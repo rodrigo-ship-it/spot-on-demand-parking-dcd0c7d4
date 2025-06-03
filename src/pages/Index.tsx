@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
+  const [searchLocation, setSearchLocation] = useState("");
+  const [searchDuration, setSearchDuration] = useState("");
   const navigate = useNavigate();
 
   const parkingSpots = [
@@ -47,8 +50,22 @@ const Index = () => {
     }
   ];
 
+  const handleSearch = () => {
+    if (!searchLocation.trim()) {
+      toast.error("Please enter a location to search for parking");
+      return;
+    }
+    console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
+    toast.success(`Searching for parking near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
+  };
+
   const handleBookNow = (spotId: number) => {
     navigate(`/spot/${spotId}?action=book`);
+  };
+
+  const handleSignIn = () => {
+    toast.info("Sign in functionality would be implemented here");
+    console.log("Sign in clicked");
   };
 
   return (
@@ -81,7 +98,7 @@ const Index = () => {
                   List Your Spot
                 </Button>
               </Link>
-              <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+              <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={handleSignIn}>
                 Sign In
               </Button>
             </div>
@@ -115,10 +132,12 @@ const Index = () => {
                     <Input 
                       placeholder="Where do you need parking?" 
                       className="pl-10 h-12 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={searchLocation}
+                      onChange={(e) => setSearchLocation(e.target.value)}
                     />
                   </div>
                 </div>
-                <Select>
+                <Select value={searchDuration} onValueChange={setSearchDuration}>
                   <SelectTrigger className="h-12 border-gray-200">
                     <SelectValue placeholder="Duration" />
                   </SelectTrigger>
@@ -130,7 +149,7 @@ const Index = () => {
                     <SelectItem value="daily">Daily</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg">
+                <Button className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg" onClick={handleSearch}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>

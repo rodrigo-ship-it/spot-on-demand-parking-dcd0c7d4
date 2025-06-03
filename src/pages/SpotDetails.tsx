@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 const SpotDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const isBookingMode = searchParams.get('action') === 'book';
   const [isEditing, setIsEditing] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(isBookingMode);
@@ -55,6 +57,37 @@ const SpotDetails = () => {
     console.log("Booking submitted:", bookingData);
     toast.success("Booking request submitted successfully! You'll receive a confirmation email shortly.");
     setShowBookingForm(false);
+    // Redirect to bookings page after successful booking
+    setTimeout(() => {
+      navigate('/bookings');
+    }, 2000);
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Save changes
+      console.log("Saving spot data:", spotData);
+      toast.success("Spot details updated successfully!");
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleUpdateAvailability = () => {
+    console.log("Opening availability calendar");
+    toast.info("Availability calendar would open here");
+  };
+
+  const handleDuplicateSpot = () => {
+    console.log("Duplicating spot:", spotData);
+    toast.success("Spot duplicated successfully! Check your spots list.");
+  };
+
+  const handleDeleteSpot = () => {
+    if (window.confirm("Are you sure you want to delete this parking spot? This action cannot be undone.")) {
+      console.log("Deleting spot:", id);
+      toast.success("Parking spot deleted successfully");
+      navigate('/manage-spots');
+    }
   };
 
   const calculateTotal = () => {
@@ -79,7 +112,7 @@ const SpotDetails = () => {
             <div className="flex items-center space-x-4">
               {!isBookingMode && (
                 <Button
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={handleEditToggle}
                   variant={isEditing ? "default" : "outline"}
                 >
                   {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
@@ -208,7 +241,10 @@ const SpotDetails = () => {
                     <span className="text-sm text-gray-600">Active</span>
                     <Switch
                       checked={spotData.isActive}
-                      onCheckedChange={(checked) => setSpotData({...spotData, isActive: checked})}
+                      onCheckedChange={(checked) => {
+                        setSpotData({...spotData, isActive: checked});
+                        toast.success(checked ? "Spot activated" : "Spot deactivated");
+                      }}
                     />
                   </div>
                 </CardTitle>
@@ -249,7 +285,7 @@ const SpotDetails = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="type">Parking Type</Label>
-                    <Select value={spotData.type} disabled={!isEditing}>
+                    <Select value={spotData.type} disabled={!isEditing} onValueChange={(value) => setSpotData({...spotData, type: value})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -417,15 +453,15 @@ const SpotDetails = () => {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleUpdateAvailability}>
                   <Calendar className="w-4 h-4 mr-2" />
                   Update Availability
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleDuplicateSpot}>
                   <Car className="w-4 h-4 mr-2" />
                   Duplicate Spot
                 </Button>
-                <Button variant="destructive" className="w-full">
+                <Button variant="destructive" className="w-full" onClick={handleDeleteSpot}>
                   Delete Spot
                 </Button>
               </CardContent>
