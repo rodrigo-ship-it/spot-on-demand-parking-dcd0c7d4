@@ -20,11 +20,16 @@ const ListSpot = () => {
     spotType: "",
     price: "",
     availability: "",
+    specificDate: "",
+    startTime: "",
+    endTime: "",
   });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const showSpecificTimeFields = formData.availability === "specific-day";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -39,6 +44,9 @@ const ListSpot = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
+              <Link to="/manage-spots">
+                <Button variant="outline" size="sm">Manage Spots</Button>
+              </Link>
               <Button variant="outline" size="sm">Help</Button>
               <Button size="sm">Sign In</Button>
             </div>
@@ -187,11 +195,47 @@ const ListSpot = () => {
                           <SelectItem value="weekdays">Weekdays Only</SelectItem>
                           <SelectItem value="weekends">Weekends Only</SelectItem>
                           <SelectItem value="evenings">Evenings & Weekends</SelectItem>
+                          <SelectItem value="specific-day">Specific Day & Hours</SelectItem>
                           <SelectItem value="custom">Custom Schedule</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
+
+                  {showSpecificTimeFields && (
+                    <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-blue-900">Specific Day & Time Details</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="specificDate">Date</Label>
+                          <Input
+                            id="specificDate"
+                            type="date"
+                            value={formData.specificDate}
+                            onChange={(e) => handleInputChange("specificDate", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="startTime">Start Time</Label>
+                          <Input
+                            id="startTime"
+                            type="time"
+                            value={formData.startTime}
+                            onChange={(e) => handleInputChange("startTime", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="endTime">End Time</Label>
+                          <Input
+                            id="endTime"
+                            type="time"
+                            value={formData.endTime}
+                            onChange={(e) => handleInputChange("endTime", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Photos */}
