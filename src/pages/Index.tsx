@@ -7,8 +7,45 @@ import { MapPin, Clock, DollarSign, Car, Search, Plus, Menu, Star } from "lucide
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  console.log("Index component is rendering");
-  
+  const [viewMode, setViewMode] = useState<"map" | "list">("list");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const featuredSpots = [
+    {
+      id: 1,
+      title: "Downtown Garage Spot",
+      location: "123 Main St, Downtown",
+      price: 8,
+      duration: "hour",
+      distance: "0.2 miles",
+      type: "Covered Garage",
+      rating: 4.8,
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop"
+    },
+    {
+      id: 2,
+      title: "Stadium Parking",
+      location: "456 Sports Ave",
+      price: 25,
+      duration: "event",
+      distance: "0.5 miles",
+      type: "Outdoor Lot",
+      rating: 4.6,
+      image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop"
+    },
+    {
+      id: 3,
+      title: "Residential Driveway",
+      location: "789 Oak Street",
+      price: 5,
+      duration: "hour",
+      distance: "0.3 miles",
+      type: "Private Driveway",
+      rating: 4.9,
+      image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Navigation */}
@@ -31,6 +68,11 @@ const Index = () => {
                 </Link>
                 <Button size="sm">Sign In</Button>
               </div>
+            </div>
+            <div className="md:hidden">
+              <Button variant="outline" size="sm">
+                <Menu className="h-6 w-6" />
+              </Button>
             </div>
           </div>
         </div>
@@ -56,7 +98,9 @@ const Index = () => {
                   <Input
                     type="text"
                     placeholder="Where do you need parking?"
-                    className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 border-none outline-none"
+                    className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 border-none outline-none focus-visible:ring-0"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-8 rounded-xl">
@@ -95,101 +139,79 @@ const Index = () => {
           </div>
         </div>
 
+        {/* View Toggle */}
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Nearby Parking Spots</h2>
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === "map" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("map")}
+              className="rounded-md"
+            >
+              <MapPin className="w-4 h-4 mr-2" />
+              Map
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-md"
+            >
+              List
+            </Button>
+          </div>
+        </div>
+
+        {/* Map View */}
+        {viewMode === "map" && (
+          <div className="h-96 mb-8 bg-gray-200 rounded-lg flex items-center justify-center border">
+            <div className="text-center">
+              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 text-lg">Interactive map view</p>
+              <p className="text-gray-500 text-sm">Map integration coming soon</p>
+            </div>
+          </div>
+        )}
+
         {/* Featured Spots */}
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Featured Parking Spots</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div className="aspect-video bg-gray-200 relative flex items-center justify-center">
-              <div className="text-gray-500">Parking Image</div>
-              <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full text-sm font-semibold">
-                $8/hour
-              </div>
-            </div>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">Downtown Garage Spot</CardTitle>
-                  <CardDescription className="flex items-center mt-1">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    123 Main St, Downtown
-                  </CardDescription>
-                </div>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-gray-600 ml-1">4.8</span>
+          {featuredSpots.map((spot) => (
+            <Card key={spot.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="aspect-video bg-gray-200 relative">
+                <img 
+                  src={spot.image} 
+                  alt={spot.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full text-sm font-semibold">
+                  ${spot.price}/{spot.duration}
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-gray-600">Covered Garage</span>
-                <span className="text-sm text-gray-600">0.2 miles</span>
-              </div>
-              <Button className="w-full">Book Now</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div className="aspect-video bg-gray-200 relative flex items-center justify-center">
-              <div className="text-gray-500">Parking Image</div>
-              <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full text-sm font-semibold">
-                $25/event
-              </div>
-            </div>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">Stadium Parking</CardTitle>
-                  <CardDescription className="flex items-center mt-1">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    456 Sports Ave
-                  </CardDescription>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{spot.title}</CardTitle>
+                    <CardDescription className="flex items-center mt-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {spot.location}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center">
+                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                    <span className="text-sm text-gray-600 ml-1">{spot.rating}</span>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-gray-600 ml-1">4.6</span>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-gray-600">{spot.type}</span>
+                  <span className="text-sm text-gray-600">{spot.distance}</span>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-gray-600">Outdoor Lot</span>
-                <span className="text-sm text-gray-600">0.5 miles</span>
-              </div>
-              <Button className="w-full">Book Now</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div className="aspect-video bg-gray-200 relative flex items-center justify-center">
-              <div className="text-gray-500">Parking Image</div>
-              <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full text-sm font-semibold">
-                $5/hour
-              </div>
-            </div>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">Residential Driveway</CardTitle>
-                  <CardDescription className="flex items-center mt-1">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    789 Oak Street
-                  </CardDescription>
-                </div>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-gray-600 ml-1">4.9</span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-gray-600">Private Driveway</span>
-                <span className="text-sm text-gray-600">0.3 miles</span>
-              </div>
-              <Button className="w-full">Book Now</Button>
-            </CardContent>
-          </Card>
+                <Button className="w-full">Book Now</Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* CTA Sections */}
