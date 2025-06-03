@@ -3,284 +3,266 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MapPin, Clock, DollarSign, Car, Search, Plus, Menu, Star } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const [viewMode, setViewMode] = useState<"map" | "list">("list");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState("grid");
 
-  const featuredSpots = [
+  const parkingSpots = [
     {
       id: 1,
       title: "Downtown Garage Spot",
-      location: "123 Main St, Downtown",
+      address: "123 Main St, Downtown",
       price: 8,
-      duration: "hour",
+      rating: 4.8,
       distance: "0.2 miles",
       type: "Covered Garage",
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop"
+      available: "24/7",
+      image: "/placeholder.svg"
     },
     {
       id: 2,
-      title: "Stadium Parking",
-      location: "456 Sports Ave",
-      price: 25,
-      duration: "event",
+      title: "Residential Driveway",
+      address: "456 Oak Avenue",
+      price: 6,
+      rating: 4.9,
       distance: "0.5 miles",
-      type: "Outdoor Lot",
-      rating: 4.6,
-      image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop"
+      type: "Private Driveway",
+      available: "Weekdays",
+      image: "/placeholder.svg"
     },
     {
       id: 3,
-      title: "Residential Driveway",
-      location: "789 Oak Street",
-      price: 5,
-      duration: "hour",
-      distance: "0.3 miles",
-      type: "Private Driveway",
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop"
+      title: "Stadium Event Parking",
+      address: "789 Sports Way",
+      price: 25,
+      rating: 4.7,
+      distance: "1.2 miles",
+      type: "Event Parking",
+      available: "Game Days",
+      image: "/placeholder.svg"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg border-b">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Modern Navigation */}
+      <nav className="bg-white/80 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">ParkSpot</h1>
-            </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
-                <Link to="/" className="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                  Find Parking
+            <div className="flex items-center space-x-8">
+              <Link to="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <Car className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  ParkSpot
+                </h1>
+              </Link>
+              <div className="hidden md:flex items-center space-x-6">
+                <Link to="/how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                  How it Works
                 </Link>
-                <Link to="/list-spot" className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                  List Your Spot
+                <Link to="/manage-spots" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                  My Spots
                 </Link>
-                <Link to="/how-it-works" className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                  How It Works
-                </Link>
-                <Button size="sm">Sign In</Button>
               </div>
             </div>
-            <div className="md:hidden">
-              <Button variant="outline" size="sm">
-                <Menu className="h-6 w-6" />
+            <div className="flex items-center space-x-3">
+              <Link to="/list-spot">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25">
+                  List Your Spot
+                </Button>
+              </Link>
+              <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                Sign In
               </Button>
             </div>
           </div>
         </div>
       </nav>
-      
+
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-green-600 text-white">
-        <div className="relative max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Find Parking
-              <span className="text-yellow-300"> Anywhere</span>
+      <section className="relative overflow-hidden py-20 lg:py-32">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/5 to-purple-600/10"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              Find Perfect
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {" "}Parking{" "}
+              </span>
+              Near You
             </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-              Rent parking spots from garages, driveways, and lots. List your unused space and earn money.
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              Discover convenient parking spots or earn money by listing your unused space. 
+              Join thousands of drivers and property owners.
             </p>
             
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto bg-white rounded-2xl p-2 shadow-2xl">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 flex items-center px-4 py-3 bg-gray-50 rounded-xl">
-                  <MapPin className="w-5 h-5 text-gray-400 mr-3" />
-                  <Input
-                    type="text"
-                    placeholder="Where do you need parking?"
-                    className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 border-none outline-none focus-visible:ring-0"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+            <div className="bg-white rounded-2xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-2">
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input 
+                      placeholder="Where do you need parking?" 
+                      className="pl-10 h-12 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-8 rounded-xl">
-                  <Search className="w-5 h-5 mr-2" />
+                <Select>
+                  <SelectTrigger className="h-12 border-gray-200">
+                    <SelectValue placeholder="Duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1h">1 Hour</SelectItem>
+                    <SelectItem value="2h">2 Hours</SelectItem>
+                    <SelectItem value="4h">4 Hours</SelectItem>
+                    <SelectItem value="8h">8 Hours</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg">
+                  <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Quick Stats */}
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Car className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">10,000+</h3>
-            <p className="text-gray-600">Available Spots</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">$50+</h3>
-            <p className="text-gray-600">Average Monthly Earnings</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">24/7</h3>
-            <p className="text-gray-600">Booking Available</p>
-          </div>
-        </div>
-
-        {/* View Toggle */}
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Nearby Parking Spots</h2>
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <Button
-              variant={viewMode === "map" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("map")}
-              className="rounded-md"
-            >
-              <MapPin className="w-4 h-4 mr-2" />
-              Map
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className="rounded-md"
-            >
-              List
-            </Button>
-          </div>
-        </div>
-
-        {/* Map View */}
-        {viewMode === "map" && (
-          <div className="h-96 mb-8 bg-gray-200 rounded-lg flex items-center justify-center border">
-            <div className="text-center">
-              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg">Interactive map view</p>
-              <p className="text-gray-500 text-sm">Map integration coming soon</p>
-            </div>
-          </div>
-        )}
-
-        {/* Featured Spots */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {featuredSpots.map((spot) => (
-            <Card key={spot.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              <div className="aspect-video bg-gray-200 relative">
-                <img 
-                  src={spot.image} 
-                  alt={spot.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full text-sm font-semibold">
-                  ${spot.price}/{spot.duration}
-                </div>
+      {/* Features */}
+      <section className="py-16 bg-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <Zap className="w-8 h-8 text-white" />
               </div>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{spot.title}</CardTitle>
-                    <CardDescription className="flex items-center mt-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {spot.location}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-sm text-gray-600 ml-1">{spot.rating}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-600">{spot.type}</span>
-                  <span className="text-sm text-gray-600">{spot.distance}</span>
-                </div>
-                <Button className="w-full">Book Now</Button>
-              </CardContent>
-            </Card>
-          ))}
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
+              <p className="text-gray-600">Book parking spots instantly with our real-time availability system</p>
+            </div>
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
+              <p className="text-gray-600">Safe and secure transactions with protection for both parties</p>
+            </div>
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Community Driven</h3>
+              <p className="text-gray-600">Join a trusted community of drivers and parking space owners</p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* CTA Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-16">
-          <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-              <CardTitle className="flex items-center text-2xl">
-                <Search className="w-6 h-6 mr-3" />
-                Need Parking?
-              </CardTitle>
-              <CardDescription className="text-blue-100">
-                Find and book parking spots in seconds
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                  Real-time availability
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                  Instant booking confirmation
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                  GPS directions to your spot
-                </li>
-              </ul>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                Find Parking Now
+      {/* Parking Spots */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Available Parking Spots</h2>
+              <p className="text-gray-600">Find the perfect spot for your needs</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className={viewMode === "grid" ? "bg-blue-600 hover:bg-blue-700" : ""}
+              >
+                <Grid className="w-4 h-4" />
               </Button>
-            </CardContent>
-          </Card>
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className={viewMode === "list" ? "bg-blue-600 hover:bg-blue-700" : ""}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
 
-          <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <CardTitle className="flex items-center text-2xl">
-                <Plus className="w-6 h-6 mr-3" />
-                Own a Parking Spot?
-              </CardTitle>
-              <CardDescription className="text-green-100">
-                List your space and start earning money
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                  Set your own prices and schedule
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                  Automatic payments
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                  Full insurance coverage
-                </li>
-              </ul>
-              <Link to="/list-spot">
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  List Your Spot
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+            {parkingSpots.map((spot) => (
+              <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
+                <div className="relative">
+                  <img 
+                    src={spot.image} 
+                    alt={spot.title}
+                    className="w-full h-48 object-cover rounded-t-lg"
+                  />
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-medium flex items-center">
+                    <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                    {spot.rating}
+                  </div>
+                </div>
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {spot.title}
+                      </CardTitle>
+                      <CardDescription className="flex items-center text-gray-600 mt-1">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {spot.address}
+                      </CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                      <div className="text-sm text-gray-500">per hour</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                    <div className="flex items-center">
+                      <Car className="w-4 h-4 mr-1" />
+                      {spot.type}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {spot.available}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">{spot.distance} away</span>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Book Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Turn Your Space Into Income
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Have an unused parking space? List it on ParkSpot and start earning money today.
+          </p>
+          <Link to="/list-spot">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-8 py-3 text-lg shadow-xl">
+              Start Earning Now
+            </Button>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 };

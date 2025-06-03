@@ -1,252 +1,260 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, CreditCard, Car, DollarSign, Shield, ArrowLeft, CheckCircle } from "lucide-react";
+import { Search, MapPin, CreditCard, Car, DollarSign, Clock, Shield, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HowItWorks = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg border-b">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Modern Navigation */}
+      <nav className="bg-white/80 backdrop-blur-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
-                <h1 className="text-2xl font-bold text-blue-600">ParkSpot</h1>
+            <div className="flex items-center space-x-8">
+              <Link to="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <Car className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  ParkSpot
+                </h1>
               </Link>
+              <div className="hidden md:flex items-center space-x-6">
+                <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                  Home
+                </Link>
+                <Link to="/manage-spots" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                  My Spots
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Link to="/list-spot">
-                <Button variant="outline" size="sm">List Your Spot</Button>
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                  List Your Spot
+                </Button>
               </Link>
-              <Button size="sm">Sign In</Button>
+              <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                Sign In
+              </Button>
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Hero */}
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            How ParkSpot Works
+            How ParkSpot
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              {" "}Works
+            </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Whether you're looking for parking or have space to rent, ParkSpot makes it simple, secure, and profitable.
+            Whether you're looking for parking or wanting to earn money from your unused space, 
+            ParkSpot makes it simple and secure.
           </p>
         </div>
 
         {/* For Renters */}
-        <div className="mb-20">
+        <section className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">For Renters</h2>
-            <p className="text-lg text-gray-600">Find and book parking in just a few taps</p>
+            <p className="text-lg text-gray-600">Find and book parking in three simple steps</p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-8 h-8 text-blue-600" />
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle>1. Search</CardTitle>
-                <CardDescription>
-                  Enter your destination and find available parking spots nearby
+                <CardTitle className="text-xl">1. Search</CardTitle>
+                <CardDescription className="text-base">
+                  Enter your destination and desired parking duration
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-left space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Real-time availability
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Filter by price and distance
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    See photos and reviews
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li>• Real-time availability</li>
+                  <li>• Filter by price and type</li>
+                  <li>• See photos and reviews</li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-blue-600" />
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle>2. Book</CardTitle>
-                <CardDescription>
-                  Reserve your spot instantly with secure payment
+                <CardTitle className="text-xl">2. Book & Pay</CardTitle>
+                <CardDescription className="text-base">
+                  Secure your spot with instant booking and payment
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-left space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Instant confirmation
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Secure payment processing
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Mobile parking pass
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li>• Instant confirmation</li>
+                  <li>• Secure payment processing</li>
+                  <li>• Digital parking pass</li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Car className="w-8 h-8 text-blue-600" />
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle>3. Park</CardTitle>
-                <CardDescription>
-                  Get directions and park with confidence
+                <CardTitle className="text-xl">3. Park</CardTitle>
+                <CardDescription className="text-base">
+                  Navigate to your spot and park with confidence
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-left space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    GPS navigation to spot
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Contact spot owner if needed
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    24/7 customer support
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li>• GPS directions included</li>
+                  <li>• Contact spot owner if needed</li>
+                  <li>• Rate your experience</li>
                 </ul>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
 
-        {/* For Hosts */}
-        <div className="mb-20">
+        {/* For Spot Owners */}
+        <section className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">For Spot Owners</h2>
             <p className="text-lg text-gray-600">Turn your unused space into income</p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-8 h-8 text-green-600" />
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Car className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle>1. List</CardTitle>
-                <CardDescription>
-                  Add your parking spot with photos and details
+                <CardTitle className="text-xl">1. List Your Spot</CardTitle>
+                <CardDescription className="text-base">
+                  Create a listing with photos and details
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-left space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Free to list
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Set your own prices
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Control availability
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li>• Quick 5-minute setup</li>
+                  <li>• Set your own pricing</li>
+                  <li>• Choose availability times</li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-green-600" />
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle>2. Approve</CardTitle>
-                <CardDescription>
-                  Review booking requests and approve renters
+                <CardTitle className="text-xl">2. Get Bookings</CardTitle>
+                <CardDescription className="text-base">
+                  Receive booking requests and confirmations
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-left space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Instant or manual approval
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    See renter profiles
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    $1M liability coverage
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li>• Automatic booking system</li>
+                  <li>• Instant notifications</li>
+                  <li>• Guest screening included</li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <DollarSign className="w-8 h-8 text-green-600" />
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <DollarSign className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle>3. Earn</CardTitle>
-                <CardDescription>
-                  Get paid automatically every week
+                <CardTitle className="text-xl">3. Earn Money</CardTitle>
+                <CardDescription className="text-base">
+                  Get paid automatically after each booking
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-left space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Automatic payments
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Keep 80% of earnings
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Track your income
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li>• Weekly payouts</li>
+                  <li>• No hidden fees</li>
+                  <li>• Earnings dashboard</li>
                 </ul>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
 
-        {/* CTA */}
-        <div className="text-center">
-          <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-2xl p-12">
-            <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-xl mb-8 opacity-90">
-              Join thousands of people already using ParkSpot
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/">
-                <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
-                  Find Parking
-                </Button>
-              </Link>
-              <Link to="/list-spot">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-                  List Your Spot
-                </Button>
-              </Link>
+        {/* Benefits */}
+        <section className="mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose ParkSpot?</h2>
+            <p className="text-lg text-gray-600">Built with trust, security, and convenience in mind</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Secure & Safe</h3>
+              <p className="text-sm text-gray-600">All transactions protected with bank-level security</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <Star className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Trusted Community</h3>
+              <p className="text-sm text-gray-600">Verified users with ratings and reviews</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <Clock className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">24/7 Support</h3>
+              <p className="text-sm text-gray-600">Help available whenever you need it</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <DollarSign className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Fair Pricing</h3>
+              <p className="text-sm text-gray-600">Competitive rates with transparent fees</p>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* CTA */}
+        <section className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            Join thousands of users who trust ParkSpot for their parking needs
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/">
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-8">
+                Find Parking
+              </Button>
+            </Link>
+            <Link to="/list-spot">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8">
+                List Your Spot
+              </Button>
+            </Link>
+          </div>
+        </section>
       </div>
     </div>
   );
