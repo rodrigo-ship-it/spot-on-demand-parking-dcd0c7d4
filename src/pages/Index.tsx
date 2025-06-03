@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
+  const navigate = useNavigate();
 
   const parkingSpots = [
     {
@@ -45,6 +46,10 @@ const Index = () => {
       image: "/placeholder.svg"
     }
   ];
+
+  const handleBookNow = (spotId: number) => {
+    navigate(`/spot/${spotId}?action=book`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -236,7 +241,11 @@ const Index = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">{spot.distance} away</span>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => handleBookNow(spot.id)}
+                    >
                       Book Now
                     </Button>
                   </div>

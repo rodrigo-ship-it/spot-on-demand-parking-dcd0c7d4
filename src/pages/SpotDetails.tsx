@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +8,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Edit, Save, Calendar, Clock, DollarSign, MapPin, Car, Users, Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const SpotDetails = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isBookingMode = searchParams.get('action') === 'book';
   const [isEditing, setIsEditing] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(isBookingMode);
+  
+  const [bookingData, setBookingData] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+    duration: "2",
+    customerName: "",
+    customerEmail: "",
+    customerPhone: ""
+  });
+
   const [spotData, setSpotData] = useState({
     title: "Downtown Garage Spot",
     description: "Secure covered parking spot in downtown garage. Perfect for daily commuters.",
@@ -36,6 +50,18 @@ const SpotDetails = () => {
     { id: 2, customer: "Sarah M.", rating: 4, comment: "Easy access and great communication.", date: "2024-06-02" },
   ];
 
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Booking submitted:", bookingData);
+    toast.success("Booking request submitted successfully! You'll receive a confirmation email shortly.");
+    setShowBookingForm(false);
+  };
+
+  const calculateTotal = () => {
+    const hours = parseInt(bookingData.duration);
+    return spotData.price * hours;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Navigation */}
@@ -43,25 +69,133 @@ const SpotDetails = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/manage-spots" className="flex items-center">
+              <Link to={isBookingMode ? "/" : "/manage-spots"} className="flex items-center">
                 <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
-                <h1 className="text-2xl font-bold text-blue-600">Back to My Spots</h1>
+                <h1 className="text-2xl font-bold text-blue-600">
+                  {isBookingMode ? "Back to Search" : "Back to My Spots"}
+                </h1>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                onClick={() => setIsEditing(!isEditing)}
-                variant={isEditing ? "default" : "outline"}
-              >
-                {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
-                {isEditing ? "Save Changes" : "Edit Spot"}
-              </Button>
+              {!isBookingMode && (
+                <Button
+                  onClick={() => setIsEditing(!isEditing)}
+                  variant={isEditing ? "default" : "outline"}
+                >
+                  {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
+                  {isEditing ? "Save Changes" : "Edit Spot"}
+                </Button>
+              )}
+              {isBookingMode && (
+                <Button
+                  onClick={() => setShowBookingForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Book This Spot
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {showBookingForm && (
+          <Card className="mb-8 border-blue-200 bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Book This Parking Spot</CardTitle>
+              <CardDescription>Fill in your details to reserve this spot</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleBookingSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={bookingData.date}
+                      onChange={(e) => setBookingData({...bookingData, date: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="startTime">Start Time</Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={bookingData.startTime}
+                      onChange={(e) => setBookingData({...bookingData, startTime: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="duration">Duration (hours)</Label>
+                    <Select value={bookingData.duration} onValueChange={(value) => setBookingData({...bookingData, duration: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 hour</SelectItem>
+                        <SelectItem value="2">2 hours</SelectItem>
+                        <SelectItem value="4">4 hours</SelectItem>
+                        <SelectItem value="8">8 hours</SelectItem>
+                        <SelectItem value="24">Full day</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="customerName">Your Name</Label>
+                    <Input
+                      id="customerName"
+                      value={bookingData.customerName}
+                      onChange={(e) => setBookingData({...bookingData, customerName: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="customerEmail">Email</Label>
+                    <Input
+                      id="customerEmail"
+                      type="email"
+                      value={bookingData.customerEmail}
+                      onChange={(e) => setBookingData({...bookingData, customerEmail: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="customerPhone">Phone</Label>
+                    <Input
+                      id="customerPhone"
+                      type="tel"
+                      value={bookingData.customerPhone}
+                      onChange={(e) => setBookingData({...bookingData, customerPhone: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="text-lg font-semibold">
+                    Total: ${calculateTotal()}
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setShowBookingForm(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                      Confirm Booking
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
