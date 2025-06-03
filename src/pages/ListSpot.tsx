@@ -218,22 +218,43 @@ const ListSpot = () => {
                   )}
 
                   {availabilityType === "custom" && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Weekly Schedule</h4>
-                      <div className="space-y-3">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-4 text-lg">Weekly Schedule</h4>
+                      <div className="space-y-4">
                         {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                          <div key={day} className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox id={day.toLowerCase()} />
-                              <Label htmlFor={day.toLowerCase()} className="w-20 text-sm">{day}</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Input type="time" className="w-32" />
-                              <span className="text-gray-500">to</span>
-                              <Input type="time" className="w-32" />
+                          <div key={day} className="bg-white rounded-lg border border-gray-200 p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex items-center space-x-3">
+                                <Checkbox id={day.toLowerCase()} className="border-gray-300" />
+                                <Label htmlFor={day.toLowerCase()} className="font-medium text-gray-900 min-w-[80px]">
+                                  {day}
+                                </Label>
+                              </div>
+                              <div className="flex items-center gap-3 text-sm text-gray-600">
+                                <div className="flex items-center gap-2">
+                                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">From</Label>
+                                  <Input 
+                                    type="time" 
+                                    className="w-32 h-9 text-sm border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                  />
+                                </div>
+                                <span className="text-gray-400 font-medium">to</span>
+                                <div className="flex items-center gap-2">
+                                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Until</Label>
+                                  <Input 
+                                    type="time" 
+                                    className="w-32 h-9 text-sm border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                  />
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}
+                      </div>
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-700">
+                          <strong>Tip:</strong> Check the days you want to make available and set the time ranges for each day.
+                        </p>
                       </div>
                     </div>
                   )}
