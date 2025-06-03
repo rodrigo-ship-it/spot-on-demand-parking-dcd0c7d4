@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPin, User, Phone, Mail } from "lucide-react";
+import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPin, Navigation, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -13,59 +13,60 @@ const Bookings = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const bookings = [
+  // Mock data showing customer's reservations
+  const myReservations = [
     {
       id: "BK001",
       spotTitle: "Downtown Garage Spot",
-      customer: "John Doe",
-      email: "john@email.com",
-      phone: "+1 (555) 123-4567",
-      date: "2024-06-03",
+      spotAddress: "123 Main St, Downtown",
+      spotOwner: "Jane Smith",
+      ownerPhone: "+1 (555) 111-2222",
+      date: "2024-06-05",
       startTime: "9:00 AM",
       endTime: "5:00 PM",
       duration: "8 hours",
       pricePerHour: 8,
-      totalEarnings: 64,
-      status: "Completed",
+      totalCost: 64,
+      status: "Upcoming",
       paymentStatus: "Paid"
     },
     {
       id: "BK002",
       spotTitle: "Residential Driveway",
-      customer: "Sarah Mitchell",
-      email: "sarah@email.com",
-      phone: "+1 (555) 987-6543",
-      date: "2024-06-04",
+      spotAddress: "456 Oak Avenue",
+      spotOwner: "Bob Johnson",
+      ownerPhone: "+1 (555) 333-4444",
+      date: "2024-06-03",
       startTime: "8:00 AM",
       endTime: "6:00 PM",
       duration: "10 hours",
       pricePerHour: 6,
-      totalEarnings: 60,
+      totalCost: 60,
       status: "Active",
       paymentStatus: "Paid"
     },
     {
       id: "BK003",
       spotTitle: "Stadium Event Parking",
-      customer: "Mike Rodriguez",
-      email: "mike@email.com",
-      phone: "+1 (555) 456-7890",
-      date: "2024-06-05",
+      spotAddress: "789 Sports Way",
+      spotOwner: "Alice Wilson",
+      ownerPhone: "+1 (555) 555-6666",
+      date: "2024-05-30",
       startTime: "6:00 PM",
       endTime: "11:00 PM",
       duration: "5 hours",
       pricePerHour: 25,
-      totalEarnings: 125,
-      status: "Upcoming",
-      paymentStatus: "Pending"
+      totalCost: 125,
+      status: "Completed",
+      paymentStatus: "Paid"
     }
   ];
 
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = booking.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.spotTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || booking.status.toLowerCase() === statusFilter;
+  const filteredReservations = myReservations.filter(reservation => {
+    const matchesSearch = reservation.spotTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         reservation.spotAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         reservation.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || reservation.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -88,9 +89,9 @@ const Bookings = () => {
     }
   };
 
-  const totalEarnings = filteredBookings.reduce((sum, booking) => sum + booking.totalEarnings, 0);
-  const completedBookings = filteredBookings.filter(b => b.status === "Completed").length;
-  const upcomingBookings = filteredBookings.filter(b => b.status === "Upcoming").length;
+  const totalSpent = filteredReservations.reduce((sum, reservation) => sum + reservation.totalCost, 0);
+  const completedReservations = filteredReservations.filter(r => r.status === "Completed").length;
+  const upcomingReservations = filteredReservations.filter(r => r.status === "Upcoming").length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -118,9 +119,9 @@ const Bookings = () => {
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Booking Management</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">My Parking Reservations</h1>
           <p className="text-xl text-gray-600">
-            Track and manage all your parking spot bookings in one place.
+            View and manage all your parking reservations in one place.
           </p>
         </div>
 
@@ -128,41 +129,41 @@ const Bookings = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Total Earnings</CardDescription>
-              <CardTitle className="text-2xl text-green-600">${totalEarnings}</CardTitle>
+              <CardDescription>Total Spent</CardDescription>
+              <CardTitle className="text-2xl text-blue-600">${totalSpent}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">From {filteredBookings.length} bookings</p>
+              <p className="text-sm text-gray-600">On {filteredReservations.length} reservations</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Total Bookings</CardDescription>
-              <CardTitle className="text-2xl text-blue-600">{filteredBookings.length}</CardTitle>
+              <CardDescription>Total Reservations</CardDescription>
+              <CardTitle className="text-2xl text-green-600">{filteredReservations.length}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">This period</p>
+              <p className="text-sm text-gray-600">All time</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Completed</CardDescription>
-              <CardTitle className="text-2xl text-purple-600">{completedBookings}</CardTitle>
+              <CardTitle className="text-2xl text-purple-600">{completedReservations}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">Finished bookings</p>
+              <p className="text-sm text-gray-600">Finished reservations</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Upcoming</CardDescription>
-              <CardTitle className="text-2xl text-orange-600">{upcomingBookings}</CardTitle>
+              <CardTitle className="text-2xl text-orange-600">{upcomingReservations}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">Future bookings</p>
+              <p className="text-sm text-gray-600">Future reservations</p>
             </CardContent>
           </Card>
         </div>
@@ -172,7 +173,7 @@ const Bookings = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search by customer, spot, or booking ID..."
+              placeholder="Search by spot name, address, or reservation ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -196,93 +197,91 @@ const Bookings = () => {
           </Button>
         </div>
 
-        {/* Bookings Table */}
+        {/* Reservations Table */}
         <Card>
           <CardHeader>
-            <CardTitle>All Bookings</CardTitle>
+            <CardTitle>My Reservations</CardTitle>
             <CardDescription>
-              Detailed view of all your parking spot bookings
+              All your parking spot reservations and their details
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Booking ID</TableHead>
-                  <TableHead>Customer</TableHead>
+                  <TableHead>Reservation ID</TableHead>
                   <TableHead>Parking Spot</TableHead>
+                  <TableHead>Spot Owner</TableHead>
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Duration</TableHead>
-                  <TableHead>Earnings</TableHead>
+                  <TableHead>Total Cost</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Payment</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-medium">{booking.id}</TableCell>
+                {filteredReservations.map((reservation) => (
+                  <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">{reservation.id}</TableCell>
                     <TableCell>
                       <div>
-                        <div className="flex items-center font-medium">
-                          <User className="w-4 h-4 mr-2 text-gray-400" />
-                          {booking.customer}
-                        </div>
-                        <div className="text-sm text-gray-600 flex items-center mt-1">
-                          <Mail className="w-3 h-3 mr-1" />
-                          {booking.email}
-                        </div>
+                        <div className="font-medium">{reservation.spotTitle}</div>
                         <div className="text-sm text-gray-600 flex items-center">
-                          <Phone className="w-3 h-3 mr-1" />
-                          {booking.phone}
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {reservation.spotAddress}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                        {booking.spotTitle}
+                      <div>
+                        <div className="font-medium">{reservation.spotOwner}</div>
+                        <div className="text-sm text-gray-600 flex items-center">
+                          <Phone className="w-3 h-3 mr-1" />
+                          {reservation.ownerPhone}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          {booking.date}
+                          {reservation.date}
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <Clock className="w-3 h-3 mr-1" />
-                          {booking.startTime} - {booking.endTime}
+                          {reservation.startTime} - {reservation.endTime}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{booking.duration}</TableCell>
+                    <TableCell>{reservation.duration}</TableCell>
                     <TableCell>
-                      <div className="flex items-center font-medium text-green-600">
+                      <div className="flex items-center font-medium text-blue-600">
                         <DollarSign className="w-4 h-4" />
-                        {booking.totalEarnings}
+                        {reservation.totalCost}
                       </div>
                       <div className="text-sm text-gray-600">
-                        ${booking.pricePerHour}/hr
+                        ${reservation.pricePerHour}/hr
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(booking.status)}>
-                        {booking.status}
+                      <Badge className={getStatusColor(reservation.status)}>
+                        {reservation.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getPaymentStatusColor(booking.paymentStatus)}>
-                        {booking.paymentStatus}
+                      <Badge className={getPaymentStatusColor(reservation.paymentStatus)}>
+                        {reservation.paymentStatus}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm">
-                          View
+                          <Navigation className="w-3 h-3 mr-1" />
+                          Directions
                         </Button>
                         <Button variant="outline" size="sm">
+                          <Phone className="w-3 h-3 mr-1" />
                           Contact
                         </Button>
                       </div>

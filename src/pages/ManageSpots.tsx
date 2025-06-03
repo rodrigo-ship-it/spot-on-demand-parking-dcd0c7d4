@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ManageSpots = () => {
@@ -50,6 +51,52 @@ const ManageSpots = () => {
     }
   ];
 
+  // Mock upcoming reservations for the spot owner's properties
+  const upcomingReservations = [
+    {
+      id: "BK004",
+      spotTitle: "Downtown Garage Spot",
+      customer: "Alice Johnson",
+      email: "alice@email.com",
+      phone: "+1 (555) 777-8888",
+      date: "2024-06-06",
+      startTime: "7:00 AM",
+      endTime: "7:00 PM",
+      duration: "12 hours",
+      pricePerHour: 8,
+      totalEarnings: 96,
+      status: "Confirmed"
+    },
+    {
+      id: "BK005",
+      spotTitle: "Residential Driveway",
+      customer: "David Lee",
+      email: "david@email.com",
+      phone: "+1 (555) 999-1111",
+      date: "2024-06-07",
+      startTime: "9:00 AM",
+      endTime: "5:00 PM",
+      duration: "8 hours",
+      pricePerHour: 6,
+      totalEarnings: 48,
+      status: "Confirmed"
+    },
+    {
+      id: "BK006",
+      spotTitle: "Downtown Garage Spot",
+      customer: "Emma Wilson",
+      email: "emma@email.com",
+      phone: "+1 (555) 222-3333",
+      date: "2024-06-08",
+      startTime: "8:00 AM",
+      endTime: "6:00 PM",
+      duration: "10 hours",
+      pricePerHour: 8,
+      totalEarnings: 80,
+      status: "Pending"
+    }
+  ];
+
   const filteredSpots = parkingSpots.filter(spot =>
     spot.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     spot.address.toLowerCase().includes(searchTerm.toLowerCase())
@@ -58,6 +105,15 @@ const ManageSpots = () => {
   const totalEarnings = parkingSpots.reduce((sum, spot) => sum + spot.monthlyEarnings, 0);
   const totalBookings = parkingSpots.reduce((sum, spot) => sum + spot.totalBookings, 0);
   const activeSpots = parkingSpots.filter(spot => spot.status === "Active").length;
+
+  const getReservationStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "confirmed": return "bg-green-100 text-green-800";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "cancelled": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -147,6 +203,98 @@ const ManageSpots = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Upcoming Reservations Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Upcoming Reservations</CardTitle>
+            <CardDescription>
+              Recent bookings for your parking spots
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reservation ID</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Parking Spot</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Earnings</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {upcomingReservations.map((reservation) => (
+                  <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">{reservation.id}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="flex items-center font-medium">
+                          <User className="w-4 h-4 mr-2 text-gray-400" />
+                          {reservation.customer}
+                        </div>
+                        <div className="text-sm text-gray-600 flex items-center mt-1">
+                          <Mail className="w-3 h-3 mr-1" />
+                          {reservation.email}
+                        </div>
+                        <div className="text-sm text-gray-600 flex items-center">
+                          <Phone className="w-3 h-3 mr-1" />
+                          {reservation.phone}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                        {reservation.spotTitle}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                          {reservation.date}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {reservation.startTime} - {reservation.endTime}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{reservation.duration}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center font-medium text-green-600">
+                        <DollarSign className="w-4 h-4" />
+                        {reservation.totalEarnings}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        ${reservation.pricePerHour}/hr
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getReservationStatusColor(reservation.status)}>
+                        {reservation.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm">
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Contact
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
