@@ -300,8 +300,8 @@ const Index = () => {
             <p className="text-lg text-gray-600">Everything you need to get started with ParkSpot</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group">
-              <CardHeader className="pb-4">
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
@@ -310,7 +310,7 @@ const Index = () => {
                   Learn how to find parking or list your space in simple steps
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <Link to="/how-it-works">
                   <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                     Learn More
@@ -319,8 +319,8 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group">
-              <CardHeader className="pb-4">
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Car className="w-8 h-8 text-white" />
                 </div>
@@ -329,7 +329,7 @@ const Index = () => {
                   Manage your listed parking spaces and track earnings
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <Link to="/manage-spots">
                   <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                     Manage Spots
@@ -338,8 +338,8 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group">
-              <CardHeader className="pb-4">
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Clock className="w-8 h-8 text-white" />
                 </div>
@@ -348,7 +348,7 @@ const Index = () => {
                   View and manage your parking reservations
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <Link to="/bookings">
                   <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                     View Bookings
