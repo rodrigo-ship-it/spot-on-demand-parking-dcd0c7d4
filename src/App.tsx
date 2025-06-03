@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import ListSpot from "./pages/ListSpot";
 import HowItWorks from "./pages/HowItWorks";
 import ManageSpots from "./pages/ManageSpots";
+import SpotDetails from "./pages/SpotDetails";
+import Bookings from "./pages/Bookings";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +26,9 @@ const App = () => (
           <Route path="/list-spot" element={<ListSpot />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/manage-spots" element={<ManageSpots />} />
+          <Route path="/spot/:id" element={<SpotDetails />} />
+          <Route path="/bookings" element={<Bookings />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

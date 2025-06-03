@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ManageSpots = () => {
@@ -72,6 +72,18 @@ const ManageSpots = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
+              <Link to="/bookings">
+                <Button variant="outline" size="sm">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Bookings
+                </Button>
+              </Link>
+              <Link to="/profile">
+                <Button variant="outline" size="sm">
+                  <User className="w-4 h-4 mr-2" />
+                  Profile
+                </Button>
+              </Link>
               <Link to="/list-spot">
                 <Button size="sm" className="bg-green-600 hover:bg-green-700">
                   <Plus className="w-4 h-4 mr-2" />
@@ -94,7 +106,6 @@ const ManageSpots = () => {
           </p>
         </div>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
@@ -137,7 +148,6 @@ const ManageSpots = () => {
           </Card>
         </div>
 
-        {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -221,9 +231,11 @@ const ManageSpots = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <Link to={`/spot/${spot.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         <Button variant="outline" size="sm">
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -271,9 +283,11 @@ const ManageSpots = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
-                Update Payment Info
-              </Button>
+              <Link to="/profile">
+                <Button variant="outline" className="w-full">
+                  Update Payment Info
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
