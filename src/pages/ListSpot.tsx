@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -221,27 +222,27 @@ const ListSpot = () => {
                       <h4 className="font-semibold text-gray-900 mb-4">Weekly Schedule</h4>
                       <div className="space-y-3">
                         {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                          <div key={day} className="bg-white rounded-lg border border-gray-200 p-3">
-                            <div className="space-y-3">
+                          <div key={day} className="bg-white rounded-lg border border-gray-200 p-4">
+                            <div className="space-y-4">
                               <div className="flex items-center space-x-3">
-                                <Checkbox id={day.toLowerCase()} className="border-gray-300" />
-                                <Label htmlFor={day.toLowerCase()} className="font-medium text-gray-900">
+                                <Checkbox id={day.toLowerCase()} className="border-gray-300 w-5 h-5" />
+                                <Label htmlFor={day.toLowerCase()} className="font-medium text-gray-900 text-base">
                                   {day}
                                 </Label>
                               </div>
-                              <div className="grid grid-cols-2 gap-3 pl-7">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-8">
                                 <div>
-                                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">From</Label>
+                                  <Label className="text-sm font-medium text-gray-700 block mb-2">From</Label>
                                   <Input 
                                     type="time" 
-                                    className="w-full h-9 text-sm border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                    className="w-full h-12 text-base border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
                                   />
                                 </div>
                                 <div>
-                                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">Until</Label>
+                                  <Label className="text-sm font-medium text-gray-700 block mb-2">Until</Label>
                                   <Input 
                                     type="time" 
-                                    className="w-full h-9 text-sm border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                    className="w-full h-12 text-base border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
                                   />
                                 </div>
                               </div>
