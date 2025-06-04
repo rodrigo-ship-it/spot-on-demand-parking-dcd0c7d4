@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +20,7 @@ const ListSpot = () => {
     title: "",
     description: "",
     type: "",
+    totalSpots: "1", // New field for garage/lot capacity
     
     // Location
     address: "",
@@ -103,7 +103,17 @@ const ListSpot = () => {
       return;
     }
 
-    toast.success("Parking spot listed successfully! You'll be redirected to your spots.");
+    // Validate total spots for garage/lot types
+    if ((formData.type === "entire-garage" || formData.type === "entire-lot") && !formData.totalSpots) {
+      toast.error("Please specify the number of spots available");
+      return;
+    }
+
+    const spotText = (formData.type === "entire-garage" || formData.type === "entire-lot") 
+      ? `with ${formData.totalSpots} spots` 
+      : "";
+    
+    toast.success(`Parking ${formData.type.includes("entire") ? "facility" : "spot"} listed successfully! ${spotText} You'll be redirected to your spots.`);
     
     // Simulate API call and redirect
     setTimeout(() => {
@@ -139,9 +149,29 @@ const ListSpot = () => {
                   <SelectItem value="lot">Outdoor Lot</SelectItem>
                   <SelectItem value="street">Street Parking</SelectItem>
                   <SelectItem value="commercial">Commercial Lot</SelectItem>
+                  <SelectItem value="entire-garage">Entire Garage</SelectItem>
+                  <SelectItem value="entire-lot">Entire Outdoor Lot</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+              <div>
+                <Label htmlFor="totalSpots">Total Number of Spots *</Label>
+                <Input
+                  id="totalSpots"
+                  type="number"
+                  min="1"
+                  placeholder="e.g., 10"
+                  value={formData.totalSpots}
+                  onChange={(e) => setFormData({...formData, totalSpots: e.target.value})}
+                  required
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  How many parking spots are available in your {formData.type === "entire-garage" ? "garage" : "lot"}?
+                </p>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="description">Description</Label>
@@ -218,6 +248,11 @@ const ListSpot = () => {
                 onChange={(e) => setFormData({...formData, pricePerHour: e.target.value})}
                 required
               />
+              {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+                <p className="text-sm text-gray-600 mt-1">
+                  This is the price per spot per hour. Total revenue will be multiplied by occupied spots.
+                </p>
+              )}
             </div>
 
             <div>
