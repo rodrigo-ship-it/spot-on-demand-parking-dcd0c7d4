@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,7 +101,6 @@ const Bookings = () => {
     }
   };
 
-  const totalSpent = filteredReservations.reduce((sum, reservation) => sum + reservation.totalCost, 0);
   const completedReservations = filteredReservations.filter(r => r.status === "Completed").length;
   const upcomingReservations = filteredReservations.filter(r => r.status === "Upcoming").length;
 
@@ -168,17 +168,7 @@ const Bookings = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Spent</CardDescription>
-              <CardTitle className="text-2xl text-blue-600">${totalSpent}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">On {filteredReservations.length} reservations</p>
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Reservations</CardDescription>
@@ -317,15 +307,39 @@ const Bookings = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Navigation className="w-3 h-3 mr-1" />
-                          Directions
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Phone className="w-3 h-3 mr-1" />
-                          Contact
-                        </Button>
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Navigation className="w-3 h-3 mr-1" />
+                            Directions
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Phone className="w-3 h-3 mr-1" />
+                            Contact
+                          </Button>
+                        </div>
+                        {reservation.status === "Completed" && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleLeaveReview(reservation.id)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Star className="w-3 h-3 mr-1" />
+                            Leave Review
+                          </Button>
+                        )}
+                        {reservation.status === "Active" && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleReportIssue(reservation.id, "occupied")}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Camera className="w-3 h-3 mr-1" />
+                            Report Issue
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

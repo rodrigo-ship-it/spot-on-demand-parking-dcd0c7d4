@@ -443,7 +443,7 @@ const SpotDetails = () => {
                           {booking.status}
                         </span>
                         <div className="flex flex-col space-y-1">
-                          {booking.canRate && (
+                          {booking.status === "Completed" && (
                             <Button 
                               variant="outline" 
                               size="sm"
@@ -451,7 +451,7 @@ const SpotDetails = () => {
                               className="text-blue-600 hover:text-blue-700"
                             >
                               <Star className="w-3 h-3 mr-1" />
-                              Rate Renter
+                              Leave Review
                             </Button>
                           )}
                           {booking.canReportOverstay && (
