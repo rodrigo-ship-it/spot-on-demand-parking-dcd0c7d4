@@ -3,106 +3,122 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, DollarSign, Clock, Camera, Shield, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Upload, Plus, X, Car, MapPin, DollarSign, Clock, Camera, Shield, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const ListSpot = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
+    // Basic Information
     title: "",
     description: "",
+    type: "",
+    totalSpots: "1", // New field for garage/lot capacity
+    
+    // Location
     address: "",
     city: "",
     state: "",
     zipCode: "",
-    type: "",
-    hourlyRate: "",
-    securityFeatures: [] as string[],
-    images: [] as string[],
+    
+    // Pricing & Availability
+    pricePerHour: "",
+    availabilityType: "always",
+    customSchedule: {
+      monday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+      tuesday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+      wednesday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+      thursday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+      friday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+      saturday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+      sunday: { enabled: false, startTime: "09:00", endTime: "17:00" }
+    },
+    
+    // Features & Rules
+    features: [],
+    specialInstructions: "",
+    
+    // Photos
+    photos: [],
+    
+    // Settings
+    instantBooking: true,
     minimumBooking: "1",
-    maxBooking: "24",
-    timeRestrictions: "",
-    cancellationPolicy: "",
-    additionalRules: ""
+    maximumBooking: "24"
   });
 
-  const parkingTypes = [
-    { value: "driveway", label: "Private Driveway" },
-    { value: "garage", label: "Covered Garage" },
-    { value: "street", label: "Street Parking" },
-    { value: "lot", label: "Open Parking Lot" },
-    { value: "other", label: "Other" },
+  const availableFeatures = [
+    "Covered/Garage", "Security Camera", "EV Charging", "24/7 Access", 
+    "Gated Entry", "Well Lit", "Wheelchair Accessible", "Car Wash Available"
   ];
 
-  const securityOptions = [
-    { value: "camera", label: "Security Camera" },
-    { value: "lights", label: "Good Lighting" },
-    { value: "gate", label: "Gated Access" },
-    { value: "security", label: "On-site Security" },
-  ];
-
-  const cancellationPolicies = [
-    { value: "flexible", label: "Flexible: Full refund 24 hours before booking" },
-    { value: "moderate", label: "Moderate: Full refund 48 hours before booking" },
-    { value: "strict", label: "Strict: No refunds" },
-  ];
-
-  const handleInputChange = (field: string, value: string) => {
+  const handleFeatureToggle = (feature: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      features: prev.features.includes(feature)
+        ? prev.features.filter(f => f !== feature)
+        : [...prev.features, feature]
     }));
   };
 
-  const handleSecurityFeatureToggle = (feature: string) => {
+  const handleScheduleChange = (day: string, field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
-      securityFeatures: prev.securityFeatures.includes(feature)
-        ? prev.securityFeatures.filter(f => f !== feature)
-        : [...prev.securityFeatures, feature]
+      customSchedule: {
+        ...prev.customSchedule,
+        [day]: {
+          ...prev.customSchedule[day as keyof typeof prev.customSchedule],
+          [field]: value
+        }
+      }
     }));
   };
 
   const handleNextStep = () => {
-    if (currentStep === 1 && (!formData.title || !formData.type)) {
-      toast.error("Please fill in the required fields.");
-      return;
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
     }
-
-    if (currentStep === 2 && (!formData.address || !formData.city || !formData.state || !formData.zipCode)) {
-      toast.error("Please fill in the required address fields.");
-      return;
-    }
-
-    if (currentStep === 4 && !formData.hourlyRate) {
-      toast.error("Please enter an hourly rate.");
-      return;
-    }
-
-    if (currentStep === 4 && !formData.cancellationPolicy) {
-      toast.error("Please select a cancellation policy.");
-      return;
-    }
-
-    setCurrentStep(prev => prev + 1);
   };
 
   const handlePrevStep = () => {
-    setCurrentStep(prev => prev - 1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
-  const handleSubmit = () => {
-    // Basic form validation
-    if (!formData.title || !formData.description || !formData.address || !formData.city || !formData.state || !formData.zipCode || !formData.type || !formData.hourlyRate) {
-      toast.error("Please fill in all required fields.");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Submitting parking spot listing:", formData);
+    
+    // Validate required fields
+    if (!formData.title || !formData.address || !formData.pricePerHour || !formData.type) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    // Here you would typically send the form data to your backend
-    console.log("Form Data Submitted:", formData);
-    toast.success("Parking spot listed successfully!");
+    // Validate total spots for garage/lot types
+    if ((formData.type === "entire-garage" || formData.type === "entire-lot") && !formData.totalSpots) {
+      toast.error("Please specify the number of spots available");
+      return;
+    }
+
+    const spotText = (formData.type === "entire-garage" || formData.type === "entire-lot") 
+      ? `with ${formData.totalSpots} spots` 
+      : "";
+    
+    toast.success(`Parking ${formData.type.includes("entire") ? "facility" : "spot"} listed successfully! ${spotText} You'll be redirected to your spots.`);
+    
+    // Simulate API call and redirect
+    setTimeout(() => {
+      navigate('/manage-spots');
+    }, 2000);
   };
 
   const renderStepContent = () => {
@@ -111,23 +127,13 @@ const ListSpot = () => {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="title">Parking Spot Title *</Label>
+              <Label htmlFor="title">Spot Title *</Label>
               <Input
                 id="title"
-                placeholder="e.g., Downtown Garage Spot, Driveway near Stadium"
+                placeholder="e.g., Downtown Garage Spot"
                 value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe your parking spot, any special instructions, or nearby landmarks..."
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                rows={4}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                required
               />
             </div>
 
@@ -138,13 +144,44 @@ const ListSpot = () => {
                   <SelectValue placeholder="Select parking type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {parkingTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="driveway">Private Driveway</SelectItem>
+                  <SelectItem value="garage">Covered Garage</SelectItem>
+                  <SelectItem value="lot">Outdoor Lot</SelectItem>
+                  <SelectItem value="street">Street Parking</SelectItem>
+                  <SelectItem value="commercial">Commercial Lot</SelectItem>
+                  <SelectItem value="entire-garage">Entire Garage</SelectItem>
+                  <SelectItem value="entire-lot">Entire Outdoor Lot</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+              <div>
+                <Label htmlFor="totalSpots">Total Number of Spots *</Label>
+                <Input
+                  id="totalSpots"
+                  type="number"
+                  min="1"
+                  placeholder="e.g., 10"
+                  value={formData.totalSpots}
+                  onChange={(e) => setFormData({...formData, totalSpots: e.target.value})}
+                  required
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  How many parking spots are available in your {formData.type === "entire-garage" ? "garage" : "lot"}?
+                </p>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe your parking spot, any special features, or access instructions..."
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+              />
             </div>
           </div>
         );
@@ -153,12 +190,13 @@ const ListSpot = () => {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="address">Address *</Label>
+              <Label htmlFor="address">Street Address *</Label>
               <Input
                 id="address"
-                placeholder="123 Main St"
+                placeholder="123 Main Street"
                 value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                required
               />
             </div>
 
@@ -167,27 +205,30 @@ const ListSpot = () => {
                 <Label htmlFor="city">City *</Label>
                 <Input
                   id="city"
-                  placeholder="Anytown"
+                  placeholder="City"
                   value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  required
                 />
               </div>
               <div>
                 <Label htmlFor="state">State *</Label>
                 <Input
                   id="state"
-                  placeholder="CA"
+                  placeholder="State"
                   value={formData.state}
-                  onChange={(e) => handleInputChange("state", e.target.value)}
+                  onChange={(e) => setFormData({...formData, state: e.target.value})}
+                  required
                 />
               </div>
               <div>
-                <Label htmlFor="zipCode">Zip Code *</Label>
+                <Label htmlFor="zipCode">ZIP Code *</Label>
                 <Input
                   id="zipCode"
                   placeholder="12345"
                   value={formData.zipCode}
-                  onChange={(e) => handleInputChange("zipCode", e.target.value)}
+                  onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
+                  required
                 />
               </div>
             </div>
@@ -198,67 +239,96 @@ const ListSpot = () => {
         return (
           <div className="space-y-6">
             <div>
-              <Label>Security Features</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {securityOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={formData.securityFeatures.includes(option.value) ? "default" : "outline"}
-                    className={formData.securityFeatures.includes(option.value) ? "bg-blue-600 hover:bg-blue-700 text-white" : "border-gray-200 hover:bg-gray-50"}
-                    onClick={() => handleSecurityFeatureToggle(option.value)}
-                  >
-                    {option.label}
-                    {formData.securityFeatures.includes(option.value) && <CheckCircle className="ml-2 w-4 h-4" />}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="images">Images (Optional)</Label>
+              <Label htmlFor="price">Price per Hour ($) *</Label>
               <Input
-                id="images"
-                type="file"
-                multiple
-                onChange={(e) => {
-                  if (e.target.files) {
-                    // Convert FileList to an array
-                    const filesArray = Array.from(e.target.files);
-                    // Update the state with the array of files
-                    setFormData(prev => ({ ...prev, images: filesArray.map(file => file.name) }));
-                  }
-                }}
+                id="price"
+                type="number"
+                placeholder="8.00"
+                value={formData.pricePerHour}
+                onChange={(e) => setFormData({...formData, pricePerHour: e.target.value})}
+                required
               />
-              <p className="text-sm text-gray-500 mt-2">
-                Upload images of your parking spot to give renters a better idea of the space.
-              </p>
+              {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+                <p className="text-sm text-gray-600 mt-1">
+                  This is the price per spot per hour. Total revenue will be multiplied by occupied spots.
+                </p>
+              )}
             </div>
-          </div>
-        );
 
-      case 4:
-        return (
-          <div className="space-y-6">
             <div>
-              <Label htmlFor="hourlyRate">Hourly Rate ($) *</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  id="hourlyRate"
-                  type="number"
-                  placeholder="15"
-                  className="pl-10"
-                  value={formData.hourlyRate}
-                  onChange={(e) => handleInputChange("hourlyRate", e.target.value)}
-                />
-              </div>
+              <Label>Availability Type</Label>
+              <Select value={formData.availabilityType} onValueChange={(value) => setFormData({...formData, availabilityType: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="always">Always Available (24/7)</SelectItem>
+                  <SelectItem value="business">Business Hours Only</SelectItem>
+                  <SelectItem value="custom">Custom Schedule</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {formData.availabilityType === "custom" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Custom Schedule</CardTitle>
+                  <CardDescription>Set specific hours for each day of the week</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900 mb-4">Weekly Schedule</h4>
+                    <div className="space-y-3">
+                      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                        <div key={day} className="bg-white rounded-lg border border-gray-200 p-4">
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-3">
+                              <Checkbox 
+                                id={day.toLowerCase()} 
+                                className="border-gray-300 w-5 h-5"
+                                checked={formData.customSchedule[day.toLowerCase() as keyof typeof formData.customSchedule].enabled}
+                                onCheckedChange={(checked) => handleScheduleChange(day.toLowerCase(), 'enabled', checked)}
+                              />
+                              <Label htmlFor={day.toLowerCase()} className="font-medium text-gray-900 text-base">
+                                {day}
+                              </Label>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-8">
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700 block mb-2">From</Label>
+                                <Input 
+                                  type="time" 
+                                  className="w-full h-12 text-base border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                  value={formData.customSchedule[day.toLowerCase() as keyof typeof formData.customSchedule].startTime}
+                                  onChange={(e) => handleScheduleChange(day.toLowerCase(), 'startTime', e.target.value)}
+                                  disabled={!formData.customSchedule[day.toLowerCase() as keyof typeof formData.customSchedule].enabled}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700 block mb-2">Until</Label>
+                                <Input 
+                                  type="time" 
+                                  className="w-full h-12 text-base border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                  value={formData.customSchedule[day.toLowerCase() as keyof typeof formData.customSchedule].endTime}
+                                  onChange={(e) => handleScheduleChange(day.toLowerCase(), 'endTime', e.target.value)}
+                                  disabled={!formData.customSchedule[day.toLowerCase() as keyof typeof formData.customSchedule].enabled}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="minimumBooking">Minimum Booking (hours)</Label>
+                <Label htmlFor="minBooking">Minimum Booking (hours)</Label>
                 <Input
-                  id="minimumBooking"
+                  id="minBooking"
                   type="number"
                   value={formData.minimumBooking}
                   onChange={(e) => setFormData({...formData, minimumBooking: e.target.value})}
@@ -269,148 +339,203 @@ const ListSpot = () => {
                 <Input
                   id="maxBooking"
                   type="number"
-                  value={formData.maxBooking}
-                  onChange={(e) => setFormData({...formData, maxBooking: e.target.value})}
+                  value={formData.maximumBooking}
+                  onChange={(e) => setFormData({...formData, maximumBooking: e.target.value})}
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="timeRestrictions">Time Restrictions (Optional)</Label>
-              <Textarea
-                id="timeRestrictions"
-                placeholder="e.g., Available weekdays 9 AM - 6 PM only, No overnight parking"
-                value={formData.timeRestrictions}
-                onChange={(e) => handleInputChange("timeRestrictions", e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cancellationPolicy">Cancellation Policy *</Label>
-              <Select value={formData.cancellationPolicy} onValueChange={(value) => setFormData({...formData, cancellationPolicy: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select cancellation policy" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cancellationPolicies.map((policy) => (
-                    <SelectItem key={policy.value} value={policy.value}>
-                      {policy.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="additionalRules">Additional Rules (Optional)</Label>
-              <Textarea
-                id="additionalRules"
-                placeholder="Any additional rules or requirements for renters..."
-                value={formData.additionalRules}
-                onChange={(e) => handleInputChange("additionalRules", e.target.value)}
-                rows={3}
-              />
             </div>
           </div>
         );
 
-      case 5:
+      case 4:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Review Your Listing</CardTitle>
-                <CardDescription>Please review the information you've provided before submitting.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div>
-                  <Label>Title</Label>
-                  <p className="font-medium">{formData.title}</p>
+          <div className="space-y-6">
+            <div>
+              <Label>Features & Amenities</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                {availableFeatures.map((feature) => (
+                  <div
+                    key={feature}
+                    onClick={() => handleFeatureToggle(feature)}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      formData.features.includes(feature)
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="text-sm font-medium">{feature}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="instructions">Special Instructions</Label>
+              <Textarea
+                id="instructions"
+                placeholder="Any special access instructions, gate codes, or important notes for renters..."
+                value={formData.specialInstructions}
+                onChange={(e) => setFormData({...formData, specialInstructions: e.target.value})}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <h3 className="font-medium">Instant Booking</h3>
+                <p className="text-sm text-gray-600">Allow renters to book without approval</p>
+              </div>
+              <Switch
+                checked={formData.instantBooking}
+                onCheckedChange={(checked) => setFormData({...formData, instantBooking: checked})}
+              />
+            </div>
+
+            <div>
+              <Label>Photos</Label>
+              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-2">
+                  <Button variant="outline" onClick={() => toast.info("Photo upload functionality would be implemented here")}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Photos
+                  </Button>
                 </div>
-                <div>
-                  <Label>Description</Label>
-                  <p>{formData.description || "No description provided."}</p>
-                </div>
-                <div>
-                  <Label>Address</Label>
-                  <p>{formData.address}, {formData.city}, {formData.state} {formData.zipCode}</p>
-                </div>
-                <div>
-                  <Label>Parking Type</Label>
-                  <p>{parkingTypes.find(type => type.value === formData.type)?.label || "Not specified"}</p>
-                </div>
-                <div>
-                  <Label>Hourly Rate</Label>
-                  <p>${formData.hourlyRate}</p>
-                </div>
-                <div>
-                  <Label>Minimum Booking</Label>
-                  <p>{formData.minimumBooking} hours</p>
-                </div>
-                <div>
-                  <Label>Maximum Booking</Label>
-                  <p>{formData.maxBooking} hours</p>
-                </div>
-                <div>
-                  <Label>Time Restrictions</Label>
-                  <p>{formData.timeRestrictions || "None"}</p>
-                </div>
-                <div>
-                  <Label>Cancellation Policy</Label>
-                  <p>{cancellationPolicies.find(policy => policy.value === formData.cancellationPolicy)?.label || "Not specified"}</p>
-                </div>
-                <div>
-                  <Label>Additional Rules</Label>
-                  <p>{formData.additionalRules || "None"}</p>
-                </div>
-              </CardContent>
-            </Card>
+                <p className="text-sm text-gray-500 mt-2">
+                  Add photos to help renters find and identify your spot
+                </p>
+              </div>
+            </div>
           </div>
         );
 
       default:
-        return <div>Unknown step</div>;
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6">
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8">
-        <h2 className="text-2xl font-bold mb-6">List Your Parking Spot</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-lg border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex items-center">
+                <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
+                <h1 className="text-2xl font-bold text-blue-600">List Your Parking Spot</h1>
+              </Link>
+            </div>
+            <div className="text-sm text-gray-600">
+              Step {currentStep} of 4
+            </div>
+          </div>
+        </div>
+      </nav>
 
-        {/* Stepper */}
-        <div className="flex items-center justify-between mb-8">
-          {Array.from({ length: 5 }, (_, i) => i + 1).map((step) => (
-            <div key={step} className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-700'}`}>
-                {step < currentStep ? <CheckCircle className="w-5 h-5" /> : step}
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">Progress</span>
+            <span className="text-sm font-medium text-gray-600">{currentStep}/4</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Step Headers */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          {[
+            { num: 1, title: "Basic Info", icon: Car },
+            { num: 2, title: "Location", icon: MapPin },
+            { num: 3, title: "Pricing", icon: DollarSign },
+            { num: 4, title: "Details", icon: Shield }
+          ].map(({ num, title, icon: Icon }) => (
+            <div
+              key={num}
+              className={`text-center p-4 rounded-lg transition-colors ${
+                currentStep === num
+                  ? "bg-blue-100 border-2 border-blue-500"
+                  : currentStep > num
+                  ? "bg-green-100 border-2 border-green-500"
+                  : "bg-gray-100 border-2 border-gray-200"
+              }`}
+            >
+              <Icon className={`w-6 h-6 mx-auto mb-2 ${
+                currentStep === num
+                  ? "text-blue-600"
+                  : currentStep > num
+                  ? "text-green-600"
+                  : "text-gray-400"
+              }`} />
+              <div className={`text-sm font-medium ${
+                currentStep === num
+                  ? "text-blue-600"
+                  : currentStep > num
+                  ? "text-green-600"
+                  : "text-gray-400"
+              }`}>
+                {title}
               </div>
-              <p className="text-sm text-gray-500 mt-1">Step {step}</p>
             </div>
           ))}
         </div>
 
-        {/* Step Content */}
-        {renderStepContent()}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <Button variant="outline" onClick={handlePrevStep} disabled={currentStep === 1}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-          {currentStep === 5 ? (
-            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleSubmit}>
-              Submit Listing
-            </Button>
-          ) : (
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleNextStep}>
-              Next
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          )}
-        </div>
+        {/* Form Content */}
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {currentStep === 1 && "Tell us about your parking spot"}
+              {currentStep === 2 && "Where is your parking spot located?"}
+              {currentStep === 3 && "Set your pricing and availability"}
+              {currentStep === 4 && "Add the finishing touches"}
+            </CardTitle>
+            <CardDescription>
+              {currentStep === 1 && "Start with the basic information about your parking space"}
+              {currentStep === 2 && "Help renters find your exact location"}
+              {currentStep === 3 && "Configure how much to charge and when it's available"}
+              {currentStep === 4 && "Add features, photos, and special instructions"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              {renderStepContent()}
+              
+              <div className="flex justify-between pt-6 mt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevStep}
+                  disabled={currentStep === 1}
+                >
+                  Previous
+                </Button>
+                
+                {currentStep < 4 ? (
+                  <Button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Next Step
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    List My Spot
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
