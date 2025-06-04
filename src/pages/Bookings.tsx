@@ -1,17 +1,28 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPin, Navigation, Phone, Mail } from "lucide-react";
+import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPin, Navigation, Phone, Mail, Star, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ReviewDialog } from "@/components/ReviewDialog";
+import { toast } from "sonner";
 
 const Bookings = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [reviewDialog, setReviewDialog] = useState<{
+    isOpen: boolean;
+    type: "rating" | "dispute";
+    bookingId: string;
+    disputeType?: "overstay" | "occupied";
+  }>({
+    isOpen: false,
+    type: "rating",
+    bookingId: "",
+  });
 
   // Mock data showing customer's reservations
   const myReservations = [
@@ -92,6 +103,37 @@ const Bookings = () => {
   const totalSpent = filteredReservations.reduce((sum, reservation) => sum + reservation.totalCost, 0);
   const completedReservations = filteredReservations.filter(r => r.status === "Completed").length;
   const upcomingReservations = filteredReservations.filter(r => r.status === "Upcoming").length;
+
+  const handleLeaveReview = (bookingId: string) => {
+    setReviewDialog({
+      isOpen: true,
+      type: "rating",
+      bookingId,
+    });
+  };
+
+  const handleReportIssue = (bookingId: string, disputeType: "overstay" | "occupied") => {
+    setReviewDialog({
+      isOpen: true,
+      type: "dispute",
+      bookingId,
+      disputeType,
+    });
+  };
+
+  const handleSubmitRating = (rating: number, comment: string, photo?: string) => {
+    console.log("Rating submitted:", { rating, comment, photo });
+    // Here you would save the rating to your database
+  };
+
+  const handlePhotoTaken = (photo: string, disputeType: string) => {
+    console.log("Dispute photo taken:", { photo, disputeType });
+    // Here you would save the dispute photo and create a support ticket
+  };
+
+  const closeReviewDialog = () => {
+    setReviewDialog(prev => ({ ...prev, isOpen: false }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -293,6 +335,17 @@ const Bookings = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ReviewDialog
+        isOpen={reviewDialog.isOpen}
+        onClose={closeReviewDialog}
+        type={reviewDialog.type}
+        bookingId={reviewDialog.bookingId}
+        userType="renter"
+        disputeType={reviewDialog.disputeType}
+        onSubmitRating={handleSubmitRating}
+        onPhotoTaken={handlePhotoTaken}
+      />
     </div>
   );
 };

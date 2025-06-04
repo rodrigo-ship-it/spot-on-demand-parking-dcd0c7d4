@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Edit, Save, Calendar, Clock, DollarSign, MapPin, Car, Users, Star } from "lucide-react";
+import { ArrowLeft, Edit, Save, Calendar, Clock, DollarSign, MapPin, Car, Users, Star, Camera } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ReviewDialog } from "@/components/ReviewDialog";
 
 const SpotDetails = () => {
   const { id } = useParams();
@@ -41,10 +41,51 @@ const SpotDetails = () => {
     instructions: "Enter through main entrance, spot #42 on level 2"
   });
 
+  const [reviewDialog, setReviewDialog] = useState<{
+    isOpen: boolean;
+    type: "rating" | "dispute";
+    bookingId: string;
+    disputeType?: "overstay" | "occupied";
+  }>({
+    isOpen: false,
+    type: "rating",
+    bookingId: "",
+  });
+
   const bookings = [
-    { id: 1, date: "2024-06-03", time: "9:00 AM - 5:00 PM", customer: "John D.", earnings: 64, status: "Completed" },
-    { id: 2, date: "2024-06-02", time: "10:00 AM - 2:00 PM", customer: "Sarah M.", earnings: 32, status: "Completed" },
-    { id: 3, date: "2024-06-04", time: "8:00 AM - 6:00 PM", customer: "Mike R.", earnings: 80, status: "Upcoming" },
+    { 
+      id: 1, 
+      bookingId: "BK001",
+      date: "2024-06-03", 
+      time: "9:00 AM - 5:00 PM", 
+      customer: "John D.", 
+      earnings: 64, 
+      status: "Completed",
+      canRate: true,
+      canReportOverstay: false
+    },
+    { 
+      id: 2, 
+      bookingId: "BK002",
+      date: "2024-06-02", 
+      time: "10:00 AM - 2:00 PM", 
+      customer: "Sarah M.", 
+      earnings: 32, 
+      status: "Completed",
+      canRate: true,
+      canReportOverstay: false
+    },
+    { 
+      id: 3, 
+      bookingId: "BK003",
+      date: "2024-06-04", 
+      time: "8:00 AM - 6:00 PM", 
+      customer: "Mike R.", 
+      earnings: 80, 
+      status: "Active",
+      canRate: false,
+      canReportOverstay: true
+    },
   ];
 
   const reviews = [
@@ -93,6 +134,37 @@ const SpotDetails = () => {
   const calculateTotal = () => {
     const hours = parseInt(bookingData.duration);
     return spotData.price * hours;
+  };
+
+  const handleLeaveReview = (bookingId: string) => {
+    setReviewDialog({
+      isOpen: true,
+      type: "rating",
+      bookingId,
+    });
+  };
+
+  const handleReportOverstay = (bookingId: string) => {
+    setReviewDialog({
+      isOpen: true,
+      type: "dispute",
+      bookingId,
+      disputeType: "overstay",
+    });
+  };
+
+  const handleSubmitRating = (rating: number, comment: string, photo?: string) => {
+    console.log("Rating submitted:", { rating, comment, photo });
+    toast.success("Review submitted successfully!");
+  };
+
+  const handlePhotoTaken = (photo: string, disputeType: string) => {
+    console.log("Dispute photo taken:", { photo, disputeType });
+    toast.success("Evidence submitted successfully!");
+  };
+
+  const closeReviewDialog = () => {
+    setReviewDialog(prev => ({ ...prev, isOpen: false }));
   };
 
   return (
@@ -370,6 +442,30 @@ const SpotDetails = () => {
                         }`}>
                           {booking.status}
                         </span>
+                        <div className="flex flex-col space-y-1">
+                          {booking.canRate && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleLeaveReview(booking.bookingId)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Star className="w-3 h-3 mr-1" />
+                              Rate Renter
+                            </Button>
+                          )}
+                          {booking.canReportOverstay && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleReportOverstay(booking.bookingId)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Camera className="w-3 h-3 mr-1" />
+                              Report Overstay
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -469,6 +565,17 @@ const SpotDetails = () => {
           </div>
         </div>
       </div>
+
+      <ReviewDialog
+        isOpen={reviewDialog.isOpen}
+        onClose={closeReviewDialog}
+        type={reviewDialog.type}
+        bookingId={reviewDialog.bookingId}
+        userType="lister"
+        disputeType={reviewDialog.disputeType}
+        onSubmitRating={handleSubmitRating}
+        onPhotoTaken={handlePhotoTaken}
+      />
     </div>
   );
 };
