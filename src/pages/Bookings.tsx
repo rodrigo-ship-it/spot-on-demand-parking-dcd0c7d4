@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPi
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReviewDialog } from "@/components/ReviewDialog";
+import { TimeManagement } from "@/components/TimeManagement";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const Bookings = () => {
@@ -24,6 +25,25 @@ const Bookings = () => {
     type: "rating",
     bookingId: "",
   });
+
+  const [timeManagementDialog, setTimeManagementDialog] = useState<{
+    isOpen: boolean;
+    bookingId: string;
+  }>({
+    isOpen: false,
+    bookingId: "",
+  });
+
+  // Mock user violations data
+  const userViolations = [
+    {
+      id: "V001",
+      type: "late_checkout",
+      date: "2024-05-25",
+      penalty: 25,
+      description: "Late check-out (45 minutes over)"
+    }
+  ];
 
   // Mock data showing customer's reservations
   const myReservations = [
@@ -121,18 +141,27 @@ const Bookings = () => {
     });
   };
 
+  const handleManageTime = (bookingId: string) => {
+    setTimeManagementDialog({
+      isOpen: true,
+      bookingId,
+    });
+  };
+
   const handleSubmitRating = (rating: number, comment: string, photo?: string) => {
     console.log("Rating submitted:", { rating, comment, photo });
-    // Here you would save the rating to your database
   };
 
   const handlePhotoTaken = (photo: string, disputeType: string) => {
     console.log("Dispute photo taken:", { photo, disputeType });
-    // Here you would save the dispute photo and create a support ticket
   };
 
   const closeReviewDialog = () => {
     setReviewDialog(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const closeTimeManagementDialog = () => {
+    setTimeManagementDialog(prev => ({ ...prev, isOpen: false }));
   };
 
   return (
@@ -267,6 +296,34 @@ const Bookings = () => {
                             Contact
                           </Button>
                         </div>
+                        {reservation.status === "Active" && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleManageTime(reservation.id)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Clock className="w-3 h-3 mr-1" />
+                                Manage Time
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Time Management - {reservation.id}</DialogTitle>
+                              </DialogHeader>
+                              <TimeManagement
+                                bookingId={reservation.id}
+                                endTime={`${reservation.date} ${reservation.endTime}`}
+                                pricePerHour={reservation.pricePerHour}
+                                userViolations={userViolations}
+                                accountStatus="good"
+                                isActive={reservation.status === "Active"}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                        )}
                         {reservation.status === "Completed" && (
                           <Button 
                             variant="outline" 
