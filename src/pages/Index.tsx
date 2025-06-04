@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +12,11 @@ const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchDuration, setSearchDuration] = useState("");
+  const [filteredSpots, setFilteredSpots] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
 
-  const parkingSpots = [
+  const allParkingSpots = [
     {
       id: 1,
       title: "Downtown Garage Spot",
@@ -64,16 +65,81 @@ const Index = () => {
       spotType: "single-spot",
       available: "Game Days",
       image: "/placeholder.svg"
+    },
+    {
+      id: 5,
+      title: "Airport Terminal Garage",
+      address: "Airport Terminal 1",
+      price: 15,
+      rating: 4.5,
+      distance: "3.2 miles",
+      type: "Airport Parking",
+      spotType: "entire-garage",
+      totalSpots: 300,
+      available: "24/7",
+      image: "/placeholder.svg"
+    },
+    {
+      id: 6,
+      title: "Mall Shopping Center",
+      address: "City Mall, Shopping District",
+      price: 5,
+      rating: 4.3,
+      distance: "1.8 miles",
+      type: "Shopping Center",
+      spotType: "entire-outdoor-lot",
+      totalSpots: 80,
+      available: "Mall Hours",
+      image: "/placeholder.svg"
+    },
+    {
+      id: 7,
+      title: "University Campus Lot",
+      address: "State University, Campus Drive",
+      price: 3,
+      rating: 4.1,
+      distance: "2.5 miles",
+      type: "Campus Parking",
+      spotType: "entire-outdoor-lot",
+      totalSpots: 200,
+      available: "Weekdays",
+      image: "/placeholder.svg"
     }
   ];
+
+  const parkingSpots = hasSearched ? filteredSpots : allParkingSpots;
 
   const handleSearch = () => {
     if (!searchLocation.trim()) {
       toast.error("Please enter a location to search for parking");
       return;
     }
+
     console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
-    toast.success(`Searching for parking near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
+    
+    // Filter spots based on search location
+    const filtered = allParkingSpots.filter(spot => 
+      spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      spot.type.toLowerCase().includes(searchLocation.toLowerCase())
+    );
+
+    setFilteredSpots(filtered);
+    setHasSearched(true);
+
+    if (filtered.length === 0) {
+      toast.error(`No parking spots found near "${searchLocation}"`);
+    } else {
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchLocation("");
+    setSearchDuration("");
+    setFilteredSpots([]);
+    setHasSearched(false);
+    toast.info("Search cleared - showing all parking spots");
   };
 
   const handleBookNow = (spotId: number) => {
@@ -151,6 +217,7 @@ const Index = () => {
                       className="pl-10 h-12 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     />
                   </div>
                 </div>
@@ -171,6 +238,13 @@ const Index = () => {
                   Search
                 </Button>
               </div>
+              {hasSearched && (
+                <div className="mt-4 flex justify-center">
+                  <Button variant="outline" onClick={clearSearch} className="text-sm">
+                    Clear Search & Show All
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -210,8 +284,18 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Available Parking Spots</h2>
-              <p className="text-gray-600">Find the perfect spot for your needs</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                {hasSearched 
+                  ? `Search Results${searchLocation ? ` for "${searchLocation}"` : ''}`
+                  : 'Available Parking Spots'
+                }
+              </h2>
+              <p className="text-gray-600">
+                {hasSearched 
+                  ? `${parkingSpots.length} spot${parkingSpots.length !== 1 ? 's' : ''} found`
+                  : 'Find the perfect spot for your needs'
+                }
+              </p>
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -233,72 +317,83 @@ const Index = () => {
             </div>
           </div>
 
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-            {parkingSpots.map((spot) => (
-              <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
-                <div className="relative">
-                  <img 
-                    src={spot.image} 
-                    alt={spot.title}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                  />
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-medium flex items-center">
-                    <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                    {spot.rating}
-                  </div>
-                </div>
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {spot.title}
-                      </CardTitle>
-                      <CardDescription className="flex items-center text-gray-600 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {spot.address}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                      <div className="text-sm text-gray-500">per hour</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <Car className="w-4 h-4 mr-1" />
-                      {spot.type}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {spot.available}
-                    </div>
-                  </div>
-                  
-                  {/* Availability Display */}
-                  <div className="mb-4">
-                    <AvailabilityDisplay 
-                      spotType={spot.spotType}
-                      totalSpots={spot.totalSpots}
-                      spotId={spot.id.toString()}
+          {parkingSpots.length === 0 ? (
+            <div className="text-center py-12">
+              <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots found</h3>
+              <p className="text-gray-600 mb-4">Try searching for a different location or clear your search to see all available spots.</p>
+              <Button onClick={clearSearch} className="bg-blue-600 hover:bg-blue-700 text-white">
+                Show All Parking Spots
+              </Button>
+            </div>
+          ) : (
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              {parkingSpots.map((spot) => (
+                <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
+                  <div className="relative">
+                    <img 
+                      src={spot.image} 
+                      alt={spot.title}
+                      className="w-full h-48 object-cover rounded-t-lg"
                     />
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-medium flex items-center">
+                      <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                      {spot.rating}
+                    </div>
                   </div>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {spot.title}
+                        </CardTitle>
+                        <CardDescription className="flex items-center text-gray-600 mt-1">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {spot.address}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                        <div className="text-sm text-gray-500">per hour</div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className="flex items-center">
+                        <Car className="w-4 h-4 mr-1" />
+                        {spot.type}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {spot.available}
+                      </div>
+                    </div>
+                    
+                    {/* Availability Display */}
+                    <div className="mb-4">
+                      <AvailabilityDisplay 
+                        spotType={spot.spotType}
+                        totalSpots={spot.totalSpots}
+                        spotId={spot.id.toString()}
+                      />
+                    </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">{spot.distance} away</span>
-                    <Button 
-                      size="sm" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => handleBookNow(spot.id)}
-                    >
-                      Book Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">{spot.distance} away</span>
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => handleBookNow(spot.id)}
+                      >
+                        Book Now
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
