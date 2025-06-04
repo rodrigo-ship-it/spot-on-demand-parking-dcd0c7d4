@@ -241,6 +241,7 @@ const Bookings = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Actions</TableHead>
                   <TableHead>Reservation ID</TableHead>
                   <TableHead>Parking Spot</TableHead>
                   <TableHead>Spot Owner</TableHead>
@@ -249,12 +250,47 @@ const Bookings = () => {
                   <TableHead>Total Cost</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Payment</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
+                    <TableCell>
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Navigation className="w-3 h-3 mr-1" />
+                            Directions
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Phone className="w-3 h-3 mr-1" />
+                            Contact
+                          </Button>
+                        </div>
+                        {reservation.status === "Completed" && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleLeaveReview(reservation.id)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Star className="w-3 h-3 mr-1" />
+                            Leave Review
+                          </Button>
+                        )}
+                        {reservation.status === "Active" && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleReportIssue(reservation.id, "occupied")}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Camera className="w-3 h-3 mr-1" />
+                            Report Issue
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">{reservation.id}</TableCell>
                     <TableCell>
                       <div>
@@ -305,42 +341,6 @@ const Bookings = () => {
                       <Badge className={getPaymentStatusColor(reservation.paymentStatus)}>
                         {reservation.paymentStatus}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col space-y-1">
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Navigation className="w-3 h-3 mr-1" />
-                            Directions
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Phone className="w-3 h-3 mr-1" />
-                            Contact
-                          </Button>
-                        </div>
-                        {reservation.status === "Completed" && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleLeaveReview(reservation.id)}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            <Star className="w-3 h-3 mr-1" />
-                            Leave Review
-                          </Button>
-                        )}
-                        {reservation.status === "Active" && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleReportIssue(reservation.id, "occupied")}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Camera className="w-3 h-3 mr-1" />
-                            Report Issue
-                          </Button>
-                        )}
-                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
