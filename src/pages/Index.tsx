@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -23,6 +24,7 @@ const Index = () => {
       rating: 4.8,
       distance: "0.2 miles",
       type: "Covered Garage",
+      spotType: "single-spot",
       available: "24/7",
       image: "/placeholder.svg"
     },
@@ -34,17 +36,32 @@ const Index = () => {
       rating: 4.9,
       distance: "0.5 miles",
       type: "Private Driveway",
+      spotType: "single-spot",
       available: "Weekdays",
       image: "/placeholder.svg"
     },
     {
       id: 3,
+      title: "Metro Center Parking Garage",
+      address: "890 Business District",
+      price: 12,
+      rating: 4.6,
+      distance: "0.8 miles",
+      type: "Multi-Level Garage",
+      spotType: "entire-garage",
+      totalSpots: 150,
+      available: "24/7",
+      image: "/placeholder.svg"
+    },
+    {
+      id: 4,
       title: "Stadium Event Parking",
       address: "789 Sports Way",
       price: 25,
       rating: 4.7,
       distance: "1.2 miles",
       type: "Event Parking",
+      spotType: "single-spot",
       available: "Game Days",
       image: "/placeholder.svg"
     }
@@ -232,7 +249,7 @@ const Index = () => {
                 </div>
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                         {spot.title}
                       </CardTitle>
@@ -258,6 +275,16 @@ const Index = () => {
                       {spot.available}
                     </div>
                   </div>
+                  
+                  {/* Availability Display */}
+                  <div className="mb-4">
+                    <AvailabilityDisplay 
+                      spotType={spot.spotType}
+                      totalSpots={spot.totalSpots}
+                      spotId={spot.id.toString()}
+                    />
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">{spot.distance} away</span>
                     <Button 
