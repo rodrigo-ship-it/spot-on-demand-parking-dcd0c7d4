@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +82,14 @@ const ListSpot = () => {
     }));
   };
 
+  const handleTypeChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      type: value,
+      minimumBooking: value === "driveway" ? "8" : "1"
+    }));
+  };
+
   const handleNextStep = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
@@ -139,7 +148,7 @@ const ListSpot = () => {
 
             <div>
               <Label htmlFor="type">Parking Type *</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
+              <Select value={formData.type} onValueChange={handleTypeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select parking type" />
                 </SelectTrigger>
@@ -332,7 +341,13 @@ const ListSpot = () => {
                   type="number"
                   value={formData.minimumBooking}
                   onChange={(e) => setFormData({...formData, minimumBooking: e.target.value})}
+                  min={formData.type === "driveway" ? "8" : "1"}
                 />
+                {formData.type === "driveway" && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Private driveways have a minimum booking of 8 hours
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="maxBooking">Maximum Booking (hours)</Label>
