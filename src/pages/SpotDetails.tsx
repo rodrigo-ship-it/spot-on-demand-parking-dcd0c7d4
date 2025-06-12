@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -309,16 +310,18 @@ const SpotDetails = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Spot Information
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Active</span>
-                    <Switch
-                      checked={spotData.isActive}
-                      onCheckedChange={(checked) => {
-                        setSpotData({...spotData, isActive: checked});
-                        toast.success(checked ? "Spot activated" : "Spot deactivated");
-                      }}
-                    />
-                  </div>
+                  {!isBookingMode && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Active</span>
+                      <Switch
+                        checked={spotData.isActive}
+                        onCheckedChange={(checked) => {
+                          setSpotData({...spotData, isActive: checked});
+                          toast.success(checked ? "Spot activated" : "Spot deactivated");
+                        }}
+                      />
+                    </div>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -526,6 +529,24 @@ const SpotDetails = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Occupancy Rate</span>
                     <span className="font-bold">78%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Pricing Info for Booking Mode */}
+            {isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Pricing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600">${spotData.price}</div>
+                    <div className="text-sm text-gray-600">per hour</div>
                   </div>
                 </CardContent>
               </Card>
