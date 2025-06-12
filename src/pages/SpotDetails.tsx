@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,8 @@ const SpotDetails = () => {
     isActive: true,
     availability: "24/7",
     features: ["Covered", "Security Camera", "EV Charging"],
-    instructions: "Enter through main entrance, spot #42 on level 2"
+    instructions: "Enter through main entrance, spot #42 on level 2",
+    timesRented: 15
   });
 
   const [reviewDialog, setReviewDialog] = useState<{
@@ -544,9 +544,15 @@ const SpotDetails = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">${spotData.price}</div>
-                    <div className="text-sm text-gray-600">per hour</div>
+                  <div className="text-center space-y-3">
+                    <div>
+                      <div className="text-3xl font-bold text-blue-600">${spotData.price}</div>
+                      <div className="text-sm text-gray-600">per hour</div>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <div className="text-lg font-medium text-gray-700">{spotData.timesRented}</div>
+                      <div className="text-sm text-gray-600">times rented</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
