@@ -404,74 +404,76 @@ const SpotDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Recent Bookings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
-                <CardDescription>Latest bookings for this parking spot</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {bookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex flex-col">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {booking.date}
+            {/* Recent Bookings - Only show if not in booking mode */}
+            {!isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Bookings</CardTitle>
+                  <CardDescription>Latest bookings for this parking spot</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {bookings.map((booking) => (
+                      <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex flex-col">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {booking.date}
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Clock className="w-4 h-4 mr-1" />
+                              {booking.time}
+                            </div>
                           </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Clock className="w-4 h-4 mr-1" />
-                            {booking.time}
+                          <div className="flex items-center">
+                            <Users className="w-4 h-4 mr-1 text-gray-400" />
+                            <span className="font-medium">{booking.customer}</span>
                           </div>
                         </div>
-                        <div className="flex items-center">
-                          <Users className="w-4 h-4 mr-1 text-gray-400" />
-                          <span className="font-medium">{booking.customer}</span>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center text-green-600 font-medium">
+                            <DollarSign className="w-4 h-4" />
+                            {booking.earnings}
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            booking.status === "Completed" 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-blue-100 text-blue-800"
+                          }`}>
+                            {booking.status}
+                          </span>
+                          <div className="flex flex-col space-y-1">
+                            {booking.status === "Completed" && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleLeaveReview(booking.bookingId)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Star className="w-3 h-3 mr-1" />
+                                Leave Review
+                              </Button>
+                            )}
+                            {booking.canReportOverstay && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleReportOverstay(booking.bookingId)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Camera className="w-3 h-3 mr-1" />
+                                Report Overstay
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center text-green-600 font-medium">
-                          <DollarSign className="w-4 h-4" />
-                          {booking.earnings}
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          booking.status === "Completed" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-blue-100 text-blue-800"
-                        }`}>
-                          {booking.status}
-                        </span>
-                        <div className="flex flex-col space-y-1">
-                          {booking.status === "Completed" && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleLeaveReview(booking.bookingId)}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Star className="w-3 h-3 mr-1" />
-                              Leave Review
-                            </Button>
-                          )}
-                          {booking.canReportOverstay && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleReportOverstay(booking.bookingId)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Camera className="w-3 h-3 mr-1" />
-                              Report Overstay
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Reviews */}
             <Card>
@@ -502,30 +504,32 @@ const SpotDetails = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Spot Performance</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Monthly Earnings</span>
-                  <span className="font-bold text-green-600">$240</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Bookings</span>
-                  <span className="font-bold">15</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Average Rating</span>
-                  <span className="font-bold">4.8 ⭐</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Occupancy Rate</span>
-                  <span className="font-bold">78%</span>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Quick Stats - Only show if not in booking mode */}
+            {!isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Spot Performance</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Monthly Earnings</span>
+                    <span className="font-bold text-green-600">$240</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Total Bookings</span>
+                    <span className="font-bold">15</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Average Rating</span>
+                    <span className="font-bold">4.8 ⭐</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Occupancy Rate</span>
+                    <span className="font-bold">78%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Location */}
             <Card>
@@ -543,25 +547,27 @@ const SpotDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full" onClick={handleUpdateAvailability}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Update Availability
-                </Button>
-                <Button variant="outline" className="w-full" onClick={handleDuplicateSpot}>
-                  <Car className="w-4 h-4 mr-2" />
-                  Duplicate Spot
-                </Button>
-                <Button variant="destructive" className="w-full" onClick={handleDeleteSpot}>
-                  Delete Spot
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Quick Actions - Only show if not in booking mode */}
+            {!isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full" onClick={handleUpdateAvailability}>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Update Availability
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleDuplicateSpot}>
+                    <Car className="w-4 h-4 mr-2" />
+                    Duplicate Spot
+                  </Button>
+                  <Button variant="destructive" className="w-full" onClick={handleDeleteSpot}>
+                    Delete Spot
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
