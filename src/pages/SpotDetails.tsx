@@ -86,6 +86,19 @@ const SpotDetails = () => {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
 
+  // Handle continue to book button click
+  const handleContinueToBook = () => {
+    // Navigate to bookings page with this spot's information
+    navigate('/bookings', { 
+      state: { 
+        spotId: id,
+        spotTitle: spotData.title,
+        price: spotData.price,
+        address: spotData.address
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Navigation */}
@@ -413,7 +426,7 @@ const SpotDetails = () => {
                   <CardTitle>Book This Spot</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full" size="lg">
+                  <Button onClick={handleContinueToBook} className="w-full" size="lg">
                     <Calendar className="w-4 h-4 mr-2" />
                     Continue to Book
                   </Button>
@@ -511,7 +524,7 @@ const SpotDetails = () => {
 
           <DisputeCamera 
             bookingId={mockBookingData.bookingId}
-            disputeType="damage"
+            disputeType="overstay"
             onPhotoTaken={(photo, description) => console.log('Dispute photo taken:', photo, description)}
             onClose={() => console.log('Dispute camera closed')}
           />
