@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,14 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import RatingSystem from "@/components/RatingSystem";
-import ReviewDialog from "@/components/ReviewDialog";
-import DisputeCamera from "@/components/DisputeCamera";
-import CheckOutSystem from "@/components/CheckOutSystem";
-import ExtensionSystem from "@/components/ExtensionSystem";
-import PenaltySystem from "@/components/PenaltySystem";
-import TimeManagement from "@/components/TimeManagement";
-import AvailabilityDisplay from "@/components/AvailabilityDisplay";
+import { RatingSystem } from "@/components/RatingSystem";
+import { ReviewDialog } from "@/components/ReviewDialog";
+import { DisputeCamera } from "@/components/DisputeCamera";
+import { CheckOutSystem } from "@/components/CheckOutSystem";
+import { ExtensionSystem } from "@/components/ExtensionSystem";
+import { PenaltySystem } from "@/components/PenaltySystem";
+import { TimeManagement } from "@/components/TimeManagement";
+import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 
 const SpotDetails = () => {
   const { id } = useParams();
