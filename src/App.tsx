@@ -11,6 +11,7 @@ import ManageSpots from "./pages/ManageSpots";
 import SpotDetails from "./pages/SpotDetails";
 import Bookings from "./pages/Bookings";
 import Profile from "./pages/Profile";
+import BookingConfirmed from "./pages/BookingConfirmed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/manage-spots" element={<ManageSpots />} />
           <Route path="/spot/:id" element={<SpotDetails />} />
           <Route path="/bookings" element={<Bookings />} />
+          <Route path="/booking-confirmed" element={<BookingConfirmed />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

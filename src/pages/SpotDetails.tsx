@@ -88,8 +88,8 @@ const SpotDetails = () => {
 
   // Handle continue to book button click
   const handleContinueToBook = () => {
-    // Navigate to bookings page with this spot's information
-    navigate('/bookings', { 
+    // Navigate to booking confirmed page with this spot's information
+    navigate('/booking-confirmed', { 
       state: { 
         spotId: id,
         spotTitle: spotData.title,
