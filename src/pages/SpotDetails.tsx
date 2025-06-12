@@ -5,168 +5,69 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Edit, Save, Calendar, Clock, DollarSign, MapPin, Car, Users, Star, Camera } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { ReviewDialog } from "@/components/ReviewDialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import RatingSystem from "@/components/RatingSystem";
+import ReviewDialog from "@/components/ReviewDialog";
+import DisputeCamera from "@/components/DisputeCamera";
+import CheckOutSystem from "@/components/CheckOutSystem";
+import ExtensionSystem from "@/components/ExtensionSystem";
+import PenaltySystem from "@/components/PenaltySystem";
+import TimeManagement from "@/components/TimeManagement";
+import AvailabilityDisplay from "@/components/AvailabilityDisplay";
 
 const SpotDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const isBookingMode = searchParams.get('action') === 'book';
-  const [isEditing, setIsEditing] = useState(false);
-  const [showBookingForm, setShowBookingForm] = useState(isBookingMode);
-  
-  const [bookingData, setBookingData] = useState({
-    date: "",
-    startTime: "",
-    endTime: "",
-    duration: "2",
-    customerName: "",
-    customerEmail: "",
-    customerPhone: ""
-  });
+  const action = searchParams.get("action");
+  const isBookingMode = action === "book";
+  const isOwnerView = action === "manage";
 
-  const [spotData, setSpotData] = useState({
-    title: "Downtown Garage Spot",
-    description: "Secure covered parking spot in downtown garage. Perfect for daily commuters.",
-    address: "123 Main St, Downtown",
-    type: "Covered Garage",
+  // Mock data - in real app this would come from API
+  const [spotData] = useState({
+    id: parseInt(id || "1"),
+    title: "Downtown Garage - Secure Parking",
+    description: "Convenient covered parking spot in the heart of downtown. Perfect for daily commuters and event attendees. Secure, well-lit, and easily accessible.",
+    address: "123 Main Street, Downtown",
+    city: "San Francisco",
+    state: "CA",
+    zipCode: "94105",
     price: 8,
+    type: "Covered Garage",
+    owner: "Sarah Johnson",
+    rating: 4.8,
+    totalReviews: 24,
+    totalBookings: 156,
+    monthlyEarnings: 2840,
     isActive: true,
     availability: "24/7",
     features: ["Covered", "Security Camera", "EV Charging"],
     instructions: "Enter through main entrance, spot #42 on level 2",
-    timesRented: 15
+    timesRented: 15,
+    totalHoursRented: 180
   });
 
-  const [reviewDialog, setReviewDialog] = useState<{
-    isOpen: boolean;
-    type: "rating" | "dispute";
-    bookingId: string;
-    disputeType?: "overstay" | "occupied";
-  }>({
-    isOpen: false,
-    type: "rating",
-    bookingId: "",
-  });
+  const [reviewDialog, setReviewDialog] = useState({ isOpen: false, type: null });
 
-  const bookings = [
-    { 
-      id: 1, 
-      bookingId: "BK001",
-      date: "2024-06-03", 
-      time: "9:00 AM - 5:00 PM", 
-      customer: "John D.", 
-      earnings: 64, 
-      status: "Completed",
-      canRate: true,
-      canReportOverstay: false
-    },
-    { 
-      id: 2, 
-      bookingId: "BK002",
-      date: "2024-06-02", 
-      time: "10:00 AM - 2:00 PM", 
-      customer: "Sarah M.", 
-      earnings: 32, 
-      status: "Completed",
-      canRate: true,
-      canReportOverstay: false
-    },
-    { 
-      id: 3, 
-      bookingId: "BK003",
-      date: "2024-06-04", 
-      time: "8:00 AM - 6:00 PM", 
-      customer: "Mike R.", 
-      earnings: 80, 
-      status: "Active",
-      canRate: false,
-      canReportOverstay: true
-    },
-  ];
+  // Dispute Camera
+  const [isDisputeCameraOpen, setIsDisputeCameraOpen] = useState(false);
 
-  const reviews = [
-    { id: 1, customer: "John D.", rating: 5, comment: "Perfect location and very secure!", date: "2024-06-03" },
-    { id: 2, customer: "Sarah M.", rating: 4, comment: "Easy access and great communication.", date: "2024-06-02" },
-  ];
+  // Check Out System
+  const [isCheckOutSystemOpen, setIsCheckOutSystemOpen] = useState(false);
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Booking submitted:", bookingData);
-    toast.success("Booking request submitted successfully! You'll receive a confirmation email shortly.");
-    setShowBookingForm(false);
-    // Redirect to bookings page after successful booking
-    setTimeout(() => {
-      navigate('/bookings');
-    }, 2000);
-  };
+  // Extension System
+  const [isExtensionSystemOpen, setIsExtensionSystemOpen] = useState(false);
 
-  const handleEditToggle = () => {
-    if (isEditing) {
-      // Save changes
-      console.log("Saving spot data:", spotData);
-      toast.success("Spot details updated successfully!");
-    }
-    setIsEditing(!isEditing);
-  };
+  // Penalty System
+  const [isPenaltySystemOpen, setIsPenaltySystemOpen] = useState(false);
 
-  const handleUpdateAvailability = () => {
-    console.log("Opening availability calendar");
-    toast.info("Availability calendar would open here");
-  };
-
-  const handleDuplicateSpot = () => {
-    console.log("Duplicating spot:", spotData);
-    toast.success("Spot duplicated successfully! Check your spots list.");
-  };
-
-  const handleDeleteSpot = () => {
-    if (window.confirm("Are you sure you want to delete this parking spot? This action cannot be undone.")) {
-      console.log("Deleting spot:", id);
-      toast.success("Parking spot deleted successfully");
-      navigate('/manage-spots');
-    }
-  };
-
-  const calculateTotal = () => {
-    const hours = parseInt(bookingData.duration);
-    return spotData.price * hours;
-  };
-
-  const handleLeaveReview = (bookingId: string) => {
-    setReviewDialog({
-      isOpen: true,
-      type: "rating",
-      bookingId,
-    });
-  };
-
-  const handleReportOverstay = (bookingId: string) => {
-    setReviewDialog({
-      isOpen: true,
-      type: "dispute",
-      bookingId,
-      disputeType: "overstay",
-    });
-  };
-
-  const handleSubmitRating = (rating: number, comment: string, photo?: string) => {
-    console.log("Rating submitted:", { rating, comment, photo });
-    toast.success("Review submitted successfully!");
-  };
-
-  const handlePhotoTaken = (photo: string, disputeType: string) => {
-    console.log("Dispute photo taken:", { photo, disputeType });
-    toast.success("Evidence submitted successfully!");
-  };
-
-  const closeReviewDialog = () => {
-    setReviewDialog(prev => ({ ...prev, isOpen: false }));
-  };
+  // Time Management
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -175,366 +76,250 @@ const SpotDetails = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to={isBookingMode ? "/" : "/manage-spots"} className="flex items-center">
+              <Link to="/" className="flex items-center">
                 <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
-                <h1 className="text-2xl font-bold text-blue-600">
-                  {isBookingMode ? "Back to Search" : "Back to My Spots"}
-                </h1>
+                <h1 className="text-2xl font-bold text-blue-600">ParkSpot</h1>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
               {!isBookingMode && (
-                <Button
-                  onClick={handleEditToggle}
-                  variant={isEditing ? "default" : "outline"}
-                >
-                  {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
-                  {isEditing ? "Save Changes" : "Edit Spot"}
-                </Button>
+                <>
+                  <Link to="/bookings">
+                    <Button variant="outline" size="sm">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Bookings
+                    </Button>
+                  </Link>
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Button>
+                  </Link>
+                </>
               )}
-              {isBookingMode && (
-                <Button
-                  onClick={() => setShowBookingForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Book This Spot
-                </Button>
-              )}
+              <Button variant="outline" size="sm">Help</Button>
+              <Button size="sm">Sign In</Button>
             </div>
           </div>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {showBookingForm && (
-          <Card className="mb-8 border-blue-200 bg-blue-50/50">
-            <CardHeader>
-              <CardTitle className="text-blue-900">Book This Parking Spot</CardTitle>
-              <CardDescription>Fill in your details to reserve this spot</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleBookingSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="date">Date</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={bookingData.date}
-                      onChange={(e) => setBookingData({...bookingData, date: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={bookingData.startTime}
-                      onChange={(e) => setBookingData({...bookingData, startTime: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="duration">Duration (hours)</Label>
-                    <Select value={bookingData.duration} onValueChange={(value) => setBookingData({...bookingData, duration: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 hour</SelectItem>
-                        <SelectItem value="2">2 hours</SelectItem>
-                        <SelectItem value="4">4 hours</SelectItem>
-                        <SelectItem value="8">8 hours</SelectItem>
-                        <SelectItem value="24">Full day</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="customerName">Your Name</Label>
-                    <Input
-                      id="customerName"
-                      value={bookingData.customerName}
-                      onChange={(e) => setBookingData({...bookingData, customerName: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerEmail">Email</Label>
-                    <Input
-                      id="customerEmail"
-                      type="email"
-                      value={bookingData.customerEmail}
-                      onChange={(e) => setBookingData({...bookingData, customerEmail: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerPhone">Phone</Label>
-                    <Input
-                      id="customerPhone"
-                      type="tel"
-                      value={bookingData.customerPhone}
-                      onChange={(e) => setBookingData({...bookingData, customerPhone: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="text-lg font-semibold">
-                    Total: ${calculateTotal()}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setShowBookingForm(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                      Confirm Booking
-                    </Button>
-                  </div>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Spot Information */}
+            {/* Spot Header */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-2xl mb-2">{spotData.title}</CardTitle>
+                    <div className="flex items-center text-gray-600 mb-2">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {spotData.address}, {spotData.city}, {spotData.state} {spotData.zipCode}
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                        <span className="font-medium">{spotData.rating}</span>
+                        <span className="text-gray-600 ml-1">({spotData.totalReviews} reviews)</span>
+                      </div>
+                      <Badge variant="secondary" className="flex items-center">
+                        <Car className="w-3 h-3 mr-1" />
+                        {spotData.type}
+                      </Badge>
+                    </div>
+                  </div>
+                  {isOwnerView && (
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 mb-4">{spotData.description}</p>
+                
+                {/* Features */}
+                <div className="mb-4">
+                  <h3 className="font-semibold mb-2">Features</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {spotData.features.map((feature, index) => (
+                      <Badge key={index} variant="outline">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Special Instructions */}
+                <div>
+                  <h3 className="font-semibold mb-2">Parking Instructions</h3>
+                  <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">
+                    {spotData.instructions}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Availability Display */}
+            <AvailabilityDisplay />
+
+            {/* Time Management (only for booking mode) */}
+            {isBookingMode && <TimeManagement />}
+
+            {/* Reviews Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  Spot Information
-                  {!isBookingMode && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">Active</span>
-                      <Switch
-                        checked={spotData.isActive}
-                        onCheckedChange={(checked) => {
-                          setSpotData({...spotData, isActive: checked});
-                          toast.success(checked ? "Spot activated" : "Spot deactivated");
-                        }}
-                      />
-                    </div>
-                  )}
+                  <span>Reviews ({spotData.totalReviews})</span>
+                  <div className="flex items-center">
+                    <Star className="w-5 h-5 text-yellow-400 mr-1" />
+                    <span className="font-medium">{spotData.rating}</span>
+                  </div>
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="title">Spot Title</Label>
-                    <Input
-                      id="title"
-                      value={spotData.title}
-                      onChange={(e) => setSpotData({...spotData, title: e.target.value})}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="price">Price per Hour ($)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={spotData.price}
-                      onChange={(e) => setSpotData({...spotData, price: Number(e.target.value)})}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={spotData.address}
-                    onChange={(e) => setSpotData({...spotData, address: e.target.value})}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="type">Parking Type</Label>
-                    <Select value={spotData.type} disabled={!isEditing} onValueChange={(value) => setSpotData({...spotData, type: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Covered Garage">Covered Garage</SelectItem>
-                        <SelectItem value="Private Driveway">Private Driveway</SelectItem>
-                        <SelectItem value="Outdoor Lot">Outdoor Lot</SelectItem>
-                        <SelectItem value="Street Parking">Street Parking</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="availability">Availability</Label>
-                    <Input
-                      id="availability"
-                      value={spotData.availability}
-                      onChange={(e) => setSpotData({...spotData, availability: e.target.value})}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={spotData.description}
-                    onChange={(e) => setSpotData({...spotData, description: e.target.value})}
-                    disabled={!isEditing}
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="instructions">Special Instructions</Label>
-                  <Textarea
-                    id="instructions"
-                    value={spotData.instructions}
-                    onChange={(e) => setSpotData({...spotData, instructions: e.target.value})}
-                    disabled={!isEditing}
-                    rows={2}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Bookings - Only show if not in booking mode */}
-            {!isBookingMode && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Bookings</CardTitle>
-                  <CardDescription>Latest bookings for this parking spot</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {bookings.map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex flex-col">
-                            <div className="flex items-center text-sm text-gray-600">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {booking.date}
-                            </div>
-                            <div className="flex items-center text-sm text-gray-600">
-                              <Clock className="w-4 h-4 mr-1" />
-                              {booking.time}
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-1 text-gray-400" />
-                            <span className="font-medium">{booking.customer}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center text-green-600 font-medium">
-                            <DollarSign className="w-4 h-4" />
-                            {booking.earnings}
-                          </div>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            booking.status === "Completed" 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-blue-100 text-blue-800"
-                          }`}>
-                            {booking.status}
-                          </span>
-                          <div className="flex flex-col space-y-1">
-                            {booking.status === "Completed" && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleLeaveReview(booking.bookingId)}
-                                className="text-blue-600 hover:text-blue-700"
-                              >
-                                <Star className="w-3 h-3 mr-1" />
-                                Leave Review
-                              </Button>
-                            )}
-                            {booking.canReportOverstay && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleReportOverstay(booking.bookingId)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Camera className="w-3 h-3 mr-1" />
-                                Report Overstay
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Reviews */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Reviews</CardTitle>
-                <CardDescription>Feedback from your customers</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{review.customer}</span>
-                        <div className="flex items-center">
-                          {Array.from({ length: review.rating }).map((_, i) => (
-                            <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                          ))}
-                          <span className="ml-2 text-sm text-gray-600">{review.date}</span>
+                  {/* Sample Reviews */}
+                  <div className="border-b pb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
+                          M
+                        </div>
+                        <div>
+                          <p className="font-medium">Mike Chen</p>
+                          <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <p className="text-gray-700">{review.comment}</p>
+                      <span className="text-sm text-gray-600">2 days ago</span>
                     </div>
-                  ))}
+                    <p className="text-gray-700">Perfect spot for my daily commute. Always clean and well-lit. The owner is very responsive.</p>
+                  </div>
+
+                  <div className="border-b pb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
+                          J
+                        </div>
+                        <div>
+                          <p className="font-medium">Jessica Park</p>
+                          <div className="flex items-center">
+                            {[1, 2, 3, 4].map((star) => (
+                              <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
+                            ))}
+                            <Star className="w-4 h-4 text-gray-300" />
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-600">1 week ago</span>
+                    </div>
+                    <p className="text-gray-700">Great location and easy to access. Only issue was finding the exact spot initially, but instructions were helpful.</p>
+                  </div>
                 </div>
+
+                {isBookingMode && (
+                  <div className="mt-4 pt-4 border-t">
+                    <Button onClick={() => setReviewDialog({ isOpen: true, type: 'create' })} variant="outline" className="w-full">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Write a Review
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Recent Bookings (only for owner view) */}
+            {isOwnerView && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Bookings</CardTitle>
+                  <CardDescription>
+                    Recent activity for this parking spot
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Date & Time</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Earnings</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <User className="w-4 h-4 mr-2 text-gray-400" />
+                            <div>
+                              <p className="font-medium">John Smith</p>
+                              <p className="text-sm text-gray-600">john@email.com</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p>June 1, 2024</p>
+                            <p className="text-sm text-gray-600">9:00 AM - 5:00 PM</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>8 hours</TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-green-600">$64</span>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <User className="w-4 h-4 mr-2 text-gray-400" />
+                            <div>
+                              <p className="font-medium">Emma Davis</p>
+                              <p className="text-sm text-gray-600">emma@email.com</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p>May 30, 2024</p>
+                            <p className="text-sm text-gray-600">7:00 AM - 7:00 PM</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>12 hours</TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-green-600">$96</span>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Stats - Only show if not in booking mode */}
-            {!isBookingMode && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Spot Performance</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Monthly Earnings</span>
-                    <span className="font-bold text-green-600">$240</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Total Bookings</span>
-                    <span className="font-bold">15</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Average Rating</span>
-                    <span className="font-bold">4.8 ⭐</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Occupancy Rate</span>
-                    <span className="font-bold">78%</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Pricing Info for Booking Mode */}
+            {/* Pricing Card - Only in booking mode */}
             {isBookingMode && (
               <Card>
                 <CardHeader>
@@ -544,53 +329,132 @@ const SpotDetails = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center space-y-3">
+                  <div className="text-center space-y-4">
                     <div>
                       <div className="text-3xl font-bold text-blue-600">${spotData.price}</div>
                       <div className="text-sm text-gray-600">per hour</div>
                     </div>
                     <div className="pt-2 border-t">
-                      <div className="text-lg font-medium text-gray-700">{spotData.timesRented}</div>
+                      <div className="text-3xl font-bold text-blue-600">{spotData.timesRented}</div>
                       <div className="text-sm text-gray-600">times rented</div>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <div className="text-3xl font-bold text-blue-600">{spotData.totalHoursRented}</div>
+                      <div className="text-sm text-gray-600">total hours rented</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Location */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MapPin className="w-5 h-5 mr-2" />
-                  Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500">Map Preview</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">{spotData.address}</p>
-              </CardContent>
-            </Card>
+            {/* Spot Performance - Only for owner view */}
+            {isOwnerView && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart3 className="w-5 h-5 mr-2" />
+                    Spot Performance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Monthly Earnings</span>
+                    <span className="font-bold text-green-600">${spotData.monthlyEarnings}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Bookings</span>
+                    <span className="font-bold">{spotData.totalBookings}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Average Rating</span>
+                    <span className="font-bold">{spotData.rating}/5</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Occupancy Rate</span>
+                    <span className="font-bold text-blue-600">78%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Quick Actions - Only show if not in booking mode */}
-            {!isBookingMode && (
+            {/* Book Now Card - Only in booking mode */}
+            {isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Book This Spot</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button className="w-full" size="lg">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Continue to Book
+                  </Button>
+                  <div className="flex items-center justify-center text-sm text-gray-600">
+                    <Shield className="w-4 h-4 mr-1" />
+                    Secure payment & instant confirmation
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Owner Contact - Only in booking mode */}
+            {isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contact Owner</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center">
+                    <User className="w-4 h-4 mr-3 text-gray-400" />
+                    <span>{spotData.owner}</span>
+                  </div>
+                  <Button variant="outline" className="w-full">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Send Message
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Call Owner
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Quick Actions - Only for owner view */}
+            {isOwnerView && (
               <Card>
                 <CardHeader>
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button variant="outline" className="w-full" onClick={handleUpdateAvailability}>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Update Availability
+                <CardContent className="space-y-3">
+                  <Button variant="outline" className="w-full">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Spot Details
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={handleDuplicateSpot}>
-                    <Car className="w-4 h-4 mr-2" />
-                    Duplicate Spot
+                  <Button variant="outline" className="w-full">
+                    <Eye className="w-4 h-4 mr-2" />
+                    View as Customer
                   </Button>
-                  <Button variant="destructive" className="w-full" onClick={handleDeleteSpot}>
-                    Delete Spot
+                  <Button variant="outline" className="w-full">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Analytics
+                  </Button>
+                  <Button variant="destructive" className="w-full">
+                    Pause Listing
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Report Card - Only in booking mode */}
+            {isBookingMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Report an Issue</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Flag className="w-4 h-4 mr-2" />
+                    Report This Spot
                   </Button>
                 </CardContent>
               </Card>
@@ -599,16 +463,27 @@ const SpotDetails = () => {
         </div>
       </div>
 
-      <ReviewDialog
+      {/* Rating System */}
+      <RatingSystem />
+
+      {/* Review Dialog */}
+      <ReviewDialog 
         isOpen={reviewDialog.isOpen}
-        onClose={closeReviewDialog}
+        onClose={() => setReviewDialog({ isOpen: false, type: null })}
         type={reviewDialog.type}
-        bookingId={reviewDialog.bookingId}
-        userType="lister"
-        disputeType={reviewDialog.disputeType}
-        onSubmitRating={handleSubmitRating}
-        onPhotoTaken={handlePhotoTaken}
       />
+
+      {/* Dispute Camera */}
+      <DisputeCamera />
+
+      {/* Check Out System */}
+      <CheckOutSystem />
+
+      {/* Extension System */}
+      <ExtensionSystem />
+
+      {/* Penalty System */}
+      <PenaltySystem />
     </div>
   );
 };
