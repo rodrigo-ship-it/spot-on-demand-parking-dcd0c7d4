@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -49,6 +48,23 @@ const SpotDetails = () => {
     instructions: "Enter through main entrance, spot #42 on level 2",
     timesRented: 15,
     totalHoursRented: 180
+  });
+
+  // Mock booking data for active session
+  const [mockBookingData] = useState({
+    bookingId: "booking-123",
+    endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+    userViolations: [
+      {
+        id: "v1",
+        type: "late_checkout" as const,
+        date: "2024-06-10",
+        penalty: 25,
+        description: "Late check-out (30 minutes over)"
+      }
+    ],
+    accountStatus: "good" as const,
+    isActiveSession: false
   });
 
   const [reviewDialog, setReviewDialog] = useState({ isOpen: false, type: null });
@@ -170,10 +186,22 @@ const SpotDetails = () => {
             </Card>
 
             {/* Availability Display */}
-            <AvailabilityDisplay />
+            <AvailabilityDisplay 
+              spotType={spotData.type}
+              spotId={spotData.id.toString()}
+            />
 
-            {/* Time Management (only for booking mode) */}
-            {isBookingMode && <TimeManagement />}
+            {/* Time Management (only for booking mode with active session) */}
+            {isBookingMode && mockBookingData.isActiveSession && (
+              <TimeManagement 
+                bookingId={mockBookingData.bookingId}
+                endTime={mockBookingData.endTime}
+                pricePerHour={spotData.price}
+                userViolations={mockBookingData.userViolations}
+                accountStatus={mockBookingData.accountStatus}
+                isActive={mockBookingData.isActiveSession}
+              />
+            )}
 
             {/* Reviews Section */}
             <Card>
@@ -464,27 +492,52 @@ const SpotDetails = () => {
         </div>
       </div>
 
-      {/* Rating System */}
-      <RatingSystem />
+      {/* Only render these components when there's an active booking session */}
+      {mockBookingData.isActiveSession && (
+        <>
+          <RatingSystem 
+            bookingId={mockBookingData.bookingId}
+            userType="renter"
+            onSubmitRating={(rating, review) => console.log('Rating submitted:', rating, review)}
+            onClose={() => console.log('Rating dialog closed')}
+          />
 
-      {/* Review Dialog */}
-      <ReviewDialog 
-        isOpen={reviewDialog.isOpen}
-        onClose={() => setReviewDialog({ isOpen: false, type: null })}
-        type={reviewDialog.type}
-      />
+          <ReviewDialog 
+            isOpen={reviewDialog.isOpen}
+            onClose={() => setReviewDialog({ isOpen: false, type: null })}
+            type={reviewDialog.type}
+            bookingId={mockBookingData.bookingId}
+          />
 
-      {/* Dispute Camera */}
-      <DisputeCamera />
+          <DisputeCamera 
+            bookingId={mockBookingData.bookingId}
+            disputeType="damage"
+            onPhotoTaken={(photo, description) => console.log('Dispute photo taken:', photo, description)}
+            onClose={() => console.log('Dispute camera closed')}
+          />
 
-      {/* Check Out System */}
-      <CheckOutSystem />
+          <CheckOutSystem 
+            bookingId={mockBookingData.bookingId}
+            endTime={mockBookingData.endTime}
+            onCheckOut={(photo, timestamp) => console.log('Check out completed:', photo, timestamp)}
+            isOvertime={new Date() > new Date(mockBookingData.endTime)}
+          />
 
-      {/* Extension System */}
-      <ExtensionSystem />
+          <ExtensionSystem 
+            bookingId={mockBookingData.bookingId}
+            endTime={mockBookingData.endTime}
+            pricePerHour={spotData.price}
+            isSpotAvailableAfter={true}
+            onExtensionRequested={(hours, cost) => console.log('Extension requested:', hours, cost)}
+          />
 
-      {/* Penalty System */}
-      <PenaltySystem />
+          <PenaltySystem 
+            violations={mockBookingData.userViolations}
+            accountStatus={mockBookingData.accountStatus}
+            totalPenalties={mockBookingData.userViolations.reduce((sum, v) => sum + v.penalty, 0)}
+          />
+        </>
+      )}
     </div>
   );
 };
