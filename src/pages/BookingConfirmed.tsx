@@ -2,7 +2,7 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, MessageSquare } from "lucide-react";
+import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, MessageSquare, Zap, Shield } from "lucide-react";
 import { useEffect } from "react";
 
 const BookingConfirmed = () => {
@@ -20,6 +20,23 @@ const BookingConfirmed = () => {
   if (!bookingData) {
     return null;
   }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -66,15 +83,15 @@ const BookingConfirmed = () => {
           <CardContent className="space-y-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{bookingData.spotTitle}</h3>
+                <h3 className="font-semibold text-lg">{bookingData.spotData?.title}</h3>
                 <div className="flex items-center text-gray-600 mt-1">
                   <MapPin className="w-4 h-4 mr-2" />
-                  {bookingData.address}
+                  {bookingData.spotData?.address}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">
-                  ${bookingData.price}/hr
+                  ${bookingData.spotData?.price || 8}/hr
                 </div>
               </div>
             </div>
@@ -84,27 +101,38 @@ const BookingConfirmed = () => {
                 <Calendar className="w-5 h-5 mr-3 text-gray-400" />
                 <div>
                   <p className="font-medium">Date</p>
-                  <p className="text-gray-600">Today, June 12, 2025</p>
+                  <p className="text-gray-600">{formatDate(bookingData.date)}</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <Clock className="w-5 h-5 mr-3 text-gray-400" />
                 <div>
                   <p className="font-medium">Time</p>
-                  <p className="text-gray-600">9:00 AM - 5:00 PM</p>
+                  <p className="text-gray-600">
+                    {formatTime(bookingData.startTime)} - {formatTime(bookingData.endTime)}
+                  </p>
                 </div>
               </div>
             </div>
 
+            {bookingData.autoExtend && (
+              <div className="pt-4 border-t">
+                <div className="flex items-center text-green-600 bg-green-50 p-3 rounded">
+                  <Zap className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Auto-extension enabled - No overtime fees if you run late!</span>
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
-                <span className="font-medium">Total Cost</span>
+                <span className="font-medium">Total Paid</span>
                 <span className="text-xl font-bold text-green-600">
-                  ${bookingData.price * 8}
+                  ${bookingData.total}
                 </span>
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                8 hours × ${bookingData.price}/hour
+                {bookingData.duration} hours × ${bookingData.spotData?.price || 8}/hour (includes fees & tax)
               </p>
             </div>
           </CardContent>
@@ -116,7 +144,7 @@ const BookingConfirmed = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600">Confirmation Number</p>
               <p className="text-lg font-mono font-bold text-blue-600">
-                PS-{Math.random().toString(36).substr(2, 9).toUpperCase()}
+                {bookingData.confirmationNumber}
               </p>
             </div>
           </CardContent>
@@ -156,9 +184,9 @@ const BookingConfirmed = () => {
                   3
                 </div>
                 <div>
-                  <p className="font-medium">Need help?</p>
+                  <p className="font-medium">Relax & enjoy</p>
                   <p className="text-gray-600 text-sm">
-                    Contact the spot owner or our support team
+                    {bookingData.autoExtend ? "Auto-extension will handle any delays automatically" : "Remember to return by your end time"}
                   </p>
                 </div>
               </div>

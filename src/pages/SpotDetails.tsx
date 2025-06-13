@@ -88,13 +88,21 @@ const SpotDetails = () => {
 
   // Handle continue to book button click
   const handleContinueToBook = () => {
-    // Navigate to booking confirmed page with this spot's information
-    navigate('/booking-confirmed', { 
+    // Navigate to new single-page booking flow
+    navigate('/book-spot/' + id, { 
       state: { 
-        spotId: id,
-        spotTitle: spotData.title,
-        price: spotData.price,
-        address: spotData.address
+        spotData: {
+          id: id,
+          title: spotData.title,
+          price: spotData.price,
+          address: spotData.address,
+          city: spotData.city,
+          state: spotData.state,
+          zipCode: spotData.zipCode,
+          type: spotData.type,
+          features: spotData.features,
+          instructions: spotData.instructions
+        }
       }
     });
   };
