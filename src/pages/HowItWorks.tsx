@@ -12,15 +12,12 @@ const HowItWorks = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
+              <Link to="/" className="hover:scale-105 transition-transform duration-200">
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
-                  className="w-12 h-12"
+                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Arriv
-                </h1>
               </Link>
               <div className="hidden md:flex items-center space-x-6">
                 <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
