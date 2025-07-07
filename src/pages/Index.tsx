@@ -160,11 +160,13 @@ const Index = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <Car className="w-5 h-5 text-white" />
-                </div>
+                <img 
+                  src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
+                  alt="Arriv Logo" 
+                  className="w-8 h-8"
+                />
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  ParkSpot
+                  Arriv
                 </h1>
               </Link>
               <div className="hidden md:flex items-center space-x-6">
@@ -202,7 +204,10 @@ const Index = () => {
               </span>
               Near You
             </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-600 mb-4 leading-relaxed">
+              Find it. Book it. Arriv.
+            </p>
+            <p className="text-lg text-gray-600 mb-8 leading-relaxed">
               Discover convenient parking spots or earn money by listing your unused space. 
               Join thousands of drivers and property owners.
             </p>
@@ -404,9 +409,9 @@ const Index = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Turn Your Space Into Income
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Have an unused parking space? List it on ParkSpot and start earning money today.
-          </p>
+            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              Have an unused parking space? List it on Arriv and start earning money today.
+            </p>
           <Link to="/list-spot">
             <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-8 py-3 text-lg shadow-xl">
               Start Earning Now
@@ -420,7 +425,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore More</h2>
-            <p className="text-lg text-gray-600">Everything you need to get started with ParkSpot</p>
+            <p className="text-lg text-gray-600">Everything you need to get started with Arriv</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
