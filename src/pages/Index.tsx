@@ -159,13 +159,13 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
+              <Link to="/" className="flex items-center space-x-3 hover:scale-105 transition-transform duration-200">
                 <img 
                   src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
                   alt="Arriv Logo" 
-                  className="w-8 h-8"
+                  className="w-12 h-12 hover:drop-shadow-lg transition-all duration-200"
                 />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                   Arriv
                 </h1>
               </Link>
@@ -179,11 +179,6 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Link to="/list-spot">
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25">
-                  List Your Spot
-                </Button>
-              </Link>
               <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={handleSignIn}>
                 Sign In
               </Button>
@@ -198,11 +193,9 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Find Perfect
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {" "}Parking{" "}
+                Find it. Book it. Arriv
               </span>
-              Near You
             </h1>
             <p className="text-xl text-gray-600 mb-4 leading-relaxed">
               Find it. Book it. Arriv.
