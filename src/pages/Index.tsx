@@ -446,7 +446,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/manage-spots">
-                  <Button className="w-full bg-secondary hover:bg-accent text-secondary-foreground">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
                     Manage Spots
                   </Button>
                 </Link>
@@ -465,7 +465,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/bookings">
-                  <Button className="w-full bg-accent hover:bg-primary text-accent-foreground">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
                     View Bookings
                   </Button>
                 </Link>
