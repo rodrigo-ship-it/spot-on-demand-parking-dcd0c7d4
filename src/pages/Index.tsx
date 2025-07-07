@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
-import ParkingMap from "@/components/ParkingMap";
+import LocationBasedParking from "@/components/LocationBasedParking";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -402,9 +402,8 @@ const Index = () => {
               Use the interactive map to discover parking spots in your area
             </p>
           </div>
-          <ParkingMap 
+          <LocationBasedParking 
             onSpotSelect={handleBookNow}
-            searchQuery={searchLocation}
           />
         </div>
       </section>
