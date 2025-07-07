@@ -7,6 +7,7 @@ import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, 
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -210,16 +211,16 @@ const Index = () => {
             <div className="bg-white rounded-2xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100 max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-2">
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <Input 
-                      placeholder="Where do you need parking?" 
-                      className="pl-10 h-12 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={searchLocation}
-                      onChange={(e) => setSearchLocation(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    />
-                  </div>
+                  <LocationAutocomplete
+                    value={searchLocation}
+                    onChange={setSearchLocation}
+                    placeholder="Where do you need parking?"
+                    className="h-12 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onLocationSelect={(location) => {
+                      console.log("Selected location:", location);
+                      // You can use the selected location data here for enhanced search
+                    }}
+                  />
                 </div>
                 <Select value={searchDuration} onValueChange={setSearchDuration}>
                   <SelectTrigger className="h-12 border-gray-200">
