@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
-import LocationBasedParking from "@/components/LocationBasedParking";
+import SearchResultsMap from "@/components/SearchResultsMap";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -391,22 +391,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Map Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Find Parking Near You
-            </h2>
-            <p className="text-gray-600">
-              Use the interactive map to discover parking spots in your area
-            </p>
-          </div>
-          <LocationBasedParking 
-            onSpotSelect={handleBookNow}
-          />
-        </div>
-      </section>
+      {/* Search Results with Map */}
+      <SearchResultsMap 
+        searchLocation={searchLocation}
+        spots={parkingSpots}
+        onSpotSelect={handleBookNow}
+      />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-secondary">
