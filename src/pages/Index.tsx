@@ -191,9 +191,7 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Find it. Book it. Arriv
-              </span>
+              Find it. Book it. Arriv
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
               Discover convenient parking spots or earn money by listing your unused space. 
