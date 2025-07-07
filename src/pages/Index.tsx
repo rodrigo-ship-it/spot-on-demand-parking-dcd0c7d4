@@ -209,9 +209,9 @@ const Index = () => {
                     onChange={setSearchLocation}
                     placeholder="Where do you need parking?"
                     className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
-                    onPlaceSelect={(place) => {
-                      console.log("Selected place:", place);
-                      // You can use the selected place data for enhanced search
+                    onLocationSelect={(location) => {
+                      console.log("Selected location:", location);
+                      // You can use the selected location data for enhanced search
                     }}
                   />
                 </div>
