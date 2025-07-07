@@ -428,7 +428,7 @@ const ListSpot = () => {
                   alt="Arriv Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold text-gray-900">
                   List Your Parking Spot
                 </h1>
               </Link>
