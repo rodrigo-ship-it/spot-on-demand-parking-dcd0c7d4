@@ -43,16 +43,13 @@ const Profile = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-2">
-                <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
+              <Link to="/" className="flex items-center space-x-4">
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
-                  className="w-8 h-8 mr-2"
+                  className="w-12 h-12 hover:drop-shadow-lg transition-all duration-200"
                 />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Arriv
-                </h1>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
