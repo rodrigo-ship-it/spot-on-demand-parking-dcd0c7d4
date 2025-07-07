@@ -145,7 +145,7 @@ const ManageSpots = () => {
                 </Button>
               </Link>
               <Link to="/list-spot">
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button size="sm" className="bg-primary hover:bg-secondary text-primary-foreground">
                   <Plus className="w-4 h-4 mr-2" />
                   List New Spot
                 </Button>
@@ -170,7 +170,7 @@ const ManageSpots = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Monthly Earnings</CardDescription>
-              <CardTitle className="text-2xl text-green-600">${totalEarnings}</CardTitle>
+              <CardTitle className="text-2xl text-primary">${totalEarnings}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">+12% from last month</p>
@@ -180,7 +180,7 @@ const ManageSpots = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Active Spots</CardDescription>
-              <CardTitle className="text-2xl text-blue-600">{activeSpots}</CardTitle>
+              <CardTitle className="text-2xl text-primary">{activeSpots}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">Out of {parkingSpots.length} total</p>
@@ -190,7 +190,7 @@ const ManageSpots = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Bookings</CardDescription>
-              <CardTitle className="text-2xl text-purple-600">{totalBookings}</CardTitle>
+              <CardTitle className="text-2xl text-primary">{totalBookings}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">This month</p>
@@ -200,7 +200,7 @@ const ManageSpots = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Average Rating</CardDescription>
-              <CardTitle className="text-2xl text-yellow-600">4.8</CardTitle>
+              <CardTitle className="text-2xl text-primary">4.8</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">Based on 26 reviews</p>
@@ -417,7 +417,7 @@ const ManageSpots = () => {
             </CardHeader>
             <CardContent>
               <Link to="/list-spot">
-                <Button className="w-full bg-green-600 hover:bg-green-700">
+                <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
                   List New Parking Spot
                 </Button>
               </Link>
