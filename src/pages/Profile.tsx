@@ -46,7 +46,7 @@ const Profile = () => {
               <Link to="/" className="flex items-center space-x-2">
                 <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
                 <img 
-                  src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
+                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
                   className="w-8 h-8 mr-2"
                 />

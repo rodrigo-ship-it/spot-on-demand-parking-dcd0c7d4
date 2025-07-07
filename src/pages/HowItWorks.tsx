@@ -14,7 +14,7 @@ const HowItWorks = () => {
             <div className="flex items-center space-x-8">
               <Link to="/" className="flex items-center space-x-2">
                 <img 
-                  src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
+                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
                   className="w-12 h-12"
                 />
