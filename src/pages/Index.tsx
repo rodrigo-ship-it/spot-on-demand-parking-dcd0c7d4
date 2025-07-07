@@ -248,21 +248,21 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
               <p className="text-gray-600">Book parking spots instantly with our real-time availability system</p>
             </div>
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
               <p className="text-gray-600">Safe and secure transactions with protection for both parties</p>
             </div>
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Community Driven</h3>
@@ -417,7 +417,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">How It Works</CardTitle>
@@ -436,7 +436,7 @@ const Index = () => {
 
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Car className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">My Spots</CardTitle>
@@ -455,7 +455,7 @@ const Index = () => {
 
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Clock className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">My Bookings</CardTitle>
