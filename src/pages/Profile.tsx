@@ -83,7 +83,7 @@ const Profile = () => {
             <CardContent className="space-y-6">
               {/* Profile Picture */}
               <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center">
                   <User className="w-10 h-10 text-white" />
                 </div>
                 <div>

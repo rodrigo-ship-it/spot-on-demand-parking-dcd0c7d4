@@ -67,7 +67,7 @@ const HowItWorks = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Search className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">1. Search</CardTitle>
@@ -86,7 +86,7 @@ const HowItWorks = () => {
 
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <CreditCard className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">2. Book & Pay</CardTitle>
@@ -105,7 +105,7 @@ const HowItWorks = () => {
 
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <MapPin className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">3. Park</CardTitle>
@@ -134,7 +134,7 @@ const HowItWorks = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Car className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">1. List Your Spot</CardTitle>
@@ -153,7 +153,7 @@ const HowItWorks = () => {
 
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Clock className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">2. Get Bookings</CardTitle>
@@ -172,7 +172,7 @@ const HowItWorks = () => {
 
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <DollarSign className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">3. Earn Money</CardTitle>
@@ -200,7 +200,7 @@ const HowItWorks = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Secure & Safe</h3>
@@ -208,7 +208,7 @@ const HowItWorks = () => {
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Star className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Trusted Community</h3>
@@ -216,7 +216,7 @@ const HowItWorks = () => {
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Clock className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">24/7 Support</h3>
@@ -224,7 +224,7 @@ const HowItWorks = () => {
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <DollarSign className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Fair Pricing</h3>
