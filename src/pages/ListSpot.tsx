@@ -426,7 +426,7 @@ const ListSpot = () => {
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
-                  className="w-12 h-12 hover:drop-shadow-lg transition-all duration-200"
+                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                   List Your Parking Spot
