@@ -244,11 +244,11 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Search Results with Map - Show only after search */}
+      {/* Search Results with Map - Show after search */}
       {hasSearched && (
         <SearchResultsMap 
           searchLocation={searchLocation}
-          spots={filteredSpots}
+          spots={filteredSpots.length > 0 ? filteredSpots : allParkingSpots}
           onSpotSelect={handleBookNow}
         />
       )}
