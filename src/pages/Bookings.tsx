@@ -205,7 +205,7 @@ const Bookings = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Reservations</CardDescription>
-              <CardTitle className="text-2xl text-green-600">{filteredReservations.length}</CardTitle>
+              <CardTitle className="text-2xl text-gray-900">{filteredReservations.length}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">All time</p>
@@ -215,7 +215,7 @@ const Bookings = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Completed</CardDescription>
-              <CardTitle className="text-2xl text-purple-600">{completedReservations}</CardTitle>
+              <CardTitle className="text-2xl text-gray-900">{completedReservations}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">Finished reservations</p>
@@ -225,7 +225,7 @@ const Bookings = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Upcoming</CardDescription>
-              <CardTitle className="text-2xl text-orange-600">{upcomingReservations}</CardTitle>
+              <CardTitle className="text-2xl text-gray-900">{upcomingReservations}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">Future reservations</p>
