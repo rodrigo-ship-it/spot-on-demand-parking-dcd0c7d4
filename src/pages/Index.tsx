@@ -244,6 +244,15 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Search Results with Map - Show only after search */}
+      {hasSearched && (
+        <SearchResultsMap 
+          searchLocation={searchLocation}
+          spots={filteredSpots}
+          onSpotSelect={handleBookNow}
+        />
+      )}
+
       {/* Features */}
       <section className="py-16 bg-white/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -390,13 +399,6 @@ const Index = () => {
           )}
         </div>
       </section>
-
-      {/* Search Results with Map */}
-      <SearchResultsMap 
-        searchLocation={searchLocation}
-        spots={parkingSpots}
-        onSpotSelect={handleBookNow}
-      />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-secondary">
