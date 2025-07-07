@@ -167,10 +167,10 @@ const Index = () => {
                 />
               </Link>
               <div className="hidden md:flex items-center space-x-6">
-                <Link to="/how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   How it Works
                 </Link>
-                <Link to="/manage-spots" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   My Spots
                 </Link>
               </div>
@@ -190,7 +190,7 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Find it. Book it. Arriv
               </span>
             </h1>
@@ -207,7 +207,7 @@ const Index = () => {
                     value={searchLocation}
                     onChange={setSearchLocation}
                     placeholder="Where do you need parking?"
-                    className="h-12 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                     onLocationSelect={(location) => {
                       console.log("Selected location:", location);
                       // You can use the selected location data here for enhanced search
@@ -226,7 +226,7 @@ const Index = () => {
                     <SelectItem value="daily">Daily</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg" onClick={handleSearch}>
+                <Button className="h-12 bg-primary hover:bg-secondary text-primary-foreground shadow-lg" onClick={handleSearch}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
@@ -248,7 +248,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
@@ -295,7 +295,7 @@ const Index = () => {
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setViewMode("grid")}
-                className={viewMode === "grid" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
               >
                 <Grid className="w-4 h-4" />
               </Button>
@@ -303,7 +303,7 @@ const Index = () => {
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setViewMode("list")}
-                className={viewMode === "list" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -315,7 +315,7 @@ const Index = () => {
               <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots found</h3>
               <p className="text-gray-600 mb-4">Try searching for a different location or clear your search to see all available spots.</p>
-              <Button onClick={clearSearch} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={clearSearch} className="bg-primary hover:bg-secondary text-primary-foreground">
                 Show All Parking Spots
               </Button>
             </div>
@@ -337,7 +337,7 @@ const Index = () => {
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
                           {spot.title}
                         </CardTitle>
                         <CardDescription className="flex items-center text-gray-600 mt-1">
@@ -376,7 +376,7 @@ const Index = () => {
                       <span className="text-sm text-gray-500">{spot.distance} away</span>
                       <Button 
                         size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-primary hover:bg-secondary text-primary-foreground"
                         onClick={() => handleBookNow(spot.id)}
                       >
                         Book Now
@@ -391,16 +391,16 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+      <section className="py-20 bg-gradient-to-r from-primary to-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Turn Your Space Into Income
           </h2>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
               Have an unused parking space? List it on Arriv and start earning money today.
             </p>
           <Link to="/list-spot">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-8 py-3 text-lg shadow-xl">
+            <Button size="lg" className="bg-white text-primary hover:bg-gray-50 font-semibold px-8 py-3 text-lg shadow-xl">
               Start Earning Now
             </Button>
           </Link>
@@ -427,7 +427,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/how-it-works">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
                     Learn More
                   </Button>
                 </Link>
@@ -446,7 +446,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/manage-spots">
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                  <Button className="w-full bg-secondary hover:bg-accent text-secondary-foreground">
                     Manage Spots
                   </Button>
                 </Link>
@@ -465,7 +465,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/bookings">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button className="w-full bg-accent hover:bg-primary text-accent-foreground">
                     View Bookings
                   </Button>
                 </Link>

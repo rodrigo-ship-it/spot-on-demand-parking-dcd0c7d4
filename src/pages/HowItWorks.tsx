@@ -20,17 +20,17 @@ const HowItWorks = () => {
                 />
               </Link>
               <div className="hidden md:flex items-center space-x-6">
-                <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                <Link to="/" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   Home
                 </Link>
-                <Link to="/manage-spots" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   My Spots
                 </Link>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <Link to="/list-spot">
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                <Button className="bg-primary hover:bg-secondary text-primary-foreground">
                   List Your Spot
                 </Button>
               </Link>
@@ -47,7 +47,7 @@ const HowItWorks = () => {
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             How Arriv
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {" "}Works
             </span>
           </h1>
@@ -234,21 +234,21 @@ const HowItWorks = () => {
         </section>
 
         {/* CTA */}
-        <section className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-12">
+        <section className="text-center bg-gradient-to-r from-primary to-secondary rounded-2xl p-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-white/80 mb-8">
             Join thousands of users who trust Arriv for their parking needs
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-8">
+              <Button size="lg" className="bg-white text-primary hover:bg-gray-50 font-semibold px-8">
                 Find Parking
               </Button>
             </Link>
             <Link to="/list-spot">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary px-8">
                 List Your Spot
               </Button>
             </Link>
