@@ -385,15 +385,15 @@ const SpotDetails = () => {
                 <CardContent>
                   <div className="text-center space-y-4">
                     <div>
-                      <div className="text-3xl font-bold text-blue-600">${spotData.price}</div>
+                      <div className="text-3xl font-bold text-gray-900">${spotData.price}</div>
                       <div className="text-sm text-gray-600">per hour</div>
                     </div>
                     <div className="pt-2 border-t">
-                      <div className="text-3xl font-bold text-blue-600">{spotData.timesRented}</div>
+                      <div className="text-3xl font-bold text-gray-900">{spotData.timesRented}</div>
                       <div className="text-sm text-gray-600">times rented</div>
                     </div>
                     <div className="pt-2 border-t">
-                      <div className="text-3xl font-bold text-blue-600">{spotData.totalHoursRented}</div>
+                      <div className="text-3xl font-bold text-gray-900">{spotData.totalHoursRented}</div>
                       <div className="text-sm text-gray-600">total hours rented</div>
                     </div>
                   </div>
