@@ -1,12 +1,13 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
+import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete";
 import SearchResultsMap from "@/components/SearchResultsMap";
 
 const Index = () => {
@@ -203,11 +204,15 @@ const Index = () => {
             <div className="bg-white rounded-2xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100 max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-2">
-                  <Input
+                  <GooglePlacesAutocomplete
                     value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    placeholder="Where do you need parking? (e.g., Downtown, Airport, Mall)"
+                    onChange={setSearchLocation}
+                    placeholder="Where do you need parking?"
                     className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
+                    onPlaceSelect={(place) => {
+                      console.log("Selected place:", place);
+                      // You can use the selected place data for enhanced search
+                    }}
                   />
                 </div>
                 <Select value={searchDuration} onValueChange={setSearchDuration}>
