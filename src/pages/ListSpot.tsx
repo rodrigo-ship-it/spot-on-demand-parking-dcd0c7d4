@@ -359,7 +359,7 @@ const ListSpot = () => {
                     onClick={() => handleFeatureToggle(feature)}
                     className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                       formData.features.includes(feature)
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
@@ -449,7 +449,7 @@ const ListSpot = () => {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
@@ -467,7 +467,7 @@ const ListSpot = () => {
               key={num}
               className={`text-center p-4 rounded-lg transition-colors ${
                 currentStep === num
-                  ? "bg-blue-100 border-2 border-blue-500"
+                  ? "bg-primary/10 border-2 border-primary"
                   : currentStep > num
                   ? "bg-green-100 border-2 border-green-500"
                   : "bg-gray-100 border-2 border-gray-200"
@@ -475,14 +475,14 @@ const ListSpot = () => {
             >
               <Icon className={`w-6 h-6 mx-auto mb-2 ${
                 currentStep === num
-                  ? "text-blue-600"
+                  ? "text-primary"
                   : currentStep > num
                   ? "text-green-600"
                   : "text-gray-400"
               }`} />
               <div className={`text-sm font-medium ${
                 currentStep === num
-                  ? "text-blue-600"
+                  ? "text-primary"
                   : currentStep > num
                   ? "text-green-600"
                   : "text-gray-400"
@@ -527,14 +527,14 @@ const ListSpot = () => {
                   <Button
                     type="button"
                     onClick={handleNextStep}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-primary hover:bg-secondary text-primary-foreground"
                   >
                     Next Step
                   </Button>
                 ) : (
                   <Button
                     type="submit"
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-primary hover:bg-secondary text-primary-foreground"
                   >
                     List My Spot
                   </Button>
