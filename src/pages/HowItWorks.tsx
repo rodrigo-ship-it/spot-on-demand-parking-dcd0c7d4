@@ -248,7 +248,7 @@ const HowItWorks = () => {
               </Button>
             </Link>
             <Link to="/list-spot">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary px-8">
+              <Button size="lg" className="bg-white text-primary hover:bg-gray-50 font-semibold px-8">
                 List Your Spot
               </Button>
             </Link>
