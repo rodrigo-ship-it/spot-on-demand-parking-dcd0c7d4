@@ -13,11 +13,13 @@ const HowItWorks = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <Car className="w-5 h-5 text-white" />
-                </div>
+                <img 
+                  src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
+                  alt="Arriv Logo" 
+                  className="w-12 h-12"
+                />
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  ParkSpot
+                  Arriv
                 </h1>
               </Link>
               <div className="hidden md:flex items-center space-x-6">
@@ -47,14 +49,14 @@ const HowItWorks = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            How ParkSpot
+            How Arriv
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {" "}Works
             </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Whether you're looking for parking or wanting to earn money from your unused space, 
-            ParkSpot makes it simple and secure.
+            Arriv makes it simple and secure.
           </p>
         </div>
 
@@ -195,7 +197,7 @@ const HowItWorks = () => {
         {/* Benefits */}
         <section className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose ParkSpot?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
             <p className="text-lg text-gray-600">Built with trust, security, and convenience in mind</p>
           </div>
           
@@ -240,7 +242,7 @@ const HowItWorks = () => {
             Ready to Get Started?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of users who trust ParkSpot for their parking needs
+            Join thousands of users who trust Arriv for their parking needs
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/">

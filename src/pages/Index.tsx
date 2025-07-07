@@ -163,7 +163,7 @@ const Index = () => {
                 <img 
                   src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
                   alt="Arriv Logo" 
-                  className="w-12 h-12 hover:drop-shadow-lg transition-all duration-200"
+                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
               <div className="hidden md:flex items-center space-x-6">

@@ -43,9 +43,16 @@ const Profile = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center">
+              <Link to="/" className="flex items-center space-x-2">
                 <ArrowLeft className="w-5 h-5 mr-2 text-gray-600" />
-                <h1 className="text-2xl font-bold text-blue-600">ParkSpot</h1>
+                <img 
+                  src="/lovable-uploads/f37e97a8-1656-47c7-98b1-8da25e95fa8b.png" 
+                  alt="Arriv Logo" 
+                  className="w-8 h-8 mr-2"
+                />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Arriv
+                </h1>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
