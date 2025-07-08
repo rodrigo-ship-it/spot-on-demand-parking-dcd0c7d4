@@ -280,56 +280,41 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Parking Spots */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {hasSearched 
-                  ? `Search Results${searchLocation ? ` for "${searchLocation}"` : ''}`
-                  : 'Available Parking Spots'
-                }
-              </h2>
-              <p className="text-gray-600">
-                {hasSearched 
-                  ? `${parkingSpots.length} spot${parkingSpots.length !== 1 ? 's' : ''} found`
-                  : 'Find the perfect spot for your needs'
-                }
-              </p>
+      {/* Parking Spots - Only show when no search has been made */}
+      {!hasSearched && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Available Parking Spots
+                </h2>
+                <p className="text-gray-600">
+                  Find the perfect spot for your needs
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-                className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
 
-          {parkingSpots.length === 0 ? (
-            <div className="text-center py-12">
-              <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots found</h3>
-              <p className="text-gray-600 mb-4">Try searching for a different location or clear your search to see all available spots.</p>
-              <Button onClick={clearSearch} className="bg-primary hover:bg-secondary text-primary-foreground">
-                Show All Parking Spots
-              </Button>
-            </div>
-          ) : (
             <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-              {parkingSpots.map((spot) => (
+              {allParkingSpots.map((spot) => (
                 <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
                   <div className="relative">
                     <img 
@@ -394,9 +379,9 @@ const Index = () => {
                 </Card>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-secondary">
