@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
+import QRCodeDisplay from "@/components/QRCodeDisplay";
 
 const ManageSpots = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSpotForQR, setSelectedSpotForQR] = useState<number | null>(null);
 
   // Mock data for demonstration
   const parkingSpots = [
@@ -391,17 +393,39 @@ const ManageSpots = () => {
                         <Button variant="outline" size="sm">
                           <Edit className="w-4 h-4" />
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedSpotForQR(selectedSpotForQR === spot.id ? null : spot.id)}
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </Button>
                         <Button variant="outline" size="sm">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                 ))}
+               </TableBody>
+             </Table>
+           </CardContent>
+         </Card>
+
+         {/* QR Code Display */}
+         {selectedSpotForQR && (
+           <div className="mt-6">
+             {(() => {
+               const selectedSpot = parkingSpots.find(spot => spot.id === selectedSpotForQR);
+               return selectedSpot ? (
+                 <QRCodeDisplay 
+                   spotId={selectedSpot.id.toString()} 
+                   spotTitle={selectedSpot.title}
+                 />
+               ) : null;
+             })()}
+           </div>
+         )}
 
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">

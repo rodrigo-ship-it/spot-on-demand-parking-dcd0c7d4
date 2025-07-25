@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import BookingConfirmed from "./pages/BookingConfirmed";
 import NotFound from "./pages/NotFound";
 import BookSpot from "./pages/BookSpot";
+import RentQR from "./pages/RentQR";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/manage-spots" element={<ManageSpots />} />
           <Route path="/spot/:id" element={<SpotDetails />} />
           <Route path="/book-spot/:id" element={<BookSpot />} />
+          <Route path="/rent-qr/:spotId" element={<RentQR />} />
           <Route path="/bookings" element={<Bookings />} />
           <Route path="/booking-confirmed" element={<BookingConfirmed />} />
           <Route path="/profile" element={<Profile />} />

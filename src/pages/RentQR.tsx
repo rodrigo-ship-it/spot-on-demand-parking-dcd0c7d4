@@ -1,0 +1,219 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, MapPin, DollarSign, Car, CreditCard } from "lucide-react";
+import { toast } from "sonner";
+
+interface ParkingSpot {
+  id: string;
+  title: string;
+  location: string;
+  image: string;
+  description: string;
+  hourlyRate: number;
+  timeOptions: string[];
+  maxDuration: number;
+}
+
+// Mock data - replace with actual data fetching
+const mockSpots: ParkingSpot[] = [
+  {
+    id: "1",
+    title: "Downtown Business District",
+    location: "123 Main St, Downtown",
+    image: "/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png",
+    description: "Secure covered parking in the heart of downtown",
+    hourlyRate: 8,
+    timeOptions: ["1 hour", "2 hours", "4 hours", "8 hours"],
+    maxDuration: 8
+  }
+];
+
+const RentQR = () => {
+  const { spotId } = useParams();
+  const navigate = useNavigate();
+  const [spot, setSpot] = useState<ParkingSpot | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    // Find the spot by ID
+    const foundSpot = mockSpots.find(s => s.id === spotId);
+    if (foundSpot) {
+      setSpot(foundSpot);
+    } else {
+      toast.error("Parking spot not found");
+      navigate("/");
+    }
+  }, [spotId, navigate]);
+
+  const calculateTotal = () => {
+    if (!spot || !selectedDuration) return 0;
+    const hours = parseInt(selectedDuration.split(" ")[0]);
+    return spot.hourlyRate * hours;
+  };
+
+  const handleRentNow = async () => {
+    if (!customerEmail || !customerName || !selectedDuration) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      // Here you would integrate with Stripe for payment processing
+      // For now, we'll simulate the payment process
+      toast.success("Processing payment...");
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // In a real implementation, you would:
+      // 1. Create a Stripe checkout session
+      // 2. Process the payment
+      // 3. Send booking confirmation
+      
+      toast.success("Booking confirmed! Check your email for details.");
+      navigate("/booking-confirmed");
+    } catch (error) {
+      toast.error("Payment failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!spot) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading parking spot...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quick Rental</h1>
+          <p className="text-gray-600">Book this parking spot instantly - no account required</p>
+        </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-start space-x-4">
+              <img 
+                src={spot.image} 
+                alt={spot.title}
+                className="w-20 h-20 rounded-lg object-cover"
+              />
+              <div className="flex-1">
+                <CardTitle className="text-xl">{spot.title}</CardTitle>
+                <CardDescription className="flex items-center mt-1">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {spot.location}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">{spot.description}</p>
+            <div className="flex items-center text-lg font-semibold text-primary">
+              <DollarSign className="w-5 h-5 mr-1" />
+              ${spot.hourlyRate}/hour
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="w-5 h-5 mr-2" />
+              Rental Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="duration">How long do you need the spot?</Label>
+              <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {spot.timeOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedDuration && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Total Cost:</span>
+                  <span className="text-2xl font-bold text-primary">${calculateTotal()}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Your Information</CardTitle>
+            <CardDescription>We'll send your booking confirmation here</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="Enter your email address"
+                required
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Button 
+          onClick={handleRentNow}
+          disabled={isProcessing || !selectedDuration || !customerEmail || !customerName}
+          className="w-full h-12 text-lg bg-primary hover:bg-secondary"
+        >
+          <CreditCard className="w-5 h-5 mr-2" />
+          {isProcessing ? "Processing..." : `Pay $${calculateTotal()} & Rent Now`}
+        </Button>
+
+        <p className="text-sm text-gray-500 text-center mt-4">
+          Secure payment powered by Stripe. Your information is protected.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default RentQR;
