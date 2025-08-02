@@ -14,7 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          payment_intent_id: string | null
+          qr_code_used: boolean | null
+          renter_id: string
+          spot_id: string
+          start_time: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          payment_intent_id?: string | null
+          qr_code_used?: boolean | null
+          renter_id: string
+          spot_id: string
+          start_time: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          payment_intent_id?: string | null
+          qr_code_used?: boolean | null
+          renter_id?: string
+          spot_id?: string
+          start_time?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_spot_id_fkey"
+            columns: ["spot_id"]
+            isOneToOne: false
+            referencedRelation: "parking_spots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parking_spots: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          availability_schedule: Json | null
+          available_spots: number | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          owner_id: string
+          price_per_hour: number
+          rating: number | null
+          spot_type: string
+          title: string
+          total_reviews: number | null
+          total_spots: number | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          availability_schedule?: Json | null
+          available_spots?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          owner_id: string
+          price_per_hour?: number
+          rating?: number | null
+          spot_type: string
+          title: string
+          total_reviews?: number | null
+          total_spots?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          availability_schedule?: Json | null
+          available_spots?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          owner_id?: string
+          price_per_hour?: number
+          rating?: number | null
+          spot_type?: string
+          title?: string
+          total_reviews?: number | null
+          total_spots?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
