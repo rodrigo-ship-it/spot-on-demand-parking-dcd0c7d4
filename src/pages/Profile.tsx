@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,19 +8,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, User, Bell, CreditCard, Shield, Camera, Save, MapPin, Phone, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Profile = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  
   const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@email.com",
-    phone: "+1 (555) 123-4567",
-    bio: "Parking spot owner in downtown area. Happy to help commuters find convenient parking.",
-    address: "123 Main Street, Downtown",
-    city: "San Francisco",
-    state: "CA",
-    zipCode: "94105"
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    bio: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: ""
   });
 
   const [notifications, setNotifications] = useState({
@@ -35,6 +42,123 @@ const Profile = () => {
     twoFactorAuth: false,
     loginAlerts: true
   });
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
+  // Load profile data
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+            throw error;
+          }
+
+          if (profile) {
+            const names = (profile.full_name || '').split(' ');
+            setProfileData({
+              firstName: names[0] || '',
+              lastName: names.slice(1).join(' ') || '',
+              email: profile.email || user.email || '',
+              phone: profile.phone || '',
+              bio: '',
+              address: '',
+              city: '',
+              state: '',
+              zipCode: ''
+            });
+          } else {
+            // Create profile if it doesn't exist
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([{
+                user_id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || ''
+              }]);
+
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+            }
+
+            const names = (user.user_metadata?.full_name || '').split(' ');
+            setProfileData({
+              firstName: names[0] || '',
+              lastName: names.slice(1).join(' ') || '',
+              email: user.email || '',
+              phone: '',
+              bio: '',
+              address: '',
+              city: '',
+              state: '',
+              zipCode: ''
+            });
+          }
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          toast.error('Failed to load profile data');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+      toast.success('Signed out successfully');
+    } catch (error) {
+      toast.error('Error signing out');
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          email: profileData.email,
+          full_name: `${profileData.firstName} ${profileData.lastName}`.trim(),
+          phone: profileData.phone
+        });
+
+      if (error) throw error;
+
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -53,7 +177,7 @@ const Profile = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Button size="sm">Sign Out</Button>
+              <Button size="sm" onClick={handleSignOut}>Sign Out</Button>
             </div>
           </div>
         </div>
@@ -199,7 +323,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <Button>
+              <Button onClick={handleSaveProfile}>
                 <Save className="w-4 h-4 mr-2" />
                 Save Changes
               </Button>

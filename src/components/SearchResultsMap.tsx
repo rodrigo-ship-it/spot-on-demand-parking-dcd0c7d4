@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, DollarSign, Star, Clock, Car, Grid, List } from 'lucide-react';
 import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
+import MapComponent from '@/components/MapComponent';
 
 interface ParkingSpot {
   id: number;
@@ -63,90 +64,14 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, spo
 
   const MapView = () => (
     <div className="space-y-6">
-      {/* Simple Map Placeholder with Pins */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center">
-              <MapPin className="w-5 h-5 mr-2" />
-              Parking Near "{searchLocation}"
-            </span>
-            <span className="text-sm font-normal text-gray-600">
-              {spots.length} spots found
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative bg-gray-100 rounded-lg h-96 overflow-hidden">
-            {/* Mock Map Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100"></div>
-            
-            {/* Map Grid Lines */}
-            <div className="absolute inset-0 opacity-20">
-              {[...Array(8)].map((_, i) => (
-                <div key={`v-${i}`} className="absolute bg-gray-400 w-px h-full" style={{ left: `${(i + 1) * 12.5}%` }} />
-              ))}
-              {[...Array(6)].map((_, i) => (
-                <div key={`h-${i}`} className="absolute bg-gray-400 h-px w-full" style={{ top: `${(i + 1) * 16.67}%` }} />
-              ))}
-            </div>
-
-            {/* Search Location Pin */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-              <div className="relative">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
-                  📍
-                </div>
-                <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow-lg text-xs whitespace-nowrap">
-                  {searchLocation}
-                </div>
-              </div>
-            </div>
-
-            {/* Parking Spot Pins */}
-            {spotsWithCoords.slice(0, 6).map((spot, index) => {
-              const top = 20 + (index % 3) * 20 + Math.random() * 10;
-              const left = 20 + Math.floor(index / 3) * 30 + Math.random() * 20;
-              
-              return (
-                <div
-                  key={spot.id}
-                  className="absolute z-20 cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group"
-                  style={{ top: `${top}%`, left: `${left}%` }}
-                  onClick={() => onSpotSelect(spot.id)}
-                >
-                  <div className="relative">
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
-                      P
-                    </div>
-                    <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white p-3 rounded-lg shadow-xl text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-30 min-w-48">
-                      <div className="font-semibold">{spot.title}</div>
-                      <div className="text-gray-600">{spot.address}</div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="font-bold text-green-600">${spot.price}/hr</span>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">{spot.distance}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Map Legend */}
-            <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs">
-              <div className="font-semibold mb-2">Legend</div>
-              <div className="flex items-center mb-1">
-                <div className="w-4 h-4 bg-blue-600 rounded-full mr-2 flex items-center justify-center text-white text-xs">📍</div>
-                <span>Search Location</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-green-600 rounded-full mr-2 flex items-center justify-center text-white text-xs font-bold">P</div>
-                <span>Parking Spots</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <MapComponent 
+        spots={spotsWithCoords.map(spot => ({
+          ...spot,
+          latitude: spot.lat,
+          longitude: spot.lng,
+        }))}
+        onSpotSelect={onSpotSelect}
+      />
 
       {/* Quick Spot Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

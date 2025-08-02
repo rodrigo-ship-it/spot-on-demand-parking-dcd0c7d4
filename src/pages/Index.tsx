@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete";
 import SearchResultsMap from "@/components/SearchResultsMap";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -17,6 +18,7 @@ const Index = () => {
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const allParkingSpots = [
     {
@@ -149,8 +151,7 @@ const Index = () => {
   };
 
   const handleSignIn = () => {
-    toast.info("Sign in functionality would be implemented here");
-    console.log("Sign in clicked");
+    navigate("/auth");
   };
 
   return (
@@ -177,9 +178,22 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={handleSignIn}>
-                Sign In
-              </Button>
+              {user ? (
+                <>
+                  <Link to="/profile">
+                    <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={signOut}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={handleSignIn}>
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>

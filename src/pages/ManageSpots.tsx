@@ -153,7 +153,9 @@ const ManageSpots = () => {
                 </Button>
               </Link>
               <Button variant="outline" size="sm">Help</Button>
-              <Button size="sm">Sign In</Button>
+              <Link to="/auth">
+                <Button size="sm">Sign In</Button>
+              </Link>
             </div>
           </div>
         </div>
