@@ -45,12 +45,8 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Add markers for parking spots with realistic coordinates around NYC
-      const spotsWithCoords = spots.map((spot, index) => ({
-        ...spot,
-        latitude: 40.7128 + (Math.random() - 0.5) * 0.1, // Random coords around NYC
-        longitude: -74.006 + (Math.random() - 0.5) * 0.1,
-      }));
+      // Use the actual coordinates from spots data
+      const spotsWithCoords = spots;
 
       spotsWithCoords.forEach((spot) => {
         const marker = new mapboxgl.Marker({

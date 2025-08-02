@@ -17,6 +17,8 @@ interface ParkingSpot {
   totalSpots?: number;
   available: string;
   image: string;
+  latitude?: number;
+  longitude?: number;
   lat: number;
   lng: number;
 }
@@ -31,12 +33,11 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, spo
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Add coordinates to spots data for map display
+  // Use the actual coordinates from spots data or use defaults if missing
   const spotsWithCoords: ParkingSpot[] = spots.map((spot, index) => ({
     ...spot,
-    // Mock coordinates around San Francisco for demo
-    lat: 37.7749 + (Math.random() - 0.5) * 0.1,
-    lng: -122.4194 + (Math.random() - 0.5) * 0.1
+    lat: spot.latitude || 40.7128 + (Math.random() - 0.5) * 0.1,
+    lng: spot.longitude || -74.006 + (Math.random() - 0.5) * 0.1
   }));
 
   useEffect(() => {
@@ -50,15 +51,15 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, spo
           });
         },
         () => {
-          // Default to San Francisco if geolocation fails
-          setUserLocation({ lat: 37.7749, lng: -122.4194 });
+          // Default to NYC if geolocation fails
+          setUserLocation({ lat: 40.7128, lng: -74.006 });
         }
       );
     }
   }, []);
 
   const handleGetDirections = (spot: ParkingSpot) => {
-    const url = `https://www.google.com/maps/dir/${userLocation?.lat || 37.7749},${userLocation?.lng || -122.4194}/${spot.lat},${spot.lng}`;
+    const url = `https://www.google.com/maps/dir/${userLocation?.lat || 40.7128},${userLocation?.lng || -74.006}/${spot.lat},${spot.lng}`;
     window.open(url, '_blank');
   };
 

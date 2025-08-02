@@ -31,7 +31,9 @@ const Index = () => {
       type: "Covered Garage",
       spotType: "single-spot",
       available: "24/7",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.7589,
+      longitude: -73.9851
     },
     {
       id: 2,
@@ -43,7 +45,9 @@ const Index = () => {
       type: "Private Driveway",
       spotType: "single-spot",
       available: "Weekdays",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.7505,
+      longitude: -73.9934
     },
     {
       id: 3,
@@ -56,7 +60,9 @@ const Index = () => {
       spotType: "entire-garage",
       totalSpots: 150,
       available: "24/7",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.7614,
+      longitude: -73.9776
     },
     {
       id: 4,
@@ -68,7 +74,9 @@ const Index = () => {
       type: "Event Parking",
       spotType: "single-spot",
       available: "Game Days",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.7282,
+      longitude: -74.0776
     },
     {
       id: 5,
@@ -81,7 +89,9 @@ const Index = () => {
       spotType: "entire-garage",
       totalSpots: 300,
       available: "24/7",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.6892,
+      longitude: -74.1745
     },
     {
       id: 6,
@@ -94,7 +104,9 @@ const Index = () => {
       spotType: "entire-outdoor-lot",
       totalSpots: 80,
       available: "Mall Hours",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.7831,
+      longitude: -73.9712
     },
     {
       id: 7,
@@ -107,7 +119,9 @@ const Index = () => {
       spotType: "entire-outdoor-lot",
       totalSpots: 200,
       available: "Weekdays",
-      image: "/placeholder.svg"
+      image: "/placeholder.svg",
+      latitude: 40.8075,
+      longitude: -73.9626
     }
   ];
 
