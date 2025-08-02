@@ -39,7 +39,7 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-74.006, 40.7128], // Default to NYC
+        center: spots.length > 0 ? [spots[0].longitude, spots[0].latitude] : [-74.006, 40.7128],
         zoom: 12,
       });
 
@@ -47,6 +47,8 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
 
       // Use the actual coordinates from spots data
       const spotsWithCoords = spots;
+
+      console.log('Initializing map with spots:', spotsWithCoords);
 
       spotsWithCoords.forEach((spot) => {
         const marker = new mapboxgl.Marker({
@@ -75,7 +77,9 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
       (window as any).selectSpot = onSpotSelect;
 
       toast.success('Map loaded successfully!');
+      console.log('Map initialized successfully with', spotsWithCoords.length, 'spots');
     } catch (error) {
+      console.error('Map initialization error:', error);
       toast.error('Invalid Mapbox token. Please check your token and try again.');
       setTokenEntered(false);
     }
@@ -88,6 +92,16 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
       initializeMap(mapboxToken.trim());
     }
   };
+
+  useEffect(() => {
+    // Reinitialize map when spots change and token is already entered
+    if (tokenEntered && mapboxToken && spots.length > 0) {
+      if (map.current) {
+        map.current.remove();
+      }
+      initializeMap(mapboxToken);
+    }
+  }, [spots, tokenEntered, mapboxToken]);
 
   useEffect(() => {
     return () => {
