@@ -109,9 +109,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
       {/* Quick Spot Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {spotsWithDistance.slice(0, 6).map((spot) => (
-          <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20" onClick={() => onSpotSelect(spot.id)}>
-            <CardContent className="p-4">
-              <div className="space-y-3">
+          <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-40 flex flex-col" onClick={() => onSpotSelect(spot.id)}>
+            <CardContent className="p-4 flex-1 flex flex-col justify-between">
+              <div className="space-y-3 flex-1">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{spot.title}</h3>
