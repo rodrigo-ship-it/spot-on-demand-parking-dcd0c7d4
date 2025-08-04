@@ -136,21 +136,109 @@ const Index = () => {
 
     // Convert location to coordinates (mock geocoding)
     const getCoordinatesFromLocation = (location: string) => {
-      // Mock geocoding - in real app you'd use Google Geocoding API or similar
-      const mockCoords = {
+      // Mock geocoding for specific places and businesses
+      const placeCoords = {
+        // City areas
         'downtown': { latitude: 40.7589, longitude: -73.9851 },
         'airport': { latitude: 40.6413, longitude: -73.7781 },
         'brooklyn': { latitude: 40.6782, longitude: -73.9442 },
         'queens': { latitude: 40.7282, longitude: -73.7949 },
         'manhattan': { latitude: 40.7831, longitude: -73.9712 },
         'times square': { latitude: 40.7580, longitude: -73.9855 },
-        'central park': { latitude: 40.7829, longitude: -73.9654 }
+        'central park': { latitude: 40.7829, longitude: -73.9654 },
+        'wall street': { latitude: 40.7074, longitude: -74.0113 },
+        'chinatown': { latitude: 40.7158, longitude: -73.9970 },
+        'soho': { latitude: 40.7230, longitude: -74.0020 },
+        'east village': { latitude: 40.7265, longitude: -73.9815 },
+        'west village': { latitude: 40.7358, longitude: -74.0036 },
+        'upper east side': { latitude: 40.7736, longitude: -73.9566 },
+        'upper west side': { latitude: 40.7870, longitude: -73.9754 },
+        'tribeca': { latitude: 40.7195, longitude: -74.0089 },
+        'chelsea': { latitude: 40.7465, longitude: -73.9972 },
+        
+        // Popular restaurants and establishments
+        'joe\'s pizza': { latitude: 40.7505, longitude: -73.9934 },
+        'joes pizza': { latitude: 40.7505, longitude: -73.9934 },
+        'shake shack': { latitude: 40.7414, longitude: -73.9887 },
+        'katz\'s deli': { latitude: 40.7223, longitude: -73.9873 },
+        'katz deli': { latitude: 40.7223, longitude: -73.9873 },
+        'mcdonald\'s': { latitude: 40.7505, longitude: -73.9860 },
+        'mcdonalds': { latitude: 40.7505, longitude: -73.9860 },
+        'starbucks': { latitude: 40.7549, longitude: -73.9840 },
+        'whole foods': { latitude: 40.7614, longitude: -73.9776 },
+        'trader joe\'s': { latitude: 40.7505, longitude: -73.9880 },
+        'trader joes': { latitude: 40.7505, longitude: -73.9880 },
+        'target': { latitude: 40.7282, longitude: -73.9942 },
+        'walmart': { latitude: 40.6892, longitude: -74.1776 },
+        'home depot': { latitude: 40.7348, longitude: -73.9830 },
+        'best buy': { latitude: 40.7505, longitude: -73.9900 },
+        
+        // Hotels
+        'marriott': { latitude: 40.7505, longitude: -73.9857 },
+        'hilton': { latitude: 40.7614, longitude: -73.9776 },
+        'hyatt': { latitude: 40.7505, longitude: -73.9820 },
+        'holiday inn': { latitude: 40.7505, longitude: -73.9880 },
+        
+        // Landmarks and attractions
+        'empire state building': { latitude: 40.7484, longitude: -73.9857 },
+        'statue of liberty': { latitude: 40.6892, longitude: -74.0445 },
+        'brooklyn bridge': { latitude: 40.7061, longitude: -73.9969 },
+        'high line': { latitude: 40.7480, longitude: -74.0048 },
+        'madison square garden': { latitude: 40.7505, longitude: -73.9934 },
+        'yankee stadium': { latitude: 40.8296, longitude: -73.9262 },
+        'citi field': { latitude: 40.7571, longitude: -73.8458 },
+        'lincoln center': { latitude: 40.7722, longitude: -73.9838 },
+        'grand central': { latitude: 40.7527, longitude: -73.9772 },
+        'penn station': { latitude: 40.7505, longitude: -73.9934 },
+        
+        // Universities
+        'nyu': { latitude: 40.7295, longitude: -73.9965 },
+        'columbia': { latitude: 40.8075, longitude: -73.9626 },
+        'fordham': { latitude: 40.8616, longitude: -73.8875 },
+        
+        // Hospitals
+        'mount sinai': { latitude: 40.7903, longitude: -73.9505 },
+        'nyu langone': { latitude: 40.7391, longitude: -73.9719 },
+        'columbia presbyterian': { latitude: 40.8422, longitude: -73.9431 },
+        
+        // Shopping
+        'macy\'s': { latitude: 40.7505, longitude: -73.9898 },
+        'macys': { latitude: 40.7505, longitude: -73.9898 },
+        'bloomingdale\'s': { latitude: 40.7614, longitude: -73.9776 },
+        'bloomingdales': { latitude: 40.7614, longitude: -73.9776 },
+        'saks': { latitude: 40.7585, longitude: -73.9776 },
+        'bergdorf goodman': { latitude: 40.7614, longitude: -73.9741 }
       };
       
-      const lowerLocation = location.toLowerCase();
-      for (const [key, coords] of Object.entries(mockCoords)) {
-        if (lowerLocation.includes(key)) {
+      const lowerLocation = location.toLowerCase().trim();
+      
+      // First try exact match
+      if (placeCoords[lowerLocation]) {
+        return placeCoords[lowerLocation];
+      }
+      
+      // Then try partial matches
+      for (const [key, coords] of Object.entries(placeCoords)) {
+        if (lowerLocation.includes(key) || key.includes(lowerLocation)) {
           return coords;
+        }
+      }
+      
+      // If no match found, try to extract known keywords
+      const keywords = ['restaurant', 'cafe', 'coffee', 'pizza', 'burger', 'sushi', 'italian', 'chinese', 'mexican', 'thai', 'hotel', 'hospital', 'school', 'university', 'bank', 'gym', 'pharmacy', 'grocery', 'mall', 'store'];
+      
+      for (const keyword of keywords) {
+        if (lowerLocation.includes(keyword)) {
+          // Return a coordinate in a relevant area based on the type
+          if (['restaurant', 'cafe', 'coffee', 'pizza', 'burger', 'sushi', 'italian', 'chinese', 'mexican', 'thai'].includes(keyword)) {
+            return { latitude: 40.7505, longitude: -73.9934 }; // Midtown dining area
+          } else if (['hotel'].includes(keyword)) {
+            return { latitude: 40.7614, longitude: -73.9776 }; // Hotel district
+          } else if (['hospital'].includes(keyword)) {
+            return { latitude: 40.7903, longitude: -73.9505 }; // Medical area
+          } else if (['school', 'university'].includes(keyword)) {
+            return { latitude: 40.7295, longitude: -73.9965 }; // NYU area
+          }
         }
       }
       
