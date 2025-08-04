@@ -38,7 +38,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
       // TEMPORARY: Use your actual Mapbox token here for instant loading
       // Replace this with your actual Mapbox public token from mapbox.com
-      const MAPBOX_TOKEN = 'pk.YOUR_ACTUAL_MAPBOX_TOKEN_HERE';
+      const MAPBOX_TOKEN = pk.eyJ1Ijoicm9kcmlnby1hcnJpdiIsImEiOiJjbWR1ZmQ5a20weXphMmtwejJkY3pkOTk2In0.mO4oWjs7xAHkdUE0CV5XPg;
       
       if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'pk.YOUR_ACTUAL_MAPBOX_TOKEN_HERE') {
         // Fallback: try the edge function one more time
