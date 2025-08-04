@@ -26,61 +26,36 @@ interface MapComponentProps {
 export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get token from environment or use fallback
-  const getMapboxToken = () => {
-    // Try to get from localStorage first
-    const cachedToken = localStorage.getItem('mapbox_token_cached');
-    if (cachedToken) {
-      return cachedToken;
-    }
-    
-    // For now, let's use a manual token input as fallback
-    const manualToken = localStorage.getItem('mapboxToken');
-    if (manualToken) {
-      return manualToken;
-    }
-    
-    return null;
-  };
-
   const initializeMap = async () => {
-    if (!mapContainer.current) {
-      console.error('Map container not found');
-      return;
-    }
+    if (!mapContainer.current) return;
 
     try {
-      setError(null);
       setIsLoading(true);
+      setError(null);
 
-      // Get the token
-      const token = getMapboxToken();
+      console.log('Getting Mapbox token...');
+      const { data, error: functionError } = await supabase.functions.invoke('get-mapbox-token');
       
-      if (!token) {
-        // If no token available, prompt user to enter it
-        const userToken = prompt('Please enter your Mapbox public token (from mapbox.com):');
-        if (userToken) {
-          localStorage.setItem('mapboxToken', userToken);
-          mapboxgl.accessToken = userToken;
-        } else {
-          throw new Error('Mapbox token is required to display the map');
-        }
-      } else {
-        mapboxgl.accessToken = token;
+      if (functionError) {
+        console.error('Function error:', functionError);
+        throw new Error('Failed to get map configuration');
       }
 
-      console.log('Token set, creating map...');
-      
+      if (!data || !data.token) {
+        console.error('No token received:', data);
+        throw new Error('Map configuration not available');
+      }
+
+      mapboxgl.accessToken = data.token;
+
       const mapCenter: [number, number] = centerLocation 
         ? [centerLocation.longitude, centerLocation.latitude]
         : spots.length > 0 
           ? [spots[0].longitude, spots[0].latitude] 
           : [-74.006, 40.7128];
-
-      console.log('Creating map with center:', mapCenter);
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -90,8 +65,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-      console.log('Adding markers for', spots.length, 'spots');
 
       spots.forEach((spot) => {
         const marker = new mapboxgl.Marker({
@@ -119,7 +92,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           .addTo(map.current!);
       });
 
-      // Add marker for search location if provided
       if (centerLocation) {
         new mapboxgl.Marker({
           color: '#ef4444',
@@ -136,18 +108,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           .addTo(map.current!);
       }
 
-      // Add spot selection to window object for popup buttons
       (window as any).selectSpot = onSpotSelect;
 
-      console.log('Map initialization complete');
       setIsLoading(false);
-      toast.success('Map loaded successfully!');
+      console.log('Map loaded successfully');
 
     } catch (error) {
-      console.error('Map initialization failed:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load map');
+      console.error('Map error:', error);
+      setError('Failed to load map. Please refresh the page.');
       setIsLoading(false);
-      toast.error('Failed to load map. Please try refreshing the page.');
     }
   };
 
