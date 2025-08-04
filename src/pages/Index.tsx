@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
+  const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchDuration, setSearchDuration] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -133,6 +134,33 @@ const Index = () => {
       return;
     }
 
+    // Convert location to coordinates (mock geocoding)
+    const getCoordinatesFromLocation = (location: string) => {
+      // Mock geocoding - in real app you'd use Google Geocoding API or similar
+      const mockCoords = {
+        'downtown': { latitude: 40.7589, longitude: -73.9851 },
+        'airport': { latitude: 40.6413, longitude: -73.7781 },
+        'brooklyn': { latitude: 40.6782, longitude: -73.9442 },
+        'queens': { latitude: 40.7282, longitude: -73.7949 },
+        'manhattan': { latitude: 40.7831, longitude: -73.9712 },
+        'times square': { latitude: 40.7580, longitude: -73.9855 },
+        'central park': { latitude: 40.7829, longitude: -73.9654 }
+      };
+      
+      const lowerLocation = location.toLowerCase();
+      for (const [key, coords] of Object.entries(mockCoords)) {
+        if (lowerLocation.includes(key)) {
+          return coords;
+        }
+      }
+      
+      // Default to NYC if no match found
+      return { latitude: 40.7128, longitude: -74.0060 };
+    };
+
+    const coords = getCoordinatesFromLocation(searchLocation);
+    setSearchCoordinates(coords);
+
     console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
     
     // Filter spots based on search location
@@ -146,7 +174,7 @@ const Index = () => {
     setHasSearched(true);
 
     if (filtered.length === 0) {
-      toast.error(`No parking spots found near "${searchLocation}"`);
+      toast.info(`No parking spots found near "${searchLocation}". Try zooming out on the map to see nearby options.`);
     } else {
       toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
     }
@@ -154,6 +182,7 @@ const Index = () => {
 
   const clearSearch = () => {
     setSearchLocation("");
+    setSearchCoordinates(null);
     setSearchDuration("");
     setFilteredSpots([]);
     setHasSearched(false);
@@ -274,6 +303,7 @@ const Index = () => {
       {hasSearched && (
         <SearchResultsMap 
           searchLocation={searchLocation}
+          searchCoordinates={searchCoordinates}
           spots={filteredSpots.length > 0 ? filteredSpots : allParkingSpots}
           onSpotSelect={handleBookNow}
         />

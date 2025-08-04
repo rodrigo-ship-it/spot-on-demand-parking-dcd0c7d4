@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, DollarSign, Star, Clock, Car, Grid, List } from 'lucide-react';
 import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
-import MapComponent from '@/components/MapComponent';
+import { MapComponent } from '@/components/MapComponent';
 
 interface ParkingSpot {
   id: number;
@@ -25,20 +25,51 @@ interface ParkingSpot {
 
 interface SearchResultsMapProps {
   searchLocation: string;
+  searchCoordinates?: { latitude: number; longitude: number } | null;
   spots: ParkingSpot[];
   onSpotSelect: (spotId: number) => void;
 }
 
-const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, spots, onSpotSelect }) => {
+const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, spots, onSpotSelect }) => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Use the actual coordinates from spots data or use defaults if missing
-  const spotsWithCoords: ParkingSpot[] = spots.map((spot, index) => ({
-    ...spot,
-    lat: spot.latitude || 40.7128 + (Math.random() - 0.5) * 0.1,
-    lng: spot.longitude || -74.006 + (Math.random() - 0.5) * 0.1
-  }));
+  // Function to calculate distance between two coordinates
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 3959; // Radius of the Earth in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c; // Distance in miles
+    return d.toFixed(1);
+  };
+
+  // Update spots with distances calculated from search location (if available) or user location
+  const spotsWithDistance = spots.map(spot => {
+    const referenceLocation = searchCoordinates || userLocation || { lat: 40.7128, lng: -74.006 };
+    
+    // Handle both possible coordinate formats
+    const refLat = 'lat' in referenceLocation ? referenceLocation.lat : referenceLocation.latitude;
+    const refLng = 'lng' in referenceLocation ? referenceLocation.lng : referenceLocation.longitude;
+    
+    const distance = calculateDistance(
+      refLat,
+      refLng,
+      spot.latitude || spot.lat || 40.7128,
+      spot.longitude || spot.lng || -74.006
+    );
+    
+    return {
+      ...spot,
+      distance: `${distance} miles`,
+      lat: spot.latitude || spot.lat || 40.7128 + (Math.random() - 0.5) * 0.1,
+      lng: spot.longitude || spot.lng || -74.006 + (Math.random() - 0.5) * 0.1
+    };
+  });
 
   useEffect(() => {
     // Request user location for map centering
@@ -66,17 +97,18 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, spo
   const MapView = () => (
     <div className="space-y-6">
       <MapComponent 
-        spots={spotsWithCoords.map(spot => ({
+        spots={spotsWithDistance.map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,
         }))}
         onSpotSelect={onSpotSelect}
+        centerLocation={searchCoordinates}
       />
 
       {/* Quick Spot Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {spots.slice(0, 6).map((spot) => (
+        {spotsWithDistance.slice(0, 6).map((spot) => (
           <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20" onClick={() => onSpotSelect(spot.id)}>
             <CardContent className="p-4">
               <div className="space-y-3">
@@ -132,7 +164,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, spo
 
   const ListView = () => (
     <div className="space-y-4">
-      {spots.map((spot) => (
+      {spotsWithDistance.map((spot) => (
         <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
           <div className="flex">
             <div className="relative w-48 h-32">

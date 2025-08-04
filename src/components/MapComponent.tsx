@@ -22,9 +22,10 @@ interface ParkingSpot {
 interface MapComponentProps {
   spots: ParkingSpot[];
   onSpotSelect: (spotId: number) => void;
+  centerLocation?: { latitude: number; longitude: number } | null;
 }
 
-export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
+export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState(() => localStorage.getItem('mapboxToken') || '');
@@ -36,10 +37,16 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
     mapboxgl.accessToken = token;
     
     try {
+      const mapCenter: [number, number] = centerLocation 
+        ? [centerLocation.longitude, centerLocation.latitude]
+        : spots.length > 0 
+          ? [spots[0].longitude, spots[0].latitude] 
+          : [-74.006, 40.7128];
+
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: spots.length > 0 ? [spots[0].longitude, spots[0].latitude] : [-74.006, 40.7128],
+        center: mapCenter,
         zoom: 12,
       });
 
@@ -73,6 +80,23 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
           .addTo(map.current!);
       });
 
+      // Add marker for search location if provided
+      if (centerLocation) {
+        new mapboxgl.Marker({
+          color: '#ef4444', // Red color for search location
+        })
+          .setLngLat([centerLocation.longitude, centerLocation.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(`
+              <div class="p-2">
+                <h3 class="font-bold text-sm">Search Location</h3>
+                <p class="text-xs text-gray-600">Your searched location</p>
+              </div>
+            `)
+          )
+          .addTo(map.current!);
+      }
+
       // Add spot selection to window object for popup buttons
       (window as any).selectSpot = onSpotSelect;
 
@@ -95,14 +119,14 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
   };
 
   useEffect(() => {
-    // Reinitialize map when spots change and token is already entered
-    if (tokenEntered && mapboxToken && spots.length > 0) {
+    // Reinitialize map when spots or centerLocation change and token is already entered
+    if (tokenEntered && mapboxToken) {
       if (map.current) {
         map.current.remove();
       }
       initializeMap(mapboxToken);
     }
-  }, [spots, tokenEntered, mapboxToken]);
+  }, [spots, centerLocation, tokenEntered, mapboxToken]);
 
   useEffect(() => {
     return () => {
