@@ -13,10 +13,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ImageUpload } from "@/components/ImageUpload";
 
 const ListSpot = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -147,6 +148,7 @@ const ListSpot = () => {
         available_spots: totalSpots, // Initially all spots are available
         availability_schedule: availabilitySchedule,
         amenities: formData.features,
+        images: formData.photos.length > 0 ? formData.photos : null,
         is_active: true
       };
 
@@ -453,18 +455,12 @@ const ListSpot = () => {
 
             <div>
               <Label>Photos</Label>
-              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Camera className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="mt-2">
-                  <Button variant="outline" onClick={() => toast.info("Photo upload functionality would be implemented here")}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Photos
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  Add photos to help renters find and identify your spot
-                </p>
-              </div>
+              <ImageUpload
+                images={formData.photos}
+                onImagesChange={(images) => setFormData({...formData, photos: images})}
+                maxImages={5}
+                spotId="temp"
+              />
             </div>
           </div>
         );

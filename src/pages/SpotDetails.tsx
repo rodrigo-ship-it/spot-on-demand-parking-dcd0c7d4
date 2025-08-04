@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3 } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RatingSystem } from "@/components/RatingSystem";
 import { ReviewDialog } from "@/components/ReviewDialog";
@@ -31,8 +31,9 @@ const SpotDetails = () => {
   const [spotData, setSpotData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Fetch spot data from database
+  // Fetch spot data from database with real-time updates
   useEffect(() => {
     const fetchSpotData = async () => {
       if (!id) {
@@ -69,6 +70,28 @@ const SpotDetails = () => {
     };
 
     fetchSpotData();
+
+    // Set up real-time subscription for this specific spot
+    const channel = supabase
+      .channel(`spot_${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'parking_spots',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Real-time spot update:', payload);
+          setSpotData(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [id]);
 
   // Mock booking data for active session
@@ -270,6 +293,83 @@ const SpotDetails = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Image Gallery */}
+            {spotData.images && spotData.images.length > 0 && (
+              <Card>
+                <CardContent className="p-0">
+                  <div className="relative">
+                    <img
+                      src={spotData.images[currentImageIndex]}
+                      alt={`${spotData.title} - Image ${currentImageIndex + 1}`}
+                      className="w-full h-96 object-cover rounded-t-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder.svg';
+                      }}
+                    />
+                    
+                    {/* Navigation buttons */}
+                    {spotData.images.length > 1 && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
+                          onClick={() => setCurrentImageIndex(
+                            currentImageIndex === 0 ? spotData.images.length - 1 : currentImageIndex - 1
+                          )}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
+                          onClick={() => setCurrentImageIndex(
+                            currentImageIndex === spotData.images.length - 1 ? 0 : currentImageIndex + 1
+                          )}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                    
+                    {/* Image counter */}
+                    <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-lg text-sm">
+                      {currentImageIndex + 1} / {spotData.images.length}
+                    </div>
+                  </div>
+                  
+                  {/* Thumbnail strip */}
+                  {spotData.images.length > 1 && (
+                    <div className="p-4 border-t">
+                      <div className="flex gap-2 overflow-x-auto">
+                        {spotData.images.map((image: string, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => setCurrentImageIndex(index)}
+                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                              currentImageIndex === index ? 'border-primary' : 'border-gray-200'
+                            }`}
+                          >
+                            <img
+                              src={image}
+                              alt={`Thumbnail ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/placeholder.svg';
+                              }}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Availability Display */}
             <AvailabilityDisplay 
