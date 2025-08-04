@@ -17,6 +17,8 @@ import { ExtensionSystem } from "@/components/ExtensionSystem";
 import { PenaltySystem } from "@/components/PenaltySystem";
 import { TimeManagement } from "@/components/TimeManagement";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const SpotDetails = () => {
   const { id } = useParams();
@@ -26,29 +28,48 @@ const SpotDetails = () => {
   const isBookingMode = action === "book";
   const isOwnerView = action === "manage";
 
-  // Mock data - in real app this would come from API
-  const [spotData] = useState({
-    id: parseInt(id || "1"),
-    title: "Downtown Garage - Secure Parking",
-    description: "Convenient covered parking spot in the heart of downtown. Perfect for daily commuters and event attendees. Secure, well-lit, and easily accessible.",
-    address: "123 Main Street, Downtown",
-    city: "San Francisco",
-    state: "CA",
-    zipCode: "94105",
-    price: 8,
-    type: "Covered Garage",
-    owner: "Sarah Johnson",
-    rating: 4.8,
-    totalReviews: 24,
-    totalBookings: 156,
-    monthlyEarnings: 2840,
-    isActive: true,
-    availability: "24/7",
-    features: ["Covered", "Security Camera", "EV Charging"],
-    instructions: "Enter through main entrance, spot #42 on level 2",
-    timesRented: 15,
-    totalHoursRented: 180
-  });
+  const [spotData, setSpotData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch spot data from database
+  useEffect(() => {
+    const fetchSpotData = async () => {
+      if (!id) {
+        setError("No spot ID provided");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data: spot, error: spotError } = await supabase
+          .from('parking_spots')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (spotError) {
+          throw spotError;
+        }
+
+        if (!spot) {
+          setError("Parking spot not found");
+          setLoading(false);
+          return;
+        }
+
+        setSpotData(spot);
+      } catch (err: any) {
+        console.error('Error fetching spot data:', err);
+        setError(err.message || "Failed to load spot data");
+        toast.error("Failed to load parking spot details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpotData();
+  }, [id]);
 
   // Mock booking data for active session
   const [mockBookingData] = useState({
@@ -88,24 +109,54 @@ const SpotDetails = () => {
 
   // Handle continue to book button click
   const handleContinueToBook = () => {
+    if (!spotData) return;
+    
     // Navigate to new single-page booking flow
     navigate('/book-spot/' + id, { 
       state: { 
         spotData: {
           id: id,
           title: spotData.title,
-          price: spotData.price,
+          price: Number(spotData.price_per_hour),
           address: spotData.address,
-          city: spotData.city,
-          state: spotData.state,
-          zipCode: spotData.zipCode,
-          type: spotData.type,
-          features: spotData.features,
-          instructions: spotData.instructions
+          type: spotData.spot_type,
+          features: spotData.amenities || [],
+          description: spotData.description
         }
       }
     });
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading spot details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !spotData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Spot Not Found</h1>
+          <p className="text-gray-600 mb-4">{error || "The parking spot you're looking for doesn't exist."}</p>
+          <Link to="/">
+            <Button>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Search
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -161,17 +212,20 @@ const SpotDetails = () => {
                     <CardTitle className="text-2xl mb-2">{spotData.title}</CardTitle>
                     <div className="flex items-center text-gray-600 mb-2">
                       <MapPin className="w-4 h-4 mr-2" />
-                      {spotData.address}, {spotData.city}, {spotData.state} {spotData.zipCode}
+                      {spotData.address}
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center">
                         <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                        <span className="font-medium">{spotData.rating}</span>
-                        <span className="text-gray-600 ml-1">({spotData.totalReviews} reviews)</span>
+                        <span className="font-medium">{spotData.rating || 0}</span>
+                        <span className="text-gray-600 ml-1">({spotData.total_reviews || 0} reviews)</span>
                       </div>
                       <Badge variant="secondary" className="flex items-center">
                         <Car className="w-3 h-3 mr-1" />
-                        {spotData.type}
+                        {spotData.spot_type}
+                      </Badge>
+                      <Badge variant={spotData.is_active ? "default" : "secondary"}>
+                        {spotData.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                   </div>
@@ -188,34 +242,39 @@ const SpotDetails = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">{spotData.description}</p>
+                <p className="text-gray-700 mb-4">{spotData.description || "No description available."}</p>
                 
                 {/* Features */}
-                <div className="mb-4">
-                  <h3 className="font-semibold mb-2">Features</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {spotData.features.map((feature, index) => (
-                      <Badge key={index} variant="outline">
-                        {feature}
-                      </Badge>
-                    ))}
+                {spotData.amenities && spotData.amenities.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="font-semibold mb-2">Amenities</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {spotData.amenities.map((amenity: string, index: number) => (
+                        <Badge key={index} variant="outline">
+                          {amenity}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Special Instructions */}
-                <div>
-                  <h3 className="font-semibold mb-2">Parking Instructions</h3>
-                  <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">
-                    {spotData.instructions}
-                  </p>
+                {/* Availability */}
+                <div className="mb-4">
+                  <h3 className="font-semibold mb-2">Availability</h3>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Available Spots:</span>
+                      <span className="font-medium">{spotData.available_spots}/{spotData.total_spots}</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Availability Display */}
             <AvailabilityDisplay 
-              spotType={spotData.type}
-              spotId={spotData.id.toString()}
+              spotType={spotData.spot_type}
+              spotId={spotData.id}
             />
 
             {/* Time Management (only for booking mode with active session) */}
@@ -223,7 +282,7 @@ const SpotDetails = () => {
               <TimeManagement 
                 bookingId={mockBookingData.bookingId}
                 endTime={mockBookingData.endTime}
-                pricePerHour={spotData.price}
+                pricePerHour={Number(spotData.price_per_hour)}
                 userViolations={mockBookingData.userViolations}
                 accountStatus={mockBookingData.accountStatus}
                 isActive={mockBookingData.isActiveSession}
@@ -234,10 +293,10 @@ const SpotDetails = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Reviews ({spotData.totalReviews})</span>
+                  <span>Reviews ({spotData.total_reviews || 0})</span>
                   <div className="flex items-center">
                     <Star className="w-5 h-5 text-yellow-400 mr-1" />
-                    <span className="font-medium">{spotData.rating}</span>
+                    <span className="font-medium">{spotData.rating || 0}</span>
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -387,16 +446,16 @@ const SpotDetails = () => {
                 <CardContent>
                   <div className="text-center space-y-4">
                     <div>
-                      <div className="text-3xl font-bold text-gray-900">${spotData.price}</div>
+                      <div className="text-3xl font-bold text-gray-900">${Number(spotData.price_per_hour).toFixed(2)}</div>
                       <div className="text-sm text-gray-600">per hour</div>
                     </div>
                     <div className="pt-2 border-t">
-                      <div className="text-3xl font-bold text-gray-900">{spotData.timesRented}</div>
-                      <div className="text-sm text-gray-600">times rented</div>
+                      <div className="text-3xl font-bold text-gray-900">{spotData.total_spots}</div>
+                      <div className="text-sm text-gray-600">total spots</div>
                     </div>
                     <div className="pt-2 border-t">
-                      <div className="text-3xl font-bold text-gray-900">{spotData.totalHoursRented}</div>
-                      <div className="text-sm text-gray-600">total hours rented</div>
+                      <div className="text-3xl font-bold text-gray-900">{spotData.available_spots}</div>
+                      <div className="text-sm text-gray-600">available now</div>
                     </div>
                   </div>
                 </CardContent>
