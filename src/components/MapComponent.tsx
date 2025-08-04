@@ -53,18 +53,27 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   };
 
   const initializeMap = async () => {
-    if (!mapContainer.current) return;
+    console.log('🗺️ Starting map initialization...');
+    
+    if (!mapContainer.current) {
+      console.error('❌ Map container not found');
+      return;
+    }
 
     try {
+      console.log('⏳ Setting loading state...');
       setIsLoading(true);
       setError(null);
       
+      console.log('🔑 Fetching Mapbox token...');
       const token = await fetchMapboxToken();
+      console.log('✅ Token received:', token ? 'Token exists' : 'No token');
       
       if (!token) {
         throw new Error('No Mapbox token available');
       }
 
+      console.log('🌍 Setting Mapbox access token...');
       mapboxgl.accessToken = token;
       
       const mapCenter: [number, number] = centerLocation 
@@ -73,6 +82,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           ? [spots[0].longitude, spots[0].latitude] 
           : [-74.006, 40.7128];
 
+      console.log('📍 Map center:', mapCenter);
+      console.log('🏗️ Creating new Mapbox instance...');
+
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
@@ -80,12 +92,16 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         zoom: 12,
       });
 
+      console.log('✅ Mapbox instance created successfully');
+
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      console.log('🎯 Adding navigation controls...');
 
       // Use the actual coordinates from spots data
       const spotsWithCoords = spots;
 
-      console.log('Initializing map with spots:', spotsWithCoords);
+      console.log('📌 Adding markers for', spotsWithCoords.length, 'spots');
 
       spotsWithCoords.forEach((spot) => {
         const marker = new mapboxgl.Marker({
@@ -134,8 +150,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       (window as any).selectSpot = onSpotSelect;
 
       toast.success('Map loaded successfully!');
-      console.log('Map initialized successfully with', spotsWithCoords.length, 'spots');
+      console.log('🎉 Map initialized successfully with', spotsWithCoords.length, 'spots');
+      console.log('🔄 Setting loading to false...');
       setIsLoading(false);
+      console.log('✅ Map initialization complete!');
     } catch (error) {
       console.error('Map initialization error:', error);
       setError('Failed to load map. Please try refreshing the page.');
