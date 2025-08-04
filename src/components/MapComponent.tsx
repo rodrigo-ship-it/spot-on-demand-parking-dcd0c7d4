@@ -27,8 +27,8 @@ interface MapComponentProps {
 export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [tokenEntered, setTokenEntered] = useState(false);
+  const [mapboxToken, setMapboxToken] = useState(() => localStorage.getItem('mapboxToken') || '');
+  const [tokenEntered, setTokenEntered] = useState(() => !!localStorage.getItem('mapboxToken'));
 
   const initializeMap = (token: string) => {
     if (!mapContainer.current || !token) return;
@@ -80,14 +80,15 @@ export const MapComponent = ({ spots, onSpotSelect }: MapComponentProps) => {
       console.log('Map initialized successfully with', spotsWithCoords.length, 'spots');
     } catch (error) {
       console.error('Map initialization error:', error);
-      toast.error('Invalid Mapbox token. Please check your token and try again.');
-      setTokenEntered(false);
+      toast.error('Map initialization failed. Please try again.');
+      // Don't reset tokenEntered on search-related map updates
     }
   };
 
   const handleTokenSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mapboxToken.trim()) {
+      localStorage.setItem('mapboxToken', mapboxToken.trim());
       setTokenEntered(true);
       initializeMap(mapboxToken.trim());
     }
