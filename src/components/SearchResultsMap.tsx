@@ -120,9 +120,12 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                       {spot.address}
                     </div>
                   </div>
-                  <div className="flex items-center text-lg font-bold text-gray-900">
-                    <DollarSign className="w-4 h-4" />
-                    {spot.price}/hr
+                  <div className="text-right">
+                    <div className="flex items-center text-lg font-bold text-gray-900">
+                      <DollarSign className="w-4 h-4" />
+                      {spot.price}/hr
+                    </div>
+                    <div className="text-sm text-gray-500">{spot.distance}</div>
                   </div>
                 </div>
                 
