@@ -36,24 +36,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       setIsLoading(true);
       setError(null);
 
-      // TEMPORARY: Use your actual Mapbox token here for instant loading
-      // Replace this with your actual Mapbox public token from mapbox.com
-      const MAPBOX_TOKEN = pk.eyJ1Ijoicm9kcmlnby1hcnJpdiIsImEiOiJjbWR1ZmQ5a20weXphMmtwejJkY3pkOTk2In0.mO4oWjs7xAHkdUE0CV5XPg;
-      
-      if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'pk.YOUR_ACTUAL_MAPBOX_TOKEN_HERE') {
-        // Fallback: try the edge function one more time
-        console.log('Getting token from Supabase...');
-        const { data, error: functionError } = await supabase.functions.invoke('get-mapbox-token');
-        
-        if (functionError || !data || !data.token) {
-          throw new Error('Please add your Mapbox token to the code');
-        }
-        
-        mapboxgl.accessToken = data.token;
-      } else {
-        // Use the hardcoded token for instant loading
-        mapboxgl.accessToken = MAPBOX_TOKEN;
-      }
+      // Use the Mapbox token directly for instant loading
+      const MAPBOX_TOKEN = 'pk.eyJ1Ijoicm9kcmlnby1hcnJpdiIsImEiOiJjbWR1ZmQ5a20weXphMmtwejJkY3pkOTk2In0.mO4oWjs7xAHkdUE0CV5XPg';
+      mapboxgl.accessToken = MAPBOX_TOKEN;
 
       const mapCenter: [number, number] = centerLocation 
         ? [centerLocation.longitude, centerLocation.latitude]
