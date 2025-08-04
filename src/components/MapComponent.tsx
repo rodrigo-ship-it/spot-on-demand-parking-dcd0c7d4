@@ -28,33 +28,43 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const map = useRef<mapboxgl.Map | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tokenReady, setTokenReady] = useState(false);
 
-  const getMapboxToken = async (): Promise<string> => {
-    // First check localStorage for instant loading
-    const cachedToken = localStorage.getItem('mapbox_token_cached');
-    if (cachedToken) {
-      console.log('Using cached token for instant loading');
-      return cachedToken;
-    }
+  // Pre-fetch token immediately when component mounts
+  useEffect(() => {
+    const prefetchToken = async () => {
+      try {
+        // Check if token is already cached
+        const cachedToken = localStorage.getItem('mapbox_token_cached');
+        if (cachedToken) {
+          console.log('Token already cached and ready');
+          mapboxgl.accessToken = cachedToken;
+          setTokenReady(true);
+          return;
+        }
 
-    // If no cached token, fetch from Supabase and cache it
-    console.log('Fetching token from Supabase...');
-    const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
-    
-    if (tokenError) {
-      throw new Error(`Failed to get Mapbox token: ${tokenError.message}`);
-    }
+        // If not cached, fetch from Supabase in background
+        console.log('Pre-fetching token from Supabase...');
+        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
+        
+        if (tokenError) {
+          console.error('Error pre-fetching token:', tokenError);
+          return;
+        }
 
-    if (!tokenData || !tokenData.token) {
-      throw new Error('No Mapbox token received from server');
-    }
+        if (tokenData && tokenData.token) {
+          localStorage.setItem('mapbox_token_cached', tokenData.token);
+          mapboxgl.accessToken = tokenData.token;
+          setTokenReady(true);
+          console.log('Token pre-fetched and ready for instant map loading');
+        }
+      } catch (error) {
+        console.error('Error during token pre-fetch:', error);
+      }
+    };
 
-    // Cache the token for instant future loads
-    localStorage.setItem('mapbox_token_cached', tokenData.token);
-    console.log('Token cached for future instant loading');
-    
-    return tokenData.token;
-  };
+    prefetchToken();
+  }, []);
 
   const initializeMap = async () => {
     if (!mapContainer.current) {
@@ -63,16 +73,21 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     }
 
     try {
-      // Only show loading if we don't have a cached token
-      const cachedToken = localStorage.getItem('mapbox_token_cached');
-      if (!cachedToken) {
-        setIsLoading(true);
-      }
-      
       setError(null);
 
-      const token = await getMapboxToken();
-      mapboxgl.accessToken = token;
+      // Token should already be set by pre-fetch, but double check
+      if (!mapboxgl.accessToken) {
+        console.log('Token not ready, waiting...');
+        setIsLoading(true);
+        // Wait a moment for pre-fetch to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (!mapboxgl.accessToken) {
+          throw new Error('Mapbox token not available');
+        }
+      }
+
+      console.log('Token ready, creating map instantly...');
       
       const mapCenter: [number, number] = centerLocation 
         ? [centerLocation.longitude, centerLocation.latitude]
