@@ -36,20 +36,24 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       setIsLoading(true);
       setError(null);
 
-      console.log('Getting Mapbox token...');
-      const { data, error: functionError } = await supabase.functions.invoke('get-mapbox-token');
+      // TEMPORARY: Use your actual Mapbox token here for instant loading
+      // Replace this with your actual Mapbox public token from mapbox.com
+      const MAPBOX_TOKEN = 'pk.YOUR_ACTUAL_MAPBOX_TOKEN_HERE';
       
-      if (functionError) {
-        console.error('Function error:', functionError);
-        throw new Error('Failed to get map configuration');
+      if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'pk.YOUR_ACTUAL_MAPBOX_TOKEN_HERE') {
+        // Fallback: try the edge function one more time
+        console.log('Getting token from Supabase...');
+        const { data, error: functionError } = await supabase.functions.invoke('get-mapbox-token');
+        
+        if (functionError || !data || !data.token) {
+          throw new Error('Please add your Mapbox token to the code');
+        }
+        
+        mapboxgl.accessToken = data.token;
+      } else {
+        // Use the hardcoded token for instant loading
+        mapboxgl.accessToken = MAPBOX_TOKEN;
       }
-
-      if (!data || !data.token) {
-        console.error('No token received:', data);
-        throw new Error('Map configuration not available');
-      }
-
-      mapboxgl.accessToken = data.token;
 
       const mapCenter: [number, number] = centerLocation 
         ? [centerLocation.longitude, centerLocation.latitude]
