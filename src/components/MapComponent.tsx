@@ -26,7 +26,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const map = useRef<mapboxgl.Map | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current) return;
 
     // Set the Mapbox access token immediately
     mapboxgl.accessToken = 'pk.eyJ1Ijoicm9kcmlnby1hcnJpdiIsImEiOiJjbWR1ZmQ5a20weXphMmtwejJkY3pkOTk2In0.mO4oWjs7xAHkdUE0CV5XPg';
@@ -37,11 +37,14 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         ? [spots[0].longitude, spots[0].latitude] 
         : [-74.006, 40.7128];
 
+    // Create map instance immediately
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: mapCenter,
       zoom: 12,
+      attributionControl: false, // Faster loading
+      logoPosition: 'bottom-right'
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
