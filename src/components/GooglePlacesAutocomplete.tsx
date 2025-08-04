@@ -142,7 +142,26 @@ export const GooglePlacesAutocomplete = ({
     try {
       setIsLoading(true);
       
-      // Use full-text search with ranking
+      // First try Google Places API via edge function
+      try {
+        const { data: googlePlaces, error: edgeFunctionError } = await supabase.functions.invoke('search-places', {
+          body: { 
+            query,
+            userLocation: userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null
+          }
+        });
+
+        if (!edgeFunctionError && googlePlaces?.places?.length > 0) {
+          setSuggestions(googlePlaces.places);
+          return;
+        }
+        
+        console.warn('Google Places API fallback to local database:', edgeFunctionError);
+      } catch (error) {
+        console.warn('Google Places API error, falling back to local database:', error);
+      }
+      
+      // Fallback to local database search
       const { data: places, error } = await supabase
         .from('places')
         .select('*')
