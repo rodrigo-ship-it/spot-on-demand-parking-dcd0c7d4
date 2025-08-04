@@ -17,6 +17,7 @@ interface ParkingSpot {
   longitude: number;
   type: string;
   available: string;
+  distance?: string;
 }
 
 interface MapComponentProps {
@@ -67,10 +68,13 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               <div class="p-2">
                 <h3 class="font-bold text-sm">${spot.title}</h3>
                 <p class="text-xs text-gray-600">${spot.address}</p>
-                <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                <div class="flex justify-between items-center mb-2">
+                  <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                  ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+                </div>
                 <button 
                   onclick="window.selectSpot(${spot.id})" 
-                  class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                  class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
                 >
                   Book Now
                 </button>
