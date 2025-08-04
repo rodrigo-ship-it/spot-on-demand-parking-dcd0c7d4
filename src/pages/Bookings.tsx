@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPin, Navigation, Phone, Mail, Star, Camera } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReviewDialog } from "@/components/ReviewDialog";
 import { TimeManagement } from "@/components/TimeManagement";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Bookings = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [reviewDialog, setReviewDialog] = useState<{
     isOpen: boolean;
     type: "rating" | "dispute";
@@ -34,6 +40,95 @@ const Bookings = () => {
     bookingId: "",
   });
 
+  // Load user bookings
+  useEffect(() => {
+    const loadBookings = async () => {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select(`
+            *,
+            parking_spots (
+              title,
+              address,
+              price_per_hour,
+              owner_id
+            )
+          `)
+          .eq('renter_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        // Transform data to match UI expectations
+        const transformedBookings = await Promise.all(data?.map(async booking => {
+          const startDate = new Date(booking.start_time);
+          const endDate = new Date(booking.end_time);
+          const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
+          
+          // Determine status based on times and current booking status
+          let status = 'Upcoming';
+          const now = new Date();
+          if (booking.status === 'completed') {
+            status = 'Completed';
+          } else if (now >= startDate && now <= endDate) {
+            status = 'Active';
+          } else if (now > endDate) {
+            status = 'Completed';
+          }
+
+          // Get owner profile separately
+          let ownerName = 'Unknown Owner';
+          let ownerPhone = 'No phone';
+          if (booking.parking_spots?.owner_id) {
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('full_name, phone')
+              .eq('user_id', booking.parking_spots.owner_id)
+              .single();
+            
+            if (ownerProfile) {
+              ownerName = ownerProfile.full_name || 'Unknown Owner';
+              ownerPhone = ownerProfile.phone || 'No phone';
+            }
+          }
+
+          return {
+            id: booking.id,
+            spotTitle: booking.parking_spots?.title || 'Unknown Spot',
+            spotAddress: booking.parking_spots?.address || 'Unknown Address',
+            spotOwner: ownerName,
+            ownerPhone: ownerPhone,
+            date: startDate.toLocaleDateString(),
+            startTime: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            endTime: endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            duration: `${duration} hours`,
+            pricePerHour: booking.parking_spots?.price_per_hour || 0,
+            totalCost: Number(booking.total_amount) || 0,
+            status,
+            paymentStatus: booking.status === 'pending' ? 'Pending' : 'Paid'
+          };
+        }) || []);
+
+        setBookings(transformedBookings);
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+        toast.error("Failed to load bookings");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBookings();
+  }, [user, navigate]);
+
   // Mock user violations data
   const userViolations = [
     {
@@ -45,56 +140,7 @@ const Bookings = () => {
     }
   ];
 
-  // Mock data showing customer's reservations
-  const myReservations = [
-    {
-      id: "BK001",
-      spotTitle: "Downtown Garage Spot",
-      spotAddress: "123 Main St, Downtown",
-      spotOwner: "Jane Smith",
-      ownerPhone: "+1 (555) 111-2222",
-      date: "2024-06-05",
-      startTime: "9:00 AM",
-      endTime: "5:00 PM",
-      duration: "8 hours",
-      pricePerHour: 8,
-      totalCost: 64,
-      status: "Upcoming",
-      paymentStatus: "Paid"
-    },
-    {
-      id: "BK002",
-      spotTitle: "Residential Driveway",
-      spotAddress: "456 Oak Avenue",
-      spotOwner: "Bob Johnson",
-      ownerPhone: "+1 (555) 333-4444",
-      date: "2024-06-03",
-      startTime: "8:00 AM",
-      endTime: "6:00 PM",
-      duration: "10 hours",
-      pricePerHour: 6,
-      totalCost: 60,
-      status: "Active",
-      paymentStatus: "Paid"
-    },
-    {
-      id: "BK003",
-      spotTitle: "Stadium Event Parking",
-      spotAddress: "789 Sports Way",
-      spotOwner: "Alice Wilson",
-      ownerPhone: "+1 (555) 555-6666",
-      date: "2024-05-30",
-      startTime: "6:00 PM",
-      endTime: "11:00 PM",
-      duration: "5 hours",
-      pricePerHour: 25,
-      totalCost: 125,
-      status: "Completed",
-      paymentStatus: "Paid"
-    }
-  ];
-
-  const filteredReservations = myReservations.filter(reservation => {
+  const filteredReservations = bookings.filter(reservation => {
     const matchesSearch = reservation.spotTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.spotAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -163,6 +209,17 @@ const Bookings = () => {
   const closeTimeManagementDialog = () => {
     setTimeManagementDialog(prev => ({ ...prev, isOpen: false }));
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">

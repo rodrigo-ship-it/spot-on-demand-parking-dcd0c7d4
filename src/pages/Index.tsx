@@ -201,6 +201,11 @@ const Index = () => {
             <div className="flex items-center space-x-3">
               {user ? (
                 <>
+                  <Link to="/bookings">
+                    <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                      My Bookings
+                    </Button>
+                  </Link>
                   <Link to="/profile">
                     <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
                       Profile

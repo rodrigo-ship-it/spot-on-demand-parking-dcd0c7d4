@@ -10,31 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BookSpot = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const spotData = location.state?.spotData;
-
-  // Pre-filled user data (would come from user profile in real app)
-  const [userProfile] = useState({
-    name: "John Smith",
-    email: "john.smith@email.com",
-    phone: "+1 (555) 123-4567",
-    vehicle: {
-      make: "Toyota",
-      model: "Camry",
-      year: "2022",
-      color: "Silver",
-      licensePlate: "ABC123"
-    },
-    paymentMethod: {
-      type: "Visa",
-      lastFour: "4242",
-      expiry: "12/25"
-    }
-  });
+  const { user } = useAuth();
+  
+  const [spotData, setSpotData] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
@@ -46,8 +33,89 @@ const BookSpot = () => {
     maxExtension: 2 // hours
   });
 
+  // Load spot data and user profile
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      try {
+        // Load parking spot data
+        const { data: spot, error: spotError } = await supabase
+          .from('parking_spots')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (spotError) {
+          toast.error("Failed to load parking spot");
+          navigate('/');
+          return;
+        }
+
+        setSpotData(spot);
+
+        // Load user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError) {
+          // Create basic profile if it doesn't exist
+          setUserProfile({
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            email: user.email,
+            phone: '',
+            vehicle: {
+              make: '',
+              model: '',
+              year: '',
+              color: '',
+              licensePlate: ''
+            },
+            paymentMethod: {
+              type: 'Card',
+              lastFour: '****',
+              expiry: ''
+            }
+          });
+        } else {
+          setUserProfile({
+            name: profile.full_name || user.email?.split('@')[0] || 'User',
+            email: profile.email || user.email,
+            phone: profile.phone || '',
+            vehicle: {
+              make: '',
+              model: '',
+              year: '',
+              color: '',
+              licensePlate: ''
+            },
+            paymentMethod: {
+              type: 'Card',
+              lastFour: '****',
+              expiry: ''
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error("Failed to load data");
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [id, user, navigate]);
+
   // Pricing calculation
-  const basePrice = spotData?.price || 8;
+  const basePrice = spotData?.price_per_hour || 8;
   const duration = bookingDetails.duration;
   const subtotal = basePrice * duration;
   const serviceFee = Math.round(subtotal * 0.08); // 8% service fee
@@ -75,28 +143,76 @@ const BookSpot = () => {
   };
 
   const handleBooking = async () => {
-    // Simulate booking process
+    if (!user || !spotData) {
+      toast.error("Missing required data");
+      return;
+    }
+
     toast.loading("Processing your booking...");
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast.success("Booking confirmed!");
-    
-    // Navigate to confirmation page
-    navigate('/booking-confirmed', { 
-      state: { 
-        ...bookingDetails,
-        spotData,
-        total,
-        confirmationNumber: `PS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    try {
+      // Create booking start and end times
+      const startDateTime = new Date(`${bookingDetails.date}T${bookingDetails.startTime}`);
+      const endDateTime = new Date(`${bookingDetails.date}T${bookingDetails.endTime}`);
+
+      // Create booking in database
+      const { data: booking, error } = await supabase
+        .from('bookings')
+        .insert({
+          spot_id: spotData.id,
+          renter_id: user.id,
+          start_time: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
+          total_amount: total,
+          status: 'confirmed'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
       }
-    });
+
+      toast.success("Booking confirmed!");
+      
+      // Navigate to confirmation page
+      navigate('/booking-confirmed', { 
+        state: { 
+          ...bookingDetails,
+          spotData,
+          total,
+          confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+          bookingId: booking.id
+        }
+      });
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error("Failed to create booking. Please try again.");
+    }
   };
 
-  if (!spotData) {
-    navigate('/');
-    return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading booking details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!spotData || !userProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Unable to load booking details</p>
+          <Button onClick={() => navigate('/')} className="mt-4">
+            Return Home
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -123,11 +239,11 @@ const BookSpot = () => {
             {/* Spot Information */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">{spotData.title}</CardTitle>
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  <span className="text-sm">{spotData.address}</span>
-                </div>
+                 <CardTitle className="text-lg">{spotData.title}</CardTitle>
+                 <div className="flex items-center text-gray-600">
+                   <MapPin className="w-4 h-4 mr-1" />
+                   <span className="text-sm">{spotData.address}</span>
+                 </div>
               </CardHeader>
             </Card>
 
