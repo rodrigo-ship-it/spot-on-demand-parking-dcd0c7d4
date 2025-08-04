@@ -5,9 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
-import ListSpot from "./pages/ListSpot";
+import ProtectedListSpot from "./pages/ProtectedListSpot";
 import HowItWorks from "./pages/HowItWorks";
-import ManageSpots from "./pages/ManageSpots";
+import ProtectedManageSpots from "./pages/ProtectedManageSpots";
 import SpotDetails from "./pages/SpotDetails";
 import Bookings from "./pages/Bookings";
 import Profile from "./pages/Profile";
@@ -29,9 +29,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/list-spot" element={<ListSpot />} />
+            <Route path="/list-spot" element={<ProtectedListSpot />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/manage-spots" element={<ManageSpots />} />
+            <Route path="/manage-spots" element={<ProtectedManageSpots />} />
             <Route path="/spot/:id" element={<SpotDetails />} />
             <Route path="/book-spot/:id" element={<BookSpot />} />
             <Route path="/rent-qr/:spotId" element={<RentQR />} />

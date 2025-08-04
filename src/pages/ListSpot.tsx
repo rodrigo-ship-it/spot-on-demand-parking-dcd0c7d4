@@ -11,9 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, Plus, X, Car, MapPin, DollarSign, Clock, Camera, Shield, Zap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ListSpot = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Basic Information
@@ -93,9 +97,14 @@ const ListSpot = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting parking spot listing:", formData);
+    
+    if (!user) {
+      toast.error("Please log in to list a parking spot");
+      navigate('/auth');
+      return;
+    }
     
     // Validate required fields
     if (!formData.title || !formData.address || !formData.pricePerHour || !formData.type) {
@@ -109,16 +118,67 @@ const ListSpot = () => {
       return;
     }
 
-    const spotText = (formData.type === "entire-garage" || formData.type === "entire-lot") 
-      ? `with ${formData.totalSpots} spots` 
-      : "";
-    
-    toast.success(`Parking ${formData.type.includes("entire") ? "facility" : "spot"} listed successfully! ${spotText} You'll be redirected to your spots.`);
-    
-    // Simulate API call and redirect
-    setTimeout(() => {
-      navigate('/manage-spots');
-    }, 2000);
+    setIsSubmitting(true);
+
+    try {
+      // Create the full address
+      const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+      
+      // Prepare availability schedule
+      const availabilitySchedule = formData.availabilityType === 'custom' 
+        ? formData.customSchedule 
+        : null;
+
+      // Determine spot type and count
+      const spotType = formData.type === 'entire-garage' || formData.type === 'entire-lot' 
+        ? formData.type 
+        : 'single-spot';
+      
+      const totalSpots = spotType === 'single-spot' ? 1 : parseInt(formData.totalSpots);
+
+      const spotData = {
+        owner_id: user.id,
+        title: formData.title,
+        description: formData.description,
+        address: fullAddress,
+        spot_type: spotType,
+        price_per_hour: parseFloat(formData.pricePerHour),
+        total_spots: totalSpots,
+        available_spots: totalSpots, // Initially all spots are available
+        availability_schedule: availabilitySchedule,
+        amenities: formData.features,
+        is_active: true
+      };
+
+      const { data, error } = await supabase
+        .from('parking_spots')
+        .insert([spotData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating parking spot:', error);
+        toast.error("Failed to list parking spot. Please try again.");
+        return;
+      }
+
+      const spotText = (spotType === "entire-garage" || spotType === "entire-lot") 
+        ? `with ${totalSpots} spots` 
+        : "";
+      
+      toast.success(`Parking ${spotType.includes("entire") ? "facility" : "spot"} listed successfully! ${spotText}`);
+      
+      // Redirect to manage spots page
+      setTimeout(() => {
+        navigate('/manage-spots');
+      }, 1500);
+
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -534,9 +594,10 @@ const ListSpot = () => {
                 ) : (
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="bg-primary hover:bg-secondary text-primary-foreground"
                   >
-                    List My Spot
+                    {isSubmitting ? "Listing..." : "List My Spot"}
                   </Button>
                 )}
               </div>

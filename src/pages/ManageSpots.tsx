@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,50 +8,72 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const ManageSpots = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpotForQR, setSelectedSpotForQR] = useState<number | null>(null);
+  const [parkingSpots, setParkingSpots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for demonstration
-  const parkingSpots = [
-    {
-      id: 1,
-      title: "Downtown Garage Spot",
-      address: "123 Main St, Downtown",
-      type: "Covered Garage",
-      price: 8,
-      status: "Active",
-      totalBookings: 15,
-      monthlyEarnings: 240,
-      lastBooked: "2024-06-01",
-      availability: "24/7"
-    },
-    {
-      id: 2,
-      title: "Residential Driveway",
-      address: "456 Oak Avenue",
-      type: "Private Driveway",
-      price: 6,
-      status: "Active",
-      totalBookings: 8,
-      monthlyEarnings: 144,
-      lastBooked: "2024-05-28",
-      availability: "Weekdays Only"
-    },
-    {
-      id: 3,
-      title: "Stadium Event Parking",
-      address: "789 Sports Way",
-      type: "Outdoor Lot",
-      price: 25,
-      status: "Paused",
-      totalBookings: 3,
-      monthlyEarnings: 75,
-      lastBooked: "2024-05-15",
-      availability: "Specific Day & Hours"
+  useEffect(() => {
+    if (user) {
+      fetchUserSpots();
     }
-  ];
+  }, [user]);
+
+  const fetchUserSpots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('parking_spots')
+        .select(`
+          *,
+          bookings(
+            id,
+            status,
+            total_amount,
+            created_at
+          )
+        `)
+        .eq('owner_id', user?.id)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error fetching spots:', error);
+        toast.error("Failed to load your parking spots");
+        return;
+      }
+
+      // Process the data to calculate earnings and bookings
+      const processedSpots = data?.map(spot => ({
+        id: spot.id,
+        title: spot.title,
+        address: spot.address,
+        type: spot.spot_type,
+        price: spot.price_per_hour,
+        status: spot.is_active ? "Active" : "Paused",
+        totalBookings: spot.bookings?.length || 0,
+        monthlyEarnings: spot.bookings?.reduce((sum: number, booking: any) => 
+          sum + (booking.status === 'completed' ? Number(booking.total_amount) : 0), 0) || 0,
+        lastBooked: spot.bookings?.length > 0 
+          ? new Date(Math.max(...spot.bookings.map((b: any) => new Date(b.created_at).getTime()))).toISOString().split('T')[0]
+          : "Never",
+        availability: spot.availability_schedule ? "Custom Schedule" : "24/7",
+        totalSpots: spot.total_spots,
+        availableSpots: spot.available_spots
+      })) || [];
+
+      setParkingSpots(processedSpots);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("An error occurred while loading your spots");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mock upcoming reservations for the spot owner's properties
   const upcomingReservations = [
@@ -116,6 +138,17 @@ const ManageSpots = () => {
       default: return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading your parking spots...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
