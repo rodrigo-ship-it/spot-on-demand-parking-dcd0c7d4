@@ -4,17 +4,21 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Loader2, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LocationSuggestion {
   id: string;
   name: string;
   description: string;
+  latitude?: number;
+  longitude?: number;
+  distance?: string;
 }
 
 interface LocationAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
-  onLocationSelect?: (location: LocationSuggestion) => void;
+  onLocationSelect?: (location: LocationSuggestion & { latitude: number; longitude: number }) => void;
   placeholder?: string;
   className?: string;
 }
@@ -30,22 +34,44 @@ export const GooglePlacesAutocomplete = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [currentLocation, setCurrentLocation] = useState<string>("");
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Common locations for suggestions
-  const commonLocations = [
-    { id: "downtown", name: "Downtown", description: "City center area" },
-    { id: "airport", name: "Airport", description: "Main airport terminal" },
-    { id: "mall", name: "Shopping Mall", description: "Major shopping centers" },
-    { id: "university", name: "University", description: "Campus area" },
-    { id: "stadium", name: "Stadium", description: "Sports venues" },
-    { id: "hospital", name: "Hospital", description: "Medical centers" },
-    { id: "train-station", name: "Train Station", description: "Railway terminals" },
-    { id: "business-district", name: "Business District", description: "Commercial area" }
-  ];
+  // Get user's current location for distance calculation
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        () => {
+          // Default to NYC if geolocation fails
+          setUserLocation({ lat: 40.7128, lng: -74.0060 });
+        }
+      );
+    } else {
+      setUserLocation({ lat: 40.7128, lng: -74.0060 });
+    }
+  }, []);
+
+  // Function to calculate distance between two coordinates
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 3959; // Radius of the Earth in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c; // Distance in miles
+    return d.toFixed(1);
+  };
 
   const getCurrentLocation = () => {
     setIsLoading(true);
@@ -59,13 +85,22 @@ export const GooglePlacesAutocomplete = ({
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          // Use reverse geocoding to get address from coordinates
           const { latitude, longitude } = position.coords;
-          
-          // For demo purposes, we'll set a generic location based on coordinates
-          const locationName = `Current Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
-          setCurrentLocation(locationName);
+          const locationName = `Current Location`;
+          setUserLocation({ lat: latitude, lng: longitude });
           onChange(locationName);
+          
+          // Call onLocationSelect with current location
+          if (onLocationSelect) {
+            onLocationSelect({
+              id: 'current',
+              name: 'Current Location',
+              description: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+              latitude,
+              longitude
+            });
+          }
+          
           toast.success("Current location detected!");
         } catch (error) {
           toast.error("Failed to get location details");
@@ -98,27 +133,64 @@ export const GooglePlacesAutocomplete = ({
     );
   };
 
-  const filterSuggestions = (query: string) => {
+  const searchPlaces = async (query: string) => {
     if (!query || query.length < 1) {
       setSuggestions([]);
       return;
     }
 
-    const filtered = commonLocations.filter(location =>
-      location.name.toLowerCase().includes(query.toLowerCase()) ||
-      location.description.toLowerCase().includes(query.toLowerCase())
-    );
+    try {
+      setIsLoading(true);
+      
+      // Use full-text search with ranking
+      const { data: places, error } = await supabase
+        .from('places')
+        .select('*')
+        .or(`name.ilike.%${query}%,address.ilike.%${query}%,category.ilike.%${query}%,subcategory.ilike.%${query}%`)
+        .limit(8);
 
-    // Add current location if it exists and matches
-    if (currentLocation && currentLocation.toLowerCase().includes(query.toLowerCase())) {
-      filtered.unshift({
-        id: "current",
-        name: "Current Location",
-        description: currentLocation
+      if (error) {
+        console.error('Error searching places:', error);
+        setSuggestions([]);
+        return;
+      }
+
+      const placesWithDistance = places?.map(place => {
+        const distance = userLocation 
+          ? calculateDistance(userLocation.lat, userLocation.lng, Number(place.latitude), Number(place.longitude))
+          : '0';
+        
+        return {
+          id: place.id,
+          name: place.name,
+          description: place.address || `${place.category} in ${place.name}`,
+          latitude: Number(place.latitude),
+          longitude: Number(place.longitude),
+          distance: `${distance} mi`
+        };
+      }) || [];
+
+      // Sort by relevance (exact name matches first, then by distance)
+      placesWithDistance.sort((a, b) => {
+        const aExactMatch = a.name.toLowerCase().startsWith(query.toLowerCase());
+        const bExactMatch = b.name.toLowerCase().startsWith(query.toLowerCase());
+        
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+        
+        // If both are exact matches or neither, sort by distance
+        const aDistance = parseFloat(a.distance || '0');
+        const bDistance = parseFloat(b.distance || '0');
+        return aDistance - bDistance;
       });
-    }
 
-    setSuggestions(filtered);
+      setSuggestions(placesWithDistance);
+    } catch (error) {
+      console.error('Error searching places:', error);
+      setSuggestions([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -127,7 +199,7 @@ export const GooglePlacesAutocomplete = ({
     }
 
     debounceRef.current = setTimeout(() => {
-      filterSuggestions(value);
+      searchPlaces(value);
     }, 300);
 
     return () => {
@@ -135,7 +207,7 @@ export const GooglePlacesAutocomplete = ({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [value, currentLocation]);
+  }, [value, userLocation]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -145,12 +217,18 @@ export const GooglePlacesAutocomplete = ({
   };
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
-    const locationText = suggestion.id === "current" ? suggestion.description : suggestion.name;
-    onChange(locationText);
+    onChange(suggestion.name);
     setShowSuggestions(false);
     setSuggestions([]);
     setSelectedIndex(-1);
-    onLocationSelect?.(suggestion);
+    
+    if (onLocationSelect && suggestion.latitude && suggestion.longitude) {
+      onLocationSelect({
+        ...suggestion,
+        latitude: suggestion.latitude,
+        longitude: suggestion.longitude
+      });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -185,7 +263,6 @@ export const GooglePlacesAutocomplete = ({
 
   const handleInputFocus = () => {
     if (value.length > 0) {
-      filterSuggestions(value);
       setShowSuggestions(true);
     }
   };
@@ -240,16 +317,23 @@ export const GooglePlacesAutocomplete = ({
               )}
               onClick={() => handleSuggestionClick(suggestion)}
             >
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">
-                    {suggestion.name}
-                  </div>
-                  <div className="text-sm text-gray-500 truncate">
-                    {suggestion.description}
+              <div className="flex items-start justify-between space-x-3">
+                <div className="flex items-start space-x-3 flex-1 min-w-0">
+                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 truncate">
+                      {suggestion.name}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">
+                      {suggestion.description}
+                    </div>
                   </div>
                 </div>
+                {suggestion.distance && (
+                  <div className="text-xs text-gray-400 flex-shrink-0">
+                    {suggestion.distance}
+                  </div>
+                )}
               </div>
             </div>
           ))}
