@@ -1,11 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ParkingSpot {
   id: number;
@@ -29,20 +26,46 @@ interface MapComponentProps {
 export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState(() => localStorage.getItem('mapboxToken') || '');
-  const [tokenEntered, setTokenEntered] = useState(() => !!localStorage.getItem('mapboxToken'));
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const initializeMap = (token: string) => {
-    if (!mapContainer.current || !token) return;
+  const initializeMap = async () => {
+    if (!mapContainer.current) {
+      console.error('Map container not found');
+      return;
+    }
 
-    mapboxgl.accessToken = token;
-    
     try {
+      setIsLoading(true);
+      setError(null);
+
+      console.log('Fetching Mapbox token...');
+      
+      // Try to get the token from Supabase edge function
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
+      
+      if (tokenError) {
+        console.error('Edge function error:', tokenError);
+        throw new Error(`Failed to get Mapbox token: ${tokenError.message}`);
+      }
+
+      if (!tokenData || !tokenData.token) {
+        console.error('No token in response:', tokenData);
+        throw new Error('No Mapbox token received from server');
+      }
+
+      const token = tokenData.token;
+      console.log('Token received successfully');
+
+      mapboxgl.accessToken = token;
+      
       const mapCenter: [number, number] = centerLocation 
         ? [centerLocation.longitude, centerLocation.latitude]
         : spots.length > 0 
           ? [spots[0].longitude, spots[0].latitude] 
           : [-74.006, 40.7128];
+
+      console.log('Creating map with center:', mapCenter);
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -53,12 +76,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Use the actual coordinates from spots data
-      const spotsWithCoords = spots;
+      console.log('Adding markers for', spots.length, 'spots');
 
-      console.log('Initializing map with spots:', spotsWithCoords);
-
-      spotsWithCoords.forEach((spot) => {
+      spots.forEach((spot) => {
         const marker = new mapboxgl.Marker({
           color: '#3B82F6',
         })
@@ -87,7 +107,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       // Add marker for search location if provided
       if (centerLocation) {
         new mapboxgl.Marker({
-          color: '#ef4444', // Red color for search location
+          color: '#ef4444',
         })
           .setLngLat([centerLocation.longitude, centerLocation.latitude])
           .setPopup(
@@ -104,33 +124,24 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       // Add spot selection to window object for popup buttons
       (window as any).selectSpot = onSpotSelect;
 
+      console.log('Map initialization complete');
+      setIsLoading(false);
       toast.success('Map loaded successfully!');
-      console.log('Map initialized successfully with', spotsWithCoords.length, 'spots');
-    } catch (error) {
-      console.error('Map initialization error:', error);
-      toast.error('Map initialization failed. Please try again.');
-      // Don't reset tokenEntered on search-related map updates
-    }
-  };
 
-  const handleTokenSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mapboxToken.trim()) {
-      localStorage.setItem('mapboxToken', mapboxToken.trim());
-      setTokenEntered(true);
-      initializeMap(mapboxToken.trim());
+    } catch (error) {
+      console.error('Map initialization failed:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load map');
+      setIsLoading(false);
+      toast.error('Failed to load map. Please try refreshing the page.');
     }
   };
 
   useEffect(() => {
-    // Reinitialize map when spots or centerLocation change and token is already entered
-    if (tokenEntered && mapboxToken) {
-      if (map.current) {
-        map.current.remove();
-      }
-      initializeMap(mapboxToken);
+    if (map.current) {
+      map.current.remove();
     }
-  }, [spots, centerLocation, tokenEntered, mapboxToken]);
+    initializeMap();
+  }, [spots, centerLocation]);
 
   useEffect(() => {
     return () => {
@@ -140,44 +151,29 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     };
   }, []);
 
-  if (!tokenEntered) {
+  if (error) {
     return (
-      <div className="p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Map Configuration Required</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              To display the interactive map, please enter your Mapbox public token. 
-              You can get one from{' '}
-              <a 
-                href="https://mapbox.com/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                mapbox.com
-              </a>
-            </p>
-            <form onSubmit={handleTokenSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="mapbox-token">Mapbox Public Token</Label>
-                <Input
-                  id="mapbox-token"
-                  type="text"
-                  placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSI..."
-                  value={mapboxToken}
-                  onChange={(e) => setMapboxToken(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Load Map
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg flex items-center justify-center bg-gray-100">
+        <div className="text-center p-6">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => initializeMap()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading map...</p>
+        </div>
       </div>
     );
   }
