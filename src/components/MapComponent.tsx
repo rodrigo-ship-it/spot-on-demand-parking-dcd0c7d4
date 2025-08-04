@@ -31,16 +31,23 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
   const fetchMapboxToken = async () => {
     try {
+      console.log('Fetching Mapbox token from Supabase...');
       const { data, error } = await supabase.functions.invoke('get-mapbox-token');
       
       if (error) {
-        console.error('Error fetching Mapbox token:', error);
-        throw new Error('Failed to fetch Mapbox token');
+        console.error('Supabase function error:', error);
+        throw new Error(`Failed to fetch Mapbox token: ${error.message}`);
+      }
+      
+      console.log('Mapbox token response:', data);
+      
+      if (!data || !data.token) {
+        throw new Error('No token received from Supabase function');
       }
       
       return data.token;
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching Mapbox token:', error);
       throw error;
     }
   };
