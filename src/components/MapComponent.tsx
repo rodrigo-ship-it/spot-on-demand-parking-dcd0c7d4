@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ParkingSpot {
   id: number;
@@ -26,130 +24,78 @@ interface MapComponentProps {
 export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const initializeMap = async () => {
+  useEffect(() => {
     if (!mapContainer.current) return;
 
-    try {
-      setIsLoading(true);
-      setError(null);
+    // Set the Mapbox access token immediately
+    mapboxgl.accessToken = 'pk.eyJ1Ijoicm9kcmlnby1hcnJpdiIsImEiOiJjbWR1ZmQ5a20weXphMmtwejJkY3pkOTk2In0.mO4oWjs7xAHkdUE0CV5XPg';
 
-      // Use the Mapbox token directly for instant loading
-      const MAPBOX_TOKEN = 'pk.eyJ1Ijoicm9kcmlnby1hcnJpdiIsImEiOiJjbWR1ZmQ5a20weXphMmtwejJkY3pkOTk2In0.mO4oWjs7xAHkdUE0CV5XPg';
-      mapboxgl.accessToken = MAPBOX_TOKEN;
+    const mapCenter: [number, number] = centerLocation 
+      ? [centerLocation.longitude, centerLocation.latitude]
+      : spots.length > 0 
+        ? [spots[0].longitude, spots[0].latitude] 
+        : [-74.006, 40.7128];
 
-      const mapCenter: [number, number] = centerLocation 
-        ? [centerLocation.longitude, centerLocation.latitude]
-        : spots.length > 0 
-          ? [spots[0].longitude, spots[0].latitude] 
-          : [-74.006, 40.7128];
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: mapCenter,
+      zoom: 12,
+    });
 
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: mapCenter,
-        zoom: 12,
-      });
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-      spots.forEach((spot) => {
-        const marker = new mapboxgl.Marker({
-          color: '#3B82F6',
-        })
-          .setLngLat([spot.longitude, spot.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(`
-              <div class="p-2">
-                <h3 class="font-bold text-sm">${spot.title}</h3>
-                <p class="text-xs text-gray-600">${spot.address}</p>
-                <div class="flex justify-between items-center mb-2">
-                  <p class="text-sm font-semibold">$${spot.price}/hour</p>
-                  ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
-                </div>
-                <button 
-                  onclick="window.selectSpot(${spot.id})" 
-                  class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
-                >
-                  Book Now
-                </button>
+    spots.forEach((spot) => {
+      const marker = new mapboxgl.Marker({
+        color: '#3B82F6',
+      })
+        .setLngLat([spot.longitude, spot.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold text-sm">${spot.title}</h3>
+              <p class="text-xs text-gray-600">${spot.address}</p>
+              <div class="flex justify-between items-center mb-2">
+                <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
               </div>
-            `)
-          )
-          .addTo(map.current!);
-      });
+              <button 
+                onclick="window.selectSpot(${spot.id})" 
+                class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+              >
+                Book Now
+              </button>
+            </div>
+          `)
+        )
+        .addTo(map.current!);
+    });
 
-      if (centerLocation) {
-        new mapboxgl.Marker({
-          color: '#ef4444',
-        })
-          .setLngLat([centerLocation.longitude, centerLocation.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(`
-              <div class="p-2">
-                <h3 class="font-bold text-sm">Search Location</h3>
-                <p class="text-xs text-gray-600">Your searched location</p>
-              </div>
-            `)
-          )
-          .addTo(map.current!);
-      }
-
-      (window as any).selectSpot = onSpotSelect;
-
-      setIsLoading(false);
-      console.log('Map loaded successfully');
-
-    } catch (error) {
-      console.error('Map error:', error);
-      setError('Failed to load map. Please refresh the page.');
-      setIsLoading(false);
+    if (centerLocation) {
+      new mapboxgl.Marker({
+        color: '#ef4444',
+      })
+        .setLngLat([centerLocation.longitude, centerLocation.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold text-sm">Search Location</h3>
+              <p class="text-xs text-gray-600">Your searched location</p>
+            </div>
+          `)
+        )
+        .addTo(map.current!);
     }
-  };
 
-  useEffect(() => {
-    if (map.current) {
-      map.current.remove();
-    }
-    initializeMap();
-  }, [spots, centerLocation]);
+    (window as any).selectSpot = onSpotSelect;
 
-  useEffect(() => {
     return () => {
       if (map.current) {
         map.current.remove();
       }
     };
-  }, []);
-
-  if (error) {
-    return (
-      <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg flex items-center justify-center bg-gray-100">
-        <div className="text-center p-6">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => initializeMap()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading map...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [spots, centerLocation, onSpotSelect]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
