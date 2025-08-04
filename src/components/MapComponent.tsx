@@ -26,8 +26,35 @@ interface MapComponentProps {
 export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getMapboxToken = async (): Promise<string> => {
+    // First check localStorage for instant loading
+    const cachedToken = localStorage.getItem('mapbox_token_cached');
+    if (cachedToken) {
+      console.log('Using cached token for instant loading');
+      return cachedToken;
+    }
+
+    // If no cached token, fetch from Supabase and cache it
+    console.log('Fetching token from Supabase...');
+    const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
+    
+    if (tokenError) {
+      throw new Error(`Failed to get Mapbox token: ${tokenError.message}`);
+    }
+
+    if (!tokenData || !tokenData.token) {
+      throw new Error('No Mapbox token received from server');
+    }
+
+    // Cache the token for instant future loads
+    localStorage.setItem('mapbox_token_cached', tokenData.token);
+    console.log('Token cached for future instant loading');
+    
+    return tokenData.token;
+  };
 
   const initializeMap = async () => {
     if (!mapContainer.current) {
@@ -36,27 +63,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     }
 
     try {
-      setIsLoading(true);
+      // Only show loading if we don't have a cached token
+      const cachedToken = localStorage.getItem('mapbox_token_cached');
+      if (!cachedToken) {
+        setIsLoading(true);
+      }
+      
       setError(null);
 
-      console.log('Fetching Mapbox token...');
-      
-      // Try to get the token from Supabase edge function
-      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
-      
-      if (tokenError) {
-        console.error('Edge function error:', tokenError);
-        throw new Error(`Failed to get Mapbox token: ${tokenError.message}`);
-      }
-
-      if (!tokenData || !tokenData.token) {
-        console.error('No token in response:', tokenData);
-        throw new Error('No Mapbox token received from server');
-      }
-
-      const token = tokenData.token;
-      console.log('Token received successfully');
-
+      const token = await getMapboxToken();
       mapboxgl.accessToken = token;
       
       const mapCenter: [number, number] = centerLocation 
