@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, User, Bell, CreditCard, Shield, Camera, Save, MapPin, Phone, Mail } from "lucide-react";
+import { ArrowLeft, User, Bell, CreditCard, Shield, Camera, Save, Phone, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,12 +22,7 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
-    bio: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: ""
+    phone: ""
   });
 
   const [notifications, setNotifications] = useState({
@@ -71,12 +66,7 @@ const Profile = () => {
               firstName: names[0] || '',
               lastName: names.slice(1).join(' ') || '',
               email: profile.email || user.email || '',
-              phone: profile.phone || '',
-              bio: '',
-              address: '',
-              city: '',
-              state: '',
-              zipCode: ''
+              phone: profile.phone || ''
             });
           } else {
             // Create profile if it doesn't exist
@@ -97,12 +87,7 @@ const Profile = () => {
               firstName: names[0] || '',
               lastName: names.slice(1).join(' ') || '',
               email: user.email || '',
-              phone: '',
-              bio: '',
-              address: '',
-              city: '',
-              state: '',
-              zipCode: ''
+              phone: ''
             });
           }
         } catch (error) {
@@ -269,59 +254,6 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={profileData.bio}
-                  onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                  rows={3}
-                  placeholder="Tell other users about yourself..."
-                />
-              </div>
-
-              {/* Address Information */}
-              <Separator />
-              <h3 className="text-lg font-semibold flex items-center">
-                <MapPin className="w-5 h-5 mr-2" />
-                Address Information
-              </h3>
-
-              <div>
-                <Label htmlFor="address">Street Address</Label>
-                <Input
-                  id="address"
-                  value={profileData.address}
-                  onChange={(e) => setProfileData({...profileData, address: e.target.value})}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={profileData.city}
-                    onChange={(e) => setProfileData({...profileData, city: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    value={profileData.state}
-                    onChange={(e) => setProfileData({...profileData, state: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zipCode">ZIP Code</Label>
-                  <Input
-                    id="zipCode"
-                    value={profileData.zipCode}
-                    onChange={(e) => setProfileData({...profileData, zipCode: e.target.value})}
-                  />
-                </div>
-              </div>
 
               <Button onClick={handleSaveProfile}>
                 <Save className="w-4 h-4 mr-2" />
