@@ -109,51 +109,52 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
       {/* Quick Spot Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {spotsWithDistance.slice(0, 6).map((spot) => (
-          <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-40 flex flex-col" onClick={() => onSpotSelect(spot.id)}>
-            <CardContent className="p-4 flex-1 flex flex-col justify-between">
-              <div className="space-y-3 flex-1">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{spot.title}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mt-1">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {spot.address}
-                    </div>
-                  </div>
-                  <div className="flex items-center text-lg font-bold text-gray-900">
-                    <DollarSign className="w-4 h-4" />
-                    {spot.price}/hr
+          <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-44" onClick={() => onSpotSelect(spot.id)}>
+            <CardContent className="p-4 h-full flex flex-col">
+              {/* Header with title/address and price */}
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm truncate">{spot.title}</h3>
+                  <div className="flex items-center text-gray-600 text-xs mt-1">
+                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">{spot.address}</span>
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center text-gray-600">
-                    <Car className="w-3 h-3 mr-1" />
-                    {spot.type}
-                  </div>
-                  <div className="flex items-center text-green-600 font-medium">
-                    <Navigation className="w-3 h-3 mr-1" />
-                    {spot.distance}
-                  </div>
+                <div className="flex items-center text-lg font-bold text-gray-900 ml-2">
+                  <DollarSign className="w-4 h-4" />
+                  {spot.price}/hr
                 </div>
+              </div>
+              
+              {/* Type and distance row */}
+              <div className="flex items-center justify-between text-sm mb-3">
+                <div className="flex items-center text-gray-600">
+                  <Car className="w-3 h-3 mr-1" />
+                  <span className="truncate">{spot.type}</span>
+                </div>
+                <div className="flex items-center text-green-600 font-medium">
+                  <Navigation className="w-3 h-3 mr-1" />
+                  {spot.distance}
+                </div>
+              </div>
 
-                <div className="flex justify-between items-center pt-2 border-t">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                    <span className="text-sm font-medium">{spot.rating}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSpotSelect(spot.id);
-                    }}
-                    className="text-xs bg-primary hover:bg-secondary"
-                  >
-                    Book Now
-                  </Button>
+              {/* Bottom row with rating and button */}
+              <div className="flex justify-between items-center mt-auto pt-2 border-t">
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                  <span className="text-sm font-medium">{spot.rating}</span>
                 </div>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSpotSelect(spot.id);
+                  }}
+                  className="text-xs bg-primary hover:bg-secondary"
+                >
+                  Book Now
+                </Button>
               </div>
             </CardContent>
           </Card>
