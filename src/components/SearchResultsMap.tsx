@@ -120,12 +120,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                       {spot.address}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center text-lg font-bold text-gray-900">
-                      <DollarSign className="w-4 h-4" />
-                      {spot.price}/hr
-                    </div>
-                    <div className="text-sm text-gray-500">{spot.distance}</div>
+                  <div className="flex items-center text-lg font-bold text-gray-900">
+                    <DollarSign className="w-4 h-4" />
+                    {spot.price}/hr
                   </div>
                 </div>
                 
@@ -147,14 +144,14 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                   </div>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="default"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleGetDirections(spot);
+                      onSpotSelect(spot.id);
                     }}
-                    className="text-xs"
+                    className="text-xs bg-primary hover:bg-secondary"
                   >
-                    Directions
+                    Book Now
                   </Button>
                 </div>
               </div>
