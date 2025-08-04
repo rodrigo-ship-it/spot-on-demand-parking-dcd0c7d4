@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete";
 import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -18,113 +19,55 @@ const Index = () => {
   const [searchDuration, setSearchDuration] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [allParkingSpots, setAllParkingSpots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  const allParkingSpots = [
-    {
-      id: 1,
-      title: "Downtown Garage Spot",
-      address: "123 Main St, Downtown",
-      price: 8,
-      rating: 4.8,
-      distance: "0.2 miles",
-      type: "Covered Garage",
-      spotType: "single-spot",
-      available: "24/7",
-      image: "/placeholder.svg",
-      latitude: 40.7589,
-      longitude: -73.9851
-    },
-    {
-      id: 2,
-      title: "Residential Driveway",
-      address: "456 Oak Avenue",
-      price: 6,
-      rating: 4.9,
-      distance: "0.5 miles",
-      type: "Private Driveway",
-      spotType: "single-spot",
-      available: "Weekdays",
-      image: "/placeholder.svg",
-      latitude: 40.7505,
-      longitude: -73.9934
-    },
-    {
-      id: 3,
-      title: "Metro Center Parking Garage",
-      address: "890 Business District",
-      price: 12,
-      rating: 4.6,
-      distance: "0.8 miles",
-      type: "Multi-Level Garage",
-      spotType: "entire-garage",
-      totalSpots: 150,
-      available: "24/7",
-      image: "/placeholder.svg",
-      latitude: 40.7614,
-      longitude: -73.9776
-    },
-    {
-      id: 4,
-      title: "Stadium Event Parking",
-      address: "789 Sports Way",
-      price: 25,
-      rating: 4.7,
-      distance: "1.2 miles",
-      type: "Event Parking",
-      spotType: "single-spot",
-      available: "Game Days",
-      image: "/placeholder.svg",
-      latitude: 40.7282,
-      longitude: -74.0776
-    },
-    {
-      id: 5,
-      title: "Airport Terminal Garage",
-      address: "Airport Terminal 1",
-      price: 15,
-      rating: 4.5,
-      distance: "3.2 miles",
-      type: "Airport Parking",
-      spotType: "entire-garage",
-      totalSpots: 300,
-      available: "24/7",
-      image: "/placeholder.svg",
-      latitude: 40.6892,
-      longitude: -74.1745
-    },
-    {
-      id: 6,
-      title: "Mall Shopping Center",
-      address: "City Mall, Shopping District",
-      price: 5,
-      rating: 4.3,
-      distance: "1.8 miles",
-      type: "Shopping Center",
-      spotType: "entire-outdoor-lot",
-      totalSpots: 80,
-      available: "Mall Hours",
-      image: "/placeholder.svg",
-      latitude: 40.7831,
-      longitude: -73.9712
-    },
-    {
-      id: 7,
-      title: "University Campus Lot",
-      address: "State University, Campus Drive",
-      price: 3,
-      rating: 4.1,
-      distance: "2.5 miles",
-      type: "Campus Parking",
-      spotType: "entire-outdoor-lot",
-      totalSpots: 200,
-      available: "Weekdays",
-      image: "/placeholder.svg",
-      latitude: 40.8075,
-      longitude: -73.9626
-    }
-  ];
+  // Load parking spots from database
+  useEffect(() => {
+    const loadParkingSpots = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('parking_spots')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error loading parking spots:', error);
+          // If no spots in database, show a helpful message
+          setAllParkingSpots([]);
+        } else {
+          // Transform database spots to match expected format
+          const transformedSpots = data?.map(spot => ({
+            id: spot.id,
+            title: spot.title,
+            address: spot.address,
+            price: Number(spot.price_per_hour),
+            rating: Number(spot.rating) || 4.5,
+            distance: "0.5 miles", // This would need real geolocation calculation
+            type: spot.spot_type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            spotType: spot.spot_type,
+            totalSpots: spot.total_spots,
+            available: "24/7", // This would come from availability_schedule
+            image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
+            latitude: Number(spot.latitude) || 40.7589,
+            longitude: Number(spot.longitude) || -73.9851
+          })) || [];
+
+          setAllParkingSpots(transformedSpots);
+        }
+      } catch (error) {
+        console.error('Error loading parking spots:', error);
+        setAllParkingSpots([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadParkingSpots();
+  }, []);
 
   const parkingSpots = hasSearched ? filteredSpots : allParkingSpots;
 
@@ -167,8 +110,8 @@ const Index = () => {
     toast.info("Search cleared - showing all parking spots");
   };
 
-  const handleBookNow = (spotId: number) => {
-    navigate(`/spot/${spotId}?action=book`);
+  const handleBookNow = (spotId: string | number) => {
+    navigate(`/book-spot/${spotId}`);
   };
 
   const handleSignIn = () => {
@@ -351,7 +294,24 @@ const Index = () => {
               </div>
             </div>
 
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading parking spots...</p>
+              </div>
+            ) : allParkingSpots.length === 0 ? (
+              <div className="text-center py-12">
+                <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots available yet</h3>
+                <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
+                <Link to="/list-spot">
+                  <Button className="bg-primary hover:bg-secondary text-primary-foreground">
+                    List Your First Spot
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
               {allParkingSpots.map((spot) => (
                 <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
                   <div className="relative">
@@ -417,6 +377,7 @@ const Index = () => {
                 </Card>
               ))}
             </div>
+            )}
           </div>
         </section>
       )}

@@ -6,7 +6,7 @@ import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
 import { MapComponent } from '@/components/MapComponent';
 
 interface ParkingSpot {
-  id: number;
+  id: string | number;
   title: string;
   address: string;
   price: number;
@@ -27,7 +27,7 @@ interface SearchResultsMapProps {
   searchLocation: string;
   searchCoordinates?: { latitude: number; longitude: number } | null;
   spots: ParkingSpot[];
-  onSpotSelect: (spotId: number) => void;
+  onSpotSelect: (spotId: string | number) => void;
 }
 
 const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, spots, onSpotSelect }) => {

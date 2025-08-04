@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface ParkingSpot {
-  id: number;
+  id: string | number;
   title: string;
   address: string;
   price: number;
@@ -17,7 +17,7 @@ interface ParkingSpot {
 
 interface MapComponentProps {
   spots: ParkingSpot[];
-  onSpotSelect: (spotId: number) => void;
+  onSpotSelect: (spotId: string | number) => void;
   centerLocation?: { latitude: number; longitude: number } | null;
 }
 
