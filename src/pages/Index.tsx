@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,57 +20,28 @@ const Index = () => {
   const [searchDuration, setSearchDuration] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [allParkingSpots, setAllParkingSpots] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  // Load parking spots from database
-  useEffect(() => {
-    const loadParkingSpots = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('parking_spots')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
+  // Transform spots for UI compatibility
+  const transformedSpots = allParkingSpots.map(spot => ({
+    id: spot.id,
+    title: spot.title,
+    address: spot.address,
+    price: Number(spot.price_per_hour),
+    rating: Number(spot.rating) || 4.5,
+    distance: "0.5 miles", // This would need real geolocation calculation
+    type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
+    spotType: spot.spot_type,
+    totalSpots: spot.total_spots || 1,
+    available: "24/7", // This would come from availability_schedule
+    image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
+    latitude: Number(spot.latitude) || 40.7589,
+    longitude: Number(spot.longitude) || -73.9851
+  }));
 
-        if (error) {
-          console.error('Error loading parking spots:', error);
-          // If no spots in database, show a helpful message
-          setAllParkingSpots([]);
-        } else {
-          // Transform database spots to match expected format
-          const transformedSpots = data?.map(spot => ({
-            id: spot.id,
-            title: spot.title,
-            address: spot.address,
-            price: Number(spot.price_per_hour),
-            rating: Number(spot.rating) || 4.5,
-            distance: "0.5 miles", // This would need real geolocation calculation
-            type: spot.spot_type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            spotType: spot.spot_type,
-            totalSpots: spot.total_spots,
-            available: "24/7", // This would come from availability_schedule
-            image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
-            latitude: Number(spot.latitude) || 40.7589,
-            longitude: Number(spot.longitude) || -73.9851
-          })) || [];
-
-          setAllParkingSpots(transformedSpots);
-        }
-      } catch (error) {
-        console.error('Error loading parking spots:', error);
-        setAllParkingSpots([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadParkingSpots();
-  }, []);
-
-  const parkingSpots = hasSearched ? filteredSpots : allParkingSpots;
+  const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
   const handleSearch = () => {
     if (!searchLocation.trim()) {
@@ -80,7 +52,7 @@ const Index = () => {
     console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
     
     // Filter spots based on search location
-    const filtered = allParkingSpots.filter(spot => 
+    const filtered = transformedSpots.filter(spot => 
       spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
       spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
       spot.type.toLowerCase().includes(searchLocation.toLowerCase())
@@ -299,7 +271,7 @@ const Index = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading parking spots...</p>
               </div>
-            ) : allParkingSpots.length === 0 ? (
+            ) : transformedSpots.length === 0 ? (
               <div className="text-center py-12">
                 <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots available yet</h3>
@@ -312,7 +284,7 @@ const Index = () => {
               </div>
             ) : (
               <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-              {allParkingSpots.map((spot) => (
+              {transformedSpots.map((spot) => (
                 <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
                   <div className="relative">
                     <img 
