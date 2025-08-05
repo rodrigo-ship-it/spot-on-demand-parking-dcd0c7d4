@@ -355,7 +355,12 @@ const BookSpot = () => {
                     {userProfile.vehicle.color} • License: {userProfile.vehicle.licensePlate}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="mt-2 p-0 h-auto text-blue-600">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-2 p-0 h-auto text-blue-600"
+                  onClick={() => toast.info("Vehicle management feature coming soon")}
+                >
                   Use different vehicle
                 </Button>
               </CardContent>
@@ -416,7 +421,13 @@ const BookSpot = () => {
                       <div className="text-sm text-gray-600">Expires {userProfile.paymentMethod.expiry}</div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">Change</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => toast.info("Payment method selection coming soon")}
+                  >
+                    Change
+                  </Button>
                 </div>
               </CardContent>
             </Card>

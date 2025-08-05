@@ -34,9 +34,11 @@ const HowItWorks = () => {
                   List Your Spot
                 </Button>
               </Link>
-              <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
-                Sign In
-              </Button>
+              <Link to="/auth">
+                <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                  Sign In
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

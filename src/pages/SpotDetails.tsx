@@ -214,7 +214,9 @@ const SpotDetails = () => {
                   </Link>
                 </>
               )}
-              <Button variant="outline" size="sm">Help</Button>
+              <Link to="/help-support">
+                <Button variant="outline" size="sm">Help</Button>
+              </Link>
               <Link to="/auth">
                 <Button size="sm">Sign In</Button>
               </Link>

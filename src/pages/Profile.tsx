@@ -196,7 +196,11 @@ const Profile = () => {
                   <User className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toast.info("Photo upload feature coming soon")}
+                  >
                     <Camera className="w-4 h-4 mr-2" />
                     Change Photo
                   </Button>
@@ -368,13 +372,25 @@ const Profile = () => {
               <Separator />
               
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => toast.info("Password change feature coming soon")}
+                >
                   Change Password
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => toast.info("Data export feature coming soon")}
+                >
                   Download Account Data
                 </Button>
-                <Button variant="destructive" className="w-full">
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => toast.info("Account deletion requires contacting support")}
+                >
                   Delete Account
                 </Button>
               </div>
@@ -399,15 +415,29 @@ const Profile = () => {
                     <p className="font-medium">Bank Account</p>
                     <p className="text-sm text-gray-600">****1234 - Chase Bank</p>
                   </div>
-                  <Button variant="outline" size="sm">Edit</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toast.info("Payment method editing coming soon")}
+                  >
+                    Edit
+                  </Button>
                 </div>
               </div>
 
               <div className="flex space-x-2">
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => toast.info("Payment method management coming soon")}
+                >
                   Add Payment Method
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => toast.info("Payout settings coming soon")}
+                >
                   Payout Settings
                 </Button>
               </div>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 const ManageSpots = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpotForQR, setSelectedSpotForQR] = useState<number | null>(null);
   const [parkingSpots, setParkingSpots] = useState<any[]>([]);
@@ -185,10 +186,16 @@ const ManageSpots = () => {
                   List New Spot
                 </Button>
               </Link>
-              <Button variant="outline" size="sm">Help</Button>
-              <Link to="/auth">
-                <Button size="sm">Sign In</Button>
+              <Link to="/help-support">
+                <Button variant="outline" size="sm">Help</Button>
               </Link>
+              {user ? (
+                <Button size="sm" onClick={() => navigate('/auth')}>Sign Out</Button>
+              ) : (
+                <Link to="/auth">
+                  <Button size="sm">Sign In</Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -322,10 +329,18 @@ const ManageSpots = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toast.info("Guest details view coming soon")}
+                        >
                           View
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`mailto:${reservation.email}`, '_self')}
+                        >
                           Contact
                         </Button>
                       </div>
@@ -347,7 +362,10 @@ const ManageSpots = () => {
               className="pl-10"
             />
           </div>
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={() => toast.info("Advanced filters coming soon")}
+          >
             Filter
           </Button>
         </div>
@@ -425,9 +443,11 @@ const ManageSpots = () => {
                             <Eye className="w-4 h-4" />
                           </Button>
                         </Link>
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <Link to={`/list-spot?edit=${spot.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -435,7 +455,11 @@ const ManageSpots = () => {
                         >
                           <QrCode className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toast.info("More actions coming soon")}
+                        >
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </div>

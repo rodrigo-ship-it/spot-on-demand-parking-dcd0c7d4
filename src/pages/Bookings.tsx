@@ -239,11 +239,17 @@ const Bookings = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => toast.info("Export feature coming soon")}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
-              <Button size="sm">Help</Button>
+              <Link to="/help-support">
+                <Button size="sm">Help</Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -319,10 +325,13 @@ const Bookings = () => {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            More Filters
-          </Button>
+              <Button 
+                variant="outline"
+                onClick={() => toast.info("Advanced filters coming soon")}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                More Filters
+              </Button>
         </div>
 
         {/* Reservations Table */}
@@ -354,11 +363,19 @@ const Bookings = () => {
                     <TableCell>
                       <div className="flex flex-col space-y-1">
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(reservation.spotAddress)}`, '_blank')}
+                          >
                             <Navigation className="w-3 h-3 mr-1" />
                             Directions
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.open(`tel:${reservation.ownerPhone}`, '_self')}
+                          >
                             <Phone className="w-3 h-3 mr-1" />
                             Contact
                           </Button>
