@@ -242,7 +242,17 @@ const Bookings = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => toast.info("Export feature coming soon")}
+                onClick={() => {
+                  const data = filteredReservations.map(b => `${b.id},${b.spotTitle},${b.status},${b.totalCost}`).join('\n');
+                  const blob = new Blob([`ID,Spot,Status,Amount\n${data}`], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'bookings.csv';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("Bookings exported successfully");
+                }}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export
@@ -325,13 +335,13 @@ const Bookings = () => {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-              <Button 
-                variant="outline"
-                onClick={() => toast.info("Advanced filters coming soon")}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                More Filters
-              </Button>
+          <Button 
+            variant="outline"
+            onClick={() => toast.info("Advanced filters coming soon")}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            More Filters
+          </Button>
         </div>
 
         {/* Reservations Table */}
