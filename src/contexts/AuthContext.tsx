@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { cleanupAuthState } from '@/lib/auth-cleanup';
 import { toast } from 'sonner';
 
+// Authentication context for managing user sessions
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
