@@ -4,9 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import ProtectedListSpot from "./pages/ProtectedListSpot";
 import HowItWorks from "./pages/HowItWorks";
+import HelpSupport from "./pages/HelpSupport";
 import ProtectedManageSpots from "./pages/ProtectedManageSpots";
 import SpotDetails from "./pages/SpotDetails";
 import Bookings from "./pages/Bookings";
@@ -23,25 +25,28 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/list-spot" element={<ProtectedListSpot />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/manage-spots" element={<ProtectedManageSpots />} />
-            <Route path="/spot/:id" element={<SpotDetails />} />
-            <Route path="/book-spot/:id" element={<BookSpot />} />
-            <Route path="/rent-qr/:spotId" element={<RentQR />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/booking-confirmed" element={<BookingConfirmed />} />
-            <Route path="/profile" element={<Profile />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/list-spot" element={<ProtectedListSpot />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/help" element={<HelpSupport />} />
+              <Route path="/manage-spots" element={<ProtectedManageSpots />} />
+              <Route path="/spot/:id" element={<SpotDetails />} />
+              <Route path="/book-spot/:id" element={<BookSpot />} />
+              <Route path="/rent-qr/:spotId" element={<RentQR />} />
+              <Route path="/bookings" element={<Bookings />} />
+              <Route path="/booking-confirmed" element={<BookingConfirmed />} />
+              <Route path="/profile" element={<Profile />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
