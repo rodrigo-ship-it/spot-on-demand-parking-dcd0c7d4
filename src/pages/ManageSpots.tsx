@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
-import QRCodeDisplay from "@/components/QRCodeDisplay";
+import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -452,12 +452,13 @@ const ManageSpots = () => {
            <div className="mt-6">
              {(() => {
                const selectedSpot = parkingSpots.find(spot => spot.id === selectedSpotForQR);
-               return selectedSpot ? (
-                 <QRCodeDisplay 
-                   spotId={selectedSpot.id.toString()} 
-                   spotTitle={selectedSpot.title}
-                 />
-               ) : null;
+                return selectedSpot ? (
+                  <QRCodeGenerator 
+                    spotId={selectedSpot.id.toString()} 
+                    spotTitle={selectedSpot.title}
+                    spotAddress={selectedSpot.address}
+                  />
+                ) : null;
              })()}
            </div>
          )}

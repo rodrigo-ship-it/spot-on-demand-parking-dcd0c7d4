@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, DollarSign, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ExtensionSystemProps {
   bookingId: string;
@@ -41,11 +42,29 @@ export const ExtensionSystem = ({
     return () => clearInterval(timer);
   }, [endTime, isSpotAvailableAfter]);
 
-  const handleExtension = (hours: number) => {
+  const handleExtension = async (hours: number) => {
     const cost = Math.round(pricePerHour * hours * 1.5); // 50% premium for extensions
-    onExtensionRequested(hours, cost);
-    setShowExtensionOptions(false);
-    toast.success(`Extended for ${hours} hour(s) - $${cost} charged`);
+    
+    try {
+      // Store extension request in database
+      const { error } = await supabase
+        .from('extensions')
+        .insert({
+          booking_id: bookingId,
+          requested_hours: hours,
+          rate_per_hour: pricePerHour * 1.5,
+          total_amount: cost
+        });
+
+      if (error) throw error;
+
+      onExtensionRequested(hours, cost);
+      setShowExtensionOptions(false);
+      toast.success(`Extension requested for ${hours} hour(s) - $${cost}`);
+    } catch (error) {
+      console.error('Error requesting extension:', error);
+      toast.error("Failed to request extension");
+    }
   };
 
   if (!showExtensionOptions || timeLeft <= 0) {

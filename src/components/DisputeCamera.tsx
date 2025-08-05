@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DisputeCameraProps {
   bookingId: string;
@@ -13,6 +15,7 @@ interface DisputeCameraProps {
 }
 
 export const DisputeCamera = ({ bookingId, disputeType, onPhotoTaken, onClose }: DisputeCameraProps) => {
+  const { user } = useAuth();
   const [isCapturing, setIsCapturing] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
 
@@ -62,15 +65,33 @@ export const DisputeCamera = ({ bookingId, disputeType, onPhotoTaken, onClose }:
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!photo) {
       toast.error("Please take a photo first");
       return;
     }
-    
-    onPhotoTaken(photo, disputeType);
-    toast.success("Dispute photo submitted successfully!");
-    onClose();
+
+    try {
+      // Store dispute in database
+      const { error } = await supabase
+        .from('disputes')
+        .insert({
+          booking_id: bookingId,
+          reporter_id: user?.id,
+          dispute_type: disputeType,
+          photo_url: photo,
+          description: getDisputeDescription()
+        });
+
+      if (error) throw error;
+
+      onPhotoTaken(photo, disputeType);
+      toast.success("Dispute reported successfully");
+      onClose();
+    } catch (error) {
+      console.error('Error reporting dispute:', error);
+      toast.error("Failed to report dispute");
+    }
   };
 
   const getDisputeTitle = () => {

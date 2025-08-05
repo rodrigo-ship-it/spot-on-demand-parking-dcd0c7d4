@@ -64,6 +64,94 @@ export type Database = {
           },
         ]
       }
+      disputes: {
+        Row: {
+          booking_id: string
+          created_at: string
+          description: string | null
+          dispute_type: string
+          id: string
+          photo_url: string
+          reporter_id: string
+          resolution: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          description?: string | null
+          dispute_type: string
+          id?: string
+          photo_url: string
+          reporter_id: string
+          resolution?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          description?: string | null
+          dispute_type?: string
+          id?: string
+          photo_url?: string
+          reporter_id?: string
+          resolution?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extensions: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          rate_per_hour: number
+          requested_hours: number
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          rate_per_hour: number
+          requested_hours: number
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          rate_per_hour?: number
+          requested_hours?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extensions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parking_spots: {
         Row: {
           address: string
@@ -129,6 +217,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      penalties: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          description: string
+          id: string
+          penalty_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          penalty_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          penalty_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "penalties_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       places: {
         Row: {
@@ -198,6 +330,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          photo_url: string | null
+          rating: number
+          reviewed_id: string
+          reviewer_id: string
+          updated_at: string
+          user_type: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          rating: number
+          reviewed_id: string
+          reviewer_id: string
+          updated_at?: string
+          user_type: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          rating?: number
+          reviewed_id?: string
+          reviewer_id?: string
+          updated_at?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

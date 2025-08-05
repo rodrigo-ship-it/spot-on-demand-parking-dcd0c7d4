@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock, MapPin, DollarSign, Car, CreditCard } from "lucide-react";
+import { PaymentIntegration } from "@/components/PaymentIntegration";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ParkingSpot {
   id: string;
@@ -41,6 +43,8 @@ const RentQR = () => {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [bookingId, setBookingId] = useState<string>("");
 
   useEffect(() => {
     // Find the spot by ID
@@ -68,25 +72,52 @@ const RentQR = () => {
     setIsProcessing(true);
     
     try {
-      // Here you would integrate with Stripe for payment processing
-      // For now, we'll simulate the payment process
-      toast.success("Processing payment...");
+      // Create booking record
+      const hours = parseInt(selectedDuration.split(" ")[0]);
+      const startTime = new Date();
+      const endTime = new Date(startTime.getTime() + hours * 60 * 60 * 1000);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real implementation, you would:
-      // 1. Create a Stripe checkout session
-      // 2. Process the payment
-      // 3. Send booking confirmation
-      
-      toast.success("Booking confirmed! Check your email for details.");
-      navigate("/booking-confirmed");
+      const { data: booking, error } = await supabase
+        .from('bookings')
+        .insert({
+          spot_id: spotId,
+          renter_id: null, // Guest booking
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          total_amount: calculateTotal(),
+          status: 'pending',
+          qr_code_used: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setBookingId(booking.id);
+      setShowPayment(true);
+      toast.success("Booking created! Please complete payment.");
     } catch (error) {
-      toast.error("Payment failed. Please try again.");
+      console.error('Booking error:', error);
+      toast.error("Failed to create booking. Please try again.");
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePaymentSuccess = (paymentData: any) => {
+    toast.success("Payment successful! Booking confirmed.");
+    navigate("/booking-confirmed", { 
+      state: { 
+        bookingId,
+        paymentData,
+        customerEmail,
+        customerName
+      }
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast.error(`Payment failed: ${error}`);
   };
 
   if (!spot) {
@@ -199,14 +230,23 @@ const RentQR = () => {
           </CardContent>
         </Card>
 
-        <Button 
-          onClick={handleRentNow}
-          disabled={isProcessing || !selectedDuration || !customerEmail || !customerName}
-          className="w-full h-12 text-lg bg-primary hover:bg-secondary"
-        >
-          <CreditCard className="w-5 h-5 mr-2" />
-          {isProcessing ? "Processing..." : `Pay $${calculateTotal()} & Rent Now`}
-        </Button>
+        {!showPayment ? (
+          <Button 
+            onClick={handleRentNow}
+            disabled={isProcessing || !selectedDuration || !customerEmail || !customerName}
+            className="w-full h-12 text-lg bg-primary hover:bg-secondary"
+          >
+            <CreditCard className="w-5 h-5 mr-2" />
+            {isProcessing ? "Processing..." : `Create Booking - $${calculateTotal()}`}
+          </Button>
+        ) : (
+          <PaymentIntegration
+            bookingId={bookingId}
+            amount={calculateTotal()}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentError={handlePaymentError}
+          />
+        )}
 
         <p className="text-sm text-gray-500 text-center mt-4">
           Secure payment powered by Stripe. Your information is protected.

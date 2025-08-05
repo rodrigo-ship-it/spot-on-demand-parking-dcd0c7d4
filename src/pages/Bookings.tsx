@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReviewDialog } from "@/components/ReviewDialog";
 import { TimeManagement } from "@/components/TimeManagement";
+import { NotificationSystem } from "@/components/NotificationSystem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -255,6 +256,11 @@ const Bookings = () => {
           <p className="text-xl text-gray-600">
             View and manage all your parking reservations in one place.
           </p>
+        </div>
+
+        {/* Notifications */}
+        <div className="mb-8">
+          <NotificationSystem />
         </div>
 
         {/* Summary Cards */}

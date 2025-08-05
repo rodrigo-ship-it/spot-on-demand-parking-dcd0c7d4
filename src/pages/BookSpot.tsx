@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap } from "lucide-react";
+import { PaymentIntegration } from "@/components/PaymentIntegration";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +23,8 @@ const BookSpot = () => {
   const [spotData, setSpotData] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showPayment, setShowPayment] = useState(false);
+  const [createdBookingId, setCreatedBookingId] = useState<string>("");
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
@@ -148,7 +151,7 @@ const BookSpot = () => {
       return;
     }
 
-    toast.loading("Processing your booking...");
+    toast.loading("Creating your booking...");
     
     try {
       // Create booking start and end times
@@ -164,7 +167,7 @@ const BookSpot = () => {
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           total_amount: total,
-          status: 'confirmed'
+          status: 'pending'
         })
         .select()
         .single();
@@ -173,22 +176,31 @@ const BookSpot = () => {
         throw error;
       }
 
-      toast.success("Booking confirmed!");
-      
-      // Navigate to confirmation page
-      navigate('/booking-confirmed', { 
-        state: { 
-          ...bookingDetails,
-          spotData,
-          total,
-          confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
-          bookingId: booking.id
-        }
-      });
+      setCreatedBookingId(booking.id);
+      setShowPayment(true);
+      toast.success("Booking created! Please complete payment.");
     } catch (error) {
       console.error('Booking error:', error);
       toast.error("Failed to create booking. Please try again.");
     }
+  };
+
+  const handlePaymentSuccess = (paymentData: any) => {
+    toast.success("Payment successful! Booking confirmed.");
+    navigate('/booking-confirmed', { 
+      state: { 
+        ...bookingDetails,
+        spotData,
+        total,
+        confirmationNumber: createdBookingId.slice(0, 8).toUpperCase(),
+        bookingId: createdBookingId,
+        paymentData
+      }
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast.error(`Payment failed: ${error}`);
   };
 
   if (loading) {
@@ -423,20 +435,31 @@ const BookSpot = () => {
               </CardContent>
             </Card>
 
-            {/* Book Button */}
+            {/* Book Button or Payment */}
             <Card>
               <CardContent className="pt-6">
-                <Button 
-                  onClick={handleBooking}
-                  className="w-full h-12 text-lg font-semibold"
-                  size="lg"
-                >
-                  Book for ${total}
-                </Button>
-                <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Secure payment • Instant confirmation • Free cancellation
-                </div>
+                {!showPayment ? (
+                  <>
+                    <Button 
+                      onClick={handleBooking}
+                      className="w-full h-12 text-lg font-semibold"
+                      size="lg"
+                    >
+                      Create Booking - ${total}
+                    </Button>
+                    <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Secure payment • Instant confirmation • Free cancellation
+                    </div>
+                  </>
+                ) : (
+                  <PaymentIntegration
+                    bookingId={createdBookingId}
+                    amount={total}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>

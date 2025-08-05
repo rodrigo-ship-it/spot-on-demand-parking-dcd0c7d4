@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface RatingSystemProps {
   bookingId: string;
@@ -14,6 +16,7 @@ interface RatingSystemProps {
 }
 
 export const RatingSystem = ({ bookingId, userType, onSubmitRating, onClose }: RatingSystemProps) => {
+  const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
@@ -61,15 +64,35 @@ export const RatingSystem = ({ bookingId, userType, onSubmitRating, onClose }: R
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) {
       toast.error("Please select a rating");
       return;
     }
-    
-    onSubmitRating(rating, comment, photo || undefined);
-    toast.success("Review submitted successfully!");
-    onClose();
+
+    try {
+      // Store review in database
+      const { error } = await supabase
+        .from('reviews')
+        .insert({
+          booking_id: bookingId,
+          reviewer_id: user?.id,
+          reviewed_id: 'spot_owner_id', // This would need proper owner ID
+          user_type: userType,
+          rating,
+          comment: comment || null,
+          photo_url: photo || null
+        });
+
+      if (error) throw error;
+
+      onSubmitRating(rating, comment, photo || undefined);
+      toast.success("Review submitted successfully!");
+      onClose();
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      toast.error("Failed to submit rating");
+    }
   };
 
   const getPlaceholderText = () => {

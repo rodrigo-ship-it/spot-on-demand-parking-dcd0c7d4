@@ -6,6 +6,9 @@ import { PenaltySystem } from "./PenaltySystem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Shield, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface TimeManagementProps {
   bookingId: string;
@@ -24,22 +27,48 @@ export const TimeManagement = ({
   accountStatus,
   isActive 
 }: TimeManagementProps) => {
+  const { user } = useAuth();
   const [isSpotAvailableAfter, setIsSpotAvailableAfter] = useState(true);
   const [checkOutCompleted, setCheckOutCompleted] = useState(false);
 
-  const handleCheckOut = (photo: string, timestamp: string) => {
-    console.log("Check-out completed:", { bookingId, photo, timestamp });
-    setCheckOutCompleted(true);
-    
-    // Calculate if user was late and apply penalties
-    const endTimeDate = new Date(endTime);
-    const checkOutTime = new Date(timestamp);
-    const minutesOver = Math.floor((checkOutTime.getTime() - endTimeDate.getTime()) / (1000 * 60));
-    
-    if (minutesOver > 15) {
-      // Apply penalty based on how late they were
-      const penalty = minutesOver > 60 ? 50 : 25;
-      console.log("Late check-out penalty applied:", penalty);
+  const handleCheckOut = async (photo: string, timestamp: string) => {
+    try {
+      const endTimeDate = new Date(endTime);
+      const checkOutTime = new Date(timestamp);
+      const minutesOver = Math.floor((checkOutTime.getTime() - endTimeDate.getTime()) / (1000 * 60));
+      
+      // Update booking status
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update({ status: 'completed' })
+        .eq('id', bookingId);
+
+      if (bookingError) throw bookingError;
+
+      if (minutesOver > 15) {
+        // Apply late checkout penalty
+        const penaltyAmount = minutesOver > 60 ? 50 : 25;
+
+        const { error: penaltyError } = await supabase
+          .from('penalties')
+          .insert({
+            user_id: user?.id,
+            booking_id: bookingId,
+            penalty_type: 'late_checkout',
+            amount: penaltyAmount,
+            description: `Late checkout by ${minutesOver} minutes`
+          });
+
+        if (penaltyError) throw penaltyError;
+        
+        toast.warning(`Late checkout fee applied: $${penaltyAmount}`);
+      }
+      
+      setCheckOutCompleted(true);
+      toast.success("Check-out completed successfully!");
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      toast.error("Failed to complete checkout");
     }
   };
 
