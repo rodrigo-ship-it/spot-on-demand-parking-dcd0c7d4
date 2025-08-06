@@ -43,11 +43,12 @@ const ManageSpots = () => {
             id,
             status,
             total_amount,
-            created_at
+            created_at,
+            start_time,
+            end_time
           )
         `)
-        .eq('owner_id', user?.id)
-        .eq('is_active', true);
+        .eq('owner_id', user?.id);
 
       if (error) {
         console.error('Error fetching spots:', error);
@@ -55,24 +56,39 @@ const ManageSpots = () => {
         return;
       }
 
+      // Get current date for monthly calculations
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
       // Process the data to calculate earnings and bookings
-      const processedSpots = data?.map(spot => ({
-        id: spot.id,
-        title: spot.title,
-        address: spot.address,
-        type: spot.spot_type,
-        price: spot.price_per_hour,
-        status: spot.is_active ? "Active" : "Paused",
-        totalBookings: spot.bookings?.length || 0,
-        monthlyEarnings: spot.bookings?.reduce((sum: number, booking: any) => 
-          sum + (booking.status === 'completed' ? Number(booking.total_amount) : 0), 0) || 0,
-        lastBooked: spot.bookings?.length > 0 
-          ? new Date(Math.max(...spot.bookings.map((b: any) => new Date(b.created_at).getTime()))).toISOString().split('T')[0]
-          : "Never",
-        availability: spot.availability_schedule ? "Custom Schedule" : "24/7",
-        totalSpots: spot.total_spots,
-        availableSpots: spot.available_spots
-      })) || [];
+      const processedSpots = data?.map(spot => {
+        const completedBookings = spot.bookings?.filter((b: any) => b.status === 'completed') || [];
+        const thisMonthBookings = completedBookings.filter((b: any) => {
+          const bookingDate = new Date(b.created_at);
+          return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear;
+        });
+
+        return {
+          id: spot.id,
+          title: spot.title,
+          address: spot.address,
+          type: spot.spot_type || 'Standard',
+          price: Number(spot.price_per_hour),
+          status: spot.is_active ? "Active" : "Paused",
+          totalBookings: spot.bookings?.length || 0,
+          monthlyEarnings: thisMonthBookings.reduce((sum: number, booking: any) => 
+            sum + Number(booking.total_amount), 0),
+          lastBooked: spot.bookings?.length > 0 
+            ? new Date(Math.max(...spot.bookings.map((b: any) => new Date(b.created_at).getTime()))).toLocaleDateString()
+            : "Never",
+          availability: spot.availability_schedule ? "Custom Schedule" : "24/7",
+          totalSpots: spot.total_spots || 1,
+          availableSpots: spot.available_spots || 1,
+          rating: Number(spot.rating) || 0,
+          totalReviews: spot.total_reviews || 0
+        };
+      }) || [];
 
       setParkingSpots(processedSpots);
     } catch (error) {
@@ -85,27 +101,25 @@ const ManageSpots = () => {
 
   const fetchUpcomingReservations = async () => {
     try {
-      // First get user's spots
-      if (parkingSpots.length === 0) {
-        // If spots haven't loaded yet, use mock data
-        setUpcomingReservations([
-          {
-            id: "BK004",
-            spotTitle: "Downtown Garage Spot",
-            customer: "Alice Johnson", 
-            email: "alice@email.com",
-            phone: "+1 (555) 777-8888",
-            date: "2024-06-06",
-            startTime: "7:00 AM",
-            endTime: "7:00 PM",
-            duration: "12 hours",
-            pricePerHour: 8,
-            totalEarnings: 96,
-            status: "Confirmed"
-          }
-        ]);
+      if (!user?.id) return;
+
+      // Get user's spots first
+      const { data: spots, error: spotsError } = await supabase
+        .from('parking_spots')
+        .select('id')
+        .eq('owner_id', user.id);
+
+      if (spotsError) {
+        console.error('Error fetching user spots:', spotsError);
         return;
       }
+
+      if (!spots || spots.length === 0) {
+        setUpcomingReservations([]);
+        return;
+      }
+
+      const spotIds = spots.map(spot => spot.id);
 
       const { data, error } = await supabase
         .from('bookings')
@@ -117,7 +131,7 @@ const ManageSpots = () => {
             price_per_hour
           )
         `)
-        .in('spot_id', parkingSpots.map(spot => spot.id))
+        .in('spot_id', spotIds)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
         .limit(10);
@@ -127,20 +141,27 @@ const ManageSpots = () => {
         return;
       }
 
-      const processedReservations = data?.map(booking => ({
-        id: booking.id,
-        spotTitle: booking.parking_spots?.title || 'Unknown Spot',
-        customer: 'Guest User', // We'll need to fetch user details separately
-        email: 'guest@example.com',
-        phone: '+1 (555) 123-4567',
-        date: new Date(booking.start_time).toLocaleDateString(),
-        startTime: new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        endTime: new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        duration: `${Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60))} hours`,
-        pricePerHour: Number(booking.parking_spots?.price_per_hour) || 15,
-        totalEarnings: Number(booking.total_amount),
-        status: booking.status === 'confirmed' ? 'Confirmed' : booking.status === 'pending' ? 'Pending' : 'Active'
-      })) || [];
+      const processedReservations = data?.map(booking => {
+        const startTime = new Date(booking.start_time);
+        const endTime = new Date(booking.end_time);
+        const durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
+        
+        return {
+          id: booking.id,
+          spotTitle: booking.parking_spots?.title || 'Unknown Spot',
+          customer: 'Guest User', // We'll fetch user details separately if needed
+          email: 'Not provided',
+          phone: 'Not provided',
+          date: startTime.toLocaleDateString(),
+          startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          duration: `${durationHours} hour${durationHours !== 1 ? 's' : ''}`,
+          pricePerHour: Number(booking.parking_spots?.price_per_hour) || 0,
+          totalEarnings: Number(booking.total_amount) || 0,
+          status: booking.status.charAt(0).toUpperCase() + booking.status.slice(1),
+          originalBooking: booking
+        };
+      }) || [];
 
       setUpcomingReservations(processedReservations);
     } catch (error) {
@@ -167,9 +188,10 @@ const ManageSpots = () => {
   const totalEarnings = parkingSpots.reduce((sum, spot) => sum + spot.monthlyEarnings, 0);
   const totalBookings = parkingSpots.reduce((sum, spot) => sum + spot.totalBookings, 0);
   const activeSpots = parkingSpots.filter(spot => spot.status === "Active").length;
-  const averageRating = parkingSpots.length > 0 
-    ? (parkingSpots.reduce((sum, spot) => sum + (spot.rating || 4.8), 0) / parkingSpots.length).toFixed(1)
-    : "4.8";
+  const totalReviews = parkingSpots.reduce((sum, spot) => sum + spot.totalReviews, 0);
+  const averageRating = totalReviews > 0 
+    ? (parkingSpots.reduce((sum, spot) => sum + (spot.rating * spot.totalReviews), 0) / totalReviews).toFixed(1)
+    : "0.0";
 
   const getReservationStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -287,7 +309,7 @@ const ManageSpots = () => {
               <CardTitle className="text-2xl text-primary">{averageRating}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">Based on {totalBookings} bookings</p>
+              <p className="text-sm text-gray-600">Based on {totalReviews} review{totalReviews !== 1 ? 's' : ''}</p>
             </CardContent>
           </Card>
         </div>
