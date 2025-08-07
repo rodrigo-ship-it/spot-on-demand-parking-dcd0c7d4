@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, Shield, DollarSign, Clock } from "lucide-react";
+import { CreditCard, Shield, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PaymentIntegrationProps {
   bookingId: string;
-  amount: number;
+  baseAmount: number;
   currency?: string;
   onPaymentSuccess: (paymentData: any) => void;
   onPaymentError: (error: string) => void;
@@ -18,11 +18,15 @@ interface PaymentIntegrationProps {
 
 export const PaymentIntegration = ({ 
   bookingId, 
-  amount, 
+  baseAmount, 
   currency = "USD",
   onPaymentSuccess,
   onPaymentError 
 }: PaymentIntegrationProps) => {
+  // Calculate fees - renter pays 7% fee on top
+  const renterFee = Math.round(baseAmount * 0.07 * 100) / 100;
+  const totalAmount = baseAmount + renterFee;
+  
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [processing, setProcessing] = useState(false);
   const [cardDetails, setCardDetails] = useState({
@@ -41,40 +45,26 @@ export const PaymentIntegration = ({
     setProcessing(true);
     
     try {
-      // In a real implementation, this would integrate with Stripe
-      // For demonstration, we'll simulate the payment process
-      
-      toast.loading("Processing payment...");
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock successful payment response
-      const paymentData = {
-        id: `pi_${Math.random().toString(36).substr(2, 9)}`,
-        amount: amount * 100, // Convert to cents
-        currency: currency.toLowerCase(),
-        status: "succeeded",
-        payment_method: paymentMethod,
-        created: Date.now(),
-        booking_id: bookingId
-      };
+      // Call Stripe payment function
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          bookingId,
+          baseAmount,
+          currency: currency.toLowerCase(),
+        }
+      });
 
-      // Update booking status in database
-      const { error: updateError } = await supabase
-        .from('bookings')
-        .update({ 
-          status: 'confirmed',
-          payment_intent_id: paymentData.id 
-        })
-        .eq('id', bookingId);
+      if (error) throw error;
 
-      if (updateError) {
-        throw updateError;
+      // Redirect to Stripe Checkout
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success("Redirecting to payment...");
+        onPaymentSuccess({ sessionId: data.sessionId });
+        return;
       }
-
-      toast.success("Payment successful!");
-      onPaymentSuccess(paymentData);
+      
+      throw new Error("No payment URL received");
       
     } catch (error) {
       console.error('Payment error:', error);
@@ -120,11 +110,20 @@ export const PaymentIntegration = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Amount Summary */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-muted p-4 rounded-lg space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-medium">Total Amount:</span>
-            <span className="text-2xl font-bold text-primary">
-              ${amount.toFixed(2)} {currency}
+            <span>Spot Price:</span>
+            <span>${baseAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Service Fee (7%):</span>
+            <span>${renterFee.toFixed(2)}</span>
+          </div>
+          <hr className="my-2" />
+          <div className="flex items-center justify-between font-bold">
+            <span>Total Amount:</span>
+            <span className="text-xl text-primary">
+              ${totalAmount.toFixed(2)} {currency}
             </span>
           </div>
         </div>
@@ -203,7 +202,7 @@ export const PaymentIntegration = ({
         )}
 
         {/* Security Notice */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 bg-green-50 p-3 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-3 rounded-lg">
           <Shield className="w-4 h-4 text-green-600" />
           <span>Your payment information is secured with 256-bit SSL encryption</span>
         </div>
@@ -223,13 +222,13 @@ export const PaymentIntegration = ({
           ) : (
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
-              Pay ${amount.toFixed(2)}
+              Pay ${totalAmount.toFixed(2)}
             </div>
           )}
         </Button>
 
         {/* Terms */}
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-muted-foreground text-center">
           By completing this payment, you agree to our Terms of Service and Privacy Policy
         </p>
       </CardContent>

@@ -15,11 +15,17 @@ serve(async (req) => {
 
   try {
     // Parse request body
-    const { bookingId, amount, currency = "usd", customerEmail, customerName } = await req.json();
+    const { bookingId, baseAmount, currency = "usd", customerEmail, customerName } = await req.json();
 
-    if (!bookingId || !amount) {
-      throw new Error("Missing required fields: bookingId and amount");
+    if (!bookingId || !baseAmount) {
+      throw new Error("Missing required fields: bookingId and baseAmount");
     }
+
+    // Calculate fees - renter pays 7% fee on top, lister gets 93% of base amount
+    const renterFee = Math.round(baseAmount * 0.07 * 100) / 100; // 7% fee
+    const totalAmountForRenter = baseAmount + renterFee; // What renter pays
+    const amountToLister = Math.round(baseAmount * 0.93 * 100) / 100; // What lister receives (93%)
+    const platformFee = baseAmount - amountToLister; // What platform keeps (7%)
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -69,7 +75,7 @@ serve(async (req) => {
               name: "Parking Spot Rental",
               description: `Booking ID: ${bookingId}`
             },
-            unit_amount: Math.round(amount * 100), // Convert to cents
+            unit_amount: Math.round(totalAmountForRenter * 100), // Convert to cents
           },
           quantity: 1,
         },
@@ -79,7 +85,10 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/book-spot/${bookingId.split('-')[0]}?cancelled=true`,
       metadata: {
         bookingId,
-        amount: amount.toString(),
+        baseAmount: baseAmount.toString(),
+        totalAmountForRenter: totalAmountForRenter.toString(),
+        amountToLister: amountToLister.toString(),
+        platformFee: platformFee.toString(),
         currency,
       },
     });

@@ -242,7 +242,7 @@ const RentQR = () => {
         ) : (
           <PaymentIntegration
             bookingId={bookingId}
-            amount={calculateTotal()}
+            baseAmount={calculateTotal()}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
           />
