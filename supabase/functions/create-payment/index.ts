@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body
-    const { bookingId, baseAmount, currency = "usd", customerEmail, customerName } = await req.json();
+    // Parse request body with payment method support
+    const { bookingId, baseAmount, currency = "usd", customerEmail, customerName, paymentMethod = "card" } = await req.json();
 
     if (!bookingId || !baseAmount) {
       throw new Error("Missing required fields: bookingId and baseAmount");
@@ -64,8 +64,8 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Create a one-time payment session
-    const session = await stripe.checkout.sessions.create({
+    // Create a one-time payment session with payment method options
+    const sessionConfig = {
       customer: customerId,
       line_items: [
         {
@@ -90,8 +90,21 @@ serve(async (req) => {
         amountToLister: amountToLister.toString(),
         platformFee: platformFee.toString(),
         currency,
+        paymentMethod,
       },
-    });
+    };
+
+    // Add payment method types based on selection
+    if (paymentMethod === "paypal") {
+      sessionConfig.payment_method_types = ["card", "paypal"];
+    } else if (paymentMethod === "apple_pay") {
+      sessionConfig.payment_method_types = ["card"];
+      // Note: Apple Pay would typically be handled client-side with Payment Request API
+    } else {
+      sessionConfig.payment_method_types = ["card"];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     // Optional: Update booking with Stripe session ID using service role
     try {
