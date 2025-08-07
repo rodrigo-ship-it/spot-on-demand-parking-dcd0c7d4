@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TermsAndConditions } from "@/components/TermsAndConditions";
+import { useState, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import ProtectedListSpot from "./pages/ProtectedListSpot";
@@ -21,35 +23,68 @@ import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/list-spot" element={<ProtectedListSpot />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/help" element={<HelpSupport />} />
-              <Route path="/manage-spots" element={<ProtectedManageSpots />} />
-              <Route path="/spot/:id" element={<SpotDetails />} />
-              <Route path="/book-spot/:id" element={<BookSpot />} />
-              <Route path="/rent-qr/:spotId" element={<RentQR />} />
-              <Route path="/bookings" element={<Bookings />} />
-              <Route path="/booking-confirmed" element={<BookingConfirmed />} />
-              <Route path="/profile" element={<Profile />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user has already accepted terms
+    const accepted = localStorage.getItem('termsAccepted');
+    if (accepted === 'true') {
+      setTermsAccepted(true);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const handleTermsAccept = () => {
+    setTermsAccepted(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!termsAccepted) {
+    return <TermsAndConditions onAccept={handleTermsAccept} />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <ErrorBoundary>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/list-spot" element={<ProtectedListSpot />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/help" element={<HelpSupport />} />
+                <Route path="/manage-spots" element={<ProtectedManageSpots />} />
+                <Route path="/spot/:id" element={<SpotDetails />} />
+                <Route path="/book-spot/:id" element={<BookSpot />} />
+                <Route path="/rent-qr/:spotId" element={<RentQR />} />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/booking-confirmed" element={<BookingConfirmed />} />
+                <Route path="/profile" element={<Profile />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

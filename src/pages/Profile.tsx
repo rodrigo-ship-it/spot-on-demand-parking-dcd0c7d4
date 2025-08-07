@@ -17,6 +17,7 @@ import { PasswordChangeDialog } from "@/components/PasswordChangeDialog";
 import { DataExportDialog } from "@/components/DataExportDialog";
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
+import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -169,9 +170,10 @@ const Profile = () => {
                 />
               </Link>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button size="sm" onClick={handleSignOut}>Sign Out</Button>
-            </div>
+          <div className="flex items-center space-x-4">
+            <TermsAcceptanceStatus />
+            <Button size="sm" onClick={handleSignOut}>Sign Out</Button>
+          </div>
           </div>
         </div>
       </nav>
