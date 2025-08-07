@@ -7,11 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, User, Bell, CreditCard, Shield, Camera, Save, Phone, Mail } from "lucide-react";
+import { ArrowLeft, User, Bell, CreditCard, Shield, Save, Phone, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
+import { PasswordChangeDialog } from "@/components/PasswordChangeDialog";
+import { DataExportDialog } from "@/components/DataExportDialog";
+import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
+import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -22,7 +27,8 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: ""
+    phone: "",
+    avatarUrl: ""
   });
 
   const [notifications, setNotifications] = useState({
@@ -66,7 +72,8 @@ const Profile = () => {
               firstName: names[0] || '',
               lastName: names.slice(1).join(' ') || '',
               email: profile.email || user.email || '',
-              phone: profile.phone || ''
+              phone: profile.phone || '',
+              avatarUrl: profile.avatar_url || ''
             });
           } else {
             // Create profile if it doesn't exist
@@ -87,7 +94,8 @@ const Profile = () => {
               firstName: names[0] || '',
               lastName: names.slice(1).join(' ') || '',
               email: user.email || '',
-              phone: ''
+              phone: '',
+              avatarUrl: ''
             });
           }
         } catch (error) {
@@ -191,22 +199,10 @@ const Profile = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Profile Picture */}
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center">
-                  <User className="w-10 h-10 text-white" />
-                </div>
-                <div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => toast.info("Photo upload feature coming soon")}
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Change Photo
-                  </Button>
-                  <p className="text-sm text-gray-600 mt-1">JPG, PNG up to 5MB</p>
-                </div>
-              </div>
+              <ProfilePhotoUpload 
+                currentPhotoUrl={profileData.avatarUrl}
+                onPhotoUpdated={(photoUrl) => setProfileData(prev => ({...prev, avatarUrl: photoUrl}))}
+              />
 
               <Separator />
 
@@ -372,20 +368,17 @@ const Profile = () => {
               <Separator />
               
               <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => toast.info("Password change feature coming soon")}
-                >
-                  Change Password
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => toast.info("Data export feature coming soon")}
-                >
-                  Download Account Data
-                </Button>
+                <PasswordChangeDialog>
+                  <Button variant="outline" className="w-full">
+                    Change Password
+                  </Button>
+                </PasswordChangeDialog>
+                
+                <DataExportDialog>
+                  <Button variant="outline" className="w-full">
+                    Download Account Data
+                  </Button>
+                </DataExportDialog>
                 <Button 
                   variant="destructive" 
                   className="w-full"
@@ -415,31 +408,26 @@ const Profile = () => {
                     <p className="font-medium">Bank Account</p>
                     <p className="text-sm text-gray-600">****1234 - Chase Bank</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => toast.info("Payment method editing coming soon")}
-                  >
-                    Edit
-                  </Button>
+                  <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
+                    <Button variant="outline" size="sm">
+                      Edit
+                    </Button>
+                  </PaymentMethodDialog>
                 </div>
               </div>
 
               <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => toast.info("Payment method management coming soon")}
-                >
-                  Add Payment Method
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => toast.info("Payout settings coming soon")}
-                >
-                  Payout Settings
-                </Button>
+                <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
+                  <Button variant="outline" className="flex-1">
+                    Manage Payment Methods
+                  </Button>
+                </PaymentMethodDialog>
+                
+                <PayoutSettingsDialog>
+                  <Button variant="outline" className="flex-1">
+                    Payout Settings
+                  </Button>
+                </PayoutSettingsDialog>
               </div>
             </CardContent>
           </Card>

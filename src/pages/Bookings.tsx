@@ -12,6 +12,7 @@ import { TimeManagement } from "@/components/TimeManagement";
 import { NotificationSystem } from "@/components/NotificationSystem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { AdvancedFiltersDialog } from "@/components/AdvancedFiltersDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -335,13 +336,17 @@ const Bookings = () => {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          <Button 
-            variant="outline"
-            onClick={() => toast.info("Advanced filters coming soon")}
+          <AdvancedFiltersDialog 
+            onFiltersApply={() => {}} 
+            currentFilters={{}}
           >
-            <Filter className="w-4 h-4 mr-2" />
-            More Filters
-          </Button>
+            <Button 
+              variant="outline"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              More Filters
+            </Button>
+          </AdvancedFiltersDialog>
         </div>
 
         {/* Reservations Table */}

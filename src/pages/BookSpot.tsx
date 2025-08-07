@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap } from "lucide-react";
 import { PaymentIntegration } from "@/components/PaymentIntegration";
 import { toast } from "sonner";
+import { VehicleManagementDialog } from "@/components/VehicleManagementDialog";
+import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -355,14 +357,15 @@ const BookSpot = () => {
                     {userProfile.vehicle.color} • License: {userProfile.vehicle.licensePlate}
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mt-2 p-0 h-auto text-blue-600"
-                  onClick={() => toast.info("Vehicle management feature coming soon")}
-                >
-                  Use different vehicle
-                </Button>
+                <VehicleManagementDialog onVehicleSelect={() => {}}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-2 p-0 h-auto text-blue-600"
+                  >
+                    Use different vehicle
+                  </Button>
+                </VehicleManagementDialog>
               </CardContent>
             </Card>
           </div>
@@ -421,13 +424,14 @@ const BookSpot = () => {
                       <div className="text-sm text-gray-600">Expires {userProfile.paymentMethod.expiry}</div>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => toast.info("Payment method selection coming soon")}
-                  >
-                    Change
-                  </Button>
+                  <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                    >
+                      Change
+                    </Button>
+                  </PaymentMethodDialog>
                 </div>
               </CardContent>
             </Card>
