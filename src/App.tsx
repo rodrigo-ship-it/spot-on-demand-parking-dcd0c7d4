@@ -42,17 +42,15 @@ const App = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
+      <QueryClientProvider client={queryClient}>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading...</p>
+          </div>
         </div>
-      </div>
+      </QueryClientProvider>
     );
-  }
-
-  if (!termsAccepted) {
-    return <TermsAndConditions onAccept={handleTermsAccept} />;
   }
 
   return (
@@ -62,24 +60,28 @@ const App = () => {
           <ErrorBoundary>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/list-spot" element={<ProtectedListSpot />} />
-                <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/help" element={<HelpSupport />} />
-                <Route path="/manage-spots" element={<ProtectedManageSpots />} />
-                <Route path="/spot/:id" element={<SpotDetails />} />
-                <Route path="/book-spot/:id" element={<BookSpot />} />
-                <Route path="/rent-qr/:spotId" element={<RentQR />} />
-                <Route path="/bookings" element={<Bookings />} />
-                <Route path="/booking-confirmed" element={<BookingConfirmed />} />
-                <Route path="/profile" element={<Profile />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            {!termsAccepted ? (
+              <TermsAndConditions onAccept={handleTermsAccept} />
+            ) : (
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/list-spot" element={<ProtectedListSpot />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/help" element={<HelpSupport />} />
+                  <Route path="/manage-spots" element={<ProtectedManageSpots />} />
+                  <Route path="/spot/:id" element={<SpotDetails />} />
+                  <Route path="/book-spot/:id" element={<BookSpot />} />
+                  <Route path="/rent-qr/:spotId" element={<RentQR />} />
+                  <Route path="/bookings" element={<Bookings />} />
+                  <Route path="/booking-confirmed" element={<BookingConfirmed />} />
+                  <Route path="/profile" element={<Profile />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            )}
           </ErrorBoundary>
         </TooltipProvider>
       </AuthProvider>
