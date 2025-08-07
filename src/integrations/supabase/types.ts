@@ -218,6 +218,90 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          cardholder_name: string | null
+          created_at: string
+          expiry_month: number | null
+          expiry_year: number | null
+          id: string
+          is_default: boolean
+          last_four: string
+          stripe_payment_method_id: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cardholder_name?: string | null
+          created_at?: string
+          expiry_month?: number | null
+          expiry_year?: number | null
+          id?: string
+          is_default?: boolean
+          last_four: string
+          stripe_payment_method_id?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cardholder_name?: string | null
+          created_at?: string
+          expiry_month?: number | null
+          expiry_year?: number | null
+          id?: string
+          is_default?: boolean
+          last_four?: string
+          stripe_payment_method_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payout_settings: {
+        Row: {
+          account_holder_name: string | null
+          account_number_last_four: string | null
+          account_type: string | null
+          bank_name: string | null
+          created_at: string
+          id: string
+          is_verified: boolean
+          routing_number: string | null
+          stripe_account_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number_last_four?: string | null
+          account_type?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          routing_number?: string | null
+          stripe_account_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number_last_four?: string | null
+          account_type?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          routing_number?: string | null
+          stripe_account_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       penalties: {
         Row: {
           amount: number
@@ -377,6 +461,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          license_plate: string
+          make: string
+          model: string
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          license_plate: string
+          make: string
+          model: string
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          license_plate?: string
+          make?: string
+          model?: string
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
       }
     }
     Views: {
