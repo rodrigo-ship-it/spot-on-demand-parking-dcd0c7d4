@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "howItWorks": "Cómo Funciona",
+    "mySpots": "Mis Espacios",
+    "myBookings": "Mis Reservas",
+    "profile": "Perfil",
+    "signIn": "Iniciar Sesión",
+    "signOut": "Cerrar Sesión"
+  },
+  "hero": {
+    "title": "Encuéntralo. Resérvalo. Arriv",
+    "subtitle": "Descubre espacios de estacionamiento convenientes o gana dinero listando tu espacio sin usar. Únete a miles de conductores y propietarios.",
+    "searchPlaceholder": "¿Dónde necesitas estacionar?",
+    "duration": "Duración",
+    "search": "Buscar",
+    "clearSearch": "Limpiar Búsqueda y Mostrar Todo"
+  },
+  "features": {
+    "instantBooking": "Reserva Instantánea",
+    "instantBookingDesc": "Reserva espacios de estacionamiento al instante con nuestro sistema de disponibilidad en tiempo real",
+    "securePayment": "Pago Seguro",
+    "securePaymentDesc": "Transacciones seguras y protegidas para ambas partes",
+    "communityDriven": "Impulsado por la Comunidad",
+    "communityDrivenDesc": "Únete a una comunidad confiable de conductores y propietarios de espacios de estacionamiento"
+  },
+  "spots": {
+    "availableTitle": "Espacios de Estacionamiento Disponibles",
+    "availableSubtitle": "Encuentra el espacio perfecto para tus necesidades",
+    "loading": "Cargando espacios de estacionamiento...",
+    "noSpots": "Aún no hay espacios de estacionamiento disponibles",
+    "beFirst": "¡Sé el primero en listar un espacio de estacionamiento en tu área!",
+    "listFirst": "Lista Tu Primer Espacio",
+    "bookNow": "Reservar Ahora",
+    "perHour": "por hora",
+    "away": "de distancia"
+  },
+  "cta": {
+    "title": "Convierte Tu Espacio en Ingresos",
+    "subtitle": "¿Tienes un espacio de estacionamiento sin usar? Listalo en Arriv y comienza a ganar dinero hoy.",
+    "startEarning": "Comenzar a Ganar Ahora"
+  },
+  "explore": {
+    "title": "Explorar Más",
+    "subtitle": "Todo lo que necesitas para comenzar con Arriv"
+  },
+  "search": {
+    "needLocation": "Por favor ingresa una ubicación para buscar estacionamiento",
+    "found": "Se encontró {{count}} espacio de estacionamiento cerca de \"{{location}}\"{{duration}}",
+    "found_plural": "Se encontraron {{count}} espacios de estacionamiento cerca de \"{{location}}\"{{duration}}",
+    "noResults": "No se encontraron espacios de estacionamiento cerca de \"{{location}}\". Intenta alejar el zoom en el mapa para ver opciones cercanas.",
+    "cleared": "Búsqueda eliminada - mostrando todos los espacios de estacionamiento",
+    "forDuration": " por {{duration}}"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "enable": "Habilitar Notificaciones",
+    "disable": "Deshabilitar Notificaciones",
+    "enabled": "¡Notificaciones habilitadas exitosamente!",
+    "disabled": "Notificaciones deshabilitadas",
+    "unsupported": "Las notificaciones push no son compatibles con este navegador",
+    "permission": "Se requiere permiso de notificación para recibir actualizaciones",
+    "bookingConfirmed": "Reserva Confirmada",
+    "bookingCancelled": "Reserva Cancelada",
+    "paymentReceived": "Pago Recibido",
+    "newBooking": "Nueva Solicitud de Reserva"
+  },
+  "settings": {
+    "language": "Idioma",
+    "selectLanguage": "Seleccionar Idioma",
+    "notifications": "Configuración de Notificaciones",
+    "pushNotifications": "Notificaciones Push"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  }
+}

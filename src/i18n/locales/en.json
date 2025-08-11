@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "howItWorks": "How it Works",
+    "mySpots": "My Spots",
+    "myBookings": "My Bookings",
+    "profile": "Profile",
+    "signIn": "Sign In",
+    "signOut": "Sign Out"
+  },
+  "hero": {
+    "title": "Find it. Book it. Arriv",
+    "subtitle": "Discover convenient parking spots or earn money by listing your unused space. Join thousands of drivers and property owners.",
+    "searchPlaceholder": "Where do you need parking?",
+    "duration": "Duration",
+    "search": "Search",
+    "clearSearch": "Clear Search & Show All"
+  },
+  "features": {
+    "instantBooking": "Instant Booking",
+    "instantBookingDesc": "Book parking spots instantly with our real-time availability system",
+    "securePayment": "Secure Payment",
+    "securePaymentDesc": "Safe and secure transactions with protection for both parties",
+    "communityDriven": "Community Driven",
+    "communityDrivenDesc": "Join a trusted community of drivers and parking space owners"
+  },
+  "spots": {
+    "availableTitle": "Available Parking Spots",
+    "availableSubtitle": "Find the perfect spot for your needs",
+    "loading": "Loading parking spots...",
+    "noSpots": "No parking spots available yet",
+    "beFirst": "Be the first to list a parking spot in your area!",
+    "listFirst": "List Your First Spot",
+    "bookNow": "Book Now",
+    "perHour": "per hour",
+    "away": "away"
+  },
+  "cta": {
+    "title": "Turn Your Space Into Income",
+    "subtitle": "Have an unused parking space? List it on Arriv and start earning money today.",
+    "startEarning": "Start Earning Now"
+  },
+  "explore": {
+    "title": "Explore More",
+    "subtitle": "Everything you need to get started with Arriv"
+  },
+  "search": {
+    "needLocation": "Please enter a location to search for parking",
+    "found": "Found {{count}} parking spot near \"{{location}}\"{{duration}}",
+    "found_plural": "Found {{count}} parking spots near \"{{location}}\"{{duration}}",
+    "noResults": "No parking spots found near \"{{location}}\". Try zooming out on the map to see nearby options.",
+    "cleared": "Search cleared - showing all parking spots",
+    "forDuration": " for {{duration}}"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enable": "Enable Notifications",
+    "disable": "Disable Notifications",
+    "enabled": "Notifications enabled successfully!",
+    "disabled": "Notifications disabled",
+    "unsupported": "Push notifications are not supported in this browser",
+    "permission": "Notification permission is required to receive updates",
+    "bookingConfirmed": "Booking Confirmed",
+    "bookingCancelled": "Booking Cancelled",
+    "paymentReceived": "Payment Received",
+    "newBooking": "New Booking Request"
+  },
+  "settings": {
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "notifications": "Notification Settings",
+    "pushNotifications": "Push Notifications"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}

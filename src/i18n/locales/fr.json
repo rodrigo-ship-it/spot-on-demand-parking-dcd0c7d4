@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "howItWorks": "Comment Ça Marche",
+    "mySpots": "Mes Places",
+    "myBookings": "Mes Réservations",
+    "profile": "Profil",
+    "signIn": "Se Connecter",
+    "signOut": "Se Déconnecter"
+  },
+  "hero": {
+    "title": "Trouvez-le. Réservez-le. Arriv",
+    "subtitle": "Découvrez des places de parking pratiques ou gagnez de l'argent en listant votre espace inutilisé. Rejoignez des milliers de conducteurs et propriétaires.",
+    "searchPlaceholder": "Où avez-vous besoin de parking?",
+    "duration": "Durée",
+    "search": "Rechercher",
+    "clearSearch": "Effacer la Recherche et Tout Afficher"
+  },
+  "features": {
+    "instantBooking": "Réservation Instantanée",
+    "instantBookingDesc": "Réservez des places de parking instantanément avec notre système de disponibilité en temps réel",
+    "securePayment": "Paiement Sécurisé",
+    "securePaymentDesc": "Transactions sûres et sécurisées avec protection pour les deux parties",
+    "communityDriven": "Axé sur la Communauté",
+    "communityDrivenDesc": "Rejoignez une communauté de confiance de conducteurs et propriétaires d'espaces de stationnement"
+  },
+  "spots": {
+    "availableTitle": "Places de Parking Disponibles",
+    "availableSubtitle": "Trouvez la place parfaite pour vos besoins",
+    "loading": "Chargement des places de parking...",
+    "noSpots": "Aucune place de parking disponible pour le moment",
+    "beFirst": "Soyez le premier à lister une place de parking dans votre région!",
+    "listFirst": "Listez Votre Première Place",
+    "bookNow": "Réserver Maintenant",
+    "perHour": "par heure",
+    "away": "de distance"
+  },
+  "cta": {
+    "title": "Transformez Votre Espace en Revenus",
+    "subtitle": "Vous avez un espace de parking inutilisé? Listez-le sur Arriv et commencez à gagner de l'argent aujourd'hui.",
+    "startEarning": "Commencer à Gagner Maintenant"
+  },
+  "explore": {
+    "title": "Explorer Plus",
+    "subtitle": "Tout ce dont vous avez besoin pour commencer avec Arriv"
+  },
+  "search": {
+    "needLocation": "Veuillez entrer un emplacement pour rechercher un parking",
+    "found": "{{count}} place de parking trouvée près de \"{{location}}\"{{duration}}",
+    "found_plural": "{{count}} places de parking trouvées près de \"{{location}}\"{{duration}}",
+    "noResults": "Aucune place de parking trouvée près de \"{{location}}\". Essayez de dézoomer sur la carte pour voir les options à proximité.",
+    "cleared": "Recherche effacée - affichage de toutes les places de parking",
+    "forDuration": " pour {{duration}}"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enable": "Activer les Notifications",
+    "disable": "Désactiver les Notifications",
+    "enabled": "Notifications activées avec succès!",
+    "disabled": "Notifications désactivées",
+    "unsupported": "Les notifications push ne sont pas prises en charge par ce navigateur",
+    "permission": "L'autorisation de notification est requise pour recevoir les mises à jour",
+    "bookingConfirmed": "Réservation Confirmée",
+    "bookingCancelled": "Réservation Annulée",
+    "paymentReceived": "Paiement Reçu",
+    "newBooking": "Nouvelle Demande de Réservation"
+  },
+  "settings": {
+    "language": "Langue",
+    "selectLanguage": "Sélectionner la Langue",
+    "notifications": "Paramètres de Notification",
+    "pushNotifications": "Notifications Push"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
+  }
+}
