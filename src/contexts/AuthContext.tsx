@@ -41,10 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         // Handle auth events
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setTimeout(() => {
             // Defer any additional data fetching to prevent deadlocks
             console.log('User signed in successfully');
+            // If user just confirmed email, redirect to home
+            if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+              window.location.href = '/';
+            }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           cleanupAuthState();
@@ -137,22 +141,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userAgent: navigator.userAgent
       });
 
-      if (error) throw error;
-
-      // Send custom verification email
-      if (data.user && !data.user.email_confirmed_at) {
-        try {
-          const confirmUrl = `${redirectUrl}?token_hash=${data.session?.access_token}&type=signup`;
-          await supabase.functions.invoke('send-verification-email', {
-            body: {
-              email: data.user.email,
-              confirmationUrl: confirmUrl,
-              type: 'signup'
-            }
-          });
-        } catch (emailError) {
-          console.error('Failed to send verification email:', emailError);
+      if (error) {
+        // Handle case where user already exists but is unconfirmed
+        if (error.message.includes('User already registered')) {
+          toast.error('An account with this email already exists. Please check your email for confirmation or try signing in.');
+          return { error };
         }
+        throw error;
       }
 
       if (data.user) {
