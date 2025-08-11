@@ -114,7 +114,7 @@ export default function AdminDashboard() {
         pendingDisputes: disputesData?.length || 0
       });
 
-      // Load detailed data
+      // Load detailed data - Show empty state if no data
       const { data: usersWithProfiles } = await supabase
         .from('profiles')
         .select('*')
@@ -266,22 +266,30 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{user.full_name || 'No name'}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Joined: {new Date(user.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={user.email_confirmed_at ? "default" : "secondary"}>
-                          {user.email_confirmed_at ? "Verified" : "Unverified"}
-                        </Badge>
-                      </div>
+                  {users.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No users found yet</p>
+                      <p className="text-sm">Users will appear here when they sign up</p>
                     </div>
-                  ))}
+                  ) : (
+                    users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{user.full_name || 'No name'}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Joined: {new Date(user.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={user.email_confirmed_at ? "default" : "secondary"}>
+                            {user.email_confirmed_at ? "Verified" : "Unverified"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -294,29 +302,37 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {spots.map((spot) => (
-                    <div key={spot.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{spot.title}</p>
-                        <p className="text-sm text-muted-foreground">{spot.address}</p>
-                        <p className="text-xs text-muted-foreground">
-                          ${spot.price_per_hour}/hr
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={spot.is_active ? "default" : "secondary"}>
-                          {spot.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleSpotStatus(spot.id, spot.is_active)}
-                        >
-                          {spot.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                        </Button>
-                      </div>
+                  {spots.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No parking spots found yet</p>
+                      <p className="text-sm">Spots will appear here when owners list them</p>
                     </div>
-                  ))}
+                  ) : (
+                    spots.map((spot) => (
+                      <div key={spot.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <p className="font-medium">{spot.title}</p>
+                          <p className="text-sm text-muted-foreground">{spot.address}</p>
+                          <p className="text-xs text-muted-foreground">
+                            ${spot.price_per_hour}/hr
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={spot.is_active ? "default" : "secondary"}>
+                            {spot.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleSpotStatus(spot.id, spot.is_active)}
+                          >
+                            {spot.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -329,29 +345,37 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {bookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Booking ID: {booking.id.slice(0, 8)}...
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(booking.start_time).toLocaleDateString()} - ${Number(booking.total_amount).toFixed(2)}
-                        </p>
-                      </div>
-                      <Badge 
-                        variant={
-                          booking.status === 'confirmed' ? 'default' :
-                          booking.status === 'active' ? 'default' :
-                          booking.status === 'completed' ? 'secondary' :
-                          'destructive'
-                        }
-                      >
-                        {booking.status}
-                      </Badge>
+                  {bookings.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Car className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No bookings found yet</p>
+                      <p className="text-sm">Bookings will appear here when users make reservations</p>
                     </div>
-                  ))}
+                  ) : (
+                    bookings.map((booking) => (
+                      <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Booking ID: {booking.id.slice(0, 8)}...
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(booking.start_time).toLocaleDateString()} - ${Number(booking.total_amount).toFixed(2)}
+                          </p>
+                        </div>
+                        <Badge 
+                          variant={
+                            booking.status === 'confirmed' ? 'default' :
+                            booking.status === 'active' ? 'default' :
+                            booking.status === 'completed' ? 'secondary' :
+                            'destructive'
+                          }
+                        >
+                          {booking.status}
+                        </Badge>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
