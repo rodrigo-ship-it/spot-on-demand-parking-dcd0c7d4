@@ -73,8 +73,8 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Simple admin check - in production, this should be a proper role-based system
-  const isAdmin = user?.email === 'admin@parkingapp.com'; // Replace with your admin email
+  // Simple admin check - replace with your actual admin email
+  const isAdmin = user?.email === 'your-email@example.com'; // Update this to your email
 
   useEffect(() => {
     if (isAdmin) {
