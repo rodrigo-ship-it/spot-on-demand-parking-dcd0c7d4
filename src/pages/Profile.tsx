@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,11 +19,9 @@ import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationSettings } from "@/components/NotificationSettings";
 
 const Profile = () => {
-  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -176,7 +173,6 @@ const Profile = () => {
               </Link>
             </div>
           <div className="flex items-center space-x-4">
-            <LanguageSwitcher />
             <NotificationSettings />
             <TermsAcceptanceStatus />
             <Button size="sm" onClick={handleSignOut}>Sign Out</Button>

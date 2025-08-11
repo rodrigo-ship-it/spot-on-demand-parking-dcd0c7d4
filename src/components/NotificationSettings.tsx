@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,6 @@ import { notificationService, NotificationPreferences } from "@/services/notific
 import { toast } from "sonner";
 
 export const NotificationSettings = () => {
-  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences>({
@@ -45,19 +43,19 @@ export const NotificationSettings = () => {
         if (permission) {
           await notificationService.subscribeToPush();
           setIsEnabled(true);
-          toast.success(t('notifications.enabled'));
+          toast.success('Push notifications enabled');
           
           // Update preferences
           const newPrefs = { ...preferences, pushEnabled: true };
           setPreferences(newPrefs);
           await notificationService.updateNotificationPreferences(newPrefs);
         } else {
-          toast.error(t('notifications.permission'));
+          toast.error('Please allow notifications in your browser settings');
         }
       } else {
         await notificationService.unsubscribeFromPush();
         setIsEnabled(false);
-        toast.success(t('notifications.disabled'));
+        toast.success('Push notifications disabled');
         
         // Update preferences
         const newPrefs = { ...preferences, pushEnabled: false };
@@ -66,7 +64,7 @@ export const NotificationSettings = () => {
       }
     } catch (error) {
       console.error('Error toggling notifications:', error);
-      toast.error(t('notifications.unsupported'));
+      toast.error('Push notifications are not supported in this browser');
     }
     
     setLoading(false);
@@ -93,14 +91,14 @@ export const NotificationSettings = () => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           {isEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-          <span className="hidden sm:inline">{t('notifications.title')}</span>
+          <span className="hidden sm:inline">Notifications</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            {t('settings.notifications')}
+            Notification Settings
           </DialogTitle>
         </DialogHeader>
         
@@ -112,7 +110,7 @@ export const NotificationSettings = () => {
                 <div className="space-y-1">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Smartphone className="w-4 h-4" />
-                    {t('settings.pushNotifications')}
+                    Push Notifications
                   </CardTitle>
                   <CardDescription className="text-sm">
                     {isEnabled 
@@ -181,7 +179,7 @@ export const NotificationSettings = () => {
           {!('Notification' in window) && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800">
-                {t('notifications.unsupported')}
+                Push notifications are not supported in this browser
               </p>
             </div>
           )}
