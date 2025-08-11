@@ -20,6 +20,8 @@ import NotFound from "./pages/NotFound";
 import BookSpot from "./pages/BookSpot";
 import RentQR from "./pages/RentQR";
 import Auth from "./pages/Auth";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +79,8 @@ const App = () => {
                   <Route path="/bookings" element={<Bookings />} />
                   <Route path="/booking-confirmed" element={<BookingConfirmed />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -18,6 +18,7 @@ import { DataExportDialog } from "@/components/DataExportDialog";
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
+import { EmailVerification } from "@/components/EmailVerification";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -188,6 +189,9 @@ const Profile = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Email Verification */}
+          <EmailVerification />
+
           {/* Profile Information */}
           <Card>
             <CardHeader>
