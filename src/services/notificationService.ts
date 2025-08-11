@@ -44,7 +44,7 @@ class NotificationService {
       // Store subscription in Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from('notification_subscriptions').upsert({
+        await (supabase as any).from('notification_subscriptions').upsert({
           user_id: user.id,
           subscription: JSON.stringify(subscription),
           updated_at: new Date().toISOString()
@@ -69,7 +69,7 @@ class NotificationService {
           // Remove subscription from Supabase
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            await supabase.from('notification_subscriptions')
+            await (supabase as any).from('notification_subscriptions')
               .delete()
               .eq('user_id', user.id);
           }
@@ -114,13 +114,13 @@ class NotificationService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('notification_preferences')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      return data || {
+      return (data as NotificationPreferences) || {
         pushEnabled: false,
         bookingUpdates: true,
         paymentAlerts: true,
@@ -137,7 +137,7 @@ class NotificationService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('notification_preferences')
         .upsert({
           user_id: user.id,
