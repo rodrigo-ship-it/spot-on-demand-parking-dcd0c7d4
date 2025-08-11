@@ -3,6 +3,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanupAuthState } from '@/lib/auth-cleanup';
 import { toast } from 'sonner';
+import { logLoginAttempt } from '@/lib/securityMonitoring';
+import { auditLog } from '@/lib/security';
 
 // Authentication context for managing user sessions
 
@@ -78,6 +80,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
 
+      // Log security event with enhanced monitoring
+      const ipAddress = (navigator as any).connection?.effectiveType || 'unknown';
+      logLoginAttempt(!error, email, ipAddress);
+      auditLog.logSecurityEvent('user_signin_attempt', { 
+        email, 
+        success: !error,
+        ipAddress,
+        userAgent: navigator.userAgent
+      });
+
       if (error) throw error;
 
       if (data.user) {
@@ -91,6 +103,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null };
     } catch (error: any) {
       console.error('Sign in error:', error);
+      logLoginAttempt(false, email);
+      auditLog.logSecurityEvent('user_signin_error', { 
+        email, 
+        error: error.message,
+        userAgent: navigator.userAgent
+      });
       return { error };
     }
   };
@@ -113,6 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
+      auditLog.logSecurityEvent('user_signup_attempt', { 
+        email, 
+        success: !error,
+        userAgent: navigator.userAgent
+      });
+
       if (error) throw error;
 
       if (data.user) {
@@ -122,6 +146,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null };
     } catch (error: any) {
       console.error('Sign up error:', error);
+      auditLog.logSecurityEvent('user_signup_error', { 
+        email, 
+        error: error.message,
+        userAgent: navigator.userAgent
+      });
       return { error };
     }
   };
