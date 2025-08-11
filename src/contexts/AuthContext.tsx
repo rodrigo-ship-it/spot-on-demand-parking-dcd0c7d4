@@ -139,6 +139,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
+      // Send custom verification email
+      if (data.user && !data.user.email_confirmed_at) {
+        try {
+          const confirmUrl = `${redirectUrl}?token_hash=${data.session?.access_token}&type=signup`;
+          await supabase.functions.invoke('send-verification-email', {
+            body: {
+              email: data.user.email,
+              confirmationUrl: confirmUrl,
+              type: 'signup'
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send verification email:', emailError);
+        }
+      }
+
       if (data.user) {
         toast.success('Account created! Please check your email to confirm.');
       }
