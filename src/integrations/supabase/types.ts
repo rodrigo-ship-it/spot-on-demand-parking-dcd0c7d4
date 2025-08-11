@@ -152,6 +152,66 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          booking_updates: boolean
+          created_at: string
+          id: string
+          payment_alerts: boolean
+          promotions: boolean
+          push_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_updates?: boolean
+          created_at?: string
+          id?: string
+          payment_alerts?: boolean
+          promotions?: boolean
+          push_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_updates?: boolean
+          created_at?: string
+          id?: string
+          payment_alerts?: boolean
+          promotions?: boolean
+          push_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          keys: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          keys: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          keys?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       parking_spots: {
         Row: {
           address: string
@@ -462,6 +522,36 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           color: string | null
@@ -506,7 +596,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      log_security_event: {
+        Args: { p_event_type: string; p_event_data?: Json; p_user_id?: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
