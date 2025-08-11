@@ -39,17 +39,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth event:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
         
         // Handle auth events
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setTimeout(() => {
-            // Defer any additional data fetching to prevent deadlocks
-            console.log('User signed in successfully');
-            // If user just confirmed email, redirect to home
-            if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+          // Only redirect if user just confirmed email and we're not already on home page
+          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && window.location.pathname !== '/') {
+            setTimeout(() => {
               window.location.href = '/';
-            }
-          }, 0);
+            }, 500);
+          }
         } else if (event === 'SIGNED_OUT') {
           cleanupAuthState();
         }
@@ -148,6 +147,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { error };
         }
         throw error;
+      }
+
+      // Send custom verification email using our edge function
+      if (data.user && !data.user.email_confirmed_at) {
+        try {
+          // Use the proper Supabase confirmation URL format
+          const confirmUrl = `${redirectUrl}#access_token=${data.session?.access_token}&expires_in=3600&refresh_token=${data.session?.refresh_token}&token_type=bearer&type=signup`;
+          
+          await supabase.functions.invoke('send-verification-email', {
+            body: {
+              email: data.user.email,
+              confirmationUrl: confirmUrl,
+              type: 'signup'
+            }
+          });
+          
+          console.log('Custom verification email sent');
+        } catch (emailError) {
+          console.error('Failed to send custom verification email:', emailError);
+          // Don't fail the signup if custom email fails - Supabase will send default
+        }
       }
 
       if (data.user) {
