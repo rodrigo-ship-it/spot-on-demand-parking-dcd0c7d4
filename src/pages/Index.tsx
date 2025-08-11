@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +13,11 @@ import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete"
 import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 const Index = () => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -114,6 +118,8 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <LanguageSwitcher />
+              <NotificationSettings />
               {user ? (
                 <>
                   <Link to="/bookings">
