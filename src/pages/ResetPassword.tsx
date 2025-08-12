@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,146 +7,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { session, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validTokens, setValidTokens] = useState<{access_token: string, refresh_token: string} | null>(null);
   const [passwords, setPasswords] = useState({
     password: '',
     confirmPassword: ''
   });
 
-  // Get the tokens from URL parameters - check both query params and hash
-  const accessToken = searchParams.get('access_token');
-  const refreshToken = searchParams.get('refresh_token');
-  
-  // Also check for recovery-specific parameters
-  const recoveryToken = searchParams.get('token');
-  const recoveryType = searchParams.get('type');
-  
-  // Also check URL hash for tokens (Supabase sometimes uses hash)
-  const urlHash = window.location.hash;
-  console.log('=== DEBUG TOKEN EXTRACTION ===');
-  console.log('Full URL:', window.location.href);
-  console.log('URL search params:', window.location.search);
-  console.log('URL hash:', urlHash);
-  console.log('Access token from params:', accessToken);
-  console.log('Refresh token from params:', refreshToken);
-  console.log('Recovery token:', recoveryToken);
-  console.log('Recovery type:', recoveryType);
-  console.log('=== END DEBUG ===');
-
   useEffect(() => {
-    console.log('=== RESET PASSWORD DEBUG START ===');
-    console.log('Full URL:', window.location.href);
-    console.log('Search params string:', window.location.search);
-    console.log('Hash string:', window.location.hash);
+    console.log('ResetPassword: session check', { hasSession: !!session, loading });
     
-    // Log all URL parameters
-    console.log('All search params:');
-    for (const [key, value] of searchParams.entries()) {
-      console.log(`  ${key}: ${value}`);
+    // If not loading and no session, redirect to auth
+    if (!loading && !session) {
+      console.log('No session found, redirecting to auth');
+      toast.error('Invalid or expired reset link. Please request a new one.');
+      navigate('/auth');
     }
-    
-    // Log hash parameters if any
-    if (urlHash) {
-      console.log('Hash parameters:');
-      const hashParams = new URLSearchParams(urlHash.substring(1));
-      for (const [key, value] of hashParams.entries()) {
-        console.log(`  ${key}: ${value}`);
-      }
-    }
-    
-    console.log('Extracted tokens:');
-    console.log('  accessToken from params:', accessToken);
-    console.log('  refreshToken from params:', refreshToken);
-    console.log('  recoveryToken from params:', recoveryToken);
-    console.log('  recoveryType from params:', recoveryType);
-    console.log('=== RESET PASSWORD DEBUG END ===');
-    
-    // Wait a moment for Supabase to complete any redirects
-    const timer = setTimeout(() => {
-      // Check for error in hash or query params first
-      const checkForErrors = () => {
-        // Check URL hash for errors
-        if (urlHash && urlHash.includes('error=')) {
-          const hashParams = new URLSearchParams(urlHash.substring(1));
-          const error = hashParams.get('error');
-          const errorCode = hashParams.get('error_code');
-          const errorDescription = hashParams.get('error_description');
-          console.log('Error in hash:', { error, errorCode, errorDescription });
-          return { error, errorCode, errorDescription };
-        }
-        
-        // Check query params for errors
-        const error = searchParams.get('error');
-        const errorCode = searchParams.get('error_code');
-        const errorDescription = searchParams.get('error_description');
-        if (error) {
-          console.log('Error in query params:', { error, errorCode, errorDescription });
-          return { error, errorCode, errorDescription };
-        }
-        
-        return null;
-      };
-      
-      const errorInfo = checkForErrors();
-      if (errorInfo) {
-        console.log('Found error, showing message and redirecting');
-        if (errorInfo.errorCode === 'otp_expired') {
-          toast.error('Password reset link has expired. Please request a new one.');
-        } else {
-          toast.error('Invalid password reset link. Please request a new one.');
-        }
-        
-        setTimeout(() => {
-          navigate('/auth');
-        }, 3000);
-        return;
-      }
-      
-      // Extract tokens from either query params or hash
-      let finalAccessToken = accessToken;
-      let finalRefreshToken = refreshToken;
-      
-      // Check hash for tokens if not in query params
-      if (!finalAccessToken && urlHash) {
-        const hashParams = new URLSearchParams(urlHash.substring(1));
-        finalAccessToken = hashParams.get('access_token');
-        finalRefreshToken = hashParams.get('refresh_token');
-        console.log('Tokens extracted from hash - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
-      }
-      
-      console.log('Final token check - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
-      
-      // If we have valid tokens, store them
-      if (finalAccessToken && finalRefreshToken) {
-        console.log('VALID TOKENS FOUND - Setting up password reset');
-        setValidTokens({
-          access_token: finalAccessToken,
-          refresh_token: finalRefreshToken
-        });
-        
-        // Clean the URL immediately to prevent any interference
-        window.history.replaceState({}, document.title, '/reset-password');
-        console.log('URL cleaned successfully');
-        return;
-      }
-      
-      // If no tokens found after everything, show error
-      console.log('NO VALID TOKENS FOUND - Showing error');
-      toast.error('Invalid password reset link. Please request a new one.');
-      setTimeout(() => {
-        navigate('/auth');
-      }, 3000);
-    }, 100); // Small delay to let Supabase finish processing
-    
-    return () => clearTimeout(timer);
-  }, [accessToken, refreshToken, recoveryToken, recoveryType, navigate, urlHash, searchParams]);
+  }, [session, loading, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswords(prev => ({
@@ -158,7 +41,7 @@ const ResetPassword = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validTokens) {
+    if (!session) {
       toast.error('Invalid reset session. Please request a new password reset.');
       navigate('/auth');
       return;
@@ -180,17 +63,7 @@ const ResetPassword = () => {
     }
 
     try {
-      // First, set the session with the reset tokens
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: validTokens.access_token,
-        refresh_token: validTokens.refresh_token
-      });
-
-      if (sessionError) {
-        throw sessionError;
-      }
-
-      // Now update the password
+      // Update the password using the current session
       const { error } = await supabase.auth.updateUser({
         password: passwords.password
       });
@@ -211,6 +84,18 @@ const ResetPassword = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking session
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">

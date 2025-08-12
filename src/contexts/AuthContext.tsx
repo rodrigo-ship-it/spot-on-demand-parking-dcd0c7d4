@@ -39,18 +39,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         console.log('Auth event:', event, session?.user?.email);
         
-        // If we're on reset password page and get any auth event, ignore it completely
-        if (window.location.pathname === '/reset-password') {
-          console.log('Ignoring all auth events on reset password page');
-          return;
-        }
-        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Handle auth events
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Check if this is a password recovery sign-in
+          if (event === 'SIGNED_IN' && window.location.pathname === '/reset-password') {
+            console.log('Password recovery sign-in detected, staying on reset page');
+            return; // Don't redirect, stay on reset page
+          }
+          
           // Only redirect if user just confirmed email and we're not already on home page
           if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && window.location.pathname !== '/') {
             setTimeout(() => {
@@ -63,17 +63,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session, but not on reset password page
-    if (window.location.pathname !== '/reset-password') {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      });
-    } else {
-      // On reset password page, just set loading to false
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
-    }
+    });
 
     return () => subscription.unsubscribe();
   }, []);
