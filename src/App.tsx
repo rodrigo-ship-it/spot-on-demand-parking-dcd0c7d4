@@ -22,6 +22,7 @@ import RentQR from "./pages/RentQR";
 import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/AdminDashboard";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/list-spot" element={<ProtectedListSpot />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/help" element={<HelpSupport />} />
