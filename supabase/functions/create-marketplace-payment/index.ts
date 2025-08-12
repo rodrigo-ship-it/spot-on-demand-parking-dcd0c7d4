@@ -75,7 +75,7 @@ serve(async (req) => {
       metadata: {
         booking_id: booking.id,
         owner_id: booking.parking_spots.owner_id,
-        platform_fee: platformFee.toString(),
+        platform_fee: totalPlatformFee.toString(),
         owner_amount: ownerAmount.toString(),
       },
       transfer_data: {
