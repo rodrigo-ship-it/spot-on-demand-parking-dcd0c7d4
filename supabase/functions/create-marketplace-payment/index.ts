@@ -59,10 +59,13 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Calculate fees (7% platform fee)
-    const totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100); // Convert to cents
-    const platformFee = Math.round(totalAmount * 0.07); // 7% fee
-    const ownerAmount = totalAmount - platformFee;
+    // Calculate fees - platform takes 7% from both sides
+    const totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100); // Convert to cents (what renter pays)
+    const baseSpotPrice = Math.round(totalAmount / 1.0875 / 1.07); // Remove tax and platform fee to get base price
+    const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07); // 7% from renter side
+    const platformFeeFromOwner = Math.round(baseSpotPrice * 0.07); // 7% from owner side
+    const totalPlatformFee = platformFeeFromRenter + platformFeeFromOwner; // 14% total
+    const ownerAmount = Math.round(baseSpotPrice - platformFeeFromOwner); // Owner gets base price minus 7%
 
     // Create payment intent with marketplace setup
     const paymentIntent = await stripe.paymentIntents.create({
@@ -79,7 +82,7 @@ serve(async (req) => {
         destination: payoutSettings.stripe_connect_account_id,
         amount: ownerAmount, // Owner gets 93% (minus Stripe fees)
       },
-      application_fee_amount: platformFee, // Platform keeps 7%
+      application_fee_amount: totalPlatformFee, // Platform keeps 14% total
     });
 
     // Update booking with fee information
@@ -91,14 +94,14 @@ serve(async (req) => {
 
     await supabaseService.from("bookings").update({
       payment_intent_id: paymentIntent.id,
-      platform_fee_amount: platformFee / 100, // Store in dollars
+      platform_fee_amount: totalPlatformFee / 100, // Store in dollars
       owner_payout_amount: ownerAmount / 100, // Store in dollars
       updated_at: new Date().toISOString(),
     }).eq("id", booking_id);
 
     return new Response(JSON.stringify({ 
       client_secret: paymentIntent.client_secret,
-      platform_fee: platformFee / 100,
+      platform_fee: totalPlatformFee / 100,
       owner_amount: ownerAmount / 100,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

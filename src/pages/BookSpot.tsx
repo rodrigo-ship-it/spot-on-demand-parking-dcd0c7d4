@@ -120,13 +120,15 @@ const BookSpot = () => {
     loadData();
   }, [id, user, navigate]);
 
-  // Pricing calculation
+  // Pricing calculation - 7% upcharge for renters, 7% deduction for listers
   const basePrice = spotData?.price_per_hour || 8;
   const duration = bookingDetails.duration;
   const subtotal = basePrice * duration;
-  const serviceFee = Math.round(subtotal * 0.08); // 8% service fee
-  const tax = Math.round(subtotal * 0.0875); // 8.75% tax
-  const total = subtotal + serviceFee + tax;
+  const platformFee = Math.round(subtotal * 0.07); // 7% platform fee
+  const renterTotal = subtotal + platformFee; // Renter pays 7% more
+  const ownerPayout = subtotal - platformFee; // Owner gets 7% less
+  const tax = Math.round(renterTotal * 0.0875); // 8.75% tax on total amount
+  const total = renterTotal + tax;
 
   // Auto-extension settings (would come from spot host settings)
   const [hostSettings] = useState({
@@ -380,24 +382,27 @@ const BookSpot = () => {
                   Pricing Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span>${basePrice}/hr × {duration} hours</span>
-                  <span>${subtotal}</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Service fee</span>
-                  <span>${serviceFee}</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Tax</span>
-                  <span>${tax}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span>${total}</span>
-                </div>
+               <CardContent className="space-y-3">
+                 <div className="flex justify-between">
+                   <span>${basePrice}/hr × {duration} hours</span>
+                   <span>${subtotal}</span>
+                 </div>
+                 <div className="flex justify-between text-sm text-gray-600">
+                   <span>Platform fee (7%)</span>
+                   <span>${platformFee}</span>
+                 </div>
+                 <div className="flex justify-between text-sm text-gray-600">
+                   <span>Tax</span>
+                   <span>${tax}</span>
+                 </div>
+                 <Separator />
+                 <div className="flex justify-between font-semibold text-lg">
+                   <span>Total</span>
+                   <span>${total}</span>
+                 </div>
+                 <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                   Owner receives: ${ownerPayout} (after 7% platform fee)
+                 </div>
                 
                 {bookingDetails.autoExtend && (
                   <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded">
