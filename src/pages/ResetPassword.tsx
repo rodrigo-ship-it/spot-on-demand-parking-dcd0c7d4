@@ -105,9 +105,8 @@ const ResetPassword = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => {
-                  // Add a flag to prevent auto-redirect
-                  sessionStorage.setItem('fromPasswordReset', 'true');
+                onClick={async () => {
+                  await supabase.auth.signOut();
                   navigate('/auth');
                 }}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
