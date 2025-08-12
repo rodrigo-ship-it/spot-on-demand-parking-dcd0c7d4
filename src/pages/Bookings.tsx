@@ -16,6 +16,7 @@ import { AdvancedFiltersDialog } from "@/components/AdvancedFiltersDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import RefundRequestDialog from "@/components/RefundRequestDialog";
+import { ContactButtons } from "@/components/ContactButtons";
 
 const Bookings = () => {
   const { user } = useAuth();
@@ -98,7 +99,9 @@ const Bookings = () => {
           // Get owner profile separately
           let ownerName = 'Unknown Owner';
           let ownerPhone = 'No phone';
+          let ownerId = null;
           if (booking.parking_spots?.owner_id) {
+            ownerId = booking.parking_spots.owner_id;
             const { data: ownerProfile } = await supabase
               .from('profiles')
               .select('full_name, phone')
@@ -116,6 +119,8 @@ const Bookings = () => {
             spotTitle: booking.parking_spots?.title || 'Unknown Spot',
             spotAddress: booking.parking_spots?.address || 'Unknown Address',
             spotOwner: ownerName,
+            ownerName: ownerName,
+            ownerId: ownerId,
             ownerPhone: ownerPhone,
             date: startDate.toLocaleDateString(),
             startTime: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -395,14 +400,15 @@ const Bookings = () => {
                             <Navigation className="w-3 h-3 mr-1" />
                             Directions
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => window.open(`tel:${reservation.ownerPhone}`, '_self')}
-                          >
-                            <Phone className="w-3 h-3 mr-1" />
-                            Contact
-                          </Button>
+                          {user && (
+                            <ContactButtons
+                              bookingId={reservation.id}
+                              recipientId={reservation.ownerId}
+                              recipientName={reservation.ownerName}
+                              showCallButton={true}
+                              showChatButton={true}
+                            />
+                          )}
                         </div>
                         {reservation.status === "Active" && (
                           <Dialog>

@@ -73,6 +73,53 @@ export type Database = {
           },
         ]
       }
+      call_sessions: {
+        Row: {
+          booking_id: string
+          caller_id: string
+          created_at: string | null
+          ended_at: string | null
+          expires_at: string | null
+          id: string
+          proxy_number: string | null
+          recipient_id: string
+          status: string | null
+          twilio_session_id: string | null
+        }
+        Insert: {
+          booking_id: string
+          caller_id: string
+          created_at?: string | null
+          ended_at?: string | null
+          expires_at?: string | null
+          id?: string
+          proxy_number?: string | null
+          recipient_id: string
+          status?: string | null
+          twilio_session_id?: string | null
+        }
+        Update: {
+          booking_id?: string
+          caller_id?: string
+          created_at?: string | null
+          ended_at?: string | null
+          expires_at?: string | null
+          id?: string
+          proxy_number?: string | null
+          recipient_id?: string
+          status?: string | null
+          twilio_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_call_sessions_booking"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disputes: {
         Row: {
           booking_id: string
@@ -161,6 +208,50 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          booking_id: string
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string | null
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_messages_booking"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           booking_updates: boolean
@@ -223,6 +314,8 @@ export type Database = {
       }
       parking_spots: {
         Row: {
+          access_instructions: string | null
+          access_requirements: string | null
           address: string
           amenities: string[] | null
           availability_schedule: Json | null
@@ -244,6 +337,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_instructions?: string | null
+          access_requirements?: string | null
           address: string
           amenities?: string[] | null
           availability_schedule?: Json | null
@@ -265,6 +360,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_instructions?: string | null
+          access_requirements?: string | null
           address?: string
           amenities?: string[] | null
           availability_schedule?: Json | null
@@ -493,6 +590,48 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          booking_id: string
+          created_at: string
+          id: string
+          processed_at: string | null
+          reason: string
+          status: string
+          stripe_refund_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          booking_id: string
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          reason: string
+          status?: string
+          stripe_refund_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          reason?: string
+          status?: string
+          stripe_refund_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -614,9 +753,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_unread_message_count: {
+        Args: { booking_id_param: string }
+        Returns: number
+      }
       log_security_event: {
         Args: { p_event_type: string; p_event_data?: Json; p_user_id?: string }
         Returns: string
+      }
+      mark_message_as_read: {
+        Args: { message_id: string }
+        Returns: undefined
       }
     }
     Enums: {

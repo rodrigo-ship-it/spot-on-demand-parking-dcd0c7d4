@@ -2,6 +2,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Clock, DollarSign, User, Mail, Phone, Car } from "lucide-react";
+import { ContactButtons } from "./ContactButtons";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BookingDetailsDialogProps {
   booking: any;
@@ -10,6 +12,8 @@ interface BookingDetailsDialogProps {
 }
 
 export const BookingDetailsDialog = ({ booking, isOpen, onClose }: BookingDetailsDialogProps) => {
+  const { user } = useAuth();
+  
   if (!booking) return null;
 
   const getStatusColor = (status: string) => {
@@ -139,16 +143,20 @@ export const BookingDetailsDialog = ({ booking, isOpen, onClose }: BookingDetail
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end space-x-2 mt-6">
-          <Button variant="outline" onClick={() => window.open(`mailto:${booking.email}`, '_self')}>
-            <Mail className="w-4 h-4 mr-2" />
-            Contact Customer
-          </Button>
-          <Button variant="outline" onClick={() => window.open(`tel:${booking.phone}`, '_self')}>
-            <Phone className="w-4 h-4 mr-2" />
-            Call Customer
-          </Button>
+        {/* Contact & Actions */}
+        <div className="flex justify-between items-center mt-6">
+          <div>
+            {/* Show secure contact buttons if we have the necessary IDs */}
+            {booking.id && user && (
+              <ContactButtons
+                bookingId={booking.id}
+                recipientId={booking.renter_id || booking.owner_id} 
+                recipientName={booking.customer || booking.ownerName || 'Contact'}
+                showCallButton={true}
+                showChatButton={true}
+              />
+            )}
+          </div>
           <Button onClick={onClose}>Close</Button>
         </div>
       </DialogContent>

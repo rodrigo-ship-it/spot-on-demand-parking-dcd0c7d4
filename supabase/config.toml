@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.webhook-handler]
 verify_jwt = false
+
+[functions.create-call-session]
+verify_jwt = true
