@@ -41,45 +41,67 @@ const ResetPassword = () => {
   console.log('=== END DEBUG ===');
 
   useEffect(() => {
-    console.log('ResetPassword useEffect running');
+    console.log('=== DEBUG TOKEN EXTRACTION ===');
     console.log('Full URL:', window.location.href);
+    console.log('URL search params:', window.location.search);
+    console.log('URL hash:', urlHash);
+    console.log('=== END DEBUG ===');
     
-    // Check for error in hash first
-    if (urlHash && urlHash.includes('error=')) {
-      const hashParams = new URLSearchParams(urlHash.substring(1));
-      const error = hashParams.get('error');
-      const errorCode = hashParams.get('error_code');
-      const errorDescription = hashParams.get('error_description');
+    // Check for error in hash or query params first
+    const checkForErrors = () => {
+      // Check URL hash for errors
+      if (urlHash && urlHash.includes('error=')) {
+        const hashParams = new URLSearchParams(urlHash.substring(1));
+        const error = hashParams.get('error');
+        const errorCode = hashParams.get('error_code');
+        const errorDescription = hashParams.get('error_description');
+        console.log('Error in hash:', { error, errorCode, errorDescription });
+        return { error, errorCode, errorDescription };
+      }
       
-      console.log('Password reset error detected:', { error, errorCode, errorDescription });
+      // Check query params for errors
+      const error = searchParams.get('error');
+      const errorCode = searchParams.get('error_code');
+      const errorDescription = searchParams.get('error_description');
+      if (error) {
+        console.log('Error in query params:', { error, errorCode, errorDescription });
+        return { error, errorCode, errorDescription };
+      }
       
-      if (errorCode === 'otp_expired') {
+      return null;
+    };
+    
+    const errorInfo = checkForErrors();
+    if (errorInfo) {
+      if (errorInfo.errorCode === 'otp_expired') {
         toast.error('Password reset link has expired. Please request a new one.');
       } else {
         toast.error('Invalid password reset link. Please request a new one.');
       }
       
-      // Redirect to auth page after showing error
       setTimeout(() => {
         navigate('/auth');
       }, 3000);
       return;
     }
     
-    // Parse tokens from hash if not in search params
+    // Extract tokens from either query params or hash
     let finalAccessToken = accessToken;
     let finalRefreshToken = refreshToken;
     
+    // Check hash for tokens if not in query params
     if (!finalAccessToken && urlHash) {
       const hashParams = new URLSearchParams(urlHash.substring(1));
       finalAccessToken = hashParams.get('access_token');
       finalRefreshToken = hashParams.get('refresh_token');
-      console.log('Tokens from hash - access:', finalAccessToken, 'refresh:', finalRefreshToken);
+      console.log('Tokens from hash - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
     }
     
-    // If no tokens anywhere, redirect to auth page
+    console.log('Final tokens - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
+    
+    // If no tokens found, this might be an invalid link
     if (!finalAccessToken || !finalRefreshToken) {
-      console.log('No valid tokens found');
+      console.log('No valid tokens found in URL');
       toast.error('Invalid password reset link. Please request a new one.');
       setTimeout(() => {
         navigate('/auth');
@@ -87,19 +109,17 @@ const ResetPassword = () => {
       return;
     }
 
-    // If we have valid tokens, store them and clean the URL
-    if (finalAccessToken && finalRefreshToken) {
-      console.log('Valid tokens found, storing for password reset');
-      setValidTokens({
-        access_token: finalAccessToken,
-        refresh_token: finalRefreshToken
-      });
-      
-      // Clean the URL to prevent AuthContext from processing these tokens
-      window.history.replaceState({}, document.title, '/reset-password');
-      console.log('URL cleaned to prevent auto sign-in');
-    }
-  }, [accessToken, refreshToken, navigate, urlHash]);
+    // Store valid tokens and clean the URL immediately
+    console.log('Valid tokens found, storing for password reset');
+    setValidTokens({
+      access_token: finalAccessToken,
+      refresh_token: finalRefreshToken
+    });
+    
+    // Clean the URL immediately to prevent any interference
+    window.history.replaceState({}, document.title, '/reset-password');
+    console.log('URL cleaned to prevent token reuse');
+  }, [accessToken, refreshToken, navigate, urlHash, searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswords(prev => ({

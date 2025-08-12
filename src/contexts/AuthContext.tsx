@@ -39,11 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         console.log('Auth event:', event, session?.user?.email);
         
-        // If we're on reset password page, don't auto sign-in from URL tokens
-        if (window.location.pathname === '/reset-password' && event === 'SIGNED_IN') {
-          console.log('Preventing auto sign-in on reset password page');
-          // Sign out immediately to prevent auto sign-in
-          supabase.auth.signOut();
+        // If we're on reset password page and get any auth event, ignore it completely
+        if (window.location.pathname === '/reset-password') {
+          console.log('Ignoring all auth events on reset password page');
           return;
         }
         
@@ -65,12 +63,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // THEN check for existing session, but not on reset password page
+    if (window.location.pathname !== '/reset-password') {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
+    } else {
+      // On reset password page, just set loading to false
       setLoading(false);
-    });
+    }
 
     return () => subscription.unsubscribe();
   }, []);
