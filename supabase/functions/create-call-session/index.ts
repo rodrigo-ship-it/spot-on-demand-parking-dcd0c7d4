@@ -64,19 +64,92 @@ serve(async (req) => {
       throw new Error("Failed to create call session");
     }
 
-    // In a real implementation, you would:
-    // 1. Use Twilio to create a proxy number
-    // 2. Set up call forwarding
-    // 3. Store the Twilio session ID
+    // Get user profiles for phone numbers
+    const { data: callerProfile } = await supabaseClient
+      .from("profiles")
+      .select("phone")
+      .eq("user_id", user.id)
+      .single();
+
+    const { data: recipientProfile } = await supabaseClient
+      .from("profiles")
+      .select("phone")
+      .eq("user_id", recipientId)
+      .single();
+
+    if (!callerProfile?.phone || !recipientProfile?.phone) {
+      throw new Error("Both users must have phone numbers to make calls");
+    }
+
+    // Create Twilio proxy session
+    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     
-    // For now, return a simulated response
-    const mockProxyNumber = "+1-555-ARRIV-1";
+    if (!twilioAccountSid || !twilioAuthToken) {
+      throw new Error("Twilio credentials not configured");
+    }
+
+    const auth = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
     
+    // Create a proxy session
+    const proxyResponse = await fetch(
+      `https://proxy.twilio.com/v1/Services/${twilioAccountSid}/Sessions`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${auth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          UniqueName: callSession.id,
+          ttl: "3600", // 1 hour
+        }),
+      }
+    );
+
+    if (!proxyResponse.ok) {
+      throw new Error("Failed to create Twilio proxy session");
+    }
+
+    const proxySession = await proxyResponse.json();
+
+    // Add participants to the proxy session
+    const addParticipant = async (phoneNumber: string, friendlyName: string) => {
+      const participantResponse = await fetch(
+        `https://proxy.twilio.com/v1/Services/${twilioAccountSid}/Sessions/${proxySession.sid}/Participants`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Basic ${auth}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            Identifier: phoneNumber,
+            FriendlyName: friendlyName,
+          }),
+        }
+      );
+      return participantResponse.json();
+    };
+
+    await addParticipant(callerProfile.phone, "Caller");
+    await addParticipant(recipientProfile.phone, "Recipient");
+
+    // Update call session with Twilio session ID
+    await supabaseClient
+      .from("call_sessions")
+      .update({
+        twilio_session_id: proxySession.sid,
+        proxy_number: proxySession.phoneNumber || "+1-555-PROXY-1"
+      })
+      .eq("id", callSession.id);
+
     return new Response(JSON.stringify({
       sessionId: callSession.id,
-      proxyNumber: mockProxyNumber,
-      instructions: "Call this number to connect to the other party. Both numbers will show 'Arriv Parking' as caller ID.",
-      expiresAt: callSession.expires_at
+      proxyNumber: proxySession.phoneNumber || "+1-555-PROXY-1",
+      instructions: "Call this number to connect securely. Your numbers will remain private.",
+      expiresAt: callSession.expires_at,
+      twilioSessionId: proxySession.sid
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
