@@ -14,6 +14,7 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validTokens, setValidTokens] = useState<{access_token: string, refresh_token: string} | null>(null);
   const [passwords, setPasswords] = useState({
     password: '',
     confirmPassword: ''
@@ -74,24 +75,14 @@ const ResetPassword = () => {
       return;
     }
 
-    // Set the session with the tokens
-    const setSession = async () => {
-      console.log('Setting session with tokens:', finalAccessToken, finalRefreshToken);
-      const { error } = await supabase.auth.setSession({
+    // If we have valid tokens, store them for later use
+    if (finalAccessToken && finalRefreshToken) {
+      console.log('Valid tokens found, storing for password reset');
+      setValidTokens({
         access_token: finalAccessToken,
         refresh_token: finalRefreshToken
       });
-
-      if (error) {
-        console.error('Error setting session:', error);
-        toast.error('Invalid or expired reset link');
-        navigate('/auth');
-      } else {
-        console.log('Session set successfully');
-      }
-    };
-
-    setSession();
+    }
   }, [accessToken, refreshToken, navigate, urlHash]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,6 +94,13 @@ const ResetPassword = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validTokens) {
+      toast.error('Invalid reset session. Please request a new password reset.');
+      navigate('/auth');
+      return;
+    }
+    
     setIsLoading(true);
 
     // Validate passwords
@@ -119,6 +117,17 @@ const ResetPassword = () => {
     }
 
     try {
+      // First, set the session with the reset tokens
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: validTokens.access_token,
+        refresh_token: validTokens.refresh_token
+      });
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      // Now update the password
       const { error } = await supabase.auth.updateUser({
         password: passwords.password
       });
