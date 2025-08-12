@@ -24,12 +24,21 @@ const ResetPassword = () => {
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   
+  // Also check for recovery-specific parameters
+  const recoveryToken = searchParams.get('token');
+  const recoveryType = searchParams.get('type');
+  
   // Also check URL hash for tokens (Supabase sometimes uses hash)
   const urlHash = window.location.hash;
+  console.log('=== DEBUG TOKEN EXTRACTION ===');
+  console.log('Full URL:', window.location.href);
   console.log('URL search params:', window.location.search);
   console.log('URL hash:', urlHash);
   console.log('Access token from params:', accessToken);
   console.log('Refresh token from params:', refreshToken);
+  console.log('Recovery token:', recoveryToken);
+  console.log('Recovery type:', recoveryType);
+  console.log('=== END DEBUG ===');
 
   useEffect(() => {
     console.log('ResetPassword useEffect running');
