@@ -41,85 +41,112 @@ const ResetPassword = () => {
   console.log('=== END DEBUG ===');
 
   useEffect(() => {
-    console.log('=== DEBUG TOKEN EXTRACTION ===');
+    console.log('=== RESET PASSWORD DEBUG START ===');
     console.log('Full URL:', window.location.href);
-    console.log('URL search params:', window.location.search);
-    console.log('URL hash:', urlHash);
-    console.log('=== END DEBUG ===');
+    console.log('Search params string:', window.location.search);
+    console.log('Hash string:', window.location.hash);
     
-    // Check for error in hash or query params first
-    const checkForErrors = () => {
-      // Check URL hash for errors
-      if (urlHash && urlHash.includes('error=')) {
-        const hashParams = new URLSearchParams(urlHash.substring(1));
-        const error = hashParams.get('error');
-        const errorCode = hashParams.get('error_code');
-        const errorDescription = hashParams.get('error_description');
-        console.log('Error in hash:', { error, errorCode, errorDescription });
-        return { error, errorCode, errorDescription };
-      }
-      
-      // Check query params for errors
-      const error = searchParams.get('error');
-      const errorCode = searchParams.get('error_code');
-      const errorDescription = searchParams.get('error_description');
-      if (error) {
-        console.log('Error in query params:', { error, errorCode, errorDescription });
-        return { error, errorCode, errorDescription };
-      }
-      
-      return null;
-    };
-    
-    const errorInfo = checkForErrors();
-    if (errorInfo) {
-      if (errorInfo.errorCode === 'otp_expired') {
-        toast.error('Password reset link has expired. Please request a new one.');
-      } else {
-        toast.error('Invalid password reset link. Please request a new one.');
-      }
-      
-      setTimeout(() => {
-        navigate('/auth');
-      }, 3000);
-      return;
+    // Log all URL parameters
+    console.log('All search params:');
+    for (const [key, value] of searchParams.entries()) {
+      console.log(`  ${key}: ${value}`);
     }
     
-    // Extract tokens from either query params or hash
-    let finalAccessToken = accessToken;
-    let finalRefreshToken = refreshToken;
-    
-    // Check hash for tokens if not in query params
-    if (!finalAccessToken && urlHash) {
+    // Log hash parameters if any
+    if (urlHash) {
+      console.log('Hash parameters:');
       const hashParams = new URLSearchParams(urlHash.substring(1));
-      finalAccessToken = hashParams.get('access_token');
-      finalRefreshToken = hashParams.get('refresh_token');
-      console.log('Tokens from hash - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
+      for (const [key, value] of hashParams.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
     }
     
-    console.log('Final tokens - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
+    console.log('Extracted tokens:');
+    console.log('  accessToken from params:', accessToken);
+    console.log('  refreshToken from params:', refreshToken);
+    console.log('  recoveryToken from params:', recoveryToken);
+    console.log('  recoveryType from params:', recoveryType);
+    console.log('=== RESET PASSWORD DEBUG END ===');
     
-    // If no tokens found, this might be an invalid link
-    if (!finalAccessToken || !finalRefreshToken) {
-      console.log('No valid tokens found in URL');
+    // Wait a moment for Supabase to complete any redirects
+    const timer = setTimeout(() => {
+      // Check for error in hash or query params first
+      const checkForErrors = () => {
+        // Check URL hash for errors
+        if (urlHash && urlHash.includes('error=')) {
+          const hashParams = new URLSearchParams(urlHash.substring(1));
+          const error = hashParams.get('error');
+          const errorCode = hashParams.get('error_code');
+          const errorDescription = hashParams.get('error_description');
+          console.log('Error in hash:', { error, errorCode, errorDescription });
+          return { error, errorCode, errorDescription };
+        }
+        
+        // Check query params for errors
+        const error = searchParams.get('error');
+        const errorCode = searchParams.get('error_code');
+        const errorDescription = searchParams.get('error_description');
+        if (error) {
+          console.log('Error in query params:', { error, errorCode, errorDescription });
+          return { error, errorCode, errorDescription };
+        }
+        
+        return null;
+      };
+      
+      const errorInfo = checkForErrors();
+      if (errorInfo) {
+        console.log('Found error, showing message and redirecting');
+        if (errorInfo.errorCode === 'otp_expired') {
+          toast.error('Password reset link has expired. Please request a new one.');
+        } else {
+          toast.error('Invalid password reset link. Please request a new one.');
+        }
+        
+        setTimeout(() => {
+          navigate('/auth');
+        }, 3000);
+        return;
+      }
+      
+      // Extract tokens from either query params or hash
+      let finalAccessToken = accessToken;
+      let finalRefreshToken = refreshToken;
+      
+      // Check hash for tokens if not in query params
+      if (!finalAccessToken && urlHash) {
+        const hashParams = new URLSearchParams(urlHash.substring(1));
+        finalAccessToken = hashParams.get('access_token');
+        finalRefreshToken = hashParams.get('refresh_token');
+        console.log('Tokens extracted from hash - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
+      }
+      
+      console.log('Final token check - access:', !!finalAccessToken, 'refresh:', !!finalRefreshToken);
+      
+      // If we have valid tokens, store them
+      if (finalAccessToken && finalRefreshToken) {
+        console.log('VALID TOKENS FOUND - Setting up password reset');
+        setValidTokens({
+          access_token: finalAccessToken,
+          refresh_token: finalRefreshToken
+        });
+        
+        // Clean the URL immediately to prevent any interference
+        window.history.replaceState({}, document.title, '/reset-password');
+        console.log('URL cleaned successfully');
+        return;
+      }
+      
+      // If no tokens found after everything, show error
+      console.log('NO VALID TOKENS FOUND - Showing error');
       toast.error('Invalid password reset link. Please request a new one.');
       setTimeout(() => {
         navigate('/auth');
       }, 3000);
-      return;
-    }
-
-    // Store valid tokens and clean the URL immediately
-    console.log('Valid tokens found, storing for password reset');
-    setValidTokens({
-      access_token: finalAccessToken,
-      refresh_token: finalRefreshToken
-    });
+    }, 100); // Small delay to let Supabase finish processing
     
-    // Clean the URL immediately to prevent any interference
-    window.history.replaceState({}, document.title, '/reset-password');
-    console.log('URL cleaned to prevent token reuse');
-  }, [accessToken, refreshToken, navigate, urlHash, searchParams]);
+    return () => clearTimeout(timer);
+  }, [accessToken, refreshToken, recoveryToken, recoveryType, navigate, urlHash, searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswords(prev => ({
