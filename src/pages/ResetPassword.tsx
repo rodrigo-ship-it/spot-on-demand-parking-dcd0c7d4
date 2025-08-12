@@ -32,6 +32,9 @@ const ResetPassword = () => {
   console.log('Refresh token from params:', refreshToken);
 
   useEffect(() => {
+    console.log('ResetPassword useEffect running');
+    console.log('Full URL:', window.location.href);
+    
     // Check for error in hash first
     if (urlHash && urlHash.includes('error=')) {
       const hashParams = new URLSearchParams(urlHash.substring(1));
@@ -39,7 +42,7 @@ const ResetPassword = () => {
       const errorCode = hashParams.get('error_code');
       const errorDescription = hashParams.get('error_description');
       
-      console.log('Password reset error:', { error, errorCode, errorDescription });
+      console.log('Password reset error detected:', { error, errorCode, errorDescription });
       
       if (errorCode === 'otp_expired') {
         toast.error('Password reset link has expired. Please request a new one.');
@@ -50,7 +53,7 @@ const ResetPassword = () => {
       // Redirect to auth page after showing error
       setTimeout(() => {
         navigate('/auth');
-      }, 2000);
+      }, 3000);
       return;
     }
     
@@ -67,21 +70,25 @@ const ResetPassword = () => {
     
     // If no tokens anywhere, redirect to auth page
     if (!finalAccessToken || !finalRefreshToken) {
-      console.log('No tokens found, redirecting to auth');
+      console.log('No valid tokens found');
       toast.error('Invalid password reset link. Please request a new one.');
       setTimeout(() => {
         navigate('/auth');
-      }, 2000);
+      }, 3000);
       return;
     }
 
-    // If we have valid tokens, store them for later use
+    // If we have valid tokens, store them and clean the URL
     if (finalAccessToken && finalRefreshToken) {
       console.log('Valid tokens found, storing for password reset');
       setValidTokens({
         access_token: finalAccessToken,
         refresh_token: finalRefreshToken
       });
+      
+      // Clean the URL to prevent AuthContext from processing these tokens
+      window.history.replaceState({}, document.title, '/reset-password');
+      console.log('URL cleaned to prevent auto sign-in');
     }
   }, [accessToken, refreshToken, navigate, urlHash]);
 
