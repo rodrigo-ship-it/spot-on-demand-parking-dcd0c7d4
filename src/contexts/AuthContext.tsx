@@ -38,6 +38,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth event:', event, session?.user?.email);
+        
+        // If we're on reset password page, don't auto sign-in from URL tokens
+        if (window.location.pathname === '/reset-password' && event === 'SIGNED_IN') {
+          console.log('Preventing auto sign-in on reset password page');
+          // Sign out immediately to prevent auto sign-in
+          supabase.auth.signOut();
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
