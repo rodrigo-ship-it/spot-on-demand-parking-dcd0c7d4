@@ -31,6 +31,28 @@ const ResetPassword = () => {
   console.log('Refresh token from params:', refreshToken);
 
   useEffect(() => {
+    // Check for error in hash first
+    if (urlHash && urlHash.includes('error=')) {
+      const hashParams = new URLSearchParams(urlHash.substring(1));
+      const error = hashParams.get('error');
+      const errorCode = hashParams.get('error_code');
+      const errorDescription = hashParams.get('error_description');
+      
+      console.log('Password reset error:', { error, errorCode, errorDescription });
+      
+      if (errorCode === 'otp_expired') {
+        toast.error('Password reset link has expired. Please request a new one.');
+      } else {
+        toast.error('Invalid password reset link. Please request a new one.');
+      }
+      
+      // Redirect to auth page after showing error
+      setTimeout(() => {
+        navigate('/auth');
+      }, 2000);
+      return;
+    }
+    
     // Parse tokens from hash if not in search params
     let finalAccessToken = accessToken;
     let finalRefreshToken = refreshToken;
@@ -45,8 +67,10 @@ const ResetPassword = () => {
     // If no tokens anywhere, redirect to auth page
     if (!finalAccessToken || !finalRefreshToken) {
       console.log('No tokens found, redirecting to auth');
-      toast.error('Invalid password reset link');
-      navigate('/auth');
+      toast.error('Invalid password reset link. Please request a new one.');
+      setTimeout(() => {
+        navigate('/auth');
+      }, 2000);
       return;
     }
 
