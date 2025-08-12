@@ -4,23 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-// For now, we'll use a simplified payment integration without Stripe Elements
-// This can be enhanced later with full Stripe Elements integration
+import { StripeProvider } from "./StripeProvider";
+import { PaymentElementForm } from "./PaymentElement";
 
 interface MarketplacePaymentProps {
   bookingId: string;
   totalAmount: number;
-  platformFee: number;
-  ownerAmount: number;
   onSuccess: () => void;
 }
 
-export const MarketplacePaymentIntegration = ({ bookingId, totalAmount, onSuccess }: { 
-  bookingId: string; 
-  totalAmount: number; 
-  onSuccess: () => void; 
-}) => {
+export const MarketplacePaymentIntegration = ({ 
+  bookingId, 
+  totalAmount, 
+  onSuccess 
+}: MarketplacePaymentProps) => {
   const [paymentDetails, setPaymentDetails] = useState<{
     platformFee: number;
     ownerAmount: number;
@@ -42,6 +39,8 @@ export const MarketplacePaymentIntegration = ({ bookingId, totalAmount, onSucces
         ownerAmount: data.owner_amount,
         client_secret: data.client_secret,
       });
+      
+      toast.success('Payment ready - please enter your payment details');
     } catch (error: any) {
       console.error('Error creating payment:', error);
       toast.error(error.message || 'Failed to initialize payment');
@@ -50,77 +49,75 @@ export const MarketplacePaymentIntegration = ({ bookingId, totalAmount, onSucces
     }
   };
 
-  const handlePayment = async () => {
-    if (!paymentDetails) return;
-    
-    setLoading(true);
-    try {
-      // For now, simulate payment processing
-      // In a real implementation, you would integrate with Stripe's Payment Element
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Payment successful! The spot owner will receive their payout instantly.');
-      onSuccess();
-    } catch (error) {
-      toast.error('Payment failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handlePaymentSuccess = () => {
+    toast.success('Payment successful! The spot owner received their payout instantly.');
+    onSuccess();
   };
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Complete Payment
-          <Badge variant="secondary">Secure Marketplace Payment</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="p-4 bg-muted rounded-lg space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Total Amount:</span>
-              <span className="font-bold">${totalAmount.toFixed(2)}</span>
-            </div>
-            {paymentDetails && (
-              <>
-                <div className="flex justify-between items-center text-sm">
-                  <span>Platform Fee (7%):</span>
-                  <span>${paymentDetails.platformFee.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span>Spot Owner Receives:</span>
-                  <span className="text-green-600 font-medium">${paymentDetails.ownerAmount.toFixed(2)}</span>
-                </div>
-              </>
-            )}
-          </div>
+  const handlePaymentError = (error: string) => {
+    toast.error(`Payment failed: ${error}`);
+  };
 
-          {!paymentDetails ? (
+  if (!paymentDetails) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Complete Payment
+            <Badge variant="secondary">Secure Marketplace Payment</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="p-4 bg-muted rounded-lg space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Amount:</span>
+                <span className="font-bold">${totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
             <Button onClick={createPaymentIntent} disabled={loading} className="w-full">
               {loading ? 'Preparing Payment...' : 'Proceed to Payment'}
             </Button>
-          ) : (
-            <div className="space-y-4">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-sm text-blue-800">
-                  💡 <strong>Marketplace Payment Ready</strong><br />
-                  The spot owner will receive an instant payout of ${paymentDetails.ownerAmount.toFixed(2)} after payment confirmation.
-                </p>
-              </div>
-              
-              <Button onClick={handlePayment} disabled={loading} className="w-full">
-                {loading ? 'Processing Payment...' : `Pay $${totalAmount.toFixed(2)}`}
-              </Button>
-              
-              <p className="text-xs text-muted-foreground text-center">
-                This is a demo of marketplace payment splitting. In production, this would integrate with Stripe Elements for secure payment processing.
+            
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Marketplace Payment</strong><br />
+                The spot owner will receive an instant payout (93% of the base price) after payment confirmation.
+                Platform fee: 7% from both renter and owner.
               </p>
             </div>
-          )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="p-4 bg-muted rounded-lg space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="font-medium">Total Amount:</span>
+          <span className="font-bold">${totalAmount.toFixed(2)}</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex justify-between items-center text-sm">
+          <span>Platform Fee (14% total):</span>
+          <span>${paymentDetails.platformFee.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center text-sm">
+          <span>Spot Owner Receives:</span>
+          <span className="text-green-600 font-medium">${paymentDetails.ownerAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <StripeProvider clientSecret={paymentDetails.client_secret}>
+        <PaymentElementForm
+          bookingId={bookingId}
+          totalAmount={totalAmount}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
+      </StripeProvider>
+    </div>
   );
 };
