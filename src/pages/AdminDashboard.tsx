@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
+import AdminRefundManager from "@/components/AdminRefundManager";
 
 interface DashboardStats {
   totalUsers: number;
@@ -257,6 +258,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="users">Recent Users</TabsTrigger>
             <TabsTrigger value="spots">Parking Spots</TabsTrigger>
             <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
+            <TabsTrigger value="refunds">Refund Requests</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -379,6 +381,10 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="refunds">
+            <AdminRefundManager />
           </TabsContent>
         </Tabs>
       </div>

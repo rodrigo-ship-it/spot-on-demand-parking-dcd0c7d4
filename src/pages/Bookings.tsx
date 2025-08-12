@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { AdvancedFiltersDialog } from "@/components/AdvancedFiltersDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import RefundRequestDialog from "@/components/RefundRequestDialog";
 
 const Bookings = () => {
   const { user } = useAuth();
@@ -40,6 +41,14 @@ const Bookings = () => {
   }>({
     isOpen: false,
     bookingId: "",
+  });
+
+  const [refundDialog, setRefundDialog] = useState<{
+    isOpen: boolean;
+    booking: any;
+  }>({
+    isOpen: false,
+    booking: null,
   });
 
   // Load user bookings
@@ -445,6 +454,23 @@ const Bookings = () => {
                             Report Issue
                           </Button>
                         )}
+                        {(reservation.status === "Completed" || reservation.status === "Active") && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setRefundDialog({
+                              isOpen: true,
+                              booking: {
+                                id: reservation.id,
+                                total_amount: reservation.totalCost,
+                                spot_id: reservation.spotId
+                              }
+                            })}
+                            className="text-orange-600 hover:text-orange-700"
+                          >
+                            Request Refund
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{reservation.id}</TableCell>
@@ -515,6 +541,12 @@ const Bookings = () => {
         disputeType={reviewDialog.disputeType}
         onSubmitRating={handleSubmitRating}
         onPhotoTaken={handlePhotoTaken}
+      />
+
+      <RefundRequestDialog
+        isOpen={refundDialog.isOpen}
+        onClose={() => setRefundDialog({ isOpen: false, booking: null })}
+        booking={refundDialog.booking}
       />
     </div>
   );

@@ -49,6 +49,8 @@ const ListSpot = () => {
     // Features & Rules
     features: [],
     specialInstructions: "",
+    accessRequirements: "", // New field for required passes/codes
+    accessInstructions: "", // New field for detailed access instructions
     
     // Photos
     photos: [],
@@ -149,6 +151,8 @@ const ListSpot = () => {
         availability_schedule: availabilitySchedule,
         amenities: formData.features,
         images: formData.photos.length > 0 ? formData.photos : null,
+        access_requirements: formData.accessRequirements || null,
+        access_instructions: formData.specialInstructions || null,
         is_active: true
       };
 
@@ -429,6 +433,20 @@ const ListSpot = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="access">Access Requirements</Label>
+              <Textarea
+                id="access"
+                placeholder="e.g., Gate code: 1234, Parking pass required, Contact at arrival..."
+                value={formData.accessRequirements}
+                onChange={(e) => setFormData({...formData, accessRequirements: e.target.value})}
+                rows={2}
+              />
+              <p className="text-sm text-gray-600 mt-1">
+                Specify any codes, passes, or special requirements renters need to access the parking spot
+              </p>
             </div>
 
             <div>
