@@ -19,7 +19,7 @@ const ManageSpots = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSpotForQR, setSelectedSpotForQR] = useState<number | null>(null);
+  const [selectedSpotForQR, setSelectedSpotForQR] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState<any>({});
@@ -338,6 +338,84 @@ const ManageSpots = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* QR Codes Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
+              QR Codes for Your Spots
+            </CardTitle>
+            <CardDescription>
+              Generate QR codes for each parking spot to enable instant rentals
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {parkingSpots.length === 0 ? (
+              <div className="text-center py-8">
+                <QrCode className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">No parking spots listed yet</p>
+                <Link to="/list-spot">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    List Your First Spot
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {parkingSpots.map((spot) => (
+                  <Card key={spot.id} className="border-2 hover:border-primary/20 transition-colors">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">{spot.title}</CardTitle>
+                      <CardDescription className="text-sm">
+                        <MapPin className="w-3 h-3 inline mr-1" />
+                        {spot.address}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-4">
+                        <Badge 
+                          variant={spot.status === "Active" ? "default" : "secondary"}
+                          className="mb-2"
+                        >
+                          {spot.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600">
+                          ${spot.price}/hour • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => setSelectedSpotForQR(selectedSpotForQR === spot.id ? null : spot.id)}
+                        variant={selectedSpotForQR === spot.id ? "default" : "outline"}
+                        className="w-full"
+                      >
+                        <QrCode className="w-4 h-4 mr-2" />
+                        {selectedSpotForQR === spot.id ? "Hide QR Code" : "Generate QR Code"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+            
+            {/* QR Code Display */}
+            {selectedSpotForQR && (
+              <div className="mt-8 pt-8 border-t">
+                {(() => {
+                  const selectedSpot = parkingSpots.find(spot => spot.id === selectedSpotForQR);
+                  return selectedSpot ? (
+                    <QRCodeGenerator
+                      spotId={selectedSpot.id}
+                      spotTitle={selectedSpot.title}
+                      spotAddress={selectedSpot.address}
+                    />
+                  ) : null;
+                })()}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Upcoming Reservations Section */}
         <Card className="mb-8">
