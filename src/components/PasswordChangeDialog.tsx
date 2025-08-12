@@ -39,8 +39,28 @@ export const PasswordChangeDialog = ({ children }: PasswordChangeDialogProps) =>
       return;
     }
 
-    if (formData.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (formData.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!/[A-Z]/.test(formData.newPassword)) {
+      toast.error('Password must contain at least one uppercase letter');
+      return;
+    }
+
+    if (!/[a-z]/.test(formData.newPassword)) {
+      toast.error('Password must contain at least one lowercase letter');
+      return;
+    }
+
+    if (!/\d/.test(formData.newPassword)) {
+      toast.error('Password must contain at least one number');
+      return;
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword)) {
+      toast.error('Password must contain at least one special character');
       return;
     }
 
@@ -75,12 +95,20 @@ export const PasswordChangeDialog = ({ children }: PasswordChangeDialogProps) =>
   };
 
   const getPasswordStrength = (password: string) => {
-    if (password.length < 6) return { strength: 'Weak', color: 'text-red-500' };
-    if (password.length < 8) return { strength: 'Fair', color: 'text-yellow-500' };
-    if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)) {
-      return { strength: 'Strong', color: 'text-green-500' };
-    }
-    return { strength: 'Good', color: 'text-blue-500' };
+    if (password.length < 8) return { strength: 'Too Short', color: 'text-red-500' };
+    
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    
+    const requirementsMet = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
+    
+    if (requirementsMet < 3) return { strength: 'Weak', color: 'text-red-500' };
+    if (requirementsMet === 3) return { strength: 'Good', color: 'text-yellow-500' };
+    if (requirementsMet === 4) return { strength: 'Strong', color: 'text-green-500' };
+    
+    return { strength: 'Weak', color: 'text-red-500' };
   };
 
   const passwordStrength = getPasswordStrength(formData.newPassword);
