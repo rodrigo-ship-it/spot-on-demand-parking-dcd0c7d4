@@ -105,7 +105,55 @@ export default function PrivacyPolicy() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">10. Contact Us</h3>
+                <h3 className="text-lg font-semibold mb-3">10. Liability and User Responsibilities</h3>
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-semibold">Parking Spot Ownership Verification</h4>
+                    <p>By listing a parking spot, owners acknowledge and warrant that:</p>
+                    <ul className="list-disc list-inside space-y-1 mt-2 ml-4">
+                      <li>They have the legal right to rent the parking space</li>
+                      <li>The listing information is 100% accurate and truthful</li>
+                      <li>The parking spot exists and is available as described</li>
+                      <li>They will provide any required access codes, passes, or permissions</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold">Platform Liability Limitations</h4>
+                    <p>Our platform is not liable for:</p>
+                    <ul className="list-disc list-inside space-y-1 mt-2 ml-4">
+                      <li>False, misleading, or inaccurate parking spot listings</li>
+                      <li>Disputes between parking spot owners and renters</li>
+                      <li>Property damage, theft, or loss occurring at parking locations</li>
+                      <li>Access issues, towing, or parking violations</li>
+                      <li>Unavailable spots due to owner negligence or misrepresentation</li>
+                      <li>Third-party actions or local parking regulations</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold">Access Requirements</h4>
+                    <p>Parking spot owners are solely responsible for providing renters with all necessary access materials including but not limited to: gate codes, parking passes, permits, or any other required credentials for accessing the parking space.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-3">11. Refunds and Dispute Resolution</h3>
+                <div className="space-y-3">
+                  <p>We offer refunds in the following circumstances:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Parking spot is not as described or unavailable</li>
+                    <li>Owner fails to provide required access credentials</li>
+                    <li>Technical issues preventing booking completion</li>
+                    <li>Safety concerns at the parking location</li>
+                  </ul>
+                  <p className="mt-2">Refund requests must be submitted within 24 hours of the booking start time. All refunds are processed at our discretion after investigation.</p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-3">12. Contact Us</h3>
                 <p>If you have any questions about this privacy policy or our data practices, please contact us at:</p>
                 <div className="mt-2 p-4 bg-muted rounded-lg">
                   <p><strong>Email:</strong> privacy@parkingapp.com</p>
