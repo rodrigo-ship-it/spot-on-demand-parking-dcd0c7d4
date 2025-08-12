@@ -19,34 +19,56 @@ const ResetPassword = () => {
     confirmPassword: ''
   });
 
-  // Get the access token from URL parameters
+  // Get the tokens from URL parameters - check both query params and hash
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
+  
+  // Also check URL hash for tokens (Supabase sometimes uses hash)
+  const urlHash = window.location.hash;
+  console.log('URL search params:', window.location.search);
+  console.log('URL hash:', urlHash);
+  console.log('Access token from params:', accessToken);
+  console.log('Refresh token from params:', refreshToken);
 
   useEffect(() => {
-    // If no tokens in URL, redirect to auth page
-    if (!accessToken || !refreshToken) {
+    // Parse tokens from hash if not in search params
+    let finalAccessToken = accessToken;
+    let finalRefreshToken = refreshToken;
+    
+    if (!finalAccessToken && urlHash) {
+      const hashParams = new URLSearchParams(urlHash.substring(1));
+      finalAccessToken = hashParams.get('access_token');
+      finalRefreshToken = hashParams.get('refresh_token');
+      console.log('Tokens from hash - access:', finalAccessToken, 'refresh:', finalRefreshToken);
+    }
+    
+    // If no tokens anywhere, redirect to auth page
+    if (!finalAccessToken || !finalRefreshToken) {
+      console.log('No tokens found, redirecting to auth');
       toast.error('Invalid password reset link');
       navigate('/auth');
       return;
     }
 
-    // Set the session with the tokens from the URL
+    // Set the session with the tokens
     const setSession = async () => {
+      console.log('Setting session with tokens:', finalAccessToken, finalRefreshToken);
       const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
+        access_token: finalAccessToken,
+        refresh_token: finalRefreshToken
       });
 
       if (error) {
         console.error('Error setting session:', error);
         toast.error('Invalid or expired reset link');
         navigate('/auth');
+      } else {
+        console.log('Session set successfully');
       }
     };
 
     setSession();
-  }, [accessToken, refreshToken, navigate]);
+  }, [accessToken, refreshToken, navigate, urlHash]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswords(prev => ({
