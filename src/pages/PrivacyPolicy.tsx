@@ -156,9 +156,9 @@ export default function PrivacyPolicy() {
                 <h3 className="text-lg font-semibold mb-3">12. Contact Us</h3>
                 <p>If you have any questions about this privacy policy or our data practices, please contact us at:</p>
                 <div className="mt-2 p-4 bg-muted rounded-lg">
-                  <p><strong>Email:</strong> privacy@parkingapp.com</p>
-                  <p><strong>Address:</strong> [Your Business Address]</p>
-                  <p><strong>Phone:</strong> [Your Phone Number]</p>
+                  <p><strong>Email:</strong> support@arriv.com</p>
+                  <p><strong>Address:</strong> Arriv Technologies Inc.</p>
+                  <p><strong>Phone:</strong> 1-800-ARRIV-1 (1-800-277-481)</p>
                 </div>
               </section>
             </CardContent>
