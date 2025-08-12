@@ -52,10 +52,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           // Only redirect if user just confirmed email and we're not already on home page
-          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && window.location.pathname !== '/') {
+          // and we're not coming from password reset
+          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && 
+              window.location.pathname !== '/' && 
+              !sessionStorage.getItem('fromPasswordReset')) {
             setTimeout(() => {
               window.location.href = '/';
             }, 500);
+          }
+          
+          // Clear the password reset flag if it exists
+          if (sessionStorage.getItem('fromPasswordReset')) {
+            sessionStorage.removeItem('fromPasswordReset');
           }
         } else if (event === 'SIGNED_OUT') {
           cleanupAuthState();
