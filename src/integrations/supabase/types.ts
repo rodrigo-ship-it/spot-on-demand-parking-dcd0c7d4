@@ -19,12 +19,15 @@ export type Database = {
           created_at: string
           end_time: string
           id: string
+          owner_payout_amount: number | null
           payment_intent_id: string | null
+          platform_fee_amount: number | null
           qr_code_used: boolean | null
           renter_id: string
           spot_id: string
           start_time: string
           status: string
+          stripe_transfer_id: string | null
           total_amount: number
           updated_at: string
         }
@@ -32,12 +35,15 @@ export type Database = {
           created_at?: string
           end_time: string
           id?: string
+          owner_payout_amount?: number | null
           payment_intent_id?: string | null
+          platform_fee_amount?: number | null
           qr_code_used?: boolean | null
           renter_id: string
           spot_id: string
           start_time: string
           status?: string
+          stripe_transfer_id?: string | null
           total_amount: number
           updated_at?: string
         }
@@ -45,12 +51,15 @@ export type Database = {
           created_at?: string
           end_time?: string
           id?: string
+          owner_payout_amount?: number | null
           payment_intent_id?: string | null
+          platform_fee_amount?: number | null
           qr_code_used?: boolean | null
           renter_id?: string
           spot_id?: string
           start_time?: string
           status?: string
+          stripe_transfer_id?: string | null
           total_amount?: number
           updated_at?: string
         }
@@ -329,8 +338,11 @@ export type Database = {
           created_at: string
           id: string
           is_verified: boolean
+          onboarding_completed: boolean | null
+          payouts_enabled: boolean | null
           routing_number: string | null
           stripe_account_id: string | null
+          stripe_connect_account_id: string | null
           updated_at: string
           user_id: string
         }
@@ -342,8 +354,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_verified?: boolean
+          onboarding_completed?: boolean | null
+          payouts_enabled?: boolean | null
           routing_number?: string | null
           stripe_account_id?: string | null
+          stripe_connect_account_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -355,8 +370,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_verified?: boolean
+          onboarding_completed?: boolean | null
+          payouts_enabled?: boolean | null
           routing_number?: string | null
           stripe_account_id?: string | null
+          stripe_connect_account_id?: string | null
           updated_at?: string
           user_id?: string
         }

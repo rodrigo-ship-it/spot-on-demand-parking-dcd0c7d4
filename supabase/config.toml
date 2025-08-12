@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.send-verification-email]
 verify_jwt = false
+
+[functions.create-connect-account]
+verify_jwt = true
+
+[functions.create-marketplace-payment]
+verify_jwt = true
+
+[functions.check-connect-status]
+verify_jwt = true

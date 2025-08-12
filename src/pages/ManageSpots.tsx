@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
 import { FilterDialog } from "@/components/FilterDialog";
+import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -552,6 +553,15 @@ const ManageSpots = () => {
 
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        </div>
+        
+        {/* Payout Setup Section */}
+        <div className="mt-8">
+          <StripeConnectOnboarding />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -575,18 +585,16 @@ const ManageSpots = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
-                Payment Settings
+                Performance Analytics
               </CardTitle>
               <CardDescription>
-                Manage your payout preferences and banking information
+                View detailed insights about your spots' performance
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link to="/profile">
-                <Button variant="outline" className="w-full">
-                  Update Payment Info
-                </Button>
-              </Link>
+              <Button variant="outline" className="w-full">
+                View Analytics
+              </Button>
             </CardContent>
           </Card>
         </div>

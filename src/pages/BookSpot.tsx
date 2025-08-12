@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap } from "lucide-react";
 import { PaymentIntegration } from "@/components/PaymentIntegration";
+import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
 import { toast } from "sonner";
 import { VehicleManagementDialog } from "@/components/VehicleManagementDialog";
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
@@ -187,16 +188,15 @@ const BookSpot = () => {
     }
   };
 
-  const handlePaymentSuccess = (paymentData: any) => {
-    toast.success("Payment successful! Booking confirmed.");
+  const handlePaymentSuccess = () => {
+    toast.success("Payment successful! The spot owner received their payout instantly.");
     navigate('/booking-confirmed', { 
       state: { 
         ...bookingDetails,
         spotData,
         total,
         confirmationNumber: createdBookingId.slice(0, 8).toUpperCase(),
-        bookingId: createdBookingId,
-        paymentData
+        bookingId: createdBookingId
       }
     });
   };
@@ -468,11 +468,10 @@ const BookSpot = () => {
                     </div>
                   </>
                 ) : (
-                  <PaymentIntegration
+                  <MarketplacePaymentIntegration
                     bookingId={createdBookingId}
-                    baseAmount={total}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    onPaymentError={handlePaymentError}
+                    totalAmount={total}
+                    onSuccess={handlePaymentSuccess}
                   />
                 )}
               </CardContent>
