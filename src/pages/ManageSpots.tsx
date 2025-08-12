@@ -61,14 +61,28 @@ const ManageSpots = () => {
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
       // Process the data to calculate earnings and bookings
       const processedSpots = data?.map(spot => {
-        const completedBookings = spot.bookings?.filter((b: any) => b.status === 'completed') || [];
+        const completedBookings = spot.bookings?.filter((b: any) => b.status === 'confirmed' || b.status === 'completed') || [];
+        
         const thisMonthBookings = completedBookings.filter((b: any) => {
           const bookingDate = new Date(b.created_at);
           return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear;
         });
+
+        const lastMonthBookings = completedBookings.filter((b: any) => {
+          const bookingDate = new Date(b.created_at);
+          return bookingDate.getMonth() === lastMonth && bookingDate.getFullYear() === lastMonthYear;
+        });
+
+        const thisMonthEarnings = thisMonthBookings.reduce((sum: number, booking: any) => 
+          sum + Number(booking.total_amount), 0);
+        
+        const lastMonthEarnings = lastMonthBookings.reduce((sum: number, booking: any) => 
+          sum + Number(booking.total_amount), 0);
 
         return {
           id: spot.id,
@@ -78,8 +92,8 @@ const ManageSpots = () => {
           price: Number(spot.price_per_hour),
           status: spot.is_active ? "Active" : "Paused",
           totalBookings: spot.bookings?.length || 0,
-          monthlyEarnings: thisMonthBookings.reduce((sum: number, booking: any) => 
-            sum + Number(booking.total_amount), 0),
+          monthlyEarnings: thisMonthEarnings,
+          lastMonthEarnings: lastMonthEarnings,
           lastBooked: spot.bookings?.length > 0 
             ? new Date(Math.max(...spot.bookings.map((b: any) => new Date(b.created_at).getTime()))).toLocaleDateString()
             : "Never",
@@ -187,6 +201,16 @@ const ManageSpots = () => {
   });
 
   const totalEarnings = parkingSpots.reduce((sum, spot) => sum + spot.monthlyEarnings, 0);
+  const lastMonthTotalEarnings = parkingSpots.reduce((sum, spot) => sum + (spot.lastMonthEarnings || 0), 0);
+  const earningsChange = lastMonthTotalEarnings > 0 
+    ? ((totalEarnings - lastMonthTotalEarnings) / lastMonthTotalEarnings * 100).toFixed(0)
+    : totalEarnings > 0 ? '100' : '0';
+  const earningsChangeText = lastMonthTotalEarnings === 0 && totalEarnings > 0 
+    ? 'First month earnings!' 
+    : lastMonthTotalEarnings === 0 && totalEarnings === 0
+    ? 'No earnings yet'
+    : `${Math.abs(Number(earningsChange))}% ${Number(earningsChange) >= 0 ? 'up' : 'down'} from last month`;
+    
   const totalBookings = parkingSpots.reduce((sum, spot) => sum + spot.totalBookings, 0);
   const activeSpots = parkingSpots.filter(spot => spot.status === "Active").length;
   const totalReviews = parkingSpots.reduce((sum, spot) => sum + spot.totalReviews, 0);
@@ -280,7 +304,7 @@ const ManageSpots = () => {
               <CardTitle className="text-2xl text-primary">${totalEarnings}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">+12% from last month</p>
+              <p className="text-sm text-gray-600">{earningsChangeText}</p>
             </CardContent>
           </Card>
 
