@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Clock, DollarSign, User, Mail, Phone, Car } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, User, Mail, Phone, Car, AlertTriangle } from "lucide-react";
 import { ContactButtons } from "./ContactButtons";
+import { SpotReportDialog } from "./SpotReportDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 
 interface BookingDetailsDialogProps {
   booking: any;
@@ -13,6 +15,7 @@ interface BookingDetailsDialogProps {
 
 export const BookingDetailsDialog = ({ booking, isOpen, onClose }: BookingDetailsDialogProps) => {
   const { user } = useAuth();
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   
   if (!booking) return null;
 
@@ -144,21 +147,54 @@ export const BookingDetailsDialog = ({ booking, isOpen, onClose }: BookingDetail
         </div>
 
         {/* Contact & Actions */}
-        <div className="flex justify-between items-center mt-6">
-          <div>
-            {/* Show secure contact buttons if we have the necessary IDs */}
-            {booking.id && user && (
-              <ContactButtons
-                bookingId={booking.id}
-                recipientId={booking.renter_id || booking.owner_id} 
-                recipientName={booking.customer || booking.ownerName || 'Contact'}
-                showCallButton={true}
-                showChatButton={true}
-              />
-            )}
+        <div className="flex flex-col space-y-4 mt-6">
+          {/* Report spot issue button for renters with confirmed/active bookings */}
+          {booking.renter_id === user?.id && 
+           ['confirmed', 'active'].includes(booking.status?.toLowerCase()) && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-orange-800">Spot Issue?</h4>
+                  <p className="text-sm text-orange-700">Report if the spot is occupied by someone else</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsReportDialogOpen(true)}
+                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Report Spot
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-between items-center">
+            <div>
+              {/* Show secure contact buttons if we have the necessary IDs */}
+              {booking.id && user && (
+                <ContactButtons
+                  bookingId={booking.id}
+                  recipientId={booking.renter_id || booking.owner_id} 
+                  recipientName={booking.customer || booking.ownerName || 'Contact'}
+                  showCallButton={true}
+                  showChatButton={true}
+                />
+              )}
+            </div>
+            <Button onClick={onClose}>Close</Button>
           </div>
-          <Button onClick={onClose}>Close</Button>
         </div>
+
+        {/* Report Dialog */}
+        <SpotReportDialog
+          isOpen={isReportDialogOpen}
+          onClose={() => setIsReportDialogOpen(false)}
+          bookingId={booking.id}
+          spotTitle={booking.spotTitle || 'Parking Spot'}
+          spotAddress={booking.address || '123 Main Street, Downtown'}
+        />
       </DialogContent>
     </Dialog>
   );
