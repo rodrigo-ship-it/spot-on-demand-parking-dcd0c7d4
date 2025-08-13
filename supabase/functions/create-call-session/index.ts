@@ -91,9 +91,10 @@ serve(async (req) => {
 
     const auth = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
     
-    // Create a proxy session
+    // Create a proxy session using your Proxy Service SID
+    const twilioProxyServiceSid = "KS0e519df156c9fc08d640558f0594cdbe";
     const proxyResponse = await fetch(
-      `https://proxy.twilio.com/v1/Services/${twilioAccountSid}/Sessions`,
+      `https://proxy.twilio.com/v1/Services/${twilioProxyServiceSid}/Sessions`,
       {
         method: "POST",
         headers: {
@@ -116,7 +117,7 @@ serve(async (req) => {
     // Add participants to the proxy session
     const addParticipant = async (phoneNumber: string, friendlyName: string) => {
       const participantResponse = await fetch(
-        `https://proxy.twilio.com/v1/Services/${twilioAccountSid}/Sessions/${proxySession.sid}/Participants`,
+        `https://proxy.twilio.com/v1/Services/${twilioProxyServiceSid}/Sessions/${proxySession.sid}/Participants`,
         {
           method: "POST",
           headers: {
