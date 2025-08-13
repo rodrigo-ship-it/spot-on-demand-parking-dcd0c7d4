@@ -63,6 +63,35 @@ export const SpotReportDialog = ({
 
       if (updateError) throw updateError;
 
+      // Get the dispute ID to send notification
+      const { data: disputeData, error: disputeError } = await supabase
+        .from('disputes')
+        .select('id')
+        .eq('booking_id', bookingId)
+        .eq('reporter_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (disputeError) throw disputeError;
+
+      // Send email notification to support team
+      try {
+        await supabase.functions.invoke('send-dispute-notification', {
+          body: {
+            disputeId: disputeData.id,
+            bookingId: bookingId,
+            reporterEmail: user?.email,
+            disputeType: disputeType,
+            photoUrl: publicUrl
+          }
+        });
+        console.log('Dispute notification sent successfully');
+      } catch (emailError) {
+        console.error('Failed to send dispute notification email:', emailError);
+        // Don't fail the whole process if email fails
+      }
+
       setReportSubmitted(true);
       setShowCamera(false);
       toast.success("Spot report submitted successfully! We'll review your case within 24 hours.");
