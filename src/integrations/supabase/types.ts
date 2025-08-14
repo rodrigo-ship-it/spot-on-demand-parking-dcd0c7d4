@@ -889,6 +889,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_safe_profile_info: {
+        Args: { profile_user_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+        }[]
+      }
       get_unread_message_count: {
         Args: { booking_id_param: string }
         Returns: number
