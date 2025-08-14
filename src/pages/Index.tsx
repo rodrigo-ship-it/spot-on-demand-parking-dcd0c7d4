@@ -25,7 +25,18 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  
+  // Safe auth hook usage with fallback
+  let user = null;
+  let signOut = () => {};
+  
+  try {
+    const auth = useAuth();
+    user = auth.user;
+    signOut = auth.signOut;
+  } catch (error) {
+    console.log('Auth not available, using defaults');
+  }
 
   // Transform spots for UI compatibility
   const transformedSpots = allParkingSpots.map(spot => ({
@@ -113,29 +124,6 @@ const Index = () => {
     navigate("/auth");
   };
 
-  // Mobile-first: redirect to auth if not signed in on mobile
-  const checkMobileAuth = () => {
-    if (window.innerWidth < 768 && !user) {
-      navigate('/auth');
-      return;
-    }
-  };
-
-  useEffect(() => {
-    checkMobileAuth();
-  }, [user, navigate]);
-
-  // If mobile and no user, show loading while redirecting
-  if (window.innerWidth < 768 && !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Redirecting to sign in...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
