@@ -49,7 +49,7 @@ const HowItWorks = () => {
         <header className="text-center mb-16" role="banner">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 animate-fade-in">
             How Arriv
-            <span className="gradient-text animate-pulse-glow">
+            <span className="text-primary">
               {" "}Works
             </span>
           </h1>
@@ -72,7 +72,7 @@ const HowItWorks = () => {
                 <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                   <Search className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl gradient-text">1. Search</CardTitle>
+                <CardTitle className="text-xl text-primary font-bold">1. Search</CardTitle>
                 <CardDescription className="text-base text-gray-600">
                   Enter your destination and desired parking duration to find perfect spots
                 </CardDescription>
@@ -91,7 +91,7 @@ const HowItWorks = () => {
                 <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                   <CreditCard className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl gradient-text">2. Book & Pay</CardTitle>
+                <CardTitle className="text-xl text-primary font-bold">2. Book & Pay</CardTitle>
                 <CardDescription className="text-base text-gray-600">
                   Secure your spot with instant booking and safe payment processing
                 </CardDescription>
@@ -110,7 +110,7 @@ const HowItWorks = () => {
                 <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                   <MapPin className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl gradient-text">3. Park</CardTitle>
+                <CardTitle className="text-xl text-primary font-bold">3. Park</CardTitle>
                 <CardDescription className="text-base text-gray-600">
                   Navigate to your spot and park with confidence using our detailed directions
                 </CardDescription>
