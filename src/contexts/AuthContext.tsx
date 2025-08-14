@@ -51,29 +51,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return; // Don't redirect, stay on reset page
           }
           
-          // For mobile users after login, check terms acceptance
+          // For authenticated users, handle redirect flow
           if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
             const termsAccepted = localStorage.getItem('termsAccepted');
-            const isMobile = window.innerWidth < 768;
+            const redirectAfterAuth = localStorage.getItem('redirectAfterAuth');
             
-            // Mobile flow: Auth → Terms → Home
-            if (isMobile && !termsAccepted && window.location.pathname !== '/terms') {
-              console.log('Mobile user needs to accept terms, redirecting to /terms');
+            // If user hasn't accepted terms yet, redirect to terms page
+            if (!termsAccepted && window.location.pathname !== '/terms') {
+              console.log('User needs to accept terms, redirecting to /terms');
               setTimeout(() => {
                 window.location.href = '/terms';
               }, 500);
               return;
             }
             
-            // If terms accepted or desktop, go to home
-            if ((termsAccepted || !isMobile) && 
+            // If terms accepted, redirect to intended destination or home
+            if (termsAccepted && 
                 window.location.pathname !== '/' && 
                 window.location.pathname !== '' &&
                 !window.location.pathname.includes('reset-password') &&
-                window.location.pathname !== '/terms') {
-              console.log('Authenticated user, redirecting to home page');
+                window.location.pathname !== '/terms' &&
+                window.location.pathname !== '/auth') {
+              console.log('User already authenticated and on correct page');
+              return;
+            }
+            
+            // Handle redirects after terms acceptance or auth completion
+            if (termsAccepted && (window.location.pathname === '/terms' || window.location.pathname === '/auth')) {
+              const destination = redirectAfterAuth || '/';
+              console.log('Redirecting to intended destination:', destination);
+              localStorage.removeItem('redirectAfterAuth'); // Clean up
               setTimeout(() => {
-                window.location.href = '/';
+                window.location.href = destination;
               }, 500);
             }
           }

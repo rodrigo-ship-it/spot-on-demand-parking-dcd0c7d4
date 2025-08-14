@@ -26,7 +26,15 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
       // Store acceptance in localStorage
       localStorage.setItem('termsAccepted', 'true');
       localStorage.setItem('termsAcceptedDate', new Date().toISOString());
-      onAccept();
+      
+      // Check if there's a redirect destination from before auth
+      const redirectAfterAuth = localStorage.getItem('redirectAfterAuth');
+      if (redirectAfterAuth) {
+        localStorage.removeItem('redirectAfterAuth');
+        window.location.href = redirectAfterAuth;
+      } else {
+        onAccept();
+      }
     }
   };
 
