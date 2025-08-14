@@ -48,10 +48,7 @@ const HowItWorks = () => {
         {/* Enhanced Header with SEO */}
         <header className="text-center mb-16" role="banner">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 animate-fade-in">
-            How Arriv
-            <span className="gradient-text">
-              {" "}Works
-            </span>
+            How Arriv <span className="gradient-text">Works</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-slide-up">
             Whether you're looking for convenient parking or wanting to earn money from your unused space, 
