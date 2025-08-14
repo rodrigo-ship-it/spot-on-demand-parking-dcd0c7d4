@@ -152,7 +152,7 @@ const Index = () => {
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed animate-slide-up">
               Discover convenient parking spots or earn money by listing your unused space. 
-              Join drivers and property owners in the Arriv community.
+              Join our growing community of drivers and property owners.
             </p>
             
             {/* Enhanced Search Bar */}
