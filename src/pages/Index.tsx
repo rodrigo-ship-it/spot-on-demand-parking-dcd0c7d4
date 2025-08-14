@@ -124,10 +124,10 @@ const Index = () => {
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
-                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
+                  className="h-12 w-auto hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
-              <div className="hidden md:flex items-center space-x-8">
+              <div className="hidden md:flex items-center space-x-12">
                 <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium whitespace-nowrap">
                   How it Works
                 </Link>
