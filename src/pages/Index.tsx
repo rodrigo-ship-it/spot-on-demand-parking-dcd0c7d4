@@ -51,6 +51,8 @@ const Index = () => {
     }
 
     console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
+    console.log("Search coordinates:", searchCoordinates);
+    console.log("Setting hasSearched to true");
     
     // Filter spots based on search location
     const filtered = transformedSpots.filter(spot => 
@@ -61,6 +63,8 @@ const Index = () => {
 
     setFilteredSpots(filtered);
     setHasSearched(true);
+    
+    console.log("hasSearched should now be true, filtered spots:", filtered.length);
 
     if (filtered.length === 0) {
       toast.info(`No parking spots found near "${searchLocation}". Showing map view to explore the area.`);
