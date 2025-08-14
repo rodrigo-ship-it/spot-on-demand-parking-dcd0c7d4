@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.create-call-session]
 verify_jwt = true
+
+[functions.security-rate-limit]
+verify_jwt = false
+
+[functions.validate-stripe-access]
+verify_jwt = true

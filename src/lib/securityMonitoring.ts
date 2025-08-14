@@ -273,8 +273,47 @@ export const logLoginAttempt = (success: boolean, email: string, ipAddress?: str
     data: {
       email: success ? email : email.substring(0, 3) + '***', // Mask on failure
       ipAddress,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString()
     }
+  });
+};
+
+export const logDataExport = (userId: string, dataType: string, recordCount: number) => {
+  securityMonitor.logSecurityEvent({
+    type: 'data_export',
+    severity: 'medium',
+    data: {
+      dataType,
+      recordCount,
+      timestamp: new Date().toISOString()
+    },
+    userId
+  });
+};
+
+export const logPaymentMethodChange = (userId: string, action: string) => {
+  securityMonitor.logSecurityEvent({
+    type: 'payment_method_change',
+    severity: 'medium',
+    data: {
+      action, // 'added', 'removed', 'updated'
+      timestamp: new Date().toISOString()
+    },
+    userId
+  });
+};
+
+export const logUnusualDataAccess = (userId: string, resource: string, pattern: string) => {
+  securityMonitor.logSecurityEvent({
+    type: 'unusual_data_access',
+    severity: 'high',
+    data: {
+      resource,
+      pattern, // 'bulk_access', 'off_hours', 'rapid_requests'
+      timestamp: new Date().toISOString()
+    },
+    userId
   });
 };
 

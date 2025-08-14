@@ -2,7 +2,7 @@
  * Security utilities for data validation and protection
  */
 
-// Input validation and sanitization
+// Enhanced input validation and sanitization
 export const sanitizeInput = (input: string): string => {
   if (!input) return '';
   
@@ -11,7 +11,33 @@ export const sanitizeInput = (input: string): string => {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
     .replace(/javascript:/gi, '') // Remove javascript: protocols
     .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .replace(/data:/gi, '') // Remove data URIs
+    .replace(/vbscript:/gi, '') // Remove VBScript
+    .replace(/=\s*("|')?\s*javascript:/gi, '') // Remove JS in attributes
+    .replace(/<!--[\s\S]*?-->/g, '') // Remove HTML comments
     .slice(0, 1000); // Limit length
+};
+
+// Enhanced CSV injection protection
+export const sanitizeCSVInput = (input: string): string => {
+  if (!input) return '';
+  
+  const dangerous = /^[=+\-@\t\r]/;
+  if (dangerous.test(input)) {
+    return `'${input}`; // Prefix with quote to neutralize
+  }
+  
+  return sanitizeInput(input);
+};
+
+// SQL injection protection
+export const sanitizeSQLInput = (input: string): string => {
+  if (!input) return '';
+  
+  return input
+    .replace(/[';\\]/g, '') // Remove SQL dangerous characters
+    .replace(/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|OR|AND)\b/gi, '') // Remove SQL keywords
+    .slice(0, 500);
 };
 
 export const validateEmail = (email: string): boolean => {
