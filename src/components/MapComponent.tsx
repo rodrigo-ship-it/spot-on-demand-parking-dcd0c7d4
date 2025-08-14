@@ -28,13 +28,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current || isInitialized) return;
+    // Add a small delay to ensure the component is fully rendered
+    const timeoutId = setTimeout(() => {
+      if (!mapContainer.current || map.current || isInitialized) return;
 
-    const initializeMap = async () => {
-      if (!mapContainer.current) {
-        console.error('Map container not ready');
-        return;
-      }
+      const initializeMap = async () => {
+        if (!mapContainer.current) {
+          console.error('Map container not ready');
+          return;
+        }
       try {
         // Fetch Mapbox token securely from edge function
         const { data: tokenData, error } = await supabase.functions.invoke('get-mapbox-token');
@@ -116,8 +118,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     };
 
     initializeMap();
+    }, 100); // Small delay to ensure DOM is ready
 
     return () => {
+      clearTimeout(timeoutId);
       if (map.current) {
         map.current.remove();
         map.current = null;
