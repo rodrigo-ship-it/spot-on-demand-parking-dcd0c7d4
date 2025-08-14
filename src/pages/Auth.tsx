@@ -15,6 +15,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("signin"); // Control active tab
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -103,7 +104,16 @@ const Auth = () => {
       
       if (error) {
         if (error.message.includes('User already registered')) {
-          toast.error('An account with this email already exists. Please sign in instead.');
+          // Clear password fields and switch to sign-in tab
+          setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+          setActiveTab("signin");
+          toast.error('An account with this email already exists. Please sign in instead.', {
+            duration: 5000,
+            action: {
+              label: 'Sign In',
+              onClick: () => setActiveTab("signin")
+            }
+          });
         } else if (error.message.includes('Password should be at least 6 characters')) {
           toast.error('Password must be at least 6 characters long');
         } else {
@@ -159,7 +169,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
