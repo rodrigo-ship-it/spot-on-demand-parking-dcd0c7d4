@@ -116,6 +116,7 @@ const Bookings = () => {
 
           return {
             id: booking.id,
+            spotId: booking.spot_id, // Add missing spotId
             spotTitle: booking.parking_spots?.title || 'Unknown Spot',
             spotAddress: booking.parking_spots?.address || 'Unknown Address',
             spotOwner: ownerName,

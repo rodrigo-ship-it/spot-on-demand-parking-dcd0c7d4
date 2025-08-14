@@ -14,7 +14,7 @@ interface RefundRequestDialogProps {
     id: string;
     total_amount: number;
     spot_id: string;
-  };
+  } | null;
 }
 
 export default function RefundRequestDialog({ isOpen, onClose, booking }: RefundRequestDialogProps) {
@@ -33,6 +33,15 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
   ];
 
   const handleSubmit = async () => {
+    if (!booking) {
+      toast({
+        title: "Error",
+        description: "No booking data available.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!reason || !description.trim()) {
       toast({
         title: "Missing Information",
@@ -75,6 +84,10 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
     }
   };
 
+  if (!booking) {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -86,7 +99,7 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
           <div>
             <Label htmlFor="refund-amount">Refund Amount</Label>
             <div className="text-2xl font-bold text-primary">
-              ${Number(booking.total_amount).toFixed(2)}
+              ${Number(booking.total_amount || 0).toFixed(2)}
             </div>
           </div>
 
