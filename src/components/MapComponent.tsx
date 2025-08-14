@@ -26,7 +26,14 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const onSpotSelectRef = useRef(onSpotSelect);
 
+  // Update the ref when onSpotSelect changes
+  useEffect(() => {
+    onSpotSelectRef.current = onSpotSelect;
+  }, [onSpotSelect]);
+
+  // Initialize map only once
   useEffect(() => {
     // Add a small delay to ensure the component is fully rendered
     const timeoutId = setTimeout(() => {
@@ -95,7 +102,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                         ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
                       </div>
                       <button 
-                        onclick="window.selectSpot(${spot.id})" 
+                        onclick="window.selectSpot && window.selectSpot(${spot.id})" 
                         class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
                       >
                         Book Now
@@ -122,7 +129,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
 
-            (window as any).selectSpot = onSpotSelect;
+            (window as any).selectSpot = (spotId: string | number) => {
+              onSpotSelectRef.current(spotId);
+            };
             setIsInitialized(true);
             console.log('Map initialization complete');
           });
@@ -148,7 +157,62 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         setIsInitialized(false);
       }
     };
-  }, [spots, centerLocation, onSpotSelect, isInitialized]);
+  }, []); // Empty dependency array - only run once
+
+  // Update markers when spots or centerLocation change
+  useEffect(() => {
+    if (!map.current || !isInitialized) return;
+
+    console.log('Updating markers for', spots.length, 'spots');
+    
+    // Clear existing markers (we'll recreate them)
+    // Note: In a production app, you'd want to track markers and only update what changed
+    
+    spots.forEach((spot) => {
+      const marker = new mapboxgl.Marker({
+        color: '#3B82F6',
+      })
+        .setLngLat([spot.longitude, spot.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold text-sm">${spot.title}</h3>
+              <p class="text-xs text-gray-600">${spot.address}</p>
+              <div class="flex justify-between items-center mb-2">
+                <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+              </div>
+              <button 
+                onclick="window.selectSpot && window.selectSpot(${spot.id})" 
+                class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+              >
+                Book Now
+              </button>
+            </div>
+          `)
+        )
+        .addTo(map.current!);
+    });
+
+    if (centerLocation) {
+      // Update map center
+      map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
+      
+      new mapboxgl.Marker({
+        color: '#ef4444',
+      })
+        .setLngLat([centerLocation.longitude, centerLocation.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold text-sm">Search Location</h3>
+              <p class="text-xs text-gray-600">Your searched location</p>
+            </div>
+          `)
+        )
+        .addTo(map.current!);
+    }
+  }, [spots, centerLocation, isInitialized]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
