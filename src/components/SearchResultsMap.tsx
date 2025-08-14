@@ -106,145 +106,163 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         centerLocation={searchCoordinates}
       />
 
-      {/* Quick Spot Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {spotsWithDistance.slice(0, 6).map((spot) => (
-          <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-44" onClick={() => onSpotSelect(spot.id)}>
-            <CardContent className="p-4 h-full flex flex-col">
-              {/* Header with title/address and price */}
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm truncate">{spot.title}</h3>
-                  <div className="flex items-center text-gray-600 text-xs mt-1">
-                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
-                    <span className="truncate">{spot.address}</span>
+      {/* Quick Spot Cards - only show if there are spots */}
+      {hasSpots && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {spotsWithDistance.slice(0, 6).map((spot) => (
+            <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-44" onClick={() => onSpotSelect(spot.id)}>
+              <CardContent className="p-4 h-full flex flex-col">
+                {/* Header with title/address and price */}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm truncate">{spot.title}</h3>
+                    <div className="flex items-center text-gray-600 text-xs mt-1">
+                      <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">{spot.address}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-lg font-bold text-gray-900 ml-2">
+                    <DollarSign className="w-4 h-4" />
+                    {spot.price}/hr
                   </div>
                 </div>
-                <div className="flex items-center text-lg font-bold text-gray-900 ml-2">
-                  <DollarSign className="w-4 h-4" />
-                  {spot.price}/hr
+                
+                {/* Type and distance row */}
+                <div className="flex items-center justify-between text-sm mb-3">
+                  <div className="flex items-center text-gray-600">
+                    <Car className="w-3 h-3 mr-1" />
+                    <span className="truncate">{spot.type}</span>
+                  </div>
+                  <div className="flex items-center text-green-600 font-medium">
+                    <Navigation className="w-3 h-3 mr-1" />
+                    {spot.distance}
+                  </div>
                 </div>
-              </div>
-              
-              {/* Type and distance row */}
-              <div className="flex items-center justify-between text-sm mb-3">
-                <div className="flex items-center text-gray-600">
-                  <Car className="w-3 h-3 mr-1" />
-                  <span className="truncate">{spot.type}</span>
-                </div>
-                <div className="flex items-center text-green-600 font-medium">
-                  <Navigation className="w-3 h-3 mr-1" />
-                  {spot.distance}
-                </div>
-              </div>
 
-              {/* Bottom row with rating and button */}
-              <div className="flex justify-between items-center mt-auto pt-2 border-t">
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                  <span className="text-sm font-medium">{spot.rating}</span>
+                {/* Bottom row with rating and button */}
+                <div className="flex justify-between items-center mt-auto pt-2 border-t">
+                  <div className="flex items-center">
+                    <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                    <span className="text-sm font-medium">{spot.rating}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSpotSelect(spot.id);
+                    }}
+                    className="text-xs bg-primary hover:bg-secondary"
+                  >
+                    Book Now
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSpotSelect(spot.id);
-                  }}
-                  className="text-xs bg-primary hover:bg-secondary"
-                >
-                  Book Now
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Message when no spots are found */}
+      {!hasSpots && (
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots found in this area</h3>
+          <p className="text-gray-600">Try zooming out on the map above or search for a different location.</p>
+        </div>
+      )}
     </div>
   );
 
   const ListView = () => (
     <div className="space-y-4">
-      {spotsWithDistance.map((spot) => (
-        <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
-          <div className="flex">
-            <div className="relative w-48 h-32">
-              <img 
-                src={spot.image} 
-                alt={spot.title}
-                className="w-full h-full object-cover rounded-l-lg"
-              />
-              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                {spot.rating}
+      {hasSpots ? (
+        spotsWithDistance.map((spot) => (
+          <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
+            <div className="flex">
+              <div className="relative w-48 h-32">
+                <img 
+                  src={spot.image} 
+                  alt={spot.title}
+                  className="w-full h-full object-cover rounded-l-lg"
+                />
+                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                  <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                  {spot.rating}
+                </div>
               </div>
-            </div>
-            <div className="flex-1 p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                    {spot.title}
-                  </h3>
-                  <div className="flex items-center text-gray-600 mt-1">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {spot.address}
+              <div className="flex-1 p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                      {spot.title}
+                    </h3>
+                    <div className="flex items-center text-gray-600 mt-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {spot.address}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                    <div className="text-sm text-gray-500">per hour</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                  <div className="text-sm text-gray-500">per hour</div>
+                
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                  <div className="flex items-center">
+                    <Car className="w-4 h-4 mr-1" />
+                    {spot.type}
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {spot.available}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                <div className="flex items-center">
-                  <Car className="w-4 h-4 mr-1" />
-                  {spot.type}
+                
+                <div className="mb-4">
+                  <AvailabilityDisplay 
+                    spotType={spot.spotType}
+                    totalSpots={spot.totalSpots}
+                    spotId={spot.id.toString()}
+                  />
                 </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  {spot.available}
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <AvailabilityDisplay 
-                  spotType={spot.spotType}
-                  totalSpots={spot.totalSpots}
-                  spotId={spot.id.toString()}
-                />
-              </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">{spot.distance} away</span>
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleGetDirections(spot)}
-                  >
-                    <Navigation className="w-4 h-4 mr-1" />
-                    Directions
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="bg-primary hover:bg-secondary text-primary-foreground"
-                    onClick={() => onSpotSelect(spot.id)}
-                  >
-                    Book Now
-                  </Button>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">{spot.distance} away</span>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleGetDirections(spot)}
+                    >
+                      <Navigation className="w-4 h-4 mr-1" />
+                      Directions
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-primary hover:bg-secondary text-primary-foreground"
+                      onClick={() => onSpotSelect(spot.id)}
+                    >
+                      Book Now
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        ))
+      ) : (
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <List className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots found in this area</h3>
+          <p className="text-gray-600">Try searching for a different location or go back to map view to explore the area.</p>
+        </div>
+      )}
     </div>
   );
 
-  if (spots.length === 0) {
-    return null;
-  }
+  // Always show the map, even when no spots are found
+  const hasSpots = spots.length > 0;
 
   return (
     <section className="py-16 bg-white/50">
