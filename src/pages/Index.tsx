@@ -127,11 +127,11 @@ const Index = () => {
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
-              <div className="hidden md:flex items-center space-x-12">
-                <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium whitespace-nowrap">
+              <div className="hidden md:flex items-center space-x-6">
+                <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   How it Works
                 </Link>
-                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium whitespace-nowrap">
+                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   My Spots
                 </Link>
               </div>
