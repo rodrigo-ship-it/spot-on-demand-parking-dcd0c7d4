@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, User, Bell, CreditCard, Shield, Save, Phone, Mail } from "lucide-react";
+import { ArrowLeft, User, Bell, CreditCard, Shield, Save, Phone, Mail, TrendingUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -191,6 +191,29 @@ const Profile = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Analytics Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2" />
+                Your Parking Analytics
+              </CardTitle>
+              <CardDescription>
+                Insights into your parking habits and spending patterns.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Your personal analytics dashboard</p>
+                <p className="text-sm">Track your spending, favorite locations, and parking patterns</p>
+                <Button className="mt-4" variant="outline">
+                  View Full Analytics (Coming Soon)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Email Verification */}
           <EmailVerification />
 

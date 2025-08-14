@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
   Clock,
   Eye,
   Ban,
-  CheckCircle
+  CheckCircle,
+  MessageSquare
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -252,14 +253,56 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Detailed Tables */}
-        <Tabs defaultValue="users" className="space-y-4">
+        {/* Analytics and Management */}
+        <Tabs defaultValue="analytics" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="users">Recent Users</TabsTrigger>
             <TabsTrigger value="spots">Parking Spots</TabsTrigger>
             <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
             <TabsTrigger value="refunds">Refund Requests</TabsTrigger>
+            <TabsTrigger value="support">Support Tickets</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analytics">
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform Analytics</CardTitle>
+                <CardDescription>
+                  Comprehensive insights into platform performance and usage
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Revenue Growth</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8 text-muted-foreground">
+                        <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>Advanced analytics charts coming soon</p>
+                        <p className="text-sm">Track revenue trends, user growth, and performance metrics</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">User Activity</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>User engagement metrics</p>
+                        <p className="text-sm">Monitor user activity and retention rates</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="users">
             <Card>
@@ -385,6 +428,27 @@ export default function AdminDashboard() {
 
           <TabsContent value="refunds">
             <AdminRefundManager />
+          </TabsContent>
+
+          <TabsContent value="support">
+            <Card>
+              <CardHeader>
+                <CardTitle>Support Tickets</CardTitle>
+                <CardDescription>
+                  Manage customer support requests and disputes
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Support ticket management system</p>
+                  <p className="text-sm">View and respond to customer support requests</p>
+                  <Button className="mt-4" variant="outline">
+                    Coming Soon
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
