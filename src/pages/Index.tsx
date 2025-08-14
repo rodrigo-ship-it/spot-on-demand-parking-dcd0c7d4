@@ -4,7 +4,8 @@ import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
@@ -21,6 +22,7 @@ const Index = () => {
   const [searchDuration, setSearchDuration] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -134,7 +136,9 @@ const Index = () => {
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-3">
               <NotificationSettings />
               {user ? (
                 <>
@@ -157,6 +161,74 @@ const Index = () => {
                   Sign In
                 </Button>
               )}
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center space-x-2">
+              <NotificationSettings />
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="w-4 h-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col space-y-4 mt-8">
+                    <Link 
+                      to="/how-it-works" 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      How it Works
+                    </Link>
+                    <Link 
+                      to="/manage-spots" 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Spots
+                    </Link>
+                    
+                    <div className="border-t pt-4 space-y-3">
+                      {user ? (
+                        <>
+                          <Link to="/bookings" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="outline" className="w-full justify-start">
+                              My Bookings
+                            </Button>
+                          </Link>
+                          <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="outline" className="w-full justify-start">
+                              Profile
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start" 
+                            onClick={() => {
+                              signOut();
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Sign Out
+                          </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start" 
+                          onClick={() => {
+                            handleSignIn();
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          Sign In
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>

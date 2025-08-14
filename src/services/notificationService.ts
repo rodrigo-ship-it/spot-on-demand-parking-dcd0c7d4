@@ -35,8 +35,19 @@ class NotificationService {
     }
 
     try {
+      // Check if we're in a secure context
+      if (!window.isSecureContext) {
+        console.warn('Push notifications require a secure context (HTTPS)');
+        return null;
+      }
+
       const registration = await navigator.serviceWorker.register('/sw.js');
-      const subscription = await registration.pushManager.subscribe({
+      await registration.update(); // Ensure latest service worker
+      
+      // Wait for service worker to be ready
+      const ready = await navigator.serviceWorker.ready;
+      
+      const subscription = await ready.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey)
       });
@@ -44,9 +55,10 @@ class NotificationService {
       // Store subscription in Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await (supabase as any).from('notification_subscriptions').upsert({
+        await supabase.from('notification_subscriptions').upsert({
           user_id: user.id,
-          subscription: JSON.stringify(subscription),
+          endpoint: subscription.endpoint,
+          keys: subscription.toJSON().keys,
           updated_at: new Date().toISOString()
         });
       }
@@ -60,6 +72,10 @@ class NotificationService {
 
   async unsubscribeFromPush(): Promise<boolean> {
     try {
+      if (!('serviceWorker' in navigator)) {
+        return false;
+      }
+
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration) {
         const subscription = await registration.pushManager.getSubscription();
@@ -69,7 +85,7 @@ class NotificationService {
           // Remove subscription from Supabase
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            await (supabase as any).from('notification_subscriptions')
+            await supabase.from('notification_subscriptions')
               .delete()
               .eq('user_id', user.id);
           }
@@ -114,13 +130,22 @@ class NotificationService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('notification_preferences')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      return (data as NotificationPreferences) || {
+      if (data) {
+        return {
+          pushEnabled: data.push_enabled,
+          bookingUpdates: data.booking_updates,
+          paymentAlerts: data.payment_alerts,
+          promotions: data.promotions
+        };
+      }
+
+      return {
         pushEnabled: false,
         bookingUpdates: true,
         paymentAlerts: true,
@@ -128,7 +153,12 @@ class NotificationService {
       };
     } catch (error) {
       console.error('Error getting notification preferences:', error);
-      return null;
+      return {
+        pushEnabled: false,
+        bookingUpdates: true,
+        paymentAlerts: true,
+        promotions: false
+      };
     }
   }
 
@@ -137,11 +167,14 @@ class NotificationService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('notification_preferences')
         .upsert({
           user_id: user.id,
-          ...preferences,
+          push_enabled: preferences.pushEnabled,
+          booking_updates: preferences.bookingUpdates,
+          payment_alerts: preferences.paymentAlerts,
+          promotions: preferences.promotions,
           updated_at: new Date().toISOString()
         });
 
