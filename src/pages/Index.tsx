@@ -373,7 +373,7 @@ const Index = () => {
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
               Have an unused parking space? List it on Arriv and start earning money today. 
-              Join thousands of property owners already making extra income.
+              Join members of the Arriv community already making extra income.
             </p>
             <Link to="/list-spot">
               <Button variant="glass" size="xl" className="animate-pulse-glow">
