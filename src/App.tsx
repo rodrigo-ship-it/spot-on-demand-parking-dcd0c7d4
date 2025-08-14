@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { TermsAndConditions } from "@/components/TermsAndConditions";
-import { useState, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import ProtectedListSpot from "./pages/ProtectedListSpot";
@@ -27,35 +26,6 @@ import ResetPassword from "./pages/ResetPassword";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user has already accepted terms
-    const accepted = localStorage.getItem('termsAccepted');
-    if (accepted === 'true') {
-      setTermsAccepted(true);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const handleTermsAccept = () => {
-    setTermsAccepted(true);
-  };
-
-  if (isLoading) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </QueryClientProvider>
-    );
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -63,31 +33,28 @@ const App = () => {
           <ErrorBoundary>
             <Toaster />
             <Sonner />
-            {!termsAccepted ? (
-              <TermsAndConditions onAccept={handleTermsAccept} />
-            ) : (
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/list-spot" element={<ProtectedListSpot />} />
-                  <Route path="/how-it-works" element={<HowItWorks />} />
-                  <Route path="/help" element={<HelpSupport />} />
-                  <Route path="/manage-spots" element={<ProtectedManageSpots />} />
-                  <Route path="/spot/:id" element={<SpotDetails />} />
-                  <Route path="/book-spot/:id" element={<BookSpot />} />
-                  <Route path="/rent-qr/:spotId" element={<RentQR />} />
-                  <Route path="/bookings" element={<Bookings />} />
-                  <Route path="/booking-confirmed" element={<BookingConfirmed />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            )}
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/terms" element={<TermsAndConditions onAccept={() => window.location.href = '/'} />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/list-spot" element={<ProtectedListSpot />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/help" element={<HelpSupport />} />
+                <Route path="/manage-spots" element={<ProtectedManageSpots />} />
+                <Route path="/spot/:id" element={<SpotDetails />} />
+                <Route path="/book-spot/:id" element={<BookSpot />} />
+                <Route path="/rent-qr/:spotId" element={<RentQR />} />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/booking-confirmed" element={<BookingConfirmed />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>
       </AuthProvider>

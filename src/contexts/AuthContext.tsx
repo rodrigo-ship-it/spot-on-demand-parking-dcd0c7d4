@@ -51,16 +51,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return; // Don't redirect, stay on reset page
           }
           
-          // Only redirect if user just confirmed email and we're not already on home page
-          // Also don't redirect if we're already on the home page (prevent reload loops)
-          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && 
-              window.location.pathname !== '/' && 
-              window.location.pathname !== '' &&
-              !window.location.pathname.includes('reset-password')) {
-            console.log('Redirecting authenticated user to home page');
-            setTimeout(() => {
-              window.location.href = '/';
-            }, 500);
+          // For new users, check if they've accepted terms
+          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+            const termsAccepted = localStorage.getItem('termsAccepted');
+            
+            // If user hasn't accepted terms yet, redirect to terms page
+            if (!termsAccepted && window.location.pathname !== '/terms') {
+              console.log('New user needs to accept terms, redirecting to /terms');
+              setTimeout(() => {
+                window.location.href = '/terms';
+              }, 500);
+              return;
+            }
+            
+            // If user has accepted terms and not on home page, redirect to home
+            if (termsAccepted && 
+                window.location.pathname !== '/' && 
+                window.location.pathname !== '' &&
+                !window.location.pathname.includes('reset-password') &&
+                window.location.pathname !== '/terms') {
+              console.log('Authenticated user with accepted terms, redirecting to home page');
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 500);
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           cleanupAuthState();
