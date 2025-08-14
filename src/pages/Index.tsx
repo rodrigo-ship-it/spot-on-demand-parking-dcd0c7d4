@@ -113,6 +113,30 @@ const Index = () => {
     navigate("/auth");
   };
 
+  // Mobile-first: redirect to auth if not signed in on mobile
+  const checkMobileAuth = () => {
+    if (window.innerWidth < 768 && !user) {
+      navigate('/auth');
+      return;
+    }
+  };
+
+  useEffect(() => {
+    checkMobileAuth();
+  }, [user, navigate]);
+
+  // If mobile and no user, show loading while redirecting
+  if (window.innerWidth < 768 && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting to sign in...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Modern Navigation */}
