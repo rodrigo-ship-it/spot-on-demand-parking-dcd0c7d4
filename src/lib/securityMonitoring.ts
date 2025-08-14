@@ -273,7 +273,7 @@ export const logLoginAttempt = (success: boolean, email: string, ipAddress?: str
     data: {
       email: success ? email : email.substring(0, 3) + '***', // Mask on failure
       ipAddress,
-      userAgent: navigator.userAgent,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       timestamp: new Date().toISOString()
     }
   });
