@@ -63,7 +63,7 @@ const Index = () => {
     setHasSearched(true);
 
     if (filtered.length === 0) {
-      toast.info(`No parking spots found near "${searchLocation}". Try zooming out on the map to see nearby options.`);
+      toast.info(`No parking spots found near "${searchLocation}". Showing map view to explore the area.`);
     } else {
       toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
     }
