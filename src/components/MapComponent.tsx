@@ -30,101 +30,122 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   useEffect(() => {
     // Add a small delay to ensure the component is fully rendered
     const timeoutId = setTimeout(() => {
-      if (!mapContainer.current || map.current || isInitialized) return;
+      if (map.current || isInitialized) return;
 
       const initializeMap = async () => {
         if (!mapContainer.current) {
           console.error('Map container not ready');
           return;
         }
-      try {
-        // Fetch Mapbox token securely from edge function
-        const { data: tokenData, error } = await supabase.functions.invoke('get-mapbox-token');
-        
-        if (error || !tokenData?.token) {
-          console.error('Failed to fetch Mapbox token:', error);
-          return;
+
+        try {
+          console.log('Initializing map...');
+          
+          // Fetch Mapbox token securely from edge function
+          const { data: tokenData, error } = await supabase.functions.invoke('get-mapbox-token');
+          
+          if (error || !tokenData?.token) {
+            console.error('Failed to fetch Mapbox token:', error);
+            return;
+          }
+
+          console.log('Mapbox token fetched successfully');
+
+          // Set the Mapbox access token securely
+          mapboxgl.accessToken = tokenData.token;
+
+          const mapCenter: [number, number] = centerLocation 
+            ? [centerLocation.longitude, centerLocation.latitude]
+            : spots.length > 0 
+              ? [spots[0].longitude, spots[0].latitude] 
+              : [-74.006, 40.7128];
+
+          console.log('Creating map with center:', mapCenter);
+
+          // Create map instance
+          map.current = new mapboxgl.Map({
+            container: mapContainer.current!,
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: mapCenter,
+            zoom: 12,
+            attributionControl: false,
+            logoPosition: 'bottom-right'
+          });
+
+          console.log('Map instance created');
+
+          map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+          // Wait for map to load before adding markers
+          map.current.on('load', () => {
+            console.log('Map loaded, adding markers for', spots.length, 'spots');
+            
+            spots.forEach((spot) => {
+              const marker = new mapboxgl.Marker({
+                color: '#3B82F6',
+              })
+                .setLngLat([spot.longitude, spot.latitude])
+                .setPopup(
+                  new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                    <div class="p-2">
+                      <h3 class="font-bold text-sm">${spot.title}</h3>
+                      <p class="text-xs text-gray-600">${spot.address}</p>
+                      <div class="flex justify-between items-center mb-2">
+                        <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                        ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+                      </div>
+                      <button 
+                        onclick="window.selectSpot(${spot.id})" 
+                        class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+                      >
+                        Book Now
+                      </button>
+                    </div>
+                  `)
+                )
+                .addTo(map.current!);
+            });
+
+            if (centerLocation) {
+              new mapboxgl.Marker({
+                color: '#ef4444',
+              })
+                .setLngLat([centerLocation.longitude, centerLocation.latitude])
+                .setPopup(
+                  new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                    <div class="p-2">
+                      <h3 class="font-bold text-sm">Search Location</h3>
+                      <p class="text-xs text-gray-600">Your searched location</p>
+                    </div>
+                  `)
+                )
+                .addTo(map.current!);
+            }
+
+            (window as any).selectSpot = onSpotSelect;
+            setIsInitialized(true);
+            console.log('Map initialization complete');
+          });
+
+          // Handle map errors
+          map.current.on('error', (e) => {
+            console.error('Map error:', e);
+          });
+
+        } catch (error) {
+          console.error('Error initializing map:', error);
         }
+      };
 
-        // Set the Mapbox access token securely
-        mapboxgl.accessToken = tokenData.token;
-
-        const mapCenter: [number, number] = centerLocation 
-          ? [centerLocation.longitude, centerLocation.latitude]
-          : spots.length > 0 
-            ? [spots[0].longitude, spots[0].latitude] 
-            : [-74.006, 40.7128];
-
-        // Create map instance
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current!,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          center: mapCenter,
-          zoom: 12,
-          attributionControl: false,
-          logoPosition: 'bottom-right'
-        });
-
-        map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-        spots.forEach((spot) => {
-          const marker = new mapboxgl.Marker({
-            color: '#3B82F6',
-          })
-            .setLngLat([spot.longitude, spot.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 }).setHTML(`
-                <div class="p-2">
-                  <h3 class="font-bold text-sm">${spot.title}</h3>
-                  <p class="text-xs text-gray-600">${spot.address}</p>
-                  <div class="flex justify-between items-center mb-2">
-                    <p class="text-sm font-semibold">$${spot.price}/hour</p>
-                    ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
-                  </div>
-                  <button 
-                    onclick="window.selectSpot(${spot.id})" 
-                    class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
-                  >
-                    Book Now
-                  </button>
-                </div>
-              `)
-            )
-            .addTo(map.current!);
-        });
-
-        if (centerLocation) {
-          new mapboxgl.Marker({
-            color: '#ef4444',
-          })
-            .setLngLat([centerLocation.longitude, centerLocation.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 }).setHTML(`
-                <div class="p-2">
-                  <h3 class="font-bold text-sm">Search Location</h3>
-                  <p class="text-xs text-gray-600">Your searched location</p>
-                </div>
-              `)
-            )
-            .addTo(map.current!);
-        }
-
-        (window as any).selectSpot = onSpotSelect;
-        setIsInitialized(true);
-
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    };
-
-    initializeMap();
-    }, 100); // Small delay to ensure DOM is ready
+      initializeMap();
+    }, 250); // Increased delay to ensure DOM is ready
 
     return () => {
       clearTimeout(timeoutId);
       if (map.current) {
         map.current.remove();
         map.current = null;
+        setIsInitialized(false);
       }
     };
   }, [spots, centerLocation, onSpotSelect, isInitialized]);
