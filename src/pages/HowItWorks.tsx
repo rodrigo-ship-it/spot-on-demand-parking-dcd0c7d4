@@ -45,19 +45,19 @@ const HowItWorks = () => {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        {/* Enhanced Header with SEO */}
+        <header className="text-center mb-16" role="banner">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 animate-fade-in">
             How Arriv
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="gradient-text animate-pulse-glow">
               {" "}Works
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Whether you're looking for parking or wanting to earn money from your unused space, 
-            Arriv makes it simple and secure.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-slide-up">
+            Whether you're looking for convenient parking or wanting to earn money from your unused space, 
+            Arriv makes it simple, secure, and profitable for everyone.
           </p>
-        </div>
+        </header>
 
         {/* For Renters */}
         <section className="mb-20">
@@ -67,14 +67,14 @@ const HowItWorks = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+            <Card className="text-center border-0 shadow-card hover:shadow-elegant transition-all duration-300 group hover-lift animate-scale-in">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                   <Search className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl">1. Search</CardTitle>
-                <CardDescription className="text-base">
-                  Enter your destination and desired parking duration
+                <CardTitle className="text-xl gradient-text">1. Search</CardTitle>
+                <CardDescription className="text-base text-gray-600">
+                  Enter your destination and desired parking duration to find perfect spots
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -86,14 +86,14 @@ const HowItWorks = () => {
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+            <Card className="text-center border-0 shadow-card hover:shadow-elegant transition-all duration-300 group hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                   <CreditCard className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl">2. Book & Pay</CardTitle>
-                <CardDescription className="text-base">
-                  Secure your spot with instant booking and payment
+                <CardTitle className="text-xl gradient-text">2. Book & Pay</CardTitle>
+                <CardDescription className="text-base text-gray-600">
+                  Secure your spot with instant booking and safe payment processing
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -105,14 +105,14 @@ const HowItWorks = () => {
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300">
+            <Card className="text-center border-0 shadow-card hover:shadow-elegant transition-all duration-300 group hover-lift animate-scale-in" style={{ animationDelay: '0.2s' }}>
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                   <MapPin className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl">3. Park</CardTitle>
-                <CardDescription className="text-base">
-                  Navigate to your spot and park with confidence
+                <CardTitle className="text-xl gradient-text">3. Park</CardTitle>
+                <CardDescription className="text-base text-gray-600">
+                  Navigate to your spot and park with confidence using our detailed directions
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -235,22 +235,25 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="text-center bg-gradient-to-r from-primary to-secondary rounded-2xl p-12">
+        {/* Enhanced CTA */}
+        <section className="text-center bg-gradient-hero rounded-2xl p-12 shadow-elegant hover-lift animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-xl text-white/80 mb-8">
-            Join thousands of users who trust Arriv for their parking needs
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Join thousands of verified users who trust Arriv for their parking needs. 
+            Start saving time and money today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/">
-              <Button size="lg" className="bg-white text-primary hover:bg-gray-50 font-semibold px-8">
+              <Button variant="glass" size="xl" className="font-semibold px-8">
+                <Search className="w-5 h-5 mr-2" />
                 Find Parking
               </Button>
             </Link>
             <Link to="/list-spot">
-              <Button size="lg" className="bg-white text-primary hover:bg-gray-50 font-semibold px-8">
+              <Button variant="glass" size="xl" className="font-semibold px-8">
+                <DollarSign className="w-5 h-5 mr-2" />
                 List Your Spot
               </Button>
             </Link>

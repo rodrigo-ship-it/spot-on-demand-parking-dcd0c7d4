@@ -142,21 +142,21 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/5 to-purple-600/10"></div>
+      {/* Hero Section with Enhanced SEO */}
+      <section className="relative overflow-hidden py-20 lg:py-32" role="banner">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary-glow/5 to-secondary/10 animate-pulse-glow"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <div className="text-center max-w-4xl mx-auto animate-fade-in">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight gradient-text">
               Find it. Book it. Arriv
             </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Discover convenient parking spots or earn money by listing your unused space. 
-              Join thousands of drivers and property owners.
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed animate-slide-up">
+              Discover convenient parking spots near you or earn money by listing your unused space. 
+              Join thousands of verified drivers and property owners in the Arriv community.
             </p>
             
-            {/* Search Bar */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100 max-w-4xl mx-auto">
+            {/* Enhanced Search Bar */}
+            <div className="bg-gradient-card rounded-2xl p-6 shadow-elegant border border-gray-100 max-w-4xl mx-auto hover-lift glass-effect animate-scale-in">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-2">
                   <GooglePlacesAutocomplete
@@ -164,11 +164,11 @@ const Index = () => {
                     onChange={setSearchLocation}
                     onLocationSelect={handleLocationSelect}
                     placeholder="Where do you need parking?"
-                    className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 focus:shadow-glow"
                   />
                 </div>
                 <Select value={searchDuration} onValueChange={setSearchDuration}>
-                  <SelectTrigger className="h-12 border-gray-200">
+                  <SelectTrigger className="h-12 border-gray-200 transition-all duration-300 hover:border-primary">
                     <SelectValue placeholder="Duration" />
                   </SelectTrigger>
                   <SelectContent>
@@ -179,7 +179,7 @@ const Index = () => {
                     <SelectItem value="daily">Daily</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button className="h-12 bg-primary hover:bg-secondary text-primary-foreground shadow-lg" onClick={handleSearch}>
+                <Button variant="premium" size="lg" className="h-12" onClick={handleSearch}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
@@ -206,31 +206,35 @@ const Index = () => {
         />
       )}
 
-      {/* Features */}
-      <section className="py-16 bg-white/50">
+      {/* Enhanced Features Section */}
+      <section className="py-16 bg-white/50" aria-labelledby="features-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <header className="text-center mb-12">
+            <h2 id="features-heading" className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">Experience the future of parking with our innovative features</p>
+          </header>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
-              <p className="text-gray-600">Book parking spots instantly with our real-time availability system</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <p className="text-gray-600">Book parking spots instantly with our real-time availability system and get confirmation in seconds</p>
+            </article>
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-gray-600">Safe and secure transactions with protection for both parties</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+              <p className="text-gray-600">Bank-level security with encrypted transactions and comprehensive protection for all users</p>
+            </article>
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Community Driven</h3>
-              <p className="text-gray-600">Join a trusted community of drivers and parking space owners</p>
-            </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Trusted Community</h3>
+              <p className="text-gray-600">Join thousands of verified drivers and property owners in our secure, rated community</p>
+            </article>
           </div>
         </div>
       </section>
@@ -286,15 +290,17 @@ const Index = () => {
               </div>
             ) : (
               <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-              {transformedSpots.map((spot) => (
-                <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
-                  <div className="relative">
+              {transformedSpots.map((spot, index) => (
+                <Card key={spot.id} className="group hover-lift border-0 shadow-card hover:shadow-elegant animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="relative overflow-hidden rounded-t-lg">
                     <img 
                       src={spot.image} 
-                      alt={spot.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
+                      alt={`Parking spot at ${spot.address} - ${spot.title}`}
+                      className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
                     />
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-medium flex items-center">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold flex items-center shadow-card animate-bounce-in">
                       <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
                       {spot.rating}
                     </div>
@@ -338,11 +344,12 @@ const Index = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">{spot.distance} away</span>
+                      <span className="text-sm text-gray-500 font-medium">{spot.distance} away</span>
                       <Button 
+                        variant="premium"
                         size="sm" 
-                        className="bg-primary hover:bg-secondary text-primary-foreground"
                         onClick={() => handleBookNow(spot.id)}
+                        aria-label={`Book parking spot at ${spot.title}`}
                       >
                         Book Now
                       </Button>
@@ -356,20 +363,25 @@ const Index = () => {
         </section>
       )}
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary to-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Turn Your Space Into Income
-          </h2>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-              Have an unused parking space? List it on Arriv and start earning money today.
+      {/* Enhanced CTA Section */}
+      <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
+        <div className="absolute inset-0 opacity-20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-fade-in">
+            <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Turn Your Space Into Income
+            </h2>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Have an unused parking space? List it on Arriv and start earning money today. 
+              Join thousands of property owners already making extra income.
             </p>
-          <Link to="/list-spot">
-            <Button size="lg" className="bg-white text-primary hover:bg-gray-50 font-semibold px-8 py-3 text-lg shadow-xl">
-              Start Earning Now
-            </Button>
-          </Link>
+            <Link to="/list-spot">
+              <Button variant="glass" size="xl" className="animate-pulse-glow">
+                <DollarSign className="w-5 h-5 mr-2" />
+                Start Earning Now
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
