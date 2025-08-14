@@ -34,7 +34,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Get initial session first
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth event:', event, session?.user?.email);
@@ -43,43 +56,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Handle auth events
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Check if this is a password recovery sign-in
-          if (event === 'SIGNED_IN' && window.location.pathname === '/reset-password') {
-            console.log('Password recovery sign-in detected, staying on reset page');
-            return; // Don't redirect, stay on reset page
-          }
-          
-          // Only redirect if user is on auth page and logged in
-          if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
-            const termsAccepted = localStorage.getItem('termsAccepted');
-            const isMobile = window.innerWidth < 768;
-            
-            if (isMobile && !termsAccepted) {
-              console.log('Mobile user needs to accept terms, redirecting to /terms');
-              setTimeout(() => {
-                window.location.href = '/terms';
-              }, 100);
-            } else {
-              console.log('User signed in while on home page, staying here');
-              setTimeout(() => {
-                window.location.href = '/';
-              }, 100);
-            }
-          }
-        } else if (event === 'SIGNED_OUT') {
+        // Simple event handling without complex redirects
+        if (event === 'SIGNED_OUT') {
           cleanupAuthState();
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    getInitialSession();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -116,10 +100,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         toast.success('Signed in successfully!');
-        // Force page reload for clean state
-        setTimeout(() => {
+        // Handle redirects after successful sign in
+        const termsAccepted = localStorage.getItem('termsAccepted');
+        const isMobile = window.innerWidth < 768;
+        
+        if (isMobile && !termsAccepted) {
+          window.location.href = '/terms';
+        } else {
           window.location.href = '/';
-        }, 100);
+        }
       }
 
       return { error: null };

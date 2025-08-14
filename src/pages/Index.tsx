@@ -25,18 +25,7 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
-  
-  // Safe auth hook usage with fallback
-  let user = null;
-  let signOut = () => {};
-  
-  try {
-    const auth = useAuth();
-    user = auth.user;
-    signOut = auth.signOut;
-  } catch (error) {
-    console.log('Auth not available, using defaults');
-  }
+  const { user, signOut } = useAuth();
 
   // Transform spots for UI compatibility
   const transformedSpots = allParkingSpots.map(spot => ({
