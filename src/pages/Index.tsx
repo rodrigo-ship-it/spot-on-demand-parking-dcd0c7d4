@@ -72,6 +72,22 @@ const Index = () => {
   const handleLocationSelect = (location: { name: string; latitude: number; longitude: number }) => {
     setSearchLocation(location.name);
     setSearchCoordinates({ latitude: location.latitude, longitude: location.longitude });
+    
+    // Automatically trigger search and show map when location is selected
+    const filtered = transformedSpots.filter(spot => 
+      spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
+      spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
+      spot.type.toLowerCase().includes(location.name.toLowerCase())
+    );
+
+    setFilteredSpots(filtered);
+    setHasSearched(true);
+
+    if (filtered.length === 0) {
+      toast.info(`No parking spots found near "${location.name}". Showing map view to explore the area.`);
+    } else {
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${location.name}"`);
+    }
   };
 
   const clearSearch = () => {
