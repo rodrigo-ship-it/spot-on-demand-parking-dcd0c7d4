@@ -52,7 +52,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           // Only redirect if user just confirmed email and we're not already on home page
-          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && window.location.pathname !== '/') {
+          // Also don't redirect if we're already on the home page (prevent reload loops)
+          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && 
+              window.location.pathname !== '/' && 
+              window.location.pathname !== '' &&
+              !window.location.pathname.includes('reset-password')) {
+            console.log('Redirecting authenticated user to home page');
             setTimeout(() => {
               window.location.href = '/';
             }, 500);
