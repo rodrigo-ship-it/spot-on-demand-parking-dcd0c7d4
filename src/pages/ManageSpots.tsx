@@ -621,13 +621,6 @@ const ManageSpots = () => {
                         >
                           <QrCode className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => toast.info("Additional spot management features: Analytics, Bulk pricing updates, Availability scheduling, Performance insights")}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -683,26 +676,6 @@ const ManageSpots = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
-                Performance Analytics
-              </CardTitle>
-              <CardDescription>
-                View detailed insights about your spots' performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => toast.info("Analytics dashboard coming soon! Track earnings, booking patterns, and optimize your spot performance.")}
-              >
-                View Analytics
-              </Button>
-            </CardContent>
-          </Card>
         </div>
         
         <BookingDetailsDialog 

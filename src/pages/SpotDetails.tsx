@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RatingSystem } from "@/components/RatingSystem";
 import { ReviewDialog } from "@/components/ReviewDialog";
@@ -149,6 +149,37 @@ const SpotDetails = () => {
         }
       }
     });
+  };
+
+  // Handle pause/activate listing
+  const handlePauseListing = async () => {
+    if (!spotData || !id) return;
+    
+    const newActiveStatus = !spotData.is_active;
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase
+        .from('parking_spots')
+        .update({ is_active: newActiveStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSpotData({ ...spotData, is_active: newActiveStatus });
+      
+      toast.success(
+        newActiveStatus 
+          ? 'Listing activated successfully!' 
+          : 'Listing paused successfully!'
+      );
+    } catch (error: any) {
+      console.error('Error updating listing status:', error);
+      toast.error(error.message || 'Failed to update listing status');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Loading state
@@ -654,25 +685,26 @@ const SpotDetails = () => {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => toast.info("Analytics feature coming soon!")}
+                    onClick={() => {
+                      // Reload the page in customer view mode
+                      window.location.href = `/spot/${spotData.id}`;
+                    }}
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     View as Customer
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant={spotData.is_active ? "destructive" : "default"}
                     className="w-full"
-                    onClick={() => toast.info("Analytics feature coming soon!")}
+                    onClick={handlePauseListing}
+                    disabled={loading}
                   >
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Analytics
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full"
-                    onClick={() => toast.info("Spot deactivation - contact support to temporarily or permanently remove your spot")}
-                  >
-                    Pause Listing
+                    {spotData.is_active ? (
+                      <Pause className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Play className="w-4 h-4 mr-2" />
+                    )}
+                    {loading ? 'Updating...' : (spotData.is_active ? 'Pause Listing' : 'Activate Listing')}
                   </Button>
                 </CardContent>
               </Card>
