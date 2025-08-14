@@ -469,7 +469,15 @@ const BookSpot = () => {
                     </Button>
                     <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
                       <Shield className="w-3 h-3 mr-1" />
-                      Secure payment • Instant confirmation • Free cancellation
+                      Secure payment • Instant confirmation
+                    </div>
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <h4 className="text-sm font-medium text-blue-800 mb-1">Cancellation Policy</h4>
+                      <div className="text-xs text-blue-700 space-y-1">
+                        <div>• 24+ hours: 100% refund</div>
+                        <div>• 3-24 hours: 90% refund (10% fee, max $5)</div>
+                        <div>• Less than 3 hours: No refund</div>
+                      </div>
                     </div>
                   </>
                 ) : (

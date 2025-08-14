@@ -170,9 +170,15 @@ const HelpSupport = () => {
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Can I cancel my booking?</h4>
-                  <p className="text-sm text-gray-600">
-                    Yes, you can cancel bookings up to 2 hours before your start time for a full refund.
-                  </p>
+                  <div className="text-sm text-gray-600 space-y-2">
+                    <p>Yes, you can cancel bookings with the following refund policy:</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li><strong>24+ hours in advance:</strong> 100% refund, no fees</li>
+                      <li><strong>3-24 hours in advance:</strong> 90% refund (10% cancellation fee, max $5)</li>
+                      <li><strong>Less than 3 hours:</strong> No refund due to short notice</li>
+                    </ul>
+                    <p className="text-xs">This policy ensures spot owners have time to relist their spots.</p>
+                  </div>
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">What if I'm running late?</h4>

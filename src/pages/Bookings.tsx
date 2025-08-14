@@ -16,6 +16,7 @@ import { AdvancedFiltersDialog } from "@/components/AdvancedFiltersDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import RefundRequestDialog from "@/components/RefundRequestDialog";
+import { CancellationPolicyDialog } from "@/components/CancellationPolicyDialog";
 import { ContactButtons } from "@/components/ContactButtons";
 
 const Bookings = () => {
@@ -45,6 +46,14 @@ const Bookings = () => {
   });
 
   const [refundDialog, setRefundDialog] = useState<{
+    isOpen: boolean;
+    booking: any;
+  }>({
+    isOpen: false,
+    booking: null,
+  });
+
+  const [cancellationDialog, setCancellationDialog] = useState<{
     isOpen: boolean;
     booking: any;
   }>({
@@ -461,6 +470,26 @@ const Bookings = () => {
                             Report Issue
                           </Button>
                         )}
+                        {(reservation.status === "Upcoming") && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setCancellationDialog({
+                              isOpen: true,
+                              booking: {
+                                id: reservation.id,
+                                start_time: `${reservation.date} ${reservation.startTime}`,
+                                total_amount: reservation.totalCost,
+                                parking_spots: {
+                                  title: reservation.spotTitle
+                                }
+                              }
+                            })}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            Cancel Booking
+                          </Button>
+                        )}
                         {(reservation.status === "Completed" || reservation.status === "Active") && (
                           <Button 
                             variant="outline" 
@@ -554,6 +583,16 @@ const Bookings = () => {
         isOpen={refundDialog.isOpen}
         onClose={() => setRefundDialog({ isOpen: false, booking: null })}
         booking={refundDialog.booking}
+      />
+
+      <CancellationPolicyDialog
+        isOpen={cancellationDialog.isOpen}
+        onClose={() => setCancellationDialog({ isOpen: false, booking: null })}
+        booking={cancellationDialog.booking}
+        onCancellationSuccess={() => {
+          // Reload bookings after successful cancellation
+          window.location.reload();
+        }}
       />
     </div>
   );
