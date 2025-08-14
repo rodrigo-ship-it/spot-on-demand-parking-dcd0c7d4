@@ -31,6 +31,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     if (!mapContainer.current || map.current || isInitialized) return;
 
     const initializeMap = async () => {
+      if (!mapContainer.current) {
+        console.error('Map container not ready');
+        return;
+      }
       try {
         // Fetch Mapbox token securely from edge function
         const { data: tokenData, error } = await supabase.functions.invoke('get-mapbox-token');
