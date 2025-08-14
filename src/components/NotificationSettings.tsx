@@ -31,7 +31,11 @@ export const NotificationSettings = () => {
   };
 
   const checkNotificationStatus = () => {
-    setIsEnabled(Notification.permission === 'granted');
+    if ('Notification' in window) {
+      setIsEnabled(Notification.permission === 'granted');
+    } else {
+      setIsEnabled(false);
+    }
   };
 
   const handleToggleNotifications = async () => {
