@@ -24,6 +24,11 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Error Boundary caught an error:', error, errorInfo);
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
+    
+    // Force a visible alert for debugging
+    alert(`Error caught: ${error.message}\n\nStack: ${error.stack}`);
   }
 
   render() {
@@ -44,11 +49,17 @@ class ErrorBoundary extends React.Component<Props, State> {
                 We're sorry, but something unexpected happened. Please try refreshing the page or return to the homepage.
               </p>
               
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {this.state.error && (
                 <div className="bg-red-50 border border-red-200 rounded p-3">
                   <p className="text-xs text-red-600 font-mono">
                     {this.state.error.message}
                   </p>
+                  <details className="mt-2">
+                    <summary className="text-xs text-red-500 cursor-pointer">Stack trace</summary>
+                    <pre className="text-xs text-red-600 mt-1 whitespace-pre-wrap">
+                      {this.state.error.stack}
+                    </pre>
+                  </details>
                 </div>
               )}
               
