@@ -905,6 +905,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      user_involved_in_booking: {
+        Args: { booking_id_param: string }
+        Returns: boolean
+      }
+      user_owns_spot: {
+        Args: { spot_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
