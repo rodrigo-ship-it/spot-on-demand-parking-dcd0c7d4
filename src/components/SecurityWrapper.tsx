@@ -13,7 +13,7 @@ export const SecurityWrapper: React.FC<SecurityWrapperProps> = ({ children }) =>
     // Log security initialization
     auditLog.logSecurityEvent('security_wrapper_initialized', {
       headers: Object.keys(headers),
-      userAgent: navigator.userAgent,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       timestamp: Date.now()
     });
 

@@ -143,9 +143,9 @@ export const auditLog = {
       timestamp: new Date().toISOString(),
       event,
       details,
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-      sessionId: sessionStorage.getItem('session-id') || 'anonymous'
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      sessionId: typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('session-id') || 'anonymous') : 'anonymous'
     };
     
     console.log('🔍 SECURITY AUDIT:', logEntry);
