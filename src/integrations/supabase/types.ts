@@ -68,13 +68,6 @@ export type Database = {
             foreignKeyName: "bookings_spot_id_fkey"
             columns: ["spot_id"]
             isOneToOne: false
-            referencedRelation: "owner_analytics"
-            referencedColumns: ["spot_id"]
-          },
-          {
-            foreignKeyName: "bookings_spot_id_fkey"
-            columns: ["spot_id"]
-            isOneToOne: false
             referencedRelation: "parking_spots"
             referencedColumns: ["id"]
           },
@@ -129,8 +122,6 @@ export type Database = {
       }
       disputes: {
         Row: {
-          assignee_id: string | null
-          auto_resolved: boolean | null
           booking_id: string
           created_at: string
           description: string | null
@@ -139,13 +130,10 @@ export type Database = {
           photo_url: string
           reporter_id: string
           resolution: string | null
-          resolution_notes: string | null
           status: string
           updated_at: string
         }
         Insert: {
-          assignee_id?: string | null
-          auto_resolved?: boolean | null
           booking_id: string
           created_at?: string
           description?: string | null
@@ -154,13 +142,10 @@ export type Database = {
           photo_url: string
           reporter_id: string
           resolution?: string | null
-          resolution_notes?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
-          assignee_id?: string | null
-          auto_resolved?: boolean | null
           booking_id?: string
           created_at?: string
           description?: string | null
@@ -169,7 +154,6 @@ export type Database = {
           photo_url?: string
           reporter_id?: string
           resolution?: string | null
-          resolution_notes?: string | null
           status?: string
           updated_at?: string
         }
@@ -223,51 +207,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      help_articles: {
-        Row: {
-          category: string
-          content: string
-          created_at: string
-          helpful_votes: number | null
-          id: string
-          is_published: boolean | null
-          keywords: string[] | null
-          subcategory: string | null
-          title: string
-          unhelpful_votes: number | null
-          updated_at: string
-          views: number | null
-        }
-        Insert: {
-          category: string
-          content: string
-          created_at?: string
-          helpful_votes?: number | null
-          id?: string
-          is_published?: boolean | null
-          keywords?: string[] | null
-          subcategory?: string | null
-          title: string
-          unhelpful_votes?: number | null
-          updated_at?: string
-          views?: number | null
-        }
-        Update: {
-          category?: string
-          content?: string
-          created_at?: string
-          helpful_votes?: number | null
-          id?: string
-          is_published?: boolean | null
-          keywords?: string[] | null
-          subcategory?: string | null
-          title?: string
-          unhelpful_votes?: number | null
-          updated_at?: string
-          views?: number | null
-        }
-        Relationships: []
       }
       messages: {
         Row: {
@@ -770,51 +709,6 @@ export type Database = {
         }
         Relationships: []
       }
-      support_tickets: {
-        Row: {
-          assignee_id: string | null
-          category: string
-          created_at: string
-          id: string
-          message: string
-          priority: string
-          resolved_at: string | null
-          status: string
-          subject: string
-          ticket_number: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          assignee_id?: string | null
-          category?: string
-          created_at?: string
-          id?: string
-          message: string
-          priority?: string
-          resolved_at?: string | null
-          status?: string
-          subject: string
-          ticket_number?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          assignee_id?: string | null
-          category?: string
-          created_at?: string
-          id?: string
-          message?: string
-          priority?: string
-          resolved_at?: string | null
-          status?: string
-          subject?: string
-          ticket_number?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       vehicles: {
         Row: {
           color: string | null
@@ -856,39 +750,9 @@ export type Database = {
       }
     }
     Views: {
-      daily_analytics: {
-        Row: {
-          avg_booking_value: number | null
-          date: string | null
-          spots_used: number | null
-          total_bookings: number | null
-          total_revenue: number | null
-          unique_renters: number | null
-        }
-        Relationships: []
-      }
-      owner_analytics: {
-        Row: {
-          address: string | null
-          avg_booking_value: number | null
-          current_month_bookings: number | null
-          current_month_earnings: number | null
-          last_month_bookings: number | null
-          last_month_earnings: number | null
-          owner_id: string | null
-          spot_id: string | null
-          title: string | null
-          total_bookings: number | null
-          total_earnings: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      auto_resolve_disputes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       get_unread_message_count: {
         Args: { booking_id_param: string }
         Returns: number
@@ -899,10 +763,6 @@ export type Database = {
       }
       mark_message_as_read: {
         Args: { message_id: string }
-        Returns: undefined
-      }
-      refresh_analytics_views: {
-        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
