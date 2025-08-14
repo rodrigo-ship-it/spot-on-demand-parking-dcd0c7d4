@@ -51,33 +51,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return; // Don't redirect, stay on reset page
           }
           
-          // For authenticated users, handle redirect flow only if they're not already browsing
+          // For mobile users after login, check terms acceptance
           if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
             const termsAccepted = localStorage.getItem('termsAccepted');
-            const redirectAfterAuth = localStorage.getItem('redirectAfterAuth');
+            const isMobile = window.innerWidth < 768;
             
-            // If user is already on home page, don't force any redirects
-            if (window.location.pathname === '/' || window.location.pathname === '') {
-              console.log('User signed in while on home page, staying here');
-              return;
-            }
-            
-            // If user hasn't accepted terms yet and not on home page, redirect to terms page
-            if (!termsAccepted && window.location.pathname !== '/terms') {
-              console.log('User needs to accept terms, redirecting to /terms');
+            // Mobile flow: Auth → Terms → Home
+            if (isMobile && !termsAccepted && window.location.pathname !== '/terms') {
+              console.log('Mobile user needs to accept terms, redirecting to /terms');
               setTimeout(() => {
                 window.location.href = '/terms';
               }, 500);
               return;
             }
             
-            // Handle redirects after terms acceptance or auth completion
-            if (termsAccepted && (window.location.pathname === '/terms' || window.location.pathname === '/auth')) {
-              const destination = redirectAfterAuth || '/';
-              console.log('Redirecting to intended destination:', destination);
-              localStorage.removeItem('redirectAfterAuth'); // Clean up
+            // If terms accepted or desktop, go to home
+            if ((termsAccepted || !isMobile) && 
+                window.location.pathname !== '/' && 
+                window.location.pathname !== '' &&
+                !window.location.pathname.includes('reset-password') &&
+                window.location.pathname !== '/terms') {
+              console.log('Authenticated user, redirecting to home page');
               setTimeout(() => {
-                window.location.href = destination;
+                window.location.href = '/';
               }, 500);
             }
           }

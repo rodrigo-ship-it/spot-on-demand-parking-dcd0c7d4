@@ -1,236 +1,571 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, DollarSign, Clock, Car, Search, Star, Shield, Zap, Users, Menu } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
+import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete";
+import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 const Index = () => {
+  const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
+  const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [searchDuration, setSearchDuration] = useState("");
+  const [filteredSpots, setFilteredSpots] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  // Transform spots for UI compatibility
+  const transformedSpots = allParkingSpots.map(spot => ({
+    id: spot.id,
+    title: spot.title,
+    address: spot.address,
+    price: Number(spot.price_per_hour),
+    rating: Number(spot.rating) || 4.5,
+    distance: "0.5 miles", // This would need real geolocation calculation
+    type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
+    spotType: spot.spot_type,
+    totalSpots: spot.total_spots || 1,
+    available: "24/7", // This would come from availability_schedule
+    image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
+    latitude: Number(spot.latitude) || 40.7589,
+    longitude: Number(spot.longitude) || -73.9851
+  }));
+
+  const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
   const handleSearch = () => {
     if (!searchLocation.trim()) {
       toast.error("Please enter a location to search for parking");
       return;
     }
-    toast.success(`Searching for parking near "${searchLocation}"`);
+
+    console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
+    console.log("Search coordinates:", searchCoordinates);
+    console.log("Setting hasSearched to true");
+    
+    // Filter spots based on search location
+    const filtered = transformedSpots.filter(spot => 
+      spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      spot.type.toLowerCase().includes(searchLocation.toLowerCase())
+    );
+
+    setFilteredSpots(filtered);
+    setHasSearched(true);
+    
+    console.log("hasSearched should now be true, filtered spots:", filtered.length);
+
+    if (filtered.length === 0) {
+      toast.info(`No parking spots found near "${searchLocation}". Showing map view to explore the area.`);
+    } else {
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
+    }
   };
 
-  const handleBookNow = () => {
-    navigate("/book-spot/1");
+  const handleLocationSelect = (location: { name: string; latitude: number; longitude: number }) => {
+    setSearchLocation(location.name);
+    setSearchCoordinates({ latitude: location.latitude, longitude: location.longitude });
+    
+    // Automatically trigger search and show map when location is selected
+    const filtered = transformedSpots.filter(spot => 
+      spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
+      spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
+      spot.type.toLowerCase().includes(location.name.toLowerCase())
+    );
+
+    setFilteredSpots(filtered);
+    setHasSearched(true);
+
+    if (filtered.length === 0) {
+      toast.info(`No parking spots found near "${location.name}". Showing map view to explore the area.`);
+    } else {
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${location.name}"`);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchLocation("");
+    setSearchCoordinates(null);
+    setSearchDuration("");
+    setFilteredSpots([]);
+    setHasSearched(false);
+    toast.info("Search cleared - showing all parking spots");
+  };
+
+  const handleBookNow = (spotId: string | number) => {
+    navigate(`/book-spot/${spotId}`);
   };
 
   const handleSignIn = () => {
     navigate("/auth");
   };
 
-  // Sample parking spots data
-  const sampleSpots = [
-    {
-      id: 1,
-      title: "Downtown Parking",
-      address: "123 Main St",
-      price: 5,
-      rating: 4.8,
-      type: "Covered",
-      available: "Available Now"
-    },
-    {
-      id: 2,
-      title: "Mall Parking",
-      address: "456 Shopping Ave",
-      price: 3,
-      rating: 4.5,
-      type: "Open Air",
-      available: "Available Now"
+  // Mobile-first: redirect to auth if not signed in on mobile
+  const checkMobileAuth = () => {
+    if (window.innerWidth < 768 && !user) {
+      navigate('/auth');
+      return;
     }
-  ];
+  };
+
+  useEffect(() => {
+    checkMobileAuth();
+  }, [user, navigate]);
+
+  // If mobile and no user, show loading while redirecting
+  if (window.innerWidth < 768 && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting to sign in...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Mobile-Optimized Navigation */}
-      <nav className="bg-white/90 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center h-14 md:h-16">
-            <Link to="/" className="flex items-center">
-              <img 
-                src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                alt="Arriv Logo" 
-                className="w-10 h-10 md:w-12 md:h-12"
-              />
-            </Link>
-            
+      {/* Modern Navigation */}
+      <nav className="bg-white/80 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
+              <Link to="/" className="hover:scale-105 transition-transform duration-200">
+                <img 
+                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                  alt="Arriv Logo" 
+                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
+                />
+              </Link>
+              <div className="hidden md:flex items-center space-x-6">
+                <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium">
+                  How it Works
+                </Link>
+                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium">
+                  My Spots
+                </Link>
+              </div>
+            </div>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-3">
+              <NotificationSettings />
               {user ? (
                 <>
-                  <Link to="/bookings" className="hidden sm:block">
-                    <Button variant="outline" size="sm" className="text-sm">
-                      Bookings
+                  <Link to="/bookings">
+                    <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                      My Bookings
                     </Button>
                   </Link>
-                  <Button variant="outline" size="sm" onClick={signOut} className="text-sm">
-                    {user ? "Sign Out" : "Sign In"}
+                  <Link to="/profile">
+                    <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={signOut}>
+                    Sign Out
                   </Button>
                 </>
               ) : (
-                <Button variant="outline" size="sm" onClick={handleSignIn} className="text-sm px-4">
+                <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={handleSignIn}>
                   Sign In
                 </Button>
               )}
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center space-x-2">
+              <NotificationSettings />
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="w-4 h-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col space-y-4 mt-8">
+                    <Link 
+                      to="/how-it-works" 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      How it Works
+                    </Link>
+                    <Link 
+                      to="/manage-spots" 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Spots
+                    </Link>
+                    
+                    <div className="border-t pt-4 flex flex-col space-y-3">
+                      {user ? (
+                        <>
+                          <Link to="/bookings" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                            <Button variant="outline" className="w-full justify-start h-12">
+                              My Bookings
+                            </Button>
+                          </Link>
+                          <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                            <Button variant="outline" className="w-full justify-start h-12">
+                              Profile
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start h-12" 
+                            onClick={() => {
+                              signOut();
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Sign Out
+                          </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start h-12" 
+                          onClick={() => {
+                            handleSignIn();
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          Sign In
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="py-12 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6">
+      {/* Hero Section with Enhanced SEO */}
+      <section className="relative overflow-hidden py-20 lg:py-32" role="banner">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary-glow/5 to-secondary/10 animate-pulse-glow"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto animate-fade-in">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight gradient-text">
               Find it. Book it. Arriv
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-6 md:mb-8 px-4">
-              Discover convenient parking spots or earn money by listing your unused space.
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed animate-slide-up">
+              Discover convenient parking spots or earn money by listing your unused space. 
+              Join our growing community of drivers and property owners.
             </p>
             
-            {/* Mobile-Optimized Search Bar */}
-            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg max-w-2xl mx-auto">
-              <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-                <input
-                  type="text"
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  placeholder="Where do you need parking?"
-                  className="flex-1 h-12 px-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                />
-                <Button size="lg" onClick={handleSearch} className="h-12 w-full md:w-auto">
+            {/* Enhanced Search Bar */}
+            <div className="bg-gradient-card rounded-2xl p-6 shadow-elegant border border-gray-100 max-w-4xl mx-auto hover-lift glass-effect animate-scale-in">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-2">
+                  <GooglePlacesAutocomplete
+                    value={searchLocation}
+                    onChange={setSearchLocation}
+                    onLocationSelect={handleLocationSelect}
+                    placeholder="Where do you need parking?"
+                    className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 focus:shadow-glow"
+                  />
+                </div>
+                <Select value={searchDuration} onValueChange={setSearchDuration}>
+                  <SelectTrigger className="h-12 border-gray-200 transition-all duration-300 hover:border-primary">
+                    <SelectValue placeholder="Duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1h">1 Hour</SelectItem>
+                    <SelectItem value="2h">2 Hours</SelectItem>
+                    <SelectItem value="4h">4 Hours</SelectItem>
+                    <SelectItem value="8h">8 Hours</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="premium" size="lg" className="h-12" onClick={handleSearch}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-12 md:py-16 bg-white/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-4">Why Choose Arriv?</h2>
-            <p className="text-base md:text-lg text-gray-600">Experience the future of parking</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="text-center px-4">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <Zap className="w-6 h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
-              <p className="text-sm md:text-base text-gray-600">Book parking spots instantly with real-time availability</p>
-            </div>
-            <div className="text-center px-4">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <Shield className="w-6 h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-sm md:text-base text-gray-600">Safe and encrypted transactions powered by Stripe</p>
-            </div>
-            <div className="text-center px-4">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <Users className="w-6 h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Trusted Community</h3>
-              <p className="text-sm md:text-base text-gray-600">Connect with verified drivers and property owners</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Sample Parking Spots */}
-      <section className="py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6 md:mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Available Parking Spots
-            </h2>
-            <p className="text-sm md:text-base text-gray-600">
-              Find the perfect spot for your needs
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {sampleSpots.map((spot) => (
-              <Card key={spot.id} className="hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <img 
-                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=200&fit=crop"
-                    alt={`Parking spot at ${spot.address}`}
-                    className="w-full h-40 md:h-48 object-cover rounded-t-lg"
-                  />
-                  <div className="absolute top-2 md:top-3 right-2 md:right-3 bg-white/95 px-2 py-1 rounded-full text-xs md:text-sm font-semibold flex items-center">
-                    <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                    {spot.rating}
-                  </div>
-                </div>
-                <CardHeader className="p-3 md:p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base md:text-lg truncate">{spot.title}</CardTitle>
-                      <CardDescription className="flex items-center text-xs md:text-sm mt-1">
-                        <MapPin className="w-3 h-3 md:w-4 md:h-4 mr-1 flex-shrink-0" />
-                        <span className="truncate">{spot.address}</span>
-                      </CardDescription>
-                    </div>
-                    <div className="text-right ml-2">
-                      <div className="text-lg md:text-2xl font-bold">${spot.price}</div>
-                      <div className="text-xs md:text-sm text-gray-500">per hour</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="flex items-center justify-between text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
-                    <div className="flex items-center">
-                      <Car className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                      {spot.type}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                      {spot.available}
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    className="w-full h-10 md:h-12 text-sm md:text-base"
-                    onClick={handleBookNow}
-                  >
-                    Book Now
+              {hasSearched && (
+                <div className="mt-4 flex justify-center">
+                  <Button variant="outline" onClick={clearSearch} className="text-sm">
+                    Clear Search & Show All
                   </Button>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 md:py-20 bg-blue-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4">
-            Turn Your Space Into Income
-          </h2>
-          <p className="text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto px-4">
-            Have an unused parking space? List it on Arriv and start earning money today.
-          </p>
-          <Link to="/list-spot">
-            <Button variant="secondary" size="lg" className="h-12 md:h-14 px-6 md:px-8">
-              <DollarSign className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-              Start Earning Now
-            </Button>
-          </Link>
+      {/* Search Results with Map - Show after search */}
+      {hasSearched && (
+        <SearchResultsMap 
+          searchLocation={searchLocation}
+          searchCoordinates={searchCoordinates}
+          spots={filteredSpots.length > 0 ? filteredSpots : allParkingSpots}
+          onSpotSelect={handleBookNow}
+        />
+      )}
+
+      {/* Enhanced Features Section */}
+      <section className="py-16 bg-white/50" aria-labelledby="features-heading">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <header className="text-center mb-12">
+            <h2 id="features-heading" className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">Experience the future of parking with our innovative features</p>
+          </header>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
+              <p className="text-gray-600">Book parking spots instantly with our real-time availability system and get immediate confirmation</p>
+            </article>
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
+              <p className="text-gray-600">Industry-standard security with encrypted transactions powered by Stripe and comprehensive data protection</p>
+            </article>
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Trusted Community</h3>
+              <p className="text-gray-600">Connect with drivers and property owners in our growing community with user profiles and ratings</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* Parking Spots - Only show when no search has been made */}
+      {!hasSearched && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Available Parking Spots
+                </h2>
+                <p className="text-gray-600">
+                  Find the perfect spot for your needs
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading parking spots...</p>
+              </div>
+            ) : transformedSpots.length === 0 ? (
+              <div className="text-center py-12">
+                <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots available yet</h3>
+                <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
+                <Link to="/list-spot">
+                  <Button className="bg-primary hover:bg-secondary text-primary-foreground">
+                    List Your First Spot
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              {transformedSpots.map((spot, index) => (
+                <Card key={spot.id} className="group hover-lift border-0 shadow-card hover:shadow-elegant animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <img 
+                      src={spot.image} 
+                      alt={`Parking spot at ${spot.address} - ${spot.title}`}
+                      className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold flex items-center shadow-card animate-bounce-in">
+                      <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                      {spot.rating}
+                    </div>
+                  </div>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                          {spot.title}
+                        </CardTitle>
+                        <CardDescription className="flex items-center text-gray-600 mt-1">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {spot.address}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                        <div className="text-sm text-gray-500">per hour</div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className="flex items-center">
+                        <Car className="w-4 h-4 mr-1" />
+                        {spot.type}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {spot.available}
+                      </div>
+                    </div>
+                    
+                    {/* Availability Display */}
+                    <div className="mb-4">
+                      <AvailabilityDisplay 
+                        spotType={spot.spotType}
+                        totalSpots={spot.totalSpots}
+                        spotId={spot.id.toString()}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500 font-medium">{spot.distance} away</span>
+                      <Button 
+                        variant="premium"
+                        size="sm" 
+                        onClick={() => handleBookNow(spot.id)}
+                        aria-label={`Book parking spot at ${spot.title}`}
+                      >
+                        Book Now
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Enhanced CTA Section */}
+      <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
+        <div className="absolute inset-0 opacity-20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-fade-in">
+            <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Turn Your Space Into Income
+            </h2>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Have an unused parking space? List it on Arriv and start earning money today. 
+              Join members of the Arriv community already making extra income.
+            </p>
+            <Link to="/list-spot">
+              <Button variant="glass" size="xl" className="animate-pulse-glow">
+                <DollarSign className="w-5 h-5 mr-2" />
+                Start Earning Now
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Links Section */}
+      <section className="py-16 bg-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore More</h2>
+            <p className="text-lg text-gray-600">Everything you need to get started with Arriv</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">How It Works</CardTitle>
+                <CardDescription className="text-base">
+                  Learn how to find parking or list your space in simple steps
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link to="/how-it-works">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                    Learn More
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Car className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">My Spots</CardTitle>
+                <CardDescription className="text-base">
+                  Manage your listed parking spaces and track earnings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link to="/manage-spots">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                    Manage Spots
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Clock className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">My Bookings</CardTitle>
+                <CardDescription className="text-base">
+                  View and manage your parking reservations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link to="/bookings">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                    View Bookings
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
     </div>
