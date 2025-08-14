@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ParkingSpot {
   id: string;
@@ -15,8 +16,12 @@ interface ParkingSpot {
 export const useRealTimeSpots = () => {
   const [spots, setSpots] = useState<ParkingSpot[]>([]);
   const [loading, setLoading] = useState(true);
+  const { loading: authLoading } = useAuth();
 
   useEffect(() => {
+    // Wait for auth context to be ready before making database calls
+    if (authLoading) return;
+    
     // Initial load
     const loadSpots = async () => {
       try {
@@ -66,7 +71,7 @@ export const useRealTimeSpots = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [authLoading]);
 
   return { spots, loading };
 };
