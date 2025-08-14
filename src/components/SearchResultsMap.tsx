@@ -276,12 +276,12 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
               {spots.length} spot{spots.length !== 1 ? 's' : ''} found
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 sm:space-x-2">
             <Button
               variant={viewMode === "map" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("map")}
-              className={viewMode === "map" ? "bg-primary hover:bg-secondary" : ""}
+              className={`w-full sm:w-auto ${viewMode === "map" ? "bg-primary hover:bg-secondary" : ""}`}
             >
               <MapPin className="w-4 h-4 mr-2" />
               Map View
@@ -290,7 +290,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
+              className={`w-full sm:w-auto ${viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}`}
             >
               <List className="w-4 h-4 mr-2" />
               List View
