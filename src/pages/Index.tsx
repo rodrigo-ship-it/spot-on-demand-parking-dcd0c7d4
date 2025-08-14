@@ -219,21 +219,21 @@ const Index = () => {
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
-              <p className="text-gray-600">Book parking spots instantly with our real-time availability system and get confirmation in seconds</p>
+              <p className="text-gray-600">Book parking spots instantly with our real-time availability system and get immediate confirmation</p>
             </article>
             <article className="text-center group hover-lift">
               <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-gray-600">Bank-level security with encrypted transactions and comprehensive protection for all users</p>
+              <p className="text-gray-600">Industry-standard security with encrypted transactions powered by Stripe and comprehensive data protection</p>
             </article>
             <article className="text-center group hover-lift">
               <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Trusted Community</h3>
-              <p className="text-gray-600">Join thousands of verified drivers and property owners in our secure, rated community</p>
+              <p className="text-gray-600">Connect with drivers and property owners in our growing community with user profiles and ratings</p>
             </article>
           </div>
         </div>
