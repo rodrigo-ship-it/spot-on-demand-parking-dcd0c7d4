@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ContactButtons } from "@/components/ContactButtons";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -624,14 +625,13 @@ const SpotDetails = () => {
                     <User className="w-4 h-4 mr-3 text-gray-400" />
                     <span>{spotData.owner}</span>
                   </div>
-                  <Button variant="outline" className="w-full">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Send Message
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Call Owner
-                  </Button>
+                  <ContactButtons
+                    bookingId="demo-booking-id"
+                    recipientId={spotData.ownerId}
+                    recipientName={spotData.owner}
+                    showCallButton={true}
+                    showChatButton={true}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -643,19 +643,35 @@ const SpotDetails = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate(`/list-spot?edit=${spotData.id}`)}
+                  >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Spot Details
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => toast.info("Analytics feature coming soon!")}
+                  >
                     <Eye className="w-4 h-4 mr-2" />
                     View as Customer
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => toast.info("Analytics feature coming soon!")}
+                  >
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Analytics
                   </Button>
-                  <Button variant="destructive" className="w-full">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full"
+                    onClick={() => toast.info("Spot deactivation - contact support to temporarily or permanently remove your spot")}
+                  >
                     Pause Listing
                   </Button>
                 </CardContent>

@@ -694,7 +694,11 @@ const ManageSpots = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => toast.info("Analytics dashboard coming soon! Track earnings, booking patterns, and optimize your spot performance.")}
+              >
                 View Analytics
               </Button>
             </CardContent>
