@@ -1,53 +1,108 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
+import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete";
+import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
+  const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchDuration, setSearchDuration] = useState("");
+  const [filteredSpots, setFilteredSpots] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  // Sample parking spots data for display
-  const sampleSpots = [
-    {
-      id: "1",
-      title: "Downtown Parking Garage",
-      address: "123 Main St, Downtown",
-      price: 15,
-      rating: 4.5,
-      distance: "0.2 miles",
-      type: "Covered Garage",
-      available: "24/7",
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center"
-    },
-    {
-      id: "2", 
-      title: "Street Parking",
-      address: "456 Oak Ave, Midtown", 
-      price: 8,
-      rating: 4.2,
-      distance: "0.5 miles",
-      type: "Street Parking",
-      available: "8 AM - 6 PM",
-      image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop&crop=center"
-    }
-  ];
+  // Transform spots for UI compatibility
+  const transformedSpots = allParkingSpots.map(spot => ({
+    id: spot.id,
+    title: spot.title,
+    address: spot.address,
+    price: Number(spot.price_per_hour),
+    rating: Number(spot.rating) || 4.5,
+    distance: "0.5 miles", // This would need real geolocation calculation
+    type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
+    spotType: spot.spot_type,
+    totalSpots: spot.total_spots || 1,
+    available: "24/7", // This would come from availability_schedule
+    image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
+    latitude: Number(spot.latitude) || 40.7589,
+    longitude: Number(spot.longitude) || -73.9851
+  }));
+
+  const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
   const handleSearch = () => {
     if (!searchLocation.trim()) {
       toast.error("Please enter a location to search for parking");
       return;
     }
-    toast.success("Search functionality will be implemented soon!");
+
+    console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
+    console.log("Search coordinates:", searchCoordinates);
+    console.log("Setting hasSearched to true");
+    
+    // Filter spots based on search location
+    const filtered = transformedSpots.filter(spot => 
+      spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      spot.type.toLowerCase().includes(searchLocation.toLowerCase())
+    );
+
+    setFilteredSpots(filtered);
+    setHasSearched(true);
+    
+    console.log("hasSearched should now be true, filtered spots:", filtered.length);
+
+    if (filtered.length === 0) {
+      toast.info(`No parking spots found near "${searchLocation}". Showing map view to explore the area.`);
+    } else {
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
+    }
+  };
+
+  const handleLocationSelect = (location: { name: string; latitude: number; longitude: number }) => {
+    setSearchLocation(location.name);
+    setSearchCoordinates({ latitude: location.latitude, longitude: location.longitude });
+    
+    // Automatically trigger search and show map when location is selected
+    const filtered = transformedSpots.filter(spot => 
+      spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
+      spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
+      spot.type.toLowerCase().includes(location.name.toLowerCase())
+    );
+
+    setFilteredSpots(filtered);
+    setHasSearched(true);
+
+    if (filtered.length === 0) {
+      toast.info(`No parking spots found near "${location.name}". Showing map view to explore the area.`);
+    } else {
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${location.name}"`);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchLocation("");
+    setSearchCoordinates(null);
+    setSearchDuration("");
+    setFilteredSpots([]);
+    setHasSearched(false);
+    toast.info("Search cleared - showing all parking spots");
   };
 
   const handleBookNow = (spotId: string | number) => {
@@ -57,6 +112,7 @@ const Index = () => {
   const handleSignIn = () => {
     navigate("/auth");
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -76,10 +132,15 @@ const Index = () => {
                 <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium">
                   How it Works
                 </Link>
+                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium">
+                  My Spots
+                </Link>
               </div>
             </div>
             
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-3">
+              <NotificationSettings />
               {user ? (
                 <>
                   <Link to="/bookings">
@@ -103,7 +164,9 @@ const Index = () => {
               )}
             </div>
 
+            {/* Mobile Navigation */}
             <div className="md:hidden flex items-center space-x-2">
+              <NotificationSettings />
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -118,6 +181,13 @@ const Index = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       How it Works
+                    </Link>
+                    <Link 
+                      to="/manage-spots" 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Spots
                     </Link>
                     
                     <div className="border-t pt-4 flex flex-col space-y-3">
@@ -165,28 +235,29 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section with Enhanced SEO */}
       <section className="relative overflow-hidden py-20 lg:py-32" role="banner">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary-glow/5 to-secondary/10 animate-pulse-glow"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <div className="text-center max-w-4xl mx-auto animate-fade-in">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight gradient-text">
               Find it. Book it. Arriv
             </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed animate-slide-up">
               Discover convenient parking spots or earn money by listing your unused space. 
               Join our growing community of drivers and property owners.
             </p>
             
-            {/* Search Bar */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 max-w-4xl mx-auto">
+            {/* Enhanced Search Bar */}
+            <div className="bg-gradient-card rounded-2xl p-6 shadow-elegant border border-gray-100 max-w-4xl mx-auto hover-lift glass-effect animate-scale-in">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-2">
-                  <input
-                    type="text"
+                  <GooglePlacesAutocomplete
                     value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
+                    onChange={setSearchLocation}
+                    onLocationSelect={handleLocationSelect}
                     placeholder="Where do you need parking?"
-                    className="w-full h-12 px-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                    className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 focus:shadow-glow"
                   />
                 </div>
                 <Select value={searchDuration} onValueChange={setSearchDuration}>
@@ -201,154 +272,276 @@ const Index = () => {
                     <SelectItem value="daily">Daily</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button size="lg" className="h-12" onClick={handleSearch}>
+                <Button variant="premium" size="lg" className="h-12" onClick={handleSearch}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
               </div>
+              {hasSearched && (
+                <div className="mt-4 flex justify-center">
+                  <Button variant="outline" onClick={clearSearch} className="text-sm">
+                    Clear Search & Show All
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-white/50">
+      {/* Search Results with Map - Show after search */}
+      {hasSearched && (
+        <SearchResultsMap 
+          searchLocation={searchLocation}
+          searchCoordinates={searchCoordinates}
+          spots={filteredSpots.length > 0 ? filteredSpots : allParkingSpots}
+          onSpotSelect={handleBookNow}
+        />
+      )}
+
+      {/* Enhanced Features Section */}
+      <section className="py-16 bg-white/50" aria-labelledby="features-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
+          <header className="text-center mb-12">
+            <h2 id="features-heading" className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">Experience the future of parking with our innovative features</p>
-          </div>
+          </header>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
-              <p className="text-gray-600">Book parking spots instantly with our real-time availability system</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <p className="text-gray-600">Book parking spots instantly with our real-time availability system and get immediate confirmation</p>
+            </article>
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-gray-600">Industry-standard security with encrypted transactions powered by Stripe</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <p className="text-gray-600">Industry-standard security with encrypted transactions powered by Stripe and comprehensive data protection</p>
+            </article>
+            <article className="text-center group hover-lift">
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Trusted Community</h3>
-              <p className="text-gray-600">Connect with drivers and property owners in our growing community</p>
-            </div>
+              <p className="text-gray-600">Connect with drivers and property owners in our growing community with user profiles and ratings</p>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* Parking Spots */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Available Parking Spots
-              </h2>
-              <p className="text-gray-600">
-                Find the perfect spot for your needs
-              </p>
+      {/* Parking Spots - Only show when no search has been made */}
+      {!hasSearched && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Available Parking Spots
+                </h2>
+                <p className="text-gray-600">
+                  Find the perfect spot for your needs
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading parking spots...</p>
+              </div>
+            ) : transformedSpots.length === 0 ? (
+              <div className="text-center py-12">
+                <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots available yet</h3>
+                <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
+                <Link to="/list-spot">
+                  <Button className="bg-primary hover:bg-secondary text-primary-foreground">
+                    List Your First Spot
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              {transformedSpots.map((spot, index) => (
+                <Card key={spot.id} className="group hover-lift border-0 shadow-card hover:shadow-elegant animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <img 
+                      src={spot.image} 
+                      alt={`Parking spot at ${spot.address} - ${spot.title}`}
+                      className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold flex items-center shadow-card animate-bounce-in">
+                      <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                      {spot.rating}
+                    </div>
+                  </div>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                          {spot.title}
+                        </CardTitle>
+                        <CardDescription className="flex items-center text-gray-600 mt-1">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {spot.address}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                        <div className="text-sm text-gray-500">per hour</div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className="flex items-center">
+                        <Car className="w-4 h-4 mr-1" />
+                        {spot.type}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {spot.available}
+                      </div>
+                    </div>
+                    
+                    {/* Availability Display */}
+                    <div className="mb-4">
+                      <AvailabilityDisplay 
+                        spotType={spot.spotType}
+                        totalSpots={spot.totalSpots}
+                        spotId={spot.id.toString()}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500 font-medium">{spot.distance} away</span>
+                      <Button 
+                        variant="premium"
+                        size="sm" 
+                        onClick={() => handleBookNow(spot.id)}
+                        aria-label={`Book parking spot at ${spot.title}`}
+                      >
+                        Book Now
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+            )}
           </div>
+        </section>
+      )}
 
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-            {sampleSpots.map((spot) => (
-              <Card key={spot.id} className="hover:shadow-lg transition-shadow duration-200">
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <img 
-                    src={spot.image} 
-                    alt={`Parking spot at ${spot.address}`}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-3 right-3 bg-white/95 px-3 py-1 rounded-full text-sm font-semibold flex items-center">
-                    <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                    {spot.rating}
-                  </div>
-                </div>
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-gray-900">
-                        {spot.title}
-                      </CardTitle>
-                      <CardDescription className="flex items-center text-gray-600 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {spot.address}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                      <div className="text-sm text-gray-500">per hour</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <Car className="w-4 h-4 mr-1" />
-                      {spot.type}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {spot.available}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500 font-medium">{spot.distance} away</span>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleBookNow(spot.id)}
-                    >
-                      Book Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-primary relative overflow-hidden">
+      {/* Enhanced CTA Section */}
+      <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
+        <div className="absolute inset-0 opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <div className="animate-fade-in">
+            <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
               Turn Your Space Into Income
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Have an unused parking space? List it on Arriv and start earning money today.
+              Have an unused parking space? List it on Arriv and start earning money today. 
+              Join members of the Arriv community already making extra income.
             </p>
             <Link to="/list-spot">
-              <Button variant="secondary" size="lg">
+              <Button variant="glass" size="xl" className="animate-pulse-glow">
                 <DollarSign className="w-5 h-5 mr-2" />
                 Start Earning Now
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Links Section */}
+      <section className="py-16 bg-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore More</h2>
+            <p className="text-lg text-gray-600">Everything you need to get started with Arriv</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">How It Works</CardTitle>
+                <CardDescription className="text-base">
+                  Learn how to find parking or list your space in simple steps
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link to="/how-it-works">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                    Learn More
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Car className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">My Spots</CardTitle>
+                <CardDescription className="text-base">
+                  Manage your listed parking spaces and track earnings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link to="/manage-spots">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                    Manage Spots
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+              <CardHeader className="pb-4 flex-grow">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Clock className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">My Bookings</CardTitle>
+                <CardDescription className="text-base">
+                  View and manage your parking reservations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link to="/bookings">
+                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                    View Bookings
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
