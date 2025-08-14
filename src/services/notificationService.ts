@@ -8,7 +8,7 @@ export interface NotificationPreferences {
 }
 
 class NotificationService {
-  private vapidKey = 'YOUR_VAPID_PUBLIC_KEY'; // Replace with actual VAPID key
+  private vapidKey = 'BNxSEO-DyKWEA7YVwE-8yKvN_yxbkXAUcxOhORAT2QbG3-F-5u5Ih5J_vD5PhC7e8JxXG2mH_JhKPCzHRrO5Dyk'; // Replace with actual VAPID key when available
 
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
