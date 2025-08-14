@@ -151,8 +151,8 @@ const Index = () => {
               Find it. Book it. Arriv
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed animate-slide-up">
-              Discover convenient parking spots near you or earn money by listing your unused space. 
-              Join thousands of verified drivers and property owners in the Arriv community.
+              Discover convenient parking spots or earn money by listing your unused space. 
+              Join thousands of drivers and property owners in the Arriv community.
             </p>
             
             {/* Enhanced Search Bar */}
