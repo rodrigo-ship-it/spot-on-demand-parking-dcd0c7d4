@@ -43,7 +43,13 @@ export const MarketplacePaymentIntegration = ({
       toast.success('Payment ready - please enter your payment details');
     } catch (error: any) {
       console.error('Error creating payment:', error);
-      toast.error(error.message || 'Failed to initialize payment');
+      
+      // Provide specific error message for payout setup issues
+      if (error.message?.includes("payout setup")) {
+        toast.error("The spot owner needs to complete their payout setup before accepting bookings. Please try another spot or contact the owner.");
+      } else {
+        toast.error(error.message || 'Failed to initialize payment');
+      }
     } finally {
       setLoading(false);
     }
