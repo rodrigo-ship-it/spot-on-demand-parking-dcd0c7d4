@@ -189,22 +189,22 @@ const Index = () => {
                       My Spots
                     </Link>
                     
-                    <div className="border-t pt-4 space-y-3">
+                    <div className="border-t pt-4 flex flex-col space-y-3">
                       {user ? (
                         <>
-                          <Link to="/bookings" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="outline" className="w-full justify-start">
+                          <Link to="/bookings" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                            <Button variant="outline" className="w-full justify-start h-12">
                               My Bookings
                             </Button>
                           </Link>
-                          <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="outline" className="w-full justify-start">
+                          <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                            <Button variant="outline" className="w-full justify-start h-12">
                               Profile
                             </Button>
                           </Link>
                           <Button 
                             variant="outline" 
-                            className="w-full justify-start" 
+                            className="w-full justify-start h-12" 
                             onClick={() => {
                               signOut();
                               setMobileMenuOpen(false);
@@ -216,7 +216,7 @@ const Index = () => {
                       ) : (
                         <Button 
                           variant="outline" 
-                          className="w-full justify-start" 
+                          className="w-full justify-start h-12" 
                           onClick={() => {
                             handleSignIn();
                             setMobileMenuOpen(false);
