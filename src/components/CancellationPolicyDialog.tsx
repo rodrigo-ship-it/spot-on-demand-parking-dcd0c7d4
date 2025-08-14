@@ -29,6 +29,11 @@ export const CancellationPolicyDialog = ({
 }: CancellationPolicyDialogProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Early return if no booking data
+  if (!booking) {
+    return null;
+  }
+
   // Calculate time until booking starts
   const now = new Date();
   const bookingStart = new Date(booking.start_time);
