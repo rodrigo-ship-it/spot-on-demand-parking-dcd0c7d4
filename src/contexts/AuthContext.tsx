@@ -51,30 +51,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return; // Don't redirect, stay on reset page
           }
           
-          // For mobile users after login, check terms acceptance
-          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+          // Only redirect if user is on auth page and logged in
+          if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
             const termsAccepted = localStorage.getItem('termsAccepted');
             const isMobile = window.innerWidth < 768;
             
-            // Mobile flow: Auth → Terms → Home
-            if (isMobile && !termsAccepted && window.location.pathname !== '/terms') {
+            if (isMobile && !termsAccepted) {
               console.log('Mobile user needs to accept terms, redirecting to /terms');
               setTimeout(() => {
                 window.location.href = '/terms';
-              }, 500);
-              return;
-            }
-            
-            // If terms accepted or desktop, go to home
-            if ((termsAccepted || !isMobile) && 
-                window.location.pathname !== '/' && 
-                window.location.pathname !== '' &&
-                !window.location.pathname.includes('reset-password') &&
-                window.location.pathname !== '/terms') {
-              console.log('Authenticated user, redirecting to home page');
+              }, 100);
+            } else {
+              console.log('User signed in while on home page, staying here');
               setTimeout(() => {
                 window.location.href = '/';
-              }, 500);
+              }, 100);
             }
           }
         } else if (event === 'SIGNED_OUT') {
