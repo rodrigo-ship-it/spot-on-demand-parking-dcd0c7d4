@@ -47,17 +47,12 @@ const SpotDetails = () => {
       }
 
       try {
-        // Load parking spot data with owner information
+        // Load parking spot data - first get the spot, then the owner info separately
         const { data: spot, error: spotError } = await supabase
           .from('parking_spots')
-          .select(`
-            *,
-            profiles!parking_spots_owner_id_fkey(full_name, phone)
-          `)
+          .select('*')
           .eq('id', id)
           .maybeSingle();
-
-        console.log('SpotDetails - Supabase response:', { spot, spotError });
 
         if (spotError) {
           console.error('SpotDetails - Error loading spot:', spotError);
@@ -73,7 +68,20 @@ const SpotDetails = () => {
           return;
         }
 
-        setSpotData(spot);
+        // Now get the owner profile
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('user_id', spot.owner_id)
+          .single();
+
+        // Combine the data
+        const spotWithOwner = {
+          ...spot,
+          profiles: ownerProfile
+        };
+
+        setSpotData(spotWithOwner);
         
         // Fetch reviews for this spot - get all bookings for this spot and their reviews
         const { data: bookingsData, error: bookingsError } = await supabase
