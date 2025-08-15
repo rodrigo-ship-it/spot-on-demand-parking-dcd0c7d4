@@ -499,11 +499,8 @@ const BookSpot = () => {
                    <span>Total</span>
                    <span>${total.toFixed(2)}</span>
                  </div>
-                 <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
-                   Owner receives: ${ownerPayout.toFixed(2)} (after 7% platform fee)
-                 </div>
-                
-                {bookingDetails.autoExtend && (
+                 
+                 {bookingDetails.autoExtend && (
                   <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded">
                     Auto-extensions: ${hostSettings.extensionRate}/hr (if needed)
                   </div>
