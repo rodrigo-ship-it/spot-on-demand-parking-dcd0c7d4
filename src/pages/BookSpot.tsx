@@ -184,10 +184,10 @@ const BookSpot = () => {
   const duration = bookingDetails.duration;
   const subtotal = isPricingHourly ? basePrice * duration : basePrice;
   const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
-  const renterTotal = subtotal + platformFee; // Renter pays 7% more
-  const ownerPayout = subtotal - platformFee; // Owner gets 7% less
+  const renterTotal = Math.round((subtotal + platformFee) * 100) / 100; // Renter pays 7% more
+  const ownerPayout = Math.round((subtotal - platformFee) * 100) / 100; // Owner gets 7% less
   const tax = Math.round(renterTotal * 0.0875 * 100) / 100; // 8.75% tax on total amount
-  const total = renterTotal + tax;
+  const total = Math.round((renterTotal + tax) * 100) / 100; // Final total rounded to nearest cent
 
   // Auto-extension settings (would come from spot host settings)
   const [hostSettings] = useState({
