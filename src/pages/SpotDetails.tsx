@@ -656,6 +656,7 @@ const SpotDetails = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Base Price Display */}
                   <div className="text-center space-y-2">
                     <div className="text-3xl font-bold text-gray-900">
                       ${spotData.pricing_type === 'hourly' 
@@ -666,6 +667,50 @@ const SpotDetails = () => {
                     <div className="text-sm text-gray-600">
                       {spotData.pricing_type === 'hourly' ? 'per hour' : 'one-time fee'}
                     </div>
+                  </div>
+
+                  {/* Pricing Breakdown */}
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <h4 className="font-semibold text-sm mb-2">Estimated Total Cost*</h4>
+                    {(() => {
+                      const isPricingHourly = spotData.pricing_type === 'hourly';
+                      const basePrice = isPricingHourly 
+                        ? Number(spotData.price_per_hour) 
+                        : Number(spotData.one_time_price);
+                      const estimatedDuration = isPricingHourly ? 4 : 1; // Estimate 4 hours for hourly spots
+                      const subtotal = isPricingHourly ? basePrice * estimatedDuration : basePrice;
+                      const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
+                      const renterTotal = subtotal + platformFee;
+                      const tax = Math.round(renterTotal * 0.0875 * 100) / 100; // 8.75% tax
+                      const total = renterTotal + tax;
+
+                      return (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span>Base price {isPricingHourly ? `(${estimatedDuration}h)` : ''}</span>
+                            <span>${subtotal.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Platform fee (7%)</span>
+                            <span>${platformFee.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Tax (8.75%)</span>
+                            <span>${tax.toFixed(2)}</span>
+                          </div>
+                          <Separator />
+                          <div className="flex justify-between text-sm font-semibold">
+                            <span>Total</span>
+                            <span>${total.toFixed(2)}</span>
+                          </div>
+                          {isPricingHourly && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              *Based on {estimatedDuration}-hour booking. Final price depends on actual duration.
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   
                   <div className="flex justify-between text-sm">
