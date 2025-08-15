@@ -44,14 +44,6 @@ export const PaymentIntegration = ({
   });
 
   const handlePayment = async () => {
-    // Validate required fields based on payment method
-    if (paymentMethod === "card") {
-      if (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.name) {
-        toast.error("Please fill in all payment details");
-        return;
-      }
-    }
-
     setProcessing(true);
     
     try {
@@ -172,102 +164,60 @@ export const PaymentIntegration = ({
           </Select>
         </div>
 
-        {/* Payment Method Forms */}
+        {/* Payment Method Info */}
         {paymentMethod === "card" && (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="cardName">Cardholder Name</Label>
-              <Input
-                id="cardName"
-                placeholder="John Doe"
-                value={cardDetails.name}
-                onChange={(e) => setCardDetails(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cardNumber">Card Number</Label>
-              <Input
-                id="cardNumber"
-                placeholder="1234 5678 9012 3456"
-                value={cardDetails.number}
-                onChange={(e) => setCardDetails(prev => ({ 
-                  ...prev, 
-                  number: formatCardNumber(e.target.value) 
-                }))}
-                maxLength={19}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="expiry">Expiry Date</Label>
-                <Input
-                  id="expiry"
-                  placeholder="MM/YY"
-                  value={cardDetails.expiry}
-                  onChange={(e) => setCardDetails(prev => ({ 
-                    ...prev, 
-                    expiry: formatExpiry(e.target.value) 
-                  }))}
-                  maxLength={5}
-                />
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-white" />
               </div>
               <div>
-                <Label htmlFor="cvv">CVV</Label>
-                <Input
-                  id="cvv"
-                  placeholder="123"
-                  value={cardDetails.cvv}
-                  onChange={(e) => setCardDetails(prev => ({ 
-                    ...prev, 
-                    cvv: e.target.value.replace(/[^0-9]/g, '') 
-                  }))}
-                  maxLength={4}
-                />
+                <h4 className="font-medium text-blue-900">Credit/Debit Card</h4>
+                <p className="text-sm text-blue-700">You'll be redirected to Stripe's secure checkout</p>
               </div>
+            </div>
+            <div className="text-xs text-blue-600">
+              ✓ Secure Stripe checkout<br/>
+              ✓ All major cards accepted<br/>
+              ✓ 256-bit SSL encryption
             </div>
           </div>
         )}
 
         {paymentMethod === "paypal" && (
-          <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">PP</span>
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-900">PayPal Payment</h4>
-                  <p className="text-sm text-blue-700">You'll be redirected to PayPal to complete your payment</p>
-                </div>
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">PP</span>
               </div>
-              <div className="text-xs text-blue-600">
-                ✓ Secure PayPal checkout<br/>
-                ✓ Pay with PayPal balance, bank, or card<br/>
-                ✓ Buyer protection included
+              <div>
+                <h4 className="font-medium text-blue-900">PayPal Payment</h4>
+                <p className="text-sm text-blue-700">You'll be redirected to PayPal to complete your payment</p>
               </div>
+            </div>
+            <div className="text-xs text-blue-600">
+              ✓ Secure PayPal checkout<br/>
+              ✓ Pay with PayPal balance, bank, or card<br/>
+              ✓ Buyer protection included
             </div>
           </div>
         )}
 
         {paymentMethod === "apple_pay" && (
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">🍎</span>
-                </div>
-                <div>
-                  <h4 className="font-medium">Apple Pay</h4>
-                  <p className="text-sm text-muted-foreground">Pay securely with Touch ID or Face ID</p>
-                </div>
+          <div className="bg-gray-50 p-4 rounded-lg border">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
+                <span className="text-white font-bold text-xs">🍎</span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                ✓ Uses your default payment method<br/>
-                ✓ No card details stored<br/>
-                ✓ Biometric authentication
+              <div>
+                <h4 className="font-medium">Apple Pay</h4>
+                <p className="text-sm text-muted-foreground">You'll be redirected to complete payment with Apple Pay</p>
               </div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              ✓ Available on supported Apple devices<br/>
+              ✓ No card details stored<br/>
+              ✓ Biometric authentication
             </div>
           </div>
         )}
@@ -292,12 +242,10 @@ export const PaymentIntegration = ({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              {paymentMethod === "card" && <DollarSign className="w-5 h-5" />}
+              {paymentMethod === "card" && <CreditCard className="w-5 h-5" />}
               {paymentMethod === "paypal" && <span className="font-bold">PP</span>}
               {paymentMethod === "apple_pay" && <span>🍎</span>}
-              {paymentMethod === "card" && `Pay $${calculatedTotal.toFixed(2)}`}
-              {paymentMethod === "paypal" && `Pay with PayPal $${calculatedTotal.toFixed(2)}`}
-              {paymentMethod === "apple_pay" && `Pay with Apple Pay $${calculatedTotal.toFixed(2)}`}
+              Continue to {paymentMethod === "card" ? "Stripe Checkout" : paymentMethod === "paypal" ? "PayPal" : "Apple Pay"}
             </div>
           )}
         </Button>
