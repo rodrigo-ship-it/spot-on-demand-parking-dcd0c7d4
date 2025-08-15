@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { PasswordChangeDialog } from "@/components/PasswordChangeDialog";
-import { DataExportDialog } from "@/components/DataExportDialog";
+
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
@@ -382,11 +382,6 @@ const Profile = () => {
                   </Button>
                 </PasswordChangeDialog>
                 
-                <DataExportDialog>
-                  <Button variant="outline" className="w-full">
-                    Download Account Data
-                  </Button>
-                </DataExportDialog>
                 <Button 
                   variant="destructive" 
                   className="w-full"
