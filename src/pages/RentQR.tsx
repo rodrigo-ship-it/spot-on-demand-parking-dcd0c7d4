@@ -47,12 +47,11 @@ const RentQR = () => {
   const [bookingId, setBookingId] = useState<string>("");
 
   useEffect(() => {
-    // Find the spot by ID
-    const foundSpot = mockSpots.find(s => s.id === spotId);
-    if (foundSpot) {
-      setSpot(foundSpot);
+    // Redirect to the new booking flow with QR parameter
+    if (spotId) {
+      navigate(`/book-spot/${spotId}?action=book&qr=true`);
     } else {
-      toast.error("Parking spot not found");
+      toast.error("Invalid QR code");
       navigate("/");
     }
   }, [spotId, navigate]);

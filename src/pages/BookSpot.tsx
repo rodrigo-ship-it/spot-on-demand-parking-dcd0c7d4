@@ -23,11 +23,22 @@ const BookSpot = () => {
   const location = useLocation();
   const { user } = useAuth();
   
+  // Check if this is a QR code scan
+  const urlParams = new URLSearchParams(location.search);
+  const isQRCodeBooking = urlParams.get('qr') === 'true';
+  
   const [spotData, setSpotData] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showPayment, setShowPayment] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string>("");
+  
+  // Guest booking state (for QR code bookings)
+  const [guestDetails, setGuestDetails] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
@@ -42,7 +53,8 @@ const BookSpot = () => {
   // Load spot data and user profile
   useEffect(() => {
     const loadData = async () => {
-      if (!user) {
+      // For QR code bookings, allow guest users (don't redirect to auth)
+      if (!user && !isQRCodeBooking) {
         navigate('/auth');
         return;
       }
@@ -63,37 +75,58 @@ const BookSpot = () => {
 
         setSpotData(spot);
 
-        // Load user profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        // Load user profile (only if user is logged in)
+        if (user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
 
-        if (profileError) {
-          // Create basic profile if it doesn't exist
-          setUserProfile({
-            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-            email: user.email,
-            phone: '',
-            vehicle: {
-              make: '',
-              model: '',
-              year: '',
-              color: '',
-              licensePlate: ''
-            },
-            paymentMethod: {
-              type: 'Card',
-              lastFour: '****',
-              expiry: ''
-            }
-          });
+          if (profileError) {
+            // Create basic profile if it doesn't exist
+            setUserProfile({
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+              email: user.email,
+              phone: '',
+              vehicle: {
+                make: '',
+                model: '',
+                year: '',
+                color: '',
+                licensePlate: ''
+              },
+              paymentMethod: {
+                type: 'Card',
+                lastFour: '****',
+                expiry: ''
+              }
+            });
+          } else {
+            setUserProfile({
+              name: profile.full_name || user.email?.split('@')[0] || 'User',
+              email: profile.email || user.email,
+              phone: profile.phone || '',
+              vehicle: {
+                make: '',
+                model: '',
+                year: '',
+                color: '',
+                licensePlate: ''
+              },
+              paymentMethod: {
+                type: 'Card',
+                lastFour: '****',
+                expiry: ''
+              }
+            });
+          }
         } else {
+          // For QR code bookings without user, create empty profile
           setUserProfile({
-            name: profile.full_name || user.email?.split('@')[0] || 'User',
-            email: profile.email || user.email,
-            phone: profile.phone || '',
+            name: '',
+            email: '',
+            phone: '',
             vehicle: {
               make: '',
               model: '',
@@ -154,7 +187,19 @@ const BookSpot = () => {
   };
 
   const handleBooking = async () => {
-    if (!user || !spotData) {
+    if (!spotData) {
+      toast.error("Missing required data");
+      return;
+    }
+
+    // For QR code bookings, validate guest details
+    if (isQRCodeBooking && (!guestDetails.name || !guestDetails.email)) {
+      toast.error("Please fill in your contact information");
+      return;
+    }
+
+    // For logged in users, require user
+    if (!isQRCodeBooking && !user) {
       toast.error("Missing required data");
       return;
     }
@@ -171,11 +216,12 @@ const BookSpot = () => {
         .from('bookings')
         .insert({
           spot_id: spotData.id,
-          renter_id: user.id,
+          renter_id: user?.id || null, // null for guest bookings
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           total_amount: total,
-          status: 'pending'
+          status: 'pending',
+          qr_code_used: isQRCodeBooking
         })
         .select()
         .single();
@@ -454,12 +500,50 @@ const BookSpot = () => {
               <CardHeader>
                 <CardTitle>Contact Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="text-sm">
-                  <div className="font-medium">{userProfile.name}</div>
-                  <div className="text-gray-600">{userProfile.email}</div>
-                  <div className="text-gray-600">{userProfile.phone}</div>
-                </div>
+              <CardContent className="space-y-3">
+                {isQRCodeBooking ? (
+                  // Guest booking form
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="guestName">Full Name *</Label>
+                      <Input
+                        id="guestName"
+                        value={guestDetails.name}
+                        onChange={(e) => setGuestDetails(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter your full name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="guestEmail">Email Address *</Label>
+                      <Input
+                        id="guestEmail"
+                        type="email"
+                        value={guestDetails.email}
+                        onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="guestPhone">Phone Number</Label>
+                      <Input
+                        id="guestPhone"
+                        type="tel"
+                        value={guestDetails.phone}
+                        onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  // Logged in user info
+                  <div className="text-sm">
+                    <div className="font-medium">{userProfile.name}</div>
+                    <div className="text-gray-600">{userProfile.email}</div>
+                    <div className="text-gray-600">{userProfile.phone}</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

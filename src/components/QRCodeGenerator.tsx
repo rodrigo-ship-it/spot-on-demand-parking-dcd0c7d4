@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Copy, Share2, QrCode, Check } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
+import { DOMAIN_CONFIG } from "@/config/domain";
 
 interface QRCodeGeneratorProps {
   spotId: string;
@@ -17,7 +18,7 @@ export const QRCodeGenerator = ({ spotId, spotTitle, spotAddress }: QRCodeGenera
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const rentUrl = `${window.location.origin}/rent-qr/${spotId}`;
+  const rentUrl = DOMAIN_CONFIG.generateQRCodeUrl(spotId);
 
   useEffect(() => {
     generateQRCode();

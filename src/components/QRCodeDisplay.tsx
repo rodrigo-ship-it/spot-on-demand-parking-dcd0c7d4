@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { QrCode, Download, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { DOMAIN_CONFIG } from "@/config/domain";
 
 interface QRCodeDisplayProps {
   spotId: string;
@@ -21,7 +22,7 @@ const QRCodeDisplay = ({ spotId, spotTitle }: QRCodeDisplayProps) => {
   const generateQRCode = async () => {
     try {
       setIsGenerating(true);
-      const rentUrl = `${window.location.origin}/rent-qr/${spotId}`;
+      const rentUrl = DOMAIN_CONFIG.generateQRCodeUrl(spotId);
       const qrDataURL = await QRCode.toDataURL(rentUrl, {
         width: 256,
         margin: 2,
@@ -52,7 +53,7 @@ const QRCodeDisplay = ({ spotId, spotTitle }: QRCodeDisplayProps) => {
   };
 
   const handleCopyLink = async () => {
-    const rentUrl = `${window.location.origin}/rent-qr/${spotId}`;
+    const rentUrl = DOMAIN_CONFIG.generateQRCodeUrl(spotId);
     try {
       await navigator.clipboard.writeText(rentUrl);
       toast.success("Rental link copied to clipboard!");
