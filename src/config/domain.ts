@@ -10,6 +10,6 @@ export const DOMAIN_CONFIG = {
   
   // Helper function to generate QR code URLs - same view as eye button on manage spots
   generateQRCodeUrl: (spotId: string) => {
-    return `${DOMAIN_CONFIG.getQRCodeDomain()}/spot/${spotId}?qr=true`;
+    return `${DOMAIN_CONFIG.getQRCodeDomain()}/spot/${spotId}`;
   }
 };
