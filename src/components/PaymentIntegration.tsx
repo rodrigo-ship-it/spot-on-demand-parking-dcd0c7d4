@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 interface PaymentIntegrationProps {
   bookingId: string;
   baseAmount: number;
+  platformFee?: number;
+  tax?: number;
+  totalAmount?: number;
   currency?: string;
   onPaymentSuccess: (paymentData: any) => void;
   onPaymentError: (error: string) => void;
@@ -19,13 +22,17 @@ interface PaymentIntegrationProps {
 export const PaymentIntegration = ({ 
   bookingId, 
   baseAmount, 
+  platformFee,
+  tax,
+  totalAmount,
   currency = "USD",
   onPaymentSuccess,
   onPaymentError 
 }: PaymentIntegrationProps) => {
-  // Calculate fees - renter pays 7% fee on top
-  const renterFee = Math.round(baseAmount * 0.07 * 100) / 100;
-  const totalAmount = baseAmount + renterFee;
+  // Use provided values or calculate if not provided (for backward compatibility)
+  const calculatedPlatformFee = platformFee ?? Math.round(baseAmount * 0.07 * 100) / 100;
+  const calculatedTax = tax ?? Math.round((baseAmount + calculatedPlatformFee) * 0.0875 * 100) / 100;
+  const calculatedTotal = totalAmount ?? baseAmount + calculatedPlatformFee + calculatedTax;
   
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [processing, setProcessing] = useState(false);
@@ -52,9 +59,9 @@ export const PaymentIntegration = ({
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: {
           bookingId,
-          baseAmount,
+          baseAmount: calculatedTotal, // Send the final total amount
           currency: currency.toLowerCase(),
-          paymentMethod: paymentMethod, // Pass the selected payment method
+          paymentMethod: paymentMethod,
         }
       });
 
@@ -130,18 +137,22 @@ export const PaymentIntegration = ({
         {/* Amount Summary */}
         <div className="bg-muted p-4 rounded-lg space-y-2">
           <div className="flex items-center justify-between">
-            <span>Spot Price:</span>
+            <span>Base price:</span>
             <span>${baseAmount.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Service Fee (7%):</span>
-            <span>${renterFee.toFixed(2)}</span>
+            <span>Platform fee:</span>
+            <span>${calculatedPlatformFee.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Tax:</span>
+            <span>${calculatedTax.toFixed(2)}</span>
           </div>
           <hr className="my-2" />
           <div className="flex items-center justify-between font-bold">
             <span>Total Amount:</span>
             <span className="text-xl text-primary">
-              ${totalAmount.toFixed(2)} {currency}
+              ${calculatedTotal.toFixed(2)} {currency}
             </span>
           </div>
         </div>
@@ -284,9 +295,9 @@ export const PaymentIntegration = ({
               {paymentMethod === "card" && <DollarSign className="w-5 h-5" />}
               {paymentMethod === "paypal" && <span className="font-bold">PP</span>}
               {paymentMethod === "apple_pay" && <span>🍎</span>}
-              {paymentMethod === "card" && `Pay $${totalAmount.toFixed(2)}`}
-              {paymentMethod === "paypal" && `Pay with PayPal $${totalAmount.toFixed(2)}`}
-              {paymentMethod === "apple_pay" && `Pay with Apple Pay $${totalAmount.toFixed(2)}`}
+              {paymentMethod === "card" && `Pay $${calculatedTotal.toFixed(2)}`}
+              {paymentMethod === "paypal" && `Pay with PayPal $${calculatedTotal.toFixed(2)}`}
+              {paymentMethod === "apple_pay" && `Pay with Apple Pay $${calculatedTotal.toFixed(2)}`}
             </div>
           )}
         </Button>
