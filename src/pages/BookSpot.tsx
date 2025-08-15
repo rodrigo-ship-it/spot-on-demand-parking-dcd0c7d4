@@ -53,9 +53,18 @@ const BookSpot = () => {
   // Load spot data and user profile
   useEffect(() => {
     const loadData = async () => {
+      console.log('BookSpot - Loading data:', { id, isQRCodeBooking, user: !!user });
+      
       // For QR code bookings, allow guest users (don't redirect to auth)
       if (!user && !isQRCodeBooking) {
         navigate('/auth');
+        return;
+      }
+
+      if (!id) {
+        console.error('BookSpot - No spot ID provided');
+        toast.error("No parking spot ID provided");
+        navigate('/');
         return;
       }
 
@@ -68,11 +77,20 @@ const BookSpot = () => {
           .single();
 
         if (spotError) {
+          console.error('BookSpot - Error loading spot:', spotError);
           toast.error("Failed to load parking spot");
           navigate('/');
           return;
         }
 
+        if (!spot) {
+          console.error('BookSpot - No spot found with ID:', id);
+          toast.error("Parking spot not found");
+          navigate('/');
+          return;
+        }
+
+        console.log('BookSpot - Spot loaded successfully:', spot);
         setSpotData(spot);
 
         // Load user profile (only if user is logged in)

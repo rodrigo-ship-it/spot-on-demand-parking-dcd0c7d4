@@ -23,6 +23,7 @@ const QRCodeDisplay = ({ spotId, spotTitle }: QRCodeDisplayProps) => {
     try {
       setIsGenerating(true);
       const rentUrl = DOMAIN_CONFIG.generateQRCodeUrl(spotId);
+      console.log('QR Code generating URL:', rentUrl);
       const qrDataURL = await QRCode.toDataURL(rentUrl, {
         width: 256,
         margin: 2,
