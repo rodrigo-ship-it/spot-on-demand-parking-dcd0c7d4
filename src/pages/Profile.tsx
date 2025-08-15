@@ -38,7 +38,6 @@ const Profile = () => {
     bookingUpdates: true,
     paymentReminders: true,
     promotionalEmails: false,
-    weeklyReports: true,
     mobileNotifications: true
   });
 
@@ -315,16 +314,6 @@ const Profile = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Weekly Reports</Label>
-                  <p className="text-sm text-gray-600">Get weekly summaries of your earnings and bookings</p>
-                </div>
-                <Switch
-                  checked={notifications.weeklyReports}
-                  onCheckedChange={(checked) => setNotifications({...notifications, weeklyReports: checked})}
-                />
-              </div>
 
               <div className="flex items-center justify-between">
                 <div>
