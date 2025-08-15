@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.validate-stripe-access]
 verify_jwt = true
+
+[functions.send-contact-email]
+verify_jwt = false

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Mail, MessageSquare, Phone, Clock, CheckCircle, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContactFormData {
   name: string;
@@ -32,12 +33,18 @@ const HelpSupport = () => {
     setLoading(true);
 
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: formData
+      });
+
+      if (error) throw error;
+
       setSubmitted(true);
       toast.success("Message sent! We'll get back to you soon.");
-    } catch (error) {
-      toast.error("Failed to send message. Please try again.");
+      console.log("Contact form submitted successfully:", data);
+    } catch (error: any) {
+      console.error("Failed to send contact form:", error);
+      toast.error("Failed to send message. Please try again or email us directly at service@arrivparking.com");
     } finally {
       setLoading(false);
     }
