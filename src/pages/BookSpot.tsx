@@ -383,7 +383,7 @@ const BookSpot = () => {
                          <Button
                            variant="outline"
                            className={cn(
-                             "w-full justify-start text-left font-normal",
+                             "w-full justify-center text-center font-normal",
                              !bookingDetails.date && "text-muted-foreground"
                            )}
                          >
@@ -426,13 +426,22 @@ const BookSpot = () => {
                      </Select>
                    </div>
                    <div>
-                     <Label htmlFor="endTime">End Time</Label>
-                     <Input
-                       id="endTime"
-                       type="time"
-                       value={bookingDetails.endTime}
-                       onChange={(e) => handleTimeChange('endTime', e.target.value)}
-                     />
+                     <Label>End Time</Label>
+                     <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
+                       <SelectTrigger className="w-full">
+                         <div className="flex items-center">
+                           <ClockIcon className="mr-2 h-4 w-4" />
+                           <SelectValue placeholder="Select time" />
+                         </div>
+                       </SelectTrigger>
+                       <SelectContent className="max-h-[200px]">
+                         {timeOptions.map((option) => (
+                           <SelectItem key={option.value} value={option.value}>
+                             {option.label}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
                    </div>
                  </div>
                 <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
