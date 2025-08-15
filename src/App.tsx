@@ -30,12 +30,17 @@ const TermsRoute = () => {
   const navigate = useNavigate();
   
   const handleAccept = () => {
-    // Navigate back to the previous page or home
-    const referrer = document.referrer;
-    if (referrer && referrer.includes(window.location.origin)) {
-      navigate(-1); // Go back to previous page
+    console.log('handleAccept called in TermsRoute');
+    // Check if there's a state indicating we came from profile
+    const fromProfile = sessionStorage.getItem('navigatedFromProfile');
+    
+    if (fromProfile === 'true') {
+      sessionStorage.removeItem('navigatedFromProfile');
+      console.log('Navigating back to profile');
+      navigate('/profile');
     } else {
-      navigate('/'); // Fallback to home page
+      console.log('Navigating to home');
+      navigate('/');
     }
   };
   

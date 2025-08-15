@@ -27,6 +27,8 @@ export const TermsAcceptanceStatus = () => {
 
   const handleReviewTerms = () => {
     setOpen(false);
+    // Mark that we're navigating from profile
+    sessionStorage.setItem('navigatedFromProfile', 'true');
     navigate('/terms');
   };
 

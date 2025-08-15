@@ -26,7 +26,10 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
       // Store acceptance in localStorage
       localStorage.setItem('termsAccepted', 'true');
       localStorage.setItem('termsAcceptedDate', new Date().toISOString());
+      console.log('Terms accepted, calling onAccept callback');
       onAccept();
+    } else {
+      console.log('Cannot accept - hasRead:', hasRead, 'hasAccepted:', hasAccepted);
     }
   };
 
