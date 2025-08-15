@@ -482,7 +482,9 @@ const ListSpot = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="minBooking">Minimum Booking (hours)</Label>
+                <Label htmlFor="minBooking">
+                  Minimum Booking ({formData.pricingType === 'daily' ? 'days' : 'hours'})
+                </Label>
                 <Input
                   id="minBooking"
                   type="number"
@@ -491,7 +493,9 @@ const ListSpot = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="maxBooking">Maximum Booking (hours)</Label>
+                <Label htmlFor="maxBooking">
+                  Maximum Booking ({formData.pricingType === 'daily' ? 'days' : 'hours'})
+                </Label>
                 <Input
                   id="maxBooking"
                   type="number"
