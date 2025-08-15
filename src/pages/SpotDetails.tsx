@@ -20,14 +20,12 @@ import { PenaltySystem } from "@/components/PenaltySystem";
 import { TimeManagement } from "@/components/TimeManagement";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const SpotDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const action = searchParams.get("action");
   const isBookingMode = action === "book";
   const isOwnerView = action === "manage";
@@ -38,9 +36,6 @@ const SpotDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Check if current user is the owner of this spot
-  const isCurrentUserOwner = user && spotData && user.id === spotData.owner_id;
 
   // Fetch spot data from database with real-time updates
   useEffect(() => {
@@ -651,8 +646,8 @@ const SpotDetails = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Book Now Card - Show for visitors who are not the owner */}
-            {!isCurrentUserOwner && (
+            {/* Book Now Card - Always show for regular visitors */}
+            {!isOwnerView && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
