@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to support team
     const supportEmailResponse = await resend.emails.send({
-      from: "Arriv Support <onboarding@resend.dev>",
+      from: "Arriv Support <rodrigo@arrivparking.com>",
       to: ["service@arrivparking.com"],
       subject: `[${type.toUpperCase()}] ${subject}`,
       html: `
@@ -65,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to user
     const confirmationEmailResponse = await resend.emails.send({
-      from: "Arriv Support <onboarding@resend.dev>",
+      from: "Arriv Support <rodrigo@arrivparking.com>",
       to: [email],
       subject: "We received your message - Arriv Support",
       html: `
