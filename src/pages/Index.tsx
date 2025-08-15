@@ -109,7 +109,7 @@ const Index = () => {
   };
 
   const handleBookNow = (spotId: string | number) => {
-    navigate(`/book-spot/${spotId}`);
+    navigate(`/spot/${spotId}`);
   };
 
   const handleSignIn = () => {
