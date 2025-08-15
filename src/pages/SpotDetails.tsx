@@ -691,11 +691,11 @@ const SpotDetails = () => {
                             <span>${subtotal.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span>Platform fee (7%)</span>
+                            <span>Platform fee</span>
                             <span>${platformFee.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span>Tax (8.75%)</span>
+                            <span>Tax</span>
                             <span>${tax.toFixed(2)}</span>
                           </div>
                           <Separator />
