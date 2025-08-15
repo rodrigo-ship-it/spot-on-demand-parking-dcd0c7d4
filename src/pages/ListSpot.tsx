@@ -191,16 +191,16 @@ const ListSpot = () => {
     
     console.log('handleSubmit called', { loading, currentStep, isEditMode });
     
+    // Only allow submission on the final step - early exit for all other steps
+    if (currentStep !== 4) {
+      console.log('Not on final step, navigating to next step');
+      handleNextStep();
+      return; // Absolutely stop here
+    }
+    
     // Prevent submission during loading or if data hasn't finished loading yet
     if (loading || isSubmitting || !dataLoaded) {
       console.log('Submission blocked:', { loading, isSubmitting, dataLoaded });
-      return;
-    }
-    
-    // Only allow submission on the final step
-    if (currentStep !== 4) {
-      console.log('Not on final step, calling handleNextStep');
-      handleNextStep();
       return;
     }
     
