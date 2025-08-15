@@ -174,6 +174,7 @@ const ListSpot = () => {
   };
 
   const handleNextStep = () => {
+    console.log('handleNextStep called', { currentStep });
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
@@ -198,6 +199,7 @@ const ListSpot = () => {
     
     // Only allow submission on the final step
     if (currentStep !== 4) {
+      console.log('Not on final step, calling handleNextStep');
       handleNextStep();
       return;
     }
