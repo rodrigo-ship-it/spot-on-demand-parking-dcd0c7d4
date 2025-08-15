@@ -35,6 +35,8 @@ const BookSpot = () => {
   
   const [spotData, setSpotData] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showPayment, setShowPayment] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string>("");
@@ -102,8 +104,9 @@ const BookSpot = () => {
         console.log('BookSpot - Spot loaded successfully:', spot);
         setSpotData(spot);
 
-        // Load user profile (only if user is logged in)
+        // Load user profile and vehicles (only if user is logged in)
         if (user) {
+          // Load user profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -116,13 +119,6 @@ const BookSpot = () => {
               name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
               email: user.email,
               phone: '',
-              vehicle: {
-                make: '',
-                model: '',
-                year: '',
-                color: '',
-                licensePlate: ''
-              },
               paymentMethod: {
                 type: 'Card',
                 lastFour: '****',
@@ -134,13 +130,6 @@ const BookSpot = () => {
               name: profile.full_name || user.email?.split('@')[0] || 'User',
               email: profile.email || user.email,
               phone: profile.phone || '',
-              vehicle: {
-                make: '',
-                model: '',
-                year: '',
-                color: '',
-                licensePlate: ''
-              },
               paymentMethod: {
                 type: 'Card',
                 lastFour: '****',
@@ -148,19 +137,26 @@ const BookSpot = () => {
               }
             });
           }
+
+          // Load user vehicles
+          const { data: userVehicles, error: vehiclesError } = await supabase
+            .from('vehicles')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('is_default', { ascending: false });
+
+          if (!vehiclesError && userVehicles) {
+            setVehicles(userVehicles);
+            // Set default vehicle as selected
+            const defaultVehicle = userVehicles.find(v => v.is_default) || userVehicles[0];
+            setSelectedVehicle(defaultVehicle);
+          }
         } else {
           // For QR code bookings without user, create empty profile
           setUserProfile({
             name: '',
             email: '',
             phone: '',
-            vehicle: {
-              make: '',
-              model: '',
-              year: '',
-              color: '',
-              licensePlate: ''
-            },
             paymentMethod: {
               type: 'Card',
               lastFour: '****',
@@ -427,23 +423,45 @@ const BookSpot = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-50 p-3 rounded">
-                  <div className="font-medium">
-                    {userProfile.vehicle.year} {userProfile.vehicle.make} {userProfile.vehicle.model}
+                {user && selectedVehicle ? (
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="font-medium">
+                      {selectedVehicle.year} {selectedVehicle.make} {selectedVehicle.model}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {selectedVehicle.color || 'Color not specified'} • License: {selectedVehicle.license_plate}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {userProfile.vehicle.color} • License: {userProfile.vehicle.licensePlate}
+                ) : user && vehicles.length === 0 ? (
+                  <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                    <div className="font-medium text-yellow-800">No vehicle added</div>
+                    <div className="text-sm text-yellow-700">Add a vehicle to complete your booking</div>
                   </div>
-                </div>
-                <VehicleManagementDialog onVehicleSelect={() => {}}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="mt-2 p-0 h-auto text-blue-600"
+                ) : !user ? (
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="font-medium">Vehicle information</div>
+                    <div className="text-sm text-gray-600">Will be collected during checkout</div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="font-medium">Loading vehicle...</div>
+                  </div>
+                )}
+                
+                {user && (
+                  <VehicleManagementDialog 
+                    onVehicleSelect={(vehicle) => setSelectedVehicle(vehicle)}
+                    selectedVehicle={selectedVehicle}
                   >
-                    Use different vehicle
-                  </Button>
-                </VehicleManagementDialog>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="mt-2 p-0 h-auto text-blue-600"
+                    >
+                      {vehicles.length === 0 ? 'Add vehicle' : 'Use different vehicle'}
+                    </Button>
+                  </VehicleManagementDialog>
+                )}
               </CardContent>
             </Card>
           </div>
