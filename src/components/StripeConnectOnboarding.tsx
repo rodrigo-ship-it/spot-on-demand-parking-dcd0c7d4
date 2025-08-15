@@ -139,6 +139,9 @@ export const StripeConnectOnboarding = () => {
                 Complete Onboarding
                 <ExternalLink className="w-4 h-4 ml-2" />
               </Button>
+              <Button onClick={checkStatus} variant="outline" className="w-full" disabled={checking}>
+                {checking ? 'Checking...' : 'Refresh Status'}
+              </Button>
               <p className="text-sm text-muted-foreground text-center">
                 Complete your Stripe onboarding to start receiving payments
               </p>
