@@ -6,9 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon } from "lucide-react";
 import { PaymentIntegration } from "@/components/PaymentIntegration";
 import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
 import { toast } from "sonner";
@@ -50,7 +54,7 @@ const BookSpot = () => {
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
     startTime: "09:00",
     endTime: "17:00",
     duration: 8,
@@ -209,6 +213,12 @@ const BookSpot = () => {
     setBookingDetails(newDetails);
   };
 
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setBookingDetails(prev => ({ ...prev, date }));
+    }
+  };
+
   const handleBooking = async () => {
     if (!spotData) {
       toast.error("Missing required data");
@@ -231,8 +241,9 @@ const BookSpot = () => {
     
     try {
       // Create booking start and end times
-      const startDateTime = new Date(`${bookingDetails.date}T${bookingDetails.startTime}`);
-      const endDateTime = new Date(`${bookingDetails.date}T${bookingDetails.endTime}`);
+      const bookingDate = format(bookingDetails.date, 'yyyy-MM-dd');
+      const startDateTime = new Date(`${bookingDate}T${bookingDetails.startTime}`);
+      const endDateTime = new Date(`${bookingDate}T${bookingDetails.endTime}`);
 
       // Create booking in database
       const { data: booking, error } = await supabase
@@ -343,37 +354,58 @@ const BookSpot = () => {
                   When
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="date">Date</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={bookingDetails.date}
-                      onChange={(e) => handleTimeChange('date', e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={bookingDetails.startTime}
-                      onChange={(e) => handleTimeChange('startTime', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="endTime">End Time</Label>
-                    <Input
-                      id="endTime"
-                      type="time"
-                      value={bookingDetails.endTime}
-                      onChange={(e) => handleTimeChange('endTime', e.target.value)}
-                    />
-                  </div>
-                </div>
+               <CardContent className="space-y-4">
+                 <div className="grid grid-cols-3 gap-3">
+                   <div>
+                     <Label>Date</Label>
+                     <Popover>
+                       <PopoverTrigger asChild>
+                         <Button
+                           variant="outline"
+                           className={cn(
+                             "w-full justify-start text-left font-normal",
+                             !bookingDetails.date && "text-muted-foreground"
+                           )}
+                         >
+                           <CalendarIcon className="mr-2 h-4 w-4" />
+                           {bookingDetails.date ? (
+                             format(bookingDetails.date, "PPP")
+                           ) : (
+                             <span>Pick a date</span>
+                           )}
+                         </Button>
+                       </PopoverTrigger>
+                       <PopoverContent className="w-auto p-0" align="start">
+                         <CalendarComponent
+                           mode="single"
+                           selected={bookingDetails.date}
+                           onSelect={handleDateChange}
+                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                           initialFocus
+                           className={cn("p-3 pointer-events-auto")}
+                         />
+                       </PopoverContent>
+                     </Popover>
+                   </div>
+                   <div>
+                     <Label htmlFor="startTime">Start Time</Label>
+                     <Input
+                       id="startTime"
+                       type="time"
+                       value={bookingDetails.startTime}
+                       onChange={(e) => handleTimeChange('startTime', e.target.value)}
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="endTime">End Time</Label>
+                     <Input
+                       id="endTime"
+                       type="time"
+                       value={bookingDetails.endTime}
+                       onChange={(e) => handleTimeChange('endTime', e.target.value)}
+                     />
+                   </div>
+                 </div>
                 <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
                   Duration: {bookingDetails.duration} hours
                 </div>
