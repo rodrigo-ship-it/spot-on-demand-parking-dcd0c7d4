@@ -487,7 +487,7 @@ const BookSpot = () => {
                     <span>${subtotal}</span>
                   </div>
                  <div className="flex justify-between text-sm text-gray-600">
-                   <span>Platform fee (7%)</span>
+                   <span>Platform fee</span>
                    <span>${platformFee}</span>
                  </div>
                  <div className="flex justify-between text-sm text-gray-600">
