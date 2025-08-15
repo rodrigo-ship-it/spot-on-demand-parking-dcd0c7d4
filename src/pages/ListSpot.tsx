@@ -159,7 +159,7 @@ const ListSpot = () => {
         address: fullAddress,
         spot_type: spotType,
         pricing_type: formData.pricingType,
-        price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 0,
+        price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : parseFloat(formData.oneTimePrice) || 1,
         one_time_price: formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         total_spots: totalSpots,
         available_spots: totalSpots, // Initially all spots are available
