@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, Plus, X, Car, MapPin, DollarSign, Clock, Camera, Shield, Zap } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,8 +18,12 @@ import { ImageUpload } from "@/components/ImageUpload";
 const ListSpot = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editSpotId = searchParams.get('edit');
+  const isEditMode = !!editSpotId;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(isEditMode);
   const [formData, setFormData] = useState({
     // Basic Information
     title: "",
@@ -68,6 +72,82 @@ const ListSpot = () => {
     "Covered/Garage", "Security Camera", "EV Charging", "24/7 Access", 
     "Gated Entry", "Well Lit", "Wheelchair Accessible", "Car Wash Available"
   ];
+
+  // Load existing spot data when in edit mode
+  useEffect(() => {
+    if (isEditMode && editSpotId && user) {
+      loadExistingSpot();
+    }
+  }, [isEditMode, editSpotId, user]);
+
+  const loadExistingSpot = async () => {
+    if (!editSpotId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('parking_spots')
+        .select('*')
+        .eq('id', editSpotId)
+        .eq('owner_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading spot:', error);
+        toast.error("Failed to load spot data");
+        navigate('/manage-spots');
+        return;
+      }
+
+      if (data) {
+        // Parse the address to separate components
+        const addressParts = data.address.split(', ');
+        const zipState = addressParts[addressParts.length - 1]?.split(' ') || [];
+        const state = zipState.length > 1 ? zipState.slice(0, -1).join(' ') : '';
+        const zipCode = zipState[zipState.length - 1] || '';
+        const city = addressParts[addressParts.length - 2] || '';
+        const address = addressParts.slice(0, -2).join(', ');
+
+        setFormData({
+          title: data.title || '',
+          description: data.description || '',
+          type: data.spot_type || '',
+          totalSpots: data.total_spots?.toString() || '1',
+          address: address,
+          city: city,
+          state: state,
+          zipCode: zipCode,
+          pricingType: data.pricing_type || 'hourly',
+          pricePerHour: data.pricing_type === 'hourly' ? data.price_per_hour?.toString() || '' : '',
+          dailyPrice: data.pricing_type === 'daily' ? data.price_per_hour?.toString() || '' : '',
+          oneTimePrice: data.one_time_price?.toString() || '',
+          availabilityType: data.availability_schedule ? 'custom' : 'always',
+          customSchedule: (data.availability_schedule as any) || {
+            monday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+            tuesday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+            wednesday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+            thursday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+            friday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+            saturday: { enabled: false, startTime: "09:00", endTime: "17:00" },
+            sunday: { enabled: false, startTime: "09:00", endTime: "17:00" }
+          },
+          features: data.amenities || [],
+          specialInstructions: data.access_instructions || '',
+          accessRequirements: data.access_requirements || '',
+          accessInstructions: '', // Keep this empty for backward compatibility
+          photos: data.images || [],
+          instantBooking: true,
+          minimumBooking: "1",
+          maximumBooking: "24"
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("An error occurred while loading spot data");
+      navigate('/manage-spots');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFeatureToggle = (feature: string) => {
     setFormData(prev => ({
@@ -185,23 +265,41 @@ const ListSpot = () => {
         is_active: true
       };
 
-      const { data, error } = await supabase
-        .from('parking_spots')
-        .insert([spotData])
-        .select()
-        .single();
+      if (isEditMode && editSpotId) {
+        // Update existing spot
+        const { error } = await supabase
+          .from('parking_spots')
+          .update(spotData)
+          .eq('id', editSpotId)
+          .eq('owner_id', user.id);
 
-      if (error) {
-        console.error('Error creating parking spot:', error);
-        toast.error("Failed to list parking spot. Please try again.");
-        return;
+        if (error) {
+          console.error('Error updating parking spot:', error);
+          toast.error("Failed to update parking spot. Please try again.");
+          return;
+        }
+
+        toast.success("Parking spot updated successfully!");
+      } else {
+        // Create new spot
+        const { data, error } = await supabase
+          .from('parking_spots')
+          .insert([spotData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating parking spot:', error);
+          toast.error("Failed to list parking spot. Please try again.");
+          return;
+        }
+
+        const spotText = (spotType === "entire-garage" || spotType === "entire-lot") 
+          ? `with ${totalSpots} spots` 
+          : "";
+        
+        toast.success(`Parking ${spotType.includes("entire") ? "facility" : "spot"} listed successfully! ${spotText}`);
       }
-
-      const spotText = (spotType === "entire-garage" || spotType === "entire-lot") 
-        ? `with ${totalSpots} spots` 
-        : "";
-      
-      toast.success(`Parking ${spotType.includes("entire") ? "facility" : "spot"} listed successfully! ${spotText}`);
       
       // Redirect to manage spots page
       setTimeout(() => {
@@ -588,6 +686,17 @@ const ListSpot = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading spot data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       {/* Navigation */}
@@ -603,7 +712,7 @@ const ListSpot = () => {
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
                 <h1 className="text-xl font-bold text-gray-900">
-                  List Your Parking Spot
+                  {isEditMode ? 'Edit Your Parking Spot' : 'List Your Parking Spot'}
                 </h1>
               </Link>
             </div>
@@ -711,7 +820,10 @@ const ListSpot = () => {
                     disabled={isSubmitting}
                     className="bg-primary hover:bg-secondary text-primary-foreground"
                   >
-                    {isSubmitting ? "Listing..." : "List My Spot"}
+                    {isSubmitting 
+                      ? (isEditMode ? "Updating..." : "Listing...") 
+                      : (isEditMode ? "Update Spot" : "List My Spot")
+                    }
                   </Button>
                 )}
               </div>
