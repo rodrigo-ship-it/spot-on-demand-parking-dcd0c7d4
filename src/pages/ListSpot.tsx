@@ -37,6 +37,7 @@ const ListSpot = () => {
     pricingType: "hourly", // New field for pricing type
     pricePerHour: "",
     oneTimePrice: "", // New field for one-time pricing
+    dailyPrice: "", // New field for daily pricing
     availabilityType: "always",
     customSchedule: {
       monday: { enabled: false, startTime: "09:00", endTime: "17:00" },
@@ -123,6 +124,11 @@ const ListSpot = () => {
       return;
     }
     
+    if (formData.pricingType === 'daily' && !formData.dailyPrice) {
+      toast.error("Please enter a daily rate");
+      return;
+    }
+    
     if (formData.pricingType === 'one_time' && !formData.oneTimePrice) {
       toast.error("Please enter a one-time price");
       return;
@@ -159,7 +165,9 @@ const ListSpot = () => {
         address: fullAddress,
         spot_type: spotType,
         pricing_type: formData.pricingType,
-        price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : parseFloat(formData.oneTimePrice) || 1,
+        price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 
+                        formData.pricingType === 'daily' ? parseFloat(formData.dailyPrice) : 
+                        parseFloat(formData.oneTimePrice) || 1,
         one_time_price: formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         total_spots: totalSpots,
         available_spots: totalSpots, // Initially all spots are available
@@ -327,12 +335,15 @@ const ListSpot = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="hourly">Hourly Rate</SelectItem>
+                  <SelectItem value="daily">Daily Rate</SelectItem>
                   <SelectItem value="one_time">One-Time Charge</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-gray-600 mt-1">
                 {formData.pricingType === 'hourly' 
                   ? "Charge renters based on the number of hours they park"
+                  : formData.pricingType === 'daily'
+                  ? "Charge renters based on the number of days they park"
                   : "Charge a flat fee regardless of parking duration"
                 }
               </p>
@@ -353,6 +364,27 @@ const ListSpot = () => {
                 {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
                   <p className="text-sm text-gray-600 mt-1">
                     This is the price per spot per hour. Total revenue will be multiplied by occupied spots.
+                  </p>
+                )}
+              </div>
+            ) : formData.pricingType === 'daily' ? (
+              <div>
+                <Label htmlFor="dailyPrice">Price per Day ($) *</Label>
+                <Input
+                  id="dailyPrice"
+                  type="number"
+                  step="0.01"
+                  placeholder="40.00"
+                  value={formData.dailyPrice}
+                  onChange={(e) => setFormData({...formData, dailyPrice: e.target.value})}
+                  required
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Renters will pay this amount per day they park (24-hour periods).
+                </p>
+                {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    This is the price per spot per day. Total revenue will be multiplied by occupied spots.
                   </p>
                 )}
               </div>
