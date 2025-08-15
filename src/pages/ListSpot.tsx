@@ -34,7 +34,9 @@ const ListSpot = () => {
     zipCode: "",
     
     // Pricing & Availability
+    pricingType: "hourly", // New field for pricing type
     pricePerHour: "",
+    oneTimePrice: "", // New field for one-time pricing
     availabilityType: "always",
     customSchedule: {
       monday: { enabled: false, startTime: "09:00", endTime: "17:00" },
@@ -110,8 +112,19 @@ const ListSpot = () => {
     }
     
     // Validate required fields
-    if (!formData.title || !formData.address || !formData.pricePerHour || !formData.type) {
+    if (!formData.title || !formData.address || !formData.type) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Validate pricing based on type
+    if (formData.pricingType === 'hourly' && !formData.pricePerHour) {
+      toast.error("Please enter an hourly rate");
+      return;
+    }
+    
+    if (formData.pricingType === 'one_time' && !formData.oneTimePrice) {
+      toast.error("Please enter a one-time price");
       return;
     }
 
@@ -145,7 +158,9 @@ const ListSpot = () => {
         description: formData.description,
         address: fullAddress,
         spot_type: spotType,
-        price_per_hour: parseFloat(formData.pricePerHour),
+        pricing_type: formData.pricingType,
+        price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 0,
+        one_time_price: formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         total_spots: totalSpots,
         available_spots: totalSpots, // Initially all spots are available
         availability_schedule: availabilitySchedule,
@@ -305,21 +320,64 @@ const ListSpot = () => {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="price">Price per Hour ($) *</Label>
-              <Input
-                id="price"
-                type="number"
-                placeholder="8.00"
-                value={formData.pricePerHour}
-                onChange={(e) => setFormData({...formData, pricePerHour: e.target.value})}
-                required
-              />
-              {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
-                <p className="text-sm text-gray-600 mt-1">
-                  This is the price per spot per hour. Total revenue will be multiplied by occupied spots.
-                </p>
-              )}
+              <Label>Pricing Type *</Label>
+              <Select value={formData.pricingType} onValueChange={(value) => setFormData({...formData, pricingType: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select pricing type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hourly">Hourly Rate</SelectItem>
+                  <SelectItem value="one_time">One-Time Charge</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-600 mt-1">
+                {formData.pricingType === 'hourly' 
+                  ? "Charge renters based on the number of hours they park"
+                  : "Charge a flat fee regardless of parking duration"
+                }
+              </p>
             </div>
+
+            {formData.pricingType === 'hourly' ? (
+              <div>
+                <Label htmlFor="price">Price per Hour ($) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  placeholder="8.00"
+                  value={formData.pricePerHour}
+                  onChange={(e) => setFormData({...formData, pricePerHour: e.target.value})}
+                  required
+                />
+                {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    This is the price per spot per hour. Total revenue will be multiplied by occupied spots.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="oneTimePrice">One-Time Price ($) *</Label>
+                <Input
+                  id="oneTimePrice"
+                  type="number"
+                  step="0.01"
+                  placeholder="25.00"
+                  value={formData.oneTimePrice}
+                  onChange={(e) => setFormData({...formData, oneTimePrice: e.target.value})}
+                  required
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Renters will pay this amount regardless of how long they park (up to your maximum booking duration).
+                </p>
+                {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    This is the price per spot. Total revenue will be multiplied by number of spots rented.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <Label>Availability Type</Label>

@@ -121,9 +121,12 @@ const BookSpot = () => {
   }, [id, user, navigate]);
 
   // Pricing calculation - 7% upcharge for renters, 7% deduction for listers
-  const basePrice = spotData?.price_per_hour || 8;
+  const isPricingHourly = spotData?.pricing_type === 'hourly';
+  const basePrice = isPricingHourly 
+    ? (spotData?.price_per_hour || 8) 
+    : (spotData?.one_time_price || 25);
   const duration = bookingDetails.duration;
-  const subtotal = basePrice * duration;
+  const subtotal = isPricingHourly ? basePrice * duration : basePrice;
   const platformFee = Math.round(subtotal * 0.07); // 7% platform fee
   const renterTotal = subtotal + platformFee; // Renter pays 7% more
   const ownerPayout = subtotal - platformFee; // Owner gets 7% less
@@ -382,11 +385,16 @@ const BookSpot = () => {
                   Pricing Summary
                 </CardTitle>
               </CardHeader>
-               <CardContent className="space-y-3">
-                 <div className="flex justify-between">
-                   <span>${basePrice}/hr × {duration} hours</span>
-                   <span>${subtotal}</span>
-                 </div>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>
+                      {isPricingHourly 
+                        ? `$${basePrice}/hr × ${duration} hours`
+                        : `$${basePrice} (flat rate)`
+                      }
+                    </span>
+                    <span>${subtotal}</span>
+                  </div>
                  <div className="flex justify-between text-sm text-gray-600">
                    <span>Platform fee (7%)</span>
                    <span>${platformFee}</span>

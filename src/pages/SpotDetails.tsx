@@ -580,8 +580,15 @@ const SpotDetails = () => {
                 <CardContent>
                   <div className="text-center space-y-4">
                     <div>
-                      <div className="text-3xl font-bold text-gray-900">${Number(spotData.price_per_hour).toFixed(2)}</div>
-                      <div className="text-sm text-gray-600">per hour</div>
+                      <div className="text-3xl font-bold text-gray-900">
+                        ${spotData.pricing_type === 'hourly' 
+                          ? Number(spotData.price_per_hour).toFixed(2)
+                          : Number(spotData.one_time_price).toFixed(2)
+                        }
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {spotData.pricing_type === 'hourly' ? 'per hour' : 'one-time fee'}
+                      </div>
                     </div>
                     <div className="pt-2 border-t">
                       <div className="text-3xl font-bold text-gray-900">{spotData.total_spots}</div>

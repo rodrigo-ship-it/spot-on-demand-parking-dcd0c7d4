@@ -388,8 +388,10 @@ export type Database = {
           is_active: boolean
           latitude: number | null
           longitude: number | null
+          one_time_price: number | null
           owner_id: string
           price_per_hour: number
+          pricing_type: string
           rating: number | null
           spot_type: string
           title: string
@@ -411,8 +413,10 @@ export type Database = {
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
+          one_time_price?: number | null
           owner_id: string
           price_per_hour?: number
+          pricing_type?: string
           rating?: number | null
           spot_type: string
           title: string
@@ -434,8 +438,10 @@ export type Database = {
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
+          one_time_price?: number | null
           owner_id?: string
           price_per_hour?: number
+          pricing_type?: string
           rating?: number | null
           spot_type?: string
           title?: string

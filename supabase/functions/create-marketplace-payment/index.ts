@@ -60,7 +60,15 @@ serve(async (req) => {
     });
 
     // Calculate fees - platform takes 7% from both sides
-    const totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100); // Convert to cents (what renter pays)
+    // Handle different pricing types
+    let totalAmount;
+    if (booking.parking_spots.pricing_type === 'hourly') {
+      totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100); // Convert to cents (what renter pays)
+    } else {
+      // For one-time pricing, the total amount should already be calculated correctly
+      totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100); // Convert to cents
+    }
+    
     const baseSpotPrice = Math.round(totalAmount / 1.0875 / 1.07); // Remove tax and platform fee to get base price
     const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07); // 7% from renter side
     const platformFeeFromOwner = Math.round(baseSpotPrice * 0.07); // 7% from owner side

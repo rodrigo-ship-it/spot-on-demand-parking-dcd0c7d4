@@ -143,7 +143,9 @@ const ManageSpots = () => {
           parking_spots (
             title,
             address,
-            price_per_hour
+            price_per_hour,
+            one_time_price,
+            pricing_type
           )
         `)
         .in('spot_id', spotIds)
@@ -171,7 +173,12 @@ const ManageSpots = () => {
           startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           duration: `${durationHours} hour${durationHours !== 1 ? 's' : ''}`,
-          pricePerHour: Number(booking.parking_spots?.price_per_hour) || 0,
+          pricePerHour: booking.parking_spots?.pricing_type === 'hourly' 
+            ? Number(booking.parking_spots?.price_per_hour) || 0
+            : 0,
+          oneTimePrice: booking.parking_spots?.pricing_type === 'one_time'
+            ? Number(booking.parking_spots?.one_time_price) || 0
+            : 0,
           totalEarnings: Number(booking.total_amount) || 0,
           status: booking.status.charAt(0).toUpperCase() + booking.status.slice(1),
           originalBooking: booking
@@ -382,7 +389,7 @@ const ManageSpots = () => {
                           {spot.status}
                         </Badge>
                         <p className="text-sm text-gray-600">
-                          ${spot.price}/hour • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
+                          {spot.price} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
                         </p>
                       </div>
                       <Button
@@ -484,7 +491,8 @@ const ManageSpots = () => {
                         {reservation.totalEarnings}
                       </div>
                       <div className="text-sm text-gray-600">
-                        ${reservation.pricePerHour}/hr
+                        {reservation.pricePerHour > 0 ? `$${reservation.pricePerHour}/hr` : 
+                         reservation.oneTimePrice > 0 ? `$${reservation.oneTimePrice} flat` : 'N/A'}
                       </div>
                     </TableCell>
                     <TableCell>

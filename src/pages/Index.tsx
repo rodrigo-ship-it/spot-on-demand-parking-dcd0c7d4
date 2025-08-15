@@ -32,7 +32,10 @@ const Index = () => {
     id: spot.id,
     title: spot.title,
     address: spot.address,
-    price: Number(spot.price_per_hour),
+    price: spot.pricing_type === 'hourly' 
+      ? Number(spot.price_per_hour)
+      : Number(spot.one_time_price),
+    pricingType: spot.pricing_type,
     rating: Number(spot.rating) || 4.5,
     distance: "0.5 miles", // This would need real geolocation calculation
     type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
