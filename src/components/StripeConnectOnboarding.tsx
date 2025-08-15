@@ -24,11 +24,13 @@ export const StripeConnectOnboarding = () => {
 
   const checkStatus = async () => {
     try {
+      console.log('🔍 Checking Stripe Connect status...');
       const { data, error } = await supabase.functions.invoke('check-connect-status');
+      console.log('✅ Status check response:', { data, error });
       if (error) throw error;
       setStatus(data);
     } catch (error) {
-      console.error('Error checking status:', error);
+      console.error('❌ Error checking status:', error);
       toast.error('Failed to check payout status');
     } finally {
       setChecking(false);
