@@ -65,7 +65,7 @@ export const PaymentIntegration = ({
         if (data?.url) {
           window.open(data.url, '_blank');
           toast.success("Redirecting to payment...");
-          onPaymentSuccess({ sessionId: data.sessionId, paymentMethod });
+          // DO NOT call onPaymentSuccess here - only after actual payment completion
           return;
         }
       } else if (paymentMethod === "apple_pay") {

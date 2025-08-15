@@ -21,11 +21,8 @@ serve(async (req) => {
       throw new Error("Missing required fields: bookingId and baseAmount");
     }
 
-    // Calculate fees - renter pays 7% fee on top, lister gets 93% of base amount
-    const renterFee = Math.round(baseAmount * 0.07 * 100) / 100; // 7% fee
-    const totalAmountForRenter = baseAmount + renterFee; // What renter pays
-    const amountToLister = Math.round(baseAmount * 0.93 * 100) / 100; // What lister receives (93%)
-    const platformFee = baseAmount - amountToLister; // What platform keeps (7%)
+    // Use the baseAmount as-is (it already includes all fees calculated on frontend)
+    const totalAmountForRenter = baseAmount;
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -85,10 +82,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/book-spot/${bookingId.split('-')[0]}?cancelled=true`,
       metadata: {
         bookingId,
-        baseAmount: baseAmount.toString(),
-        totalAmountForRenter: totalAmountForRenter.toString(),
-        amountToLister: amountToLister.toString(),
-        platformFee: platformFee.toString(),
+        totalAmount: totalAmountForRenter.toString(),
         currency,
         paymentMethod,
       },
