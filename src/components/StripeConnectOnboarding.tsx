@@ -98,7 +98,7 @@ export const StripeConnectOnboarding = () => {
         </CardTitle>
         <CardDescription>
           Set up your payout account to receive instant payments when your parking spots are booked.
-          You'll receive 93% of each booking (we keep 7% as our platform fee).
+          We take a small percentage as our platform fee.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
