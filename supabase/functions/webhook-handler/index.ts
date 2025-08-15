@@ -23,7 +23,7 @@ serve(async (req) => {
     // Verify webhook signature
     let event;
     try {
-      event = stripe.webhooks.constructEvent(
+      event = await stripe.webhooks.constructEventAsync(
         body,
         signature!,
         Deno.env.get("STRIPE_WEBHOOK_SECRET") || ""
@@ -85,8 +85,44 @@ serve(async (req) => {
       case "transfer.created": {
         const transfer = event.data.object as Stripe.Transfer;
         
-        // Log successful transfer to owner
-        console.log(`Transfer created: ${transfer.id} for amount: ${transfer.amount}`);
+        // Log successful transfer to owner with 7-day delay
+        console.log(`Transfer created: ${transfer.id} for amount: ${transfer.amount} (7-day delayed payout)`);
+        
+        // Store transfer information in booking if metadata exists
+        if (transfer.metadata?.booking_id) {
+          const { error } = await supabaseService
+            .from("bookings")
+            .update({ 
+              stripe_transfer_id: transfer.id,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", transfer.metadata.booking_id);
+
+          if (error) {
+            console.error("Error updating booking with transfer ID:", error);
+          }
+        }
+        break;
+      }
+
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        
+        // Update payout settings with latest account status
+        const { error } = await supabaseService
+          .from("payout_settings")
+          .update({
+            payouts_enabled: account.payouts_enabled,
+            onboarding_completed: account.details_submitted,
+            updated_at: new Date().toISOString()
+          })
+          .eq("stripe_connect_account_id", account.id);
+
+        if (error) {
+          console.error("Error updating payout settings:", error);
+        }
+        
+        console.log(`Connect account updated: ${account.id}, payouts_enabled: ${account.payouts_enabled}`);
         break;
       }
 

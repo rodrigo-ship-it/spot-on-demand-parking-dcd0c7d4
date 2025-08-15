@@ -75,7 +75,7 @@ serve(async (req) => {
     const totalPlatformFee = platformFeeFromRenter + platformFeeFromOwner; // 14% total
     const ownerAmount = Math.round(baseSpotPrice - platformFeeFromOwner); // Owner gets base price minus 7%
 
-    // Create payment intent with marketplace setup
+    // Create payment intent with marketplace setup and 7-day delayed payout
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmount,
       currency: "usd",
@@ -89,8 +89,9 @@ serve(async (req) => {
       transfer_data: {
         destination: payoutSettings.stripe_connect_account_id,
         amount: ownerAmount, // Owner gets 93% (minus Stripe fees)
+        delay_days: 7, // 7-day delayed payout
       },
-      application_fee_amount: totalPlatformFee, // Platform keeps 14% total
+      application_fee_amount: totalPlatformFee, // Platform keeps 7% total
     });
 
     // Update booking with fee information
