@@ -15,9 +15,17 @@ serve(async (req) => {
   try {
     console.log('Starting check-connect-status function');
     
+    // Use anon key for user authentication
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+    
+    // Use service role key for database operations to bypass RLS
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization")!;
@@ -32,8 +40,8 @@ serve(async (req) => {
     
     console.log('User authenticated:', user.id);
 
-    // Get user's payout settings
-    const { data: payoutSettings, error: dbError } = await supabaseClient
+    // Get user's payout settings using service role to bypass RLS
+    const { data: payoutSettings, error: dbError } = await supabaseService
       .from("payout_settings")
       .select("*")
       .eq("user_id", user.id)
@@ -72,13 +80,6 @@ serve(async (req) => {
     
     const onboardingCompleted = account.details_submitted;
     const payoutsEnabled = account.payouts_enabled;
-
-    // Update database with current status
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
 
     console.log('Updating database with status:', { onboardingCompleted, payoutsEnabled });
     
