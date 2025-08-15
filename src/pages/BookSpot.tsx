@@ -687,7 +687,7 @@ const BookSpot = () => {
                 ) : (
                   <PaymentIntegration
                     bookingId={createdBookingId}
-                    baseAmount={total}
+                    baseAmount={subtotal}
                     onPaymentSuccess={handlePaymentSuccess}
                     onPaymentError={handlePaymentError}
                   />
