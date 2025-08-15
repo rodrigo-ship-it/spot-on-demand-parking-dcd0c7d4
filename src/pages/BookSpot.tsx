@@ -183,10 +183,10 @@ const BookSpot = () => {
     : (spotData?.one_time_price || 25);
   const duration = bookingDetails.duration;
   const subtotal = isPricingHourly ? basePrice * duration : basePrice;
-  const platformFee = Math.round(subtotal * 0.07); // 7% platform fee
+  const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
   const renterTotal = subtotal + platformFee; // Renter pays 7% more
   const ownerPayout = subtotal - platformFee; // Owner gets 7% less
-  const tax = Math.round(renterTotal * 0.0875); // 8.75% tax on total amount
+  const tax = Math.round(renterTotal * 0.0875 * 100) / 100; // 8.75% tax on total amount
   const total = renterTotal + tax;
 
   // Auto-extension settings (would come from spot host settings)
@@ -484,23 +484,23 @@ const BookSpot = () => {
                         : `$${basePrice} (flat rate)`
                       }
                     </span>
-                    <span>${subtotal}</span>
+                    <span>${subtotal.toFixed(2)}</span>
                   </div>
                  <div className="flex justify-between text-sm text-gray-600">
                    <span>Platform fee</span>
-                   <span>${platformFee}</span>
+                   <span>${platformFee.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between text-sm text-gray-600">
                    <span>Tax</span>
-                   <span>${tax}</span>
+                   <span>${tax.toFixed(2)}</span>
                  </div>
                  <Separator />
                  <div className="flex justify-between font-semibold text-lg">
                    <span>Total</span>
-                   <span>${total}</span>
+                   <span>${total.toFixed(2)}</span>
                  </div>
                  <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
-                   Owner receives: ${ownerPayout} (after 7% platform fee)
+                   Owner receives: ${ownerPayout.toFixed(2)} (after 7% platform fee)
                  </div>
                 
                 {bookingDetails.autoExtend && (
