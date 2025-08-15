@@ -18,14 +18,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const BookSpot = () => {
+  console.log('🔥 BookSpot component is loading!');
+  
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   
+  console.log('🔥 BookSpot params:', { id, pathname: location.pathname, search: location.search });
+  
   // Check if this is a QR code scan
   const urlParams = new URLSearchParams(location.search);
   const isQRCodeBooking = urlParams.get('qr') === 'true';
+  
+  console.log('🔥 BookSpot QR check:', { isQRCodeBooking, urlParams: location.search });
   
   const [spotData, setSpotData] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
