@@ -71,13 +71,24 @@ export const RatingSystem = ({ bookingId, userType, onSubmitRating, onClose }: R
     }
 
     try {
+      // First get the booking to find the spot owner
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .select('spot_id, parking_spots(owner_id)')
+        .eq('id', bookingId)
+        .single();
+
+      if (bookingError || !booking) {
+        throw new Error('Could not find booking information');
+      }
+
       // Store review in database
       const { error } = await supabase
         .from('reviews')
         .insert({
           booking_id: bookingId,
           reviewer_id: user?.id,
-          reviewed_id: 'spot_owner_id', // This would need proper owner ID
+          reviewed_id: userType === 'renter' ? booking.parking_spots.owner_id : user?.id,
           user_type: userType,
           rating,
           comment: comment || null,

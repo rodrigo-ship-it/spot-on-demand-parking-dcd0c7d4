@@ -30,6 +30,7 @@ const SpotDetails = () => {
   const isOwnerView = action === "manage";
 
   const [spotData, setSpotData] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -61,6 +62,29 @@ const SpotDetails = () => {
         }
 
         setSpotData(spot);
+        
+        // Fetch reviews for this spot - get all bookings for this spot and their reviews
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('id')
+          .eq('spot_id', id);
+
+        if (!bookingsError && bookingsData && bookingsData.length > 0) {
+          const bookingIds = bookingsData.map(booking => booking.id);
+          
+          const { data: reviewsData, error: reviewsError } = await supabase
+            .from('reviews')
+            .select(`
+              *,
+              profiles!reviews_reviewer_id_fkey(full_name)
+            `)
+            .in('booking_id', bookingIds)
+            .order('created_at', { ascending: false });
+
+          if (!reviewsError && reviewsData) {
+            setReviews(reviewsData);
+          }
+        }
       } catch (err: any) {
         console.error('Error fetching spot data:', err);
         setError(err.message || "Failed to load spot data");
@@ -427,56 +451,69 @@ const SpotDetails = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Reviews ({spotData.total_reviews || 0})</span>
+                  <span>Reviews ({reviews.length})</span>
                   <div className="flex items-center">
                     <Star className="w-5 h-5 text-yellow-400 mr-1" />
-                    <span className="font-medium">{spotData.rating || 0}</span>
+                    <span className="font-medium">
+                      {reviews.length > 0 
+                        ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+                        : '0.0'
+                      }
+                    </span>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Sample Reviews */}
-                  <div className="border-b pb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
-                          M
-                        </div>
-                        <div>
-                          <p className="font-medium">Mike Chen</p>
+                  {reviews.length > 0 ? (
+                    reviews.map((review) => (
+                      <div key={review.id} className="border-b pb-4 last:border-b-0">
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
-                            ))}
+                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
+                              {review.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <p className="font-medium">{review.profiles?.full_name || 'Anonymous User'}</p>
+                              <div className="flex items-center">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star 
+                                    key={star} 
+                                    className={`w-4 h-4 ${
+                                      star <= review.rating 
+                                        ? 'text-yellow-400 fill-current' 
+                                        : 'text-gray-300'
+                                    }`} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
                           </div>
+                          <span className="text-sm text-gray-600">
+                            {new Date(review.created_at).toLocaleDateString()}
+                          </span>
                         </div>
-                      </div>
-                      <span className="text-sm text-gray-600">2 days ago</span>
-                    </div>
-                    <p className="text-gray-700">Perfect spot for my daily commute. Always clean and well-lit. The owner is very responsive.</p>
-                  </div>
-
-                  <div className="border-b pb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
-                          J
-                        </div>
-                        <div>
-                          <p className="font-medium">Jessica Park</p>
-                          <div className="flex items-center">
-                            {[1, 2, 3, 4].map((star) => (
-                              <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
-                            ))}
-                            <Star className="w-4 h-4 text-gray-300" />
+                        {review.comment && (
+                          <p className="text-gray-700">{review.comment}</p>
+                        )}
+                        {review.photo_url && (
+                          <div className="mt-2">
+                            <img 
+                              src={review.photo_url} 
+                              alt="Review photo" 
+                              className="w-32 h-32 object-cover rounded-lg"
+                            />
                           </div>
-                        </div>
+                        )}
                       </div>
-                      <span className="text-sm text-gray-600">1 week ago</span>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Star className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                      <p>No reviews yet</p>
+                      <p className="text-sm">Be the first to review this parking spot!</p>
                     </div>
-                    <p className="text-gray-700">Great location and easy to access. Only issue was finding the exact spot initially, but instructions were helpful.</p>
-                  </div>
+                  )}
                 </div>
 
                 {isBookingMode && (
