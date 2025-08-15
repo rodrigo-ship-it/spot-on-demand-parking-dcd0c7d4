@@ -70,11 +70,14 @@ const BookSpot = () => {
 
       try {
         // Load parking spot data
+        console.log('BookSpot - Attempting to load spot with ID:', id);
         const { data: spot, error: spotError } = await supabase
           .from('parking_spots')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
+
+        console.log('BookSpot - Supabase response:', { spot, spotError });
 
         if (spotError) {
           console.error('BookSpot - Error loading spot:', spotError);
