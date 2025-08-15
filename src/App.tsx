@@ -64,6 +64,7 @@ const App = () => {
                 <Route path="/list-spot" element={<ProtectedListSpot />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/help" element={<HelpSupport />} />
+                <Route path="/help-support" element={<HelpSupport />} />
                 <Route path="/manage-spots" element={<ProtectedManageSpots />} />
                 <Route path="/spot/:id" element={<SpotDetails />} />
                 <Route path="/book-spot/:id" element={<BookSpot />} />
