@@ -1,21 +1,95 @@
 
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useLocation, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, MessageSquare, Zap, Shield } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const BookingConfirmed = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const bookingData = location.state;
+  const [searchParams] = useSearchParams();
+  const [bookingData, setBookingData] = useState(location.state);
+  const [loading, setLoading] = useState(false);
 
-  // Redirect to home if no booking data
+  // Get URL parameters from Stripe redirect
+  const sessionId = searchParams.get('session_id');
+  const bookingId = searchParams.get('booking_id');
+
+  // Fetch booking data if coming from Stripe redirect
   useEffect(() => {
-    if (!bookingData) {
-      navigate('/');
-    }
-  }, [bookingData, navigate]);
+    const fetchBookingData = async () => {
+      // If we already have booking data from navigation state, use it
+      if (bookingData) return;
+
+      // If we have URL parameters from Stripe, fetch the booking data
+      if (bookingId) {
+        setLoading(true);
+        try {
+          // Fetch booking details
+          const { data: booking, error: bookingError } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('id', bookingId)
+            .single();
+
+          if (bookingError) throw bookingError;
+
+          // Fetch spot details
+          const { data: spot, error: spotError } = await supabase
+            .from('parking_spots')
+            .select('*')
+            .eq('id', booking.spot_id)
+            .single();
+
+          if (spotError) throw spotError;
+
+          // Format the data to match expected structure
+          const formattedData = {
+            date: new Date(booking.start_time).toISOString().split('T')[0],
+            startTime: new Date(booking.start_time).toTimeString().split(' ')[0].substring(0, 5),
+            endTime: new Date(booking.end_time).toTimeString().split(' ')[0].substring(0, 5),
+            duration: Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60)),
+            total: booking.total_amount,
+            confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+            bookingId: booking.id,
+            autoExtend: false, // Default value
+            spotData: {
+              title: spot.title,
+              address: spot.address,
+              price: spot.price_per_hour || spot.one_time_price
+            }
+          };
+
+          setBookingData(formattedData);
+        } catch (error) {
+          console.error('Error fetching booking data:', error);
+          toast.error('Failed to load booking details');
+          navigate('/');
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // No booking data and no URL parameters - redirect to home
+        navigate('/');
+      }
+    };
+
+    fetchBookingData();
+  }, [bookingId, bookingData, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading booking details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!bookingData) {
     return null;
