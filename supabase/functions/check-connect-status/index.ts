@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting check-connect-status function');
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -23,16 +25,25 @@ serve(async (req) => {
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     
-    if (!user) throw new Error("User not authenticated");
+    if (!user) {
+      console.log('User not authenticated');
+      throw new Error("User not authenticated");
+    }
+    
+    console.log('User authenticated:', user.id);
 
     // Get user's payout settings
-    const { data: payoutSettings } = await supabaseClient
+    const { data: payoutSettings, error: dbError } = await supabaseClient
       .from("payout_settings")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    console.log('Payout settings from DB:', payoutSettings);
+    console.log('DB error:', dbError);
+
     if (!payoutSettings?.stripe_connect_account_id) {
+      console.log('No stripe_connect_account_id found');
       return new Response(JSON.stringify({ 
         connected: false,
         onboarding_completed: false,
@@ -43,12 +54,17 @@ serve(async (req) => {
       });
     }
 
+    console.log('Stripe Connect Account ID:', payoutSettings.stripe_connect_account_id);
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
     // Check account status with Stripe
+    console.log('Checking Stripe account status...');
     const account = await stripe.accounts.retrieve(payoutSettings.stripe_connect_account_id);
+    console.log('Stripe account details_submitted:', account.details_submitted);
+    console.log('Stripe account payouts_enabled:', account.payouts_enabled);
     
     const onboardingCompleted = account.details_submitted;
     const payoutsEnabled = account.payouts_enabled;
@@ -60,11 +76,19 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    await supabaseService.from("payout_settings").update({
+    console.log('Updating database with status:', { onboardingCompleted, payoutsEnabled });
+    
+    const { error: updateError } = await supabaseService.from("payout_settings").update({
       onboarding_completed: onboardingCompleted,
       payouts_enabled: payoutsEnabled,
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
+
+    if (updateError) {
+      console.error('Error updating payout settings:', updateError);
+    } else {
+      console.log('Successfully updated payout settings');
+    }
 
     return new Response(JSON.stringify({ 
       connected: true,
