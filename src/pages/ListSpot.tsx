@@ -24,6 +24,7 @@ const ListSpot = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(isEditMode);
+  const [dataLoaded, setDataLoaded] = useState(!isEditMode); // Track if initial data loading is complete
   const [formData, setFormData] = useState({
     // Basic Information
     title: "",
@@ -146,6 +147,7 @@ const ListSpot = () => {
       navigate('/manage-spots');
     } finally {
       setLoading(false);
+      setDataLoaded(true); // Mark data as loaded
     }
   };
 
@@ -186,8 +188,11 @@ const ListSpot = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent submission during loading
-    if (loading) {
+    console.log('handleSubmit called', { loading, currentStep, isEditMode });
+    
+    // Prevent submission during loading or if data hasn't finished loading yet
+    if (loading || isSubmitting || !dataLoaded) {
+      console.log('Submission blocked:', { loading, isSubmitting, dataLoaded });
       return;
     }
     
