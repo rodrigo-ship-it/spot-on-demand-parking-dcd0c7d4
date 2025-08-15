@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Mail, MessageSquare, Phone, Clock, CheckCircle, X } from "lucide-react";
+import { Mail, MessageSquare, Phone, Clock, CheckCircle, X, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ContactFormData {
@@ -18,6 +19,7 @@ interface ContactFormData {
 }
 
 const HelpSupport = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState<ContactFormData>({
@@ -76,6 +78,14 @@ const HelpSupport = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Button>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Help & Support</h1>
           <p className="text-gray-600">Get help with your Arriv parking experience</p>
