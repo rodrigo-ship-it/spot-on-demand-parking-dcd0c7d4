@@ -301,7 +301,7 @@ const Bookings = () => {
 
         {/* Notifications */}
         <div className="mb-8">
-          <NotificationSystem />
+          <NotificationSystem bookings={bookings} />
         </div>
 
         {/* Summary Cards */}

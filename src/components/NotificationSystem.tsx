@@ -18,51 +18,88 @@ interface Notification {
   urgent: boolean;
 }
 
-export const NotificationSystem = () => {
+interface NotificationSystemProps {
+  bookings?: any[];
+}
+
+export const NotificationSystem = ({ bookings = [] }: NotificationSystemProps) => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Mock notifications for demonstration
+  // Generate real notifications based on actual bookings
   useEffect(() => {
-    if (!user) return;
+    if (!user || !bookings.length) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
 
-    const mockNotifications: Notification[] = [
-      {
-        id: "1",
-        type: "checkout_reminder",
-        title: "Check-out Reminder",
-        message: "Your parking session ends in 15 minutes. Please prepare to check out.",
-        bookingId: "booking-123",
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        read: false,
-        urgent: false
-      },
-      {
-        id: "2",
-        type: "overstay_warning",
-        title: "Overstay Warning",
-        message: "You are 10 minutes past your reserved time. Additional fees may apply.",
-        bookingId: "booking-124",
-        timestamp: new Date(Date.now() - 10 * 60 * 1000),
-        read: false,
-        urgent: true
-      },
-      {
-        id: "3",
-        type: "extension_request",
-        title: "Extension Available",
-        message: "Extend your parking for 2 more hours at $12/hour?",
-        bookingId: "booking-125",
-        timestamp: new Date(Date.now() - 20 * 60 * 1000),
-        read: true,
-        urgent: false
+    const now = new Date();
+    const realNotifications: Notification[] = [];
+
+    bookings.forEach((booking) => {
+      const startTime = new Date(`${booking.date} ${booking.startTime}`);
+      const endTime = new Date(`${booking.date} ${booking.endTime}`);
+      
+      // Check for active bookings ending soon (within 30 minutes)
+      if (booking.status === "Active") {
+        const timeUntilEnd = endTime.getTime() - now.getTime();
+        const minutesLeft = Math.floor(timeUntilEnd / (1000 * 60));
+        
+        if (minutesLeft > 0 && minutesLeft <= 30) {
+          realNotifications.push({
+            id: `checkout-${booking.id}`,
+            type: "checkout_reminder",
+            title: "Check-out Reminder",
+            message: `Your parking session at ${booking.spotTitle} ends in ${minutesLeft} minutes. Please prepare to check out.`,
+            bookingId: booking.id,
+            timestamp: new Date(now.getTime() - 2 * 60 * 1000), // 2 minutes ago
+            read: false,
+            urgent: minutesLeft <= 15
+          });
+        }
+        
+        // Check for overstay
+        if (timeUntilEnd < 0) {
+          const overstayMinutes = Math.abs(minutesLeft);
+          realNotifications.push({
+            id: `overstay-${booking.id}`,
+            type: "overstay_warning",
+            title: "Overstay Warning",
+            message: `You are ${overstayMinutes} minutes past your reserved time at ${booking.spotTitle}. Additional fees may apply.`,
+            bookingId: booking.id,
+            timestamp: new Date(endTime.getTime() + 1 * 60 * 1000), // 1 minute after end time
+            read: false,
+            urgent: true
+          });
+        }
       }
-    ];
+      
+      // Check for upcoming bookings (within 2 hours)
+      if (booking.status === "Upcoming") {
+        const timeUntilStart = startTime.getTime() - now.getTime();
+        const hoursLeft = timeUntilStart / (1000 * 60 * 60);
+        
+        if (hoursLeft > 0 && hoursLeft <= 2) {
+          const minutesLeft = Math.floor(timeUntilStart / (1000 * 60));
+          realNotifications.push({
+            id: `upcoming-${booking.id}`,
+            type: "checkout_reminder",
+            title: "Upcoming Reservation",
+            message: `Your parking reservation at ${booking.spotTitle} starts in ${minutesLeft} minutes.`,
+            bookingId: booking.id,
+            timestamp: new Date(now.getTime() - 5 * 60 * 1000), // 5 minutes ago
+            read: false,
+            urgent: hoursLeft <= 0.5
+          });
+        }
+      }
+    });
 
-    setNotifications(mockNotifications);
-    setUnreadCount(mockNotifications.filter(n => !n.read).length);
-  }, [user]);
+    setNotifications(realNotifications);
+    setUnreadCount(realNotifications.filter(n => !n.read).length);
+  }, [user, bookings]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
