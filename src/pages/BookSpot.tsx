@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon, ClockIcon } from "lucide-react";
 import { PaymentIntegration } from "@/components/PaymentIntegration";
 import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
 import { toast } from "sonner";
@@ -219,6 +220,25 @@ const BookSpot = () => {
     }
   };
 
+  // Generate time options for the time picker
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          hour12: true 
+        });
+        options.push({ value: timeString, label: displayTime });
+      }
+    }
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions();
+
   const handleBooking = async () => {
     if (!spotData) {
       toast.error("Missing required data");
@@ -369,7 +389,7 @@ const BookSpot = () => {
                          >
                            <CalendarIcon className="mr-2 h-4 w-4" />
                            {bookingDetails.date ? (
-                             format(bookingDetails.date, "PPP")
+                             format(bookingDetails.date, "MMM d, yyyy")
                            ) : (
                              <span>Pick a date</span>
                            )}
@@ -388,13 +408,22 @@ const BookSpot = () => {
                      </Popover>
                    </div>
                    <div>
-                     <Label htmlFor="startTime">Start Time</Label>
-                     <Input
-                       id="startTime"
-                       type="time"
-                       value={bookingDetails.startTime}
-                       onChange={(e) => handleTimeChange('startTime', e.target.value)}
-                     />
+                     <Label>Start Time</Label>
+                     <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
+                       <SelectTrigger className="w-full">
+                         <div className="flex items-center">
+                           <ClockIcon className="mr-2 h-4 w-4" />
+                           <SelectValue placeholder="Select time" />
+                         </div>
+                       </SelectTrigger>
+                       <SelectContent className="max-h-[200px]">
+                         {timeOptions.map((option) => (
+                           <SelectItem key={option.value} value={option.value}>
+                             {option.label}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
                    </div>
                    <div>
                      <Label htmlFor="endTime">End Time</Label>
