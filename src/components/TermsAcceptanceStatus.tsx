@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const TermsAcceptanceStatus = () => {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   
   const getAcceptanceInfo = () => {
     const accepted = localStorage.getItem('termsAccepted');
@@ -24,10 +26,8 @@ export const TermsAcceptanceStatus = () => {
   const { accepted, date } = getAcceptanceInfo();
 
   const handleReviewTerms = () => {
-    // Clear acceptance to show terms again
-    localStorage.removeItem('termsAccepted');
-    localStorage.removeItem('termsAcceptedDate');
-    window.location.reload();
+    setOpen(false);
+    navigate('/terms');
   };
 
   return (

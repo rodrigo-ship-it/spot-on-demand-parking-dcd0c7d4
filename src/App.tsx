@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { TermsAndConditions } from "@/components/TermsAndConditions";
+import { useNavigate } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import ProtectedListSpot from "./pages/ProtectedListSpot";
@@ -25,6 +26,22 @@ import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
+const TermsRoute = () => {
+  const navigate = useNavigate();
+  
+  const handleAccept = () => {
+    // Navigate back to the previous page or home
+    const referrer = document.referrer;
+    if (referrer && referrer.includes(window.location.origin)) {
+      navigate(-1); // Go back to previous page
+    } else {
+      navigate('/'); // Fallback to home page
+    }
+  };
+  
+  return <TermsAndConditions onAccept={handleAccept} />;
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -36,7 +53,7 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/terms" element={<TermsAndConditions onAccept={() => window.location.href = '/'} />} />
+                <Route path="/terms" element={<TermsRoute />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/list-spot" element={<ProtectedListSpot />} />
