@@ -27,6 +27,8 @@ export const QRCodeGenerator = ({ spotId, spotTitle, spotAddress }: QRCodeGenera
   const generateQRCode = async () => {
     setIsGenerating(true);
     try {
+      console.log('QRCodeGenerator - Generating QR for spotId:', spotId);
+      console.log('QRCodeGenerator - Generated URL:', rentUrl);
       const dataURL = await QRCode.toDataURL(rentUrl, {
         width: 400,
         margin: 2,
@@ -158,6 +160,14 @@ export const QRCodeGenerator = ({ spotId, spotTitle, spotAddress }: QRCodeGenera
             <li>• No account creation required</li>
             <li>• You receive notifications and payment automatically</li>
           </ul>
+        </div>
+
+        {/* QR URL Display for debugging */}
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">QR Code URL:</h4>
+          <code className="text-xs text-gray-700 break-all bg-white p-2 rounded border block">
+            {rentUrl}
+          </code>
         </div>
 
         {/* Status Badge */}
