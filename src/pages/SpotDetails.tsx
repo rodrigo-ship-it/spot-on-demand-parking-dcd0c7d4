@@ -28,6 +28,7 @@ const SpotDetails = () => {
   const action = searchParams.get("action");
   const isBookingMode = action === "book";
   const isOwnerView = action === "manage";
+  const isQRCodeScan = searchParams.get("qr") === "true";
 
   const [spotData, setSpotData] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -282,6 +283,26 @@ const SpotDetails = () => {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* QR Code Booking Banner */}
+        {isQRCodeScan && (
+          <Card className="mb-6 border-primary bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Calendar className="w-5 h-5 text-primary mr-3" />
+                  <div>
+                    <h3 className="font-semibold text-primary">Quick Rental Available!</h3>
+                    <p className="text-sm text-gray-600">Book this parking spot instantly - no account required</p>
+                  </div>
+                </div>
+                <Button onClick={handleContinueToBook} size="lg" className="ml-4">
+                  Book Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -605,6 +626,46 @@ const SpotDetails = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Book Now Card - Always show for regular visitors */}
+            {!isOwnerView && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Pricing & Booking
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold text-gray-900">
+                      ${spotData.pricing_type === 'hourly' 
+                        ? Number(spotData.price_per_hour).toFixed(2)
+                        : Number(spotData.one_time_price).toFixed(2)
+                      }
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {spotData.pricing_type === 'hourly' ? 'per hour' : 'one-time fee'}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Available:</span>
+                    <span className="font-medium">{spotData.available_spots}/{spotData.total_spots} spots</span>
+                  </div>
+                  
+                  <Button onClick={handleContinueToBook} className="w-full" size="lg">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Book Now
+                  </Button>
+                  
+                  <div className="flex items-center justify-center text-sm text-gray-600">
+                    <Shield className="w-4 h-4 mr-1" />
+                    Secure payment & instant confirmation
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Pricing Card - Only in booking mode */}
             {isBookingMode && (
               <Card>
