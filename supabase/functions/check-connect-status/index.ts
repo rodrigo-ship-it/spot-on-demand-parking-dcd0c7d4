@@ -41,6 +41,8 @@ serve(async (req) => {
 
     console.log('Payout settings from DB:', payoutSettings);
     console.log('DB error:', dbError);
+    console.log('stripe_connect_account_id field:', payoutSettings?.stripe_connect_account_id);
+    console.log('All fields:', Object.keys(payoutSettings || {}));
 
     if (!payoutSettings?.stripe_connect_account_id) {
       console.log('No stripe_connect_account_id found');
