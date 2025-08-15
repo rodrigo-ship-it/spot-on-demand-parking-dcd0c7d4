@@ -46,6 +46,8 @@ serve(async (req) => {
 
     if (!payoutSettings?.stripe_connect_account_id) {
       console.log('No stripe_connect_account_id found');
+      console.log('Available fields:', payoutSettings ? Object.keys(payoutSettings) : 'null');
+      console.log('stripe_connect_account_id value:', payoutSettings?.stripe_connect_account_id);
       return new Response(JSON.stringify({ 
         connected: false,
         onboarding_completed: false,
