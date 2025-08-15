@@ -71,7 +71,7 @@ const HelpSupport = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Help & Support</h1>
-          <p className="text-gray-600">Get help with your parking experience</p>
+          <p className="text-gray-600">Get help with your Arriv parking experience</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -165,31 +165,49 @@ const HelpSupport = () => {
                 <div>
                   <h4 className="font-medium mb-2">How do I book a parking spot?</h4>
                   <p className="text-sm text-gray-600">
-                    Browse available spots on our homepage, select your preferred time, and complete the booking process with secure payment.
+                    Search for parking spots on the homepage, select your dates and times, and complete payment. You'll receive a booking confirmation and can manage your reservation from the "My Bookings" page.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">How do I extend my parking time?</h4>
+                  <p className="text-sm text-gray-600">
+                    Go to "My Bookings" and click "Manage Time" on active reservations. You can extend your booking to avoid overstay penalties.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Can I cancel my booking?</h4>
                   <div className="text-sm text-gray-600 space-y-2">
-                    <p>Yes, you can cancel bookings with the following refund policy:</p>
+                    <p>Yes, you can request refunds based on our cancellation policy:</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
                       <li><strong>24+ hours in advance:</strong> 100% refund, no fees</li>
                       <li><strong>3-24 hours in advance:</strong> 90% refund (10% cancellation fee, max $5)</li>
                       <li><strong>Less than 3 hours:</strong> No refund due to short notice</li>
                     </ul>
-                    <p className="text-xs">This policy ensures spot owners have time to relist their spots.</p>
+                    <p className="text-xs">Use the "Request Refund" button in your bookings to start the process.</p>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">What if I'm running late?</h4>
+                  <h4 className="font-medium mb-2">How do I rent using a QR code?</h4>
                   <p className="text-sm text-gray-600">
-                    Use our auto-extension feature or manually extend your booking through the app to avoid overstay fees.
+                    Scan the QR code at the parking location to instantly book that spot. This provides quick access for spontaneous parking needs.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">How do I list my parking spot?</h4>
                   <p className="text-sm text-gray-600">
-                    Click "List Your Spot" on the homepage, fill out the details, upload photos, and set your pricing.
+                    Click "List Your Spot" from the homepage, provide details about your space, upload photos, set pricing, and define availability. You can manage all your spots from "Manage Spots".
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">How do I get paid as a spot owner?</h4>
+                  <p className="text-sm text-gray-600">
+                    Connect your Stripe account through your profile to receive payments. Earnings are processed automatically after each completed booking.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">What if there's a dispute?</h4>
+                  <p className="text-sm text-gray-600">
+                    Use the "Report Issue" feature in your bookings to document problems with photos. Our team will review and resolve disputes fairly.
                   </p>
                 </div>
               </CardContent>
@@ -205,46 +223,38 @@ const HelpSupport = () => {
                   <Mail className="w-5 h-5 mr-3 text-blue-500" />
                   <div>
                     <p className="font-medium">Email Support</p>
-                    <p className="text-sm text-gray-600">support@arriv.com</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Phone className="w-5 h-5 mr-3 text-green-500" />
-                  <div>
-                    <p className="font-medium">Phone Support</p>
-                    <p className="text-sm text-gray-600">1-800-ARRIV-1 (1-800-277-481)</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 mr-3 text-orange-500" />
-                  <div>
-                    <p className="font-medium">Support Hours</p>
-                    <p className="text-sm text-gray-600">Mon-Fri: 8 AM - 8 PM PST</p>
+                    <p className="text-sm text-gray-600">support@arriv.app</p>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <MessageSquare className="w-5 h-5 mr-3 text-purple-500" />
                   <div>
-                    <p className="font-medium">Live Chat</p>
-                    <p className="text-sm text-gray-600">Available during support hours</p>
+                    <p className="font-medium">In-App Support</p>
+                    <p className="text-sm text-gray-600">Use the contact form above for fastest response</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Clock className="w-5 h-5 mr-3 text-orange-500" />
+                  <div>
+                    <p className="font-medium">Response Time</p>
+                    <p className="text-sm text-gray-600">We typically respond within 24 hours</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Emergency */}
-            <Card className="border-red-200 bg-red-50">
+            {/* Tips */}
+            <Card className="border-blue-200 bg-blue-50">
               <CardHeader>
-                <CardTitle className="text-red-700">Emergency Assistance</CardTitle>
+                <CardTitle className="text-blue-700">Quick Tips</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-red-600 mb-3">
-                  For urgent issues like safety concerns, unauthorized vehicle access, or payment disputes during active bookings:
-                </p>
-                <Button variant="destructive" className="w-full">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Emergency Line: 1-800-URGENT-1
-                </Button>
+                <div className="space-y-2 text-sm text-blue-600">
+                  <p>• Check your email for booking confirmations and receipts</p>
+                  <p>• Use QR codes for instant parking when available</p>
+                  <p>• Enable notifications to get updates about your bookings</p>
+                  <p>• Rate your experience to help improve the community</p>
+                </div>
               </CardContent>
             </Card>
           </div>
