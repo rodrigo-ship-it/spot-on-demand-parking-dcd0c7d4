@@ -186,6 +186,11 @@ const ListSpot = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prevent submission during loading
+    if (loading) {
+      return;
+    }
+    
     // Only allow submission on the final step
     if (currentStep !== 4) {
       handleNextStep();
