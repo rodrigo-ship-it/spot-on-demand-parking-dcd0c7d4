@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RatingSystem } from "@/components/RatingSystem";
 import { ReviewDialog } from "@/components/ReviewDialog";
 import { DisputeCamera } from "@/components/DisputeCamera";
+import { SpotReportDialog } from "@/components/SpotReportDialog";
 import { CheckOutSystem } from "@/components/CheckOutSystem";
 import { ExtensionSystem } from "@/components/ExtensionSystem";
 import { PenaltySystem } from "@/components/PenaltySystem";
@@ -46,17 +47,27 @@ const SpotDetails = () => {
       }
 
       try {
+        // Load parking spot data with owner information
         const { data: spot, error: spotError } = await supabase
           .from('parking_spots')
-          .select('*')
+          .select(`
+            *,
+            profiles!parking_spots_owner_id_fkey(full_name, phone)
+          `)
           .eq('id', id)
           .maybeSingle();
 
+        console.log('SpotDetails - Supabase response:', { spot, spotError });
+
         if (spotError) {
-          throw spotError;
+          console.error('SpotDetails - Error loading spot:', spotError);
+          toast.error("Failed to load parking spot");
+          navigate('/');
+          return;
         }
 
         if (!spot) {
+          console.error('SpotDetails - No spot found with ID:', id);
           setError("Parking spot not found");
           setLoading(false);
           return;
@@ -141,6 +152,7 @@ const SpotDetails = () => {
 
   // Dispute Camera
   const [isDisputeCameraOpen, setIsDisputeCameraOpen] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   // Check Out System
   const [isCheckOutSystemOpen, setIsCheckOutSystemOpen] = useState(false);
@@ -759,12 +771,18 @@ const SpotDetails = () => {
                 <CardContent className="space-y-3">
                   <div className="flex items-center">
                     <User className="w-4 h-4 mr-3 text-gray-400" />
-                    <span>{spotData.owner}</span>
+                    <span>{spotData.profiles?.full_name || 'Property Owner'}</span>
                   </div>
+                  {spotData.profiles?.phone && (
+                    <div className="flex items-center">
+                      <Phone className="w-4 h-4 mr-3 text-gray-400" />
+                      <span>{spotData.profiles.phone}</span>
+                    </div>
+                  )}
                   <ContactButtons
-                    bookingId="demo-booking-id"
-                    recipientId={spotData.ownerId}
-                    recipientName={spotData.owner}
+                    bookingId="guest-inquiry"
+                    recipientId={spotData.owner_id}
+                    recipientName={spotData.profiles?.full_name || 'Property Owner'}
                     showCallButton={true}
                     showChatButton={true}
                   />
@@ -822,7 +840,12 @@ const SpotDetails = () => {
                   <CardTitle className="text-sm">Report an Issue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => setShowReportDialog(true)}
+                  >
                     <Flag className="w-4 h-4 mr-2" />
                     Report This Spot
                   </Button>
@@ -879,6 +902,15 @@ const SpotDetails = () => {
           />
         </>
       )}
+
+      {/* Spot Report Dialog */}
+      <SpotReportDialog
+        isOpen={showReportDialog}
+        onClose={() => setShowReportDialog(false)}
+        bookingId="guest-report"
+        spotTitle={spotData?.title || "Parking Spot"}
+        spotAddress={spotData?.address || "Unknown Address"}
+      />
     </div>
   );
 };
