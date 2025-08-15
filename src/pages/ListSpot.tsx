@@ -106,6 +106,12 @@ const ListSpot = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Only allow submission on the final step
+    if (currentStep !== 4) {
+      handleNextStep();
+      return;
+    }
+    
     if (!user) {
       toast.error("Please log in to list a parking spot");
       navigate('/auth');
