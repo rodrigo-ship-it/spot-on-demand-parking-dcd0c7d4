@@ -264,24 +264,6 @@ const Bookings = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const data = filteredReservations.map(b => `${b.id},${b.spotTitle},${b.status},${b.totalCost}`).join('\n');
-                  const blob = new Blob([`ID,Spot,Status,Amount\n${data}`], { type: 'text/csv' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'bookings.csv';
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  toast.success("Bookings exported successfully");
-                }}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
               <Link to="/help-support">
                 <Button size="sm">Help</Button>
               </Link>
