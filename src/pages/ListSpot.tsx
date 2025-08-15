@@ -805,41 +805,40 @@ const ListSpot = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
-              {renderStepContent()}
+            {renderStepContent()}
+            
+            <div className="flex justify-between pt-6 mt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevStep}
+                disabled={currentStep === 1}
+              >
+                Previous
+              </Button>
               
-              <div className="flex justify-between pt-6 mt-6 border-t">
+              {currentStep < 4 ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={handlePrevStep}
-                  disabled={currentStep === 1}
+                  onClick={handleNextStep}
+                  className="bg-primary hover:bg-secondary text-primary-foreground"
                 >
-                  Previous
+                  Next Step
                 </Button>
-                
-                {currentStep < 4 ? (
-                  <Button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="bg-primary hover:bg-secondary text-primary-foreground"
-                  >
-                    Next Step
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-primary hover:bg-secondary text-primary-foreground"
-                  >
-                    {isSubmitting 
-                      ? (isEditMode ? "Updating..." : "Listing...") 
-                      : (isEditMode ? "Update Spot" : "List My Spot")
-                    }
-                  </Button>
-                )}
-              </div>
-            </form>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="bg-primary hover:bg-secondary text-primary-foreground"
+                >
+                  {isSubmitting 
+                    ? (isEditMode ? "Updating..." : "Listing...") 
+                    : (isEditMode ? "Update Spot" : "List My Spot")
+                  }
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
