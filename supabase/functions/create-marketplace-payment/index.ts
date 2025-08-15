@@ -59,7 +59,7 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Calculate fees - platform takes 7% from both sides
+    // Calculate fees - platform takes 7%, Stripe fees come from lister's portion
     // Handle different pricing types
     let totalAmount;
     if (booking.parking_spots.pricing_type === 'hourly') {
@@ -69,11 +69,14 @@ serve(async (req) => {
       totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100); // Convert to cents
     }
     
-    const baseSpotPrice = Math.round(totalAmount / 1.0875 / 1.07); // Remove tax and platform fee to get base price
-    const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07); // 7% from renter side
-    const platformFeeFromOwner = Math.round(baseSpotPrice * 0.07); // 7% from owner side
-    const totalPlatformFee = platformFeeFromRenter + platformFeeFromOwner; // 14% total
-    const ownerAmount = Math.round(baseSpotPrice - platformFeeFromOwner); // Owner gets base price minus 7%
+    // Calculate platform fee (7% of total payment)
+    const platformFee = Math.round(totalAmount * 0.07);
+    
+    // Calculate Stripe processing fee (2.9% + $0.30)
+    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + 30 cents
+    
+    // Lister gets remaining amount after platform fee and Stripe processing fee
+    const listerAmount = totalAmount - platformFee - stripeProcessingFee;
 
     // Create payment intent with marketplace setup and 7-day delayed payout
     const paymentIntent = await stripe.paymentIntents.create({
@@ -83,15 +86,16 @@ serve(async (req) => {
       metadata: {
         booking_id: booking.id,
         owner_id: booking.parking_spots.owner_id,
-        platform_fee: totalPlatformFee.toString(),
-        owner_amount: ownerAmount.toString(),
+        platform_fee: platformFee.toString(),
+        lister_amount: listerAmount.toString(),
+        stripe_processing_fee: stripeProcessingFee.toString(),
       },
       transfer_data: {
         destination: payoutSettings.stripe_connect_account_id,
-        amount: ownerAmount, // Owner gets 93% (minus Stripe fees)
+        amount: listerAmount, // Lister gets amount after platform fee and Stripe fees
         delay_days: 7, // 7-day delayed payout
       },
-      application_fee_amount: totalPlatformFee, // Platform keeps 7% total
+      application_fee_amount: platformFee, // Platform keeps exactly 7%
     });
 
     // Update booking with fee information
@@ -103,15 +107,16 @@ serve(async (req) => {
 
     await supabaseService.from("bookings").update({
       payment_intent_id: paymentIntent.id,
-      platform_fee_amount: totalPlatformFee / 100, // Store in dollars
-      owner_payout_amount: ownerAmount / 100, // Store in dollars
+      platform_fee_amount: platformFee / 100, // Store in dollars
+      owner_payout_amount: listerAmount / 100, // Store in dollars (after Stripe fees)
       updated_at: new Date().toISOString(),
     }).eq("id", booking_id);
 
     return new Response(JSON.stringify({ 
       client_secret: paymentIntent.client_secret,
-      platform_fee: totalPlatformFee / 100,
-      owner_amount: ownerAmount / 100,
+      platform_fee: platformFee / 100,
+      lister_amount: listerAmount / 100,
+      stripe_processing_fee: stripeProcessingFee / 100,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
