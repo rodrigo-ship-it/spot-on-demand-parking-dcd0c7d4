@@ -8,6 +8,7 @@ interface ParkingSpot {
   title: string;
   address: string;
   price: number;
+  pricingType?: string;
   rating: number;
   latitude: number;
   longitude: number;
@@ -141,7 +142,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                       <h3 class="font-bold text-sm">${spot.title}</h3>
                       <p class="text-xs text-gray-600">${spot.address}</p>
                       <div class="flex justify-between items-center mb-2">
-                        <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                        <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
                         ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
                       </div>
                       <button 
@@ -272,7 +273,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               <h3 class="font-bold text-sm">${spot.title}</h3>
               <p class="text-xs text-gray-600">${spot.address}</p>
               <div class="flex justify-between items-center mb-2">
-                <p class="text-sm font-semibold">$${spot.price}/hour</p>
+                <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
                 ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
               </div>
               <button 

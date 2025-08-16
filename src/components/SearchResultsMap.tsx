@@ -10,6 +10,7 @@ interface ParkingSpot {
   title: string;
   address: string;
   price: number;
+  pricingType?: string;
   rating: number;
   distance: string;
   type: string;
@@ -123,7 +124,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                   </div>
                   <div className="flex items-center text-lg font-bold text-gray-900 ml-2">
                     <DollarSign className="w-4 h-4" />
-                    {spot.price}/hr
+                    {spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}
                   </div>
                 </div>
                 
@@ -204,7 +205,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                    <div className="text-sm text-gray-500">per hour</div>
+                    <div className="text-sm text-gray-500">
+                      {spot.pricingType === 'hourly' ? 'per hour' : spot.pricingType === 'daily' ? 'per day' : 'one-time'}
+                    </div>
                   </div>
                 </div>
                 
