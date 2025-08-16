@@ -61,24 +61,13 @@ serve(async (req) => {
     // Get booking details using service role to bypass RLS
     console.log("📝 Searching for booking:", booking_id);
     
-    // First check if booking exists at all
-    const { data: bookingCheck, error: bookingCheckError } = await supabaseService
-      .from("bookings")
-      .select("*")
-      .eq("id", booking_id);
-      
-    console.log("📝 Booking check result:", { bookingCheck, bookingCheckError });
-    
     const { data: booking, error: bookingError } = await supabaseService
       .from("bookings")
-      .select(`
-        *,
-        parking_spots!inner (*)
-      `)
+      .select("*")
       .eq("id", booking_id)
       .maybeSingle();
 
-    console.log("📝 Booking with parking_spots result:", { booking, bookingError });
+    console.log("📝 Booking result:", { booking, bookingError });
 
     if (bookingError || !booking) {
       console.log("❌ Booking not found or error:", { bookingError, booking });
@@ -88,11 +77,28 @@ serve(async (req) => {
       });
     }
 
+    // Get parking spot details separately
+    const { data: parkingSpot, error: spotError } = await supabaseService
+      .from("parking_spots")
+      .select("*")
+      .eq("id", booking.spot_id)
+      .maybeSingle();
+
+    console.log("📝 Parking spot result:", { parkingSpot, spotError });
+
+    if (spotError || !parkingSpot) {
+      console.log("❌ Parking spot not found:", { spotError, parkingSpot });
+      return new Response(JSON.stringify({ error: "Parking spot not found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
+    }
+
     // Get payout settings using service role to bypass RLS
     const { data: payoutSettings, error: payoutError } = await supabaseService
       .from("payout_settings")
       .select("*")
-      .eq("user_id", booking.parking_spots.owner_id)
+      .eq("user_id", parkingSpot.owner_id)
       .maybeSingle();
 
     if (payoutError || !payoutSettings?.stripe_connect_account_id || !payoutSettings?.payouts_enabled) {
@@ -108,7 +114,7 @@ serve(async (req) => {
     });
 
     // Calculate fees
-    const baseSpotPrice = Math.round(parseFloat(booking.parking_spots.one_time_price.toString()) * 100);
+    const baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
     const totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100);
     const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07);
     const platformFeeFromLister = Math.round(baseSpotPrice * 0.07);
@@ -124,8 +130,8 @@ serve(async (req) => {
         price_data: {
           currency: "usd",
           product_data: {
-            name: `Parking: ${booking.parking_spots.title}`,
-            description: `${booking.parking_spots.address}`,
+            name: `Parking: ${parkingSpot.title}`,
+            description: `${parkingSpot.address}`,
           },
           unit_amount: totalAmount,
         },
@@ -133,7 +139,7 @@ serve(async (req) => {
       }],
       metadata: {
         booking_id: booking.id,
-        owner_id: booking.parking_spots.owner_id,
+        owner_id: parkingSpot.owner_id,
         platform_fee: totalPlatformFee.toString(),
         lister_amount: listerAmount.toString(),
       },
