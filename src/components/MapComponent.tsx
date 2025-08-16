@@ -157,6 +157,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             });
 
             (window as any).selectSpot = (spotId: string | number) => {
+              console.log('Map popup button clicked for spot:', spotId);
+              console.log('onSpotSelectRef.current:', onSpotSelectRef.current);
               onSpotSelectRef.current(spotId);
             };
             setIsInitialized(true);
