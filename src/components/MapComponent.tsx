@@ -88,6 +88,12 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             console.log('Map loaded, adding markers for', spots.length, 'spots');
             
             spots.forEach((spot) => {
+              // Skip spots without valid coordinates
+              if (!spot.latitude || !spot.longitude) {
+                console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
+                return;
+              }
+              
               const marker = new mapboxgl.Marker({
                 color: '#3B82F6',
               })
@@ -169,6 +175,12 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     // Note: In a production app, you'd want to track markers and only update what changed
     
     spots.forEach((spot) => {
+      // Skip spots without valid coordinates
+      if (!spot.latitude || !spot.longitude) {
+        console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
+        return;
+      }
+      
       const marker = new mapboxgl.Marker({
         color: '#3B82F6',
       })
