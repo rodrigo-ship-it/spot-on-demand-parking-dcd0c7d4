@@ -86,7 +86,7 @@ export const MarketplacePaymentIntegration = ({
             <div className="p-4 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total Amount:</span>
-                <span className="font-bold">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold">${(totalAmount || 0).toFixed(2)}</span>
               </div>
             </div>
 
@@ -112,15 +112,15 @@ export const MarketplacePaymentIntegration = ({
       <div className="p-4 bg-muted rounded-lg space-y-2">
         <div className="flex justify-between items-center">
           <span className="font-medium">Total Amount:</span>
-          <span className="font-bold">${totalAmount.toFixed(2)}</span>
+          <span className="font-bold">${(totalAmount || 0).toFixed(2)}</span>
         </div>
         <div className="flex justify-between items-center text-sm">
           <span>Platform Fee (14% total):</span>
-          <span>${paymentDetails.platformFee.toFixed(2)}</span>
+          <span>${(paymentDetails?.platformFee || 0).toFixed(2)}</span>
         </div>
         <div className="flex justify-between items-center text-sm">
           <span>Spot Owner Receives:</span>
-          <span className="text-green-600 font-medium">${paymentDetails.ownerAmount.toFixed(2)}</span>
+          <span className="text-green-600 font-medium">${(paymentDetails?.ownerAmount || 0).toFixed(2)}</span>
         </div>
       </div>
 
