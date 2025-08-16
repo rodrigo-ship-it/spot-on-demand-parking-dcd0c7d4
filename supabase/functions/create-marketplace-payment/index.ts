@@ -161,8 +161,16 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error("Error creating marketplace payment:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("❌ Error creating marketplace payment:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: `Function error: ${error.message}`
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
