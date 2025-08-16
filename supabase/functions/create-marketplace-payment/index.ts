@@ -40,13 +40,7 @@ serve(async (req) => {
       .from("bookings")
       .select(`
         *,
-        parking_spots:spot_id (
-          *,
-          profiles:owner_id (
-            *,
-            payout_settings (stripe_connect_account_id, payouts_enabled)
-          )
-        )
+        parking_spots!inner (*)
       `)
       .eq("id", booking_id)
       .eq("renter_id", user.id)
@@ -64,8 +58,20 @@ serve(async (req) => {
       throw new Error("Booking not found or unauthorized");
     }
 
-    const spotOwner = booking.parking_spots.profiles;
-    const payoutSettings = spotOwner.payout_settings?.[0];
+    // Get the spot owner's payout settings
+    console.log("📝 Fetching payout settings for owner:", booking.parking_spots.owner_id);
+    const { data: payoutSettings, error: payoutError } = await supabaseClient
+      .from("payout_settings")
+      .select("*")
+      .eq("user_id", booking.parking_spots.owner_id)
+      .maybeSingle();
+
+    console.log("📝 Payout settings result:", { payoutSettings, payoutError });
+    
+    if (payoutError) {
+      console.error("❌ Payout settings query error:", payoutError);
+      throw new Error(`Database error: ${payoutError.message}`);
+    }
     
     if (!payoutSettings?.stripe_connect_account_id || !payoutSettings?.payouts_enabled) {
       throw new Error("Spot owner hasn't completed payout setup");
