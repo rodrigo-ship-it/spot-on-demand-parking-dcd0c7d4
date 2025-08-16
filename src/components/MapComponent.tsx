@@ -87,6 +87,25 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           map.current.on('load', () => {
             console.log('Map loaded, adding markers for', spots.length, 'spots');
             
+            // Add search location marker first (so it appears below parking spots)
+            if (centerLocation) {
+              new mapboxgl.Marker({
+                color: '#ef4444',
+                scale: 0.8, // Make search marker slightly smaller
+              })
+                .setLngLat([centerLocation.longitude, centerLocation.latitude])
+                .setPopup(
+                  new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                    <div class="p-2">
+                      <h3 class="font-bold text-sm">Search Location</h3>
+                      <p class="text-xs text-gray-600">Your searched location</p>
+                    </div>
+                  `)
+                )
+                .addTo(map.current!);
+            }
+            
+            // Add parking spot markers after (so they appear on top and are clickable)
             spots.forEach((spot) => {
               // Skip spots without valid coordinates
               if (!spot.latitude || !spot.longitude) {
@@ -94,10 +113,28 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 return;
               }
               
+              // If spot is very close to search location, offset it slightly so both are visible
+              let spotLng = spot.longitude;
+              let spotLat = spot.latitude;
+              
+              if (centerLocation) {
+                const distance = Math.sqrt(
+                  Math.pow(spot.longitude - centerLocation.longitude, 2) + 
+                  Math.pow(spot.latitude - centerLocation.latitude, 2)
+                );
+                
+                // If markers are too close (within ~50 meters), offset the parking spot marker slightly
+                if (distance < 0.0005) {
+                  spotLng += 0.0002; // Small offset to make both markers visible and clickable
+                  spotLat += 0.0001;
+                }
+              }
+              
               const marker = new mapboxgl.Marker({
                 color: '#3B82F6',
+                scale: 1.1, // Make parking spot markers slightly larger
               })
-                .setLngLat([spot.longitude, spot.latitude])
+                .setLngLat([spotLng, spotLat])
                 .setPopup(
                   new mapboxgl.Popup({ offset: 25 }).setHTML(`
                     <div class="p-2">
@@ -118,22 +155,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 )
                 .addTo(map.current!);
             });
-
-            if (centerLocation) {
-              new mapboxgl.Marker({
-                color: '#ef4444',
-              })
-                .setLngLat([centerLocation.longitude, centerLocation.latitude])
-                .setPopup(
-                  new mapboxgl.Popup({ offset: 25 }).setHTML(`
-                    <div class="p-2">
-                      <h3 class="font-bold text-sm">Search Location</h3>
-                      <p class="text-xs text-gray-600">Your searched location</p>
-                    </div>
-                  `)
-                )
-                .addTo(map.current!);
-            }
 
             (window as any).selectSpot = (spotId: string | number) => {
               onSpotSelectRef.current(spotId);
@@ -174,6 +195,31 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     // Clear existing markers (we'll recreate them)
     // Note: In a production app, you'd want to track markers and only update what changed
     
+    // Clear existing markers (we'll recreate them)
+    // Note: In a production app, you'd want to track markers and only update what changed
+    
+    // Add search location marker first (if exists)
+    if (centerLocation) {
+      // Update map center
+      map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
+      
+      new mapboxgl.Marker({
+        color: '#ef4444',
+        scale: 0.8, // Make search marker slightly smaller
+      })
+        .setLngLat([centerLocation.longitude, centerLocation.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold text-sm">Search Location</h3>
+              <p class="text-xs text-gray-600">Your searched location</p>
+            </div>
+          `)
+        )
+        .addTo(map.current!);
+    }
+    
+    // Add parking spot markers after (so they appear on top)
     spots.forEach((spot) => {
       // Skip spots without valid coordinates
       if (!spot.latitude || !spot.longitude) {
@@ -181,10 +227,28 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         return;
       }
       
+      // If spot is very close to search location, offset it slightly so both are visible
+      let spotLng = spot.longitude;
+      let spotLat = spot.latitude;
+      
+      if (centerLocation) {
+        const distance = Math.sqrt(
+          Math.pow(spot.longitude - centerLocation.longitude, 2) + 
+          Math.pow(spot.latitude - centerLocation.latitude, 2)
+        );
+        
+        // If markers are too close (within ~50 meters), offset the parking spot marker slightly
+        if (distance < 0.0005) {
+          spotLng += 0.0002; // Small offset to make both markers visible and clickable
+          spotLat += 0.0001;
+        }
+      }
+      
       const marker = new mapboxgl.Marker({
         color: '#3B82F6',
+        scale: 1.1, // Make parking spot markers slightly larger
       })
-        .setLngLat([spot.longitude, spot.latitude])
+        .setLngLat([spotLng, spotLat])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 }).setHTML(`
             <div class="p-2">
@@ -205,25 +269,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         )
         .addTo(map.current!);
     });
-
-    if (centerLocation) {
-      // Update map center
-      map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
-      
-      new mapboxgl.Marker({
-        color: '#ef4444',
-      })
-        .setLngLat([centerLocation.longitude, centerLocation.latitude])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(`
-            <div class="p-2">
-              <h3 class="font-bold text-sm">Search Location</h3>
-              <p class="text-xs text-gray-600">Your searched location</p>
-            </div>
-          `)
-        )
-        .addTo(map.current!);
-    }
   }, [spots, centerLocation, isInitialized]);
 
   return (
