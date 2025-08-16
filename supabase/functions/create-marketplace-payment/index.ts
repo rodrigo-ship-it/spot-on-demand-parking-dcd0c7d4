@@ -176,7 +176,6 @@ serve(async (req) => {
           destination: payoutSettings.stripe_connect_account_id,
           amount: listerAmount,
         },
-        application_fee_amount: totalPlatformFee,
       },
       success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/book-spot/${booking.spot_id}`,
