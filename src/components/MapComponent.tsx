@@ -145,7 +145,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                         ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
                       </div>
                       <button 
-                        onclick="window.selectSpot && window.selectSpot(${spot.id})" 
+                        id="book-btn-${spot.id}" 
                         class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
                       >
                         Book Now
@@ -154,13 +154,28 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                   `)
                 )
                 .addTo(map.current!);
+
+              // Add click event listener to the popup after it opens
+              marker.getPopup().on('open', () => {
+                setTimeout(() => {
+                  const bookBtn = document.getElementById(`book-btn-${spot.id}`);
+                  if (bookBtn) {
+                    console.log('Adding event listener to button for spot:', spot.id);
+                    bookBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Map popup button clicked for spot:', spot.id);
+                      console.log('onSpotSelectRef.current:', onSpotSelectRef.current);
+                      onSpotSelectRef.current(spot.id);
+                    });
+                  } else {
+                    console.error('Could not find book button for spot:', spot.id);
+                  }
+                }, 100); // Small delay to ensure DOM is ready
+              });
             });
 
-            (window as any).selectSpot = (spotId: string | number) => {
-              console.log('Map popup button clicked for spot:', spotId);
-              console.log('onSpotSelectRef.current:', onSpotSelectRef.current);
-              onSpotSelectRef.current(spotId);
-            };
+            // Remove the global selectSpot function since we're using direct event listeners now
             setIsInitialized(true);
             console.log('Map initialization complete');
           });
@@ -261,7 +276,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
               </div>
               <button 
-                onclick="window.selectSpot && window.selectSpot(${spot.id})" 
+                id="book-btn-update-${spot.id}" 
                 class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
               >
                 Book Now
@@ -270,6 +285,25 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           `)
         )
         .addTo(map.current!);
+
+      // Add click event listener to the popup after it opens
+      marker.getPopup().on('open', () => {
+        setTimeout(() => {
+          const bookBtn = document.getElementById(`book-btn-update-${spot.id}`);
+          if (bookBtn) {
+            console.log('Adding event listener to updated button for spot:', spot.id);
+            bookBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Map popup button clicked for spot:', spot.id);
+              console.log('onSpotSelectRef.current:', onSpotSelectRef.current);
+              onSpotSelectRef.current(spot.id);
+            });
+          } else {
+            console.error('Could not find book button for spot:', spot.id);
+          }
+        }, 100); // Small delay to ensure DOM is ready
+      });
     });
   }, [spots, centerLocation, isInitialized]);
 
