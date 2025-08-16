@@ -17,8 +17,11 @@ serve(async (req) => {
   try {
     const { booking_id } = await req.json();
     console.log("📝 Booking ID received:", booking_id);
+    console.log("📝 Booking ID type:", typeof booking_id);
+    console.log("📝 Request headers:", Object.fromEntries(req.headers.entries()));
     
     if (!booking_id) {
+      console.log("❌ No booking_id provided");
       return new Response(JSON.stringify({ error: "Missing booking_id" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -40,6 +43,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("❌ No authorization header");
       return new Response(JSON.stringify({ error: "No authorization header provided" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
@@ -47,8 +51,11 @@ serve(async (req) => {
     }
     
     const token = authHeader.replace("Bearer ", "");
+    console.log("📝 Token length:", token.length);
     const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    console.log("📝 Auth result:", { user: data.user?.email, authError });
     if (authError || !data.user?.email) {
+      console.log("❌ Authentication failed:", authError);
       return new Response(JSON.stringify({ error: "Authentication failed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
@@ -60,6 +67,15 @@ serve(async (req) => {
 
     // Get booking details using service role to bypass RLS
     console.log("📝 Searching for booking:", booking_id);
+    console.log("📝 Using service role with URL:", Deno.env.get("SUPABASE_URL"));
+    console.log("📝 Service role key exists:", !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+    
+    // First, let's check what bookings exist
+    const { data: allBookings, error: allBookingsError } = await supabaseService
+      .from("bookings")
+      .select("id, renter_id, spot_id, created_at")
+      .limit(10);
+    console.log("📝 All recent bookings:", { allBookings, allBookingsError });
     
     const { data: booking, error: bookingError } = await supabaseService
       .from("bookings")
@@ -69,9 +85,21 @@ serve(async (req) => {
 
     console.log("📝 Booking result:", { booking, bookingError });
 
-    if (bookingError || !booking) {
-      console.log("❌ Booking not found or error:", { bookingError, booking });
-      return new Response(JSON.stringify({ error: "Booking not found" }), {
+    if (bookingError) {
+      console.log("❌ Booking query error:", bookingError);
+      return new Response(JSON.stringify({ error: "Database error: " + bookingError.message }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+
+    if (!booking) {
+      console.log("❌ Booking not found - ID:", booking_id);
+      return new Response(JSON.stringify({ 
+        error: "Booking not found", 
+        booking_id: booking_id,
+        debug: "Booking does not exist in database"
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 404,
       });
