@@ -25,9 +25,17 @@ serve(async (req) => {
       });
     }
 
+    // Create client for user authentication (with anon key)
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+    
+    // Create service client for database operations (bypass RLS)
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -50,8 +58,8 @@ serve(async (req) => {
     const user = data.user;
     console.log("📝 User authenticated:", user.email);
 
-    // Get booking details
-    const { data: booking, error: bookingError } = await supabaseClient
+    // Get booking details using service role to bypass RLS
+    const { data: booking, error: bookingError } = await supabaseService
       .from("bookings")
       .select(`
         *,
@@ -67,8 +75,8 @@ serve(async (req) => {
       });
     }
 
-    // Get payout settings
-    const { data: payoutSettings, error: payoutError } = await supabaseClient
+    // Get payout settings using service role to bypass RLS
+    const { data: payoutSettings, error: payoutError } = await supabaseService
       .from("payout_settings")
       .select("*")
       .eq("user_id", booking.parking_spots.owner_id)
@@ -129,13 +137,7 @@ serve(async (req) => {
 
     console.log("📝 Checkout session created successfully");
 
-    // Update booking
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
+    // Update booking with payment details
     await supabaseService.from("bookings").update({
       payment_intent_id: session.id,
       platform_fee_amount: totalPlatformFee / 100,
