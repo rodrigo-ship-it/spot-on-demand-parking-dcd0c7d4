@@ -59,6 +59,16 @@ serve(async (req) => {
     console.log("📝 User authenticated:", user.email);
 
     // Get booking details using service role to bypass RLS
+    console.log("📝 Searching for booking:", booking_id);
+    
+    // First check if booking exists at all
+    const { data: bookingCheck, error: bookingCheckError } = await supabaseService
+      .from("bookings")
+      .select("*")
+      .eq("id", booking_id);
+      
+    console.log("📝 Booking check result:", { bookingCheck, bookingCheckError });
+    
     const { data: booking, error: bookingError } = await supabaseService
       .from("bookings")
       .select(`
@@ -68,7 +78,10 @@ serve(async (req) => {
       .eq("id", booking_id)
       .maybeSingle();
 
+    console.log("📝 Booking with parking_spots result:", { booking, bookingError });
+
     if (bookingError || !booking) {
+      console.log("❌ Booking not found or error:", { bookingError, booking });
       return new Response(JSON.stringify({ error: "Booking not found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 404,
