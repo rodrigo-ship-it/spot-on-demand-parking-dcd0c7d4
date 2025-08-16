@@ -8,22 +8,29 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("🔥 create-marketplace-payment function called");
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("📝 Parsing request body...");
     const { booking_id } = await req.json();
+    console.log("📝 Request data:", { booking_id });
     
+    console.log("📝 Creating Supabase client...");
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
+    console.log("📝 Getting user from auth header...");
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
+    console.log("📝 User authenticated:", { userId: user?.id, email: user?.email });
     
     if (!user?.email) throw new Error("User not authenticated");
 
