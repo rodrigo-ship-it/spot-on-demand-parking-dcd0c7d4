@@ -26,35 +26,58 @@ export const MarketplacePaymentIntegration = ({
   const [loading, setLoading] = useState(false);
 
   const createPaymentIntent = async () => {
+    if (loading) return; // Prevent multiple calls
+    
     setLoading(true);
     try {
+      console.log("🚀 Starting payment process for booking:", bookingId);
+      
       const { data, error } = await supabase.functions.invoke('create-marketplace-payment', {
         body: { booking_id: bookingId }
       });
 
-      if (error) throw error;
+      console.log("📝 Function response:", { data, error });
+
+      if (error) {
+        console.error("❌ Function error:", error);
+        throw error;
+      }
 
       // If we get a checkout URL, redirect to Stripe Checkout
       if (data?.checkout_url) {
+        console.log("✅ Got checkout URL, redirecting:", data.checkout_url);
         window.open(data.checkout_url, '_blank');
         toast.success('Redirecting to payment...');
         return;
       }
 
+      // If we get success but no checkout URL, show the test response
+      if (data?.success) {
+        toast.success('Function test successful: ' + data.message);
+        return;
+      }
+
       // Otherwise set payment details for inline form
-      setPaymentDetails({
-        platformFee: data.platform_fee,
-        ownerAmount: data.lister_amount,
-        client_secret: data.client_secret,
-      });
+      if (data?.client_secret) {
+        setPaymentDetails({
+          platformFee: data.platform_fee,
+          ownerAmount: data.lister_amount,
+          client_secret: data.client_secret,
+        });
+        toast.success('Payment ready - please enter your payment details');
+        return;
+      }
+
+      throw new Error("No valid response from payment function");
       
-      toast.success('Payment ready - please enter your payment details');
     } catch (error: any) {
-      console.error('Error creating payment:', error);
+      console.error('❌ Error creating payment:', error);
       
       // Provide specific error message for payout setup issues
       if (error.message?.includes("payout setup")) {
         toast.error("The spot owner needs to complete their payout setup before accepting bookings. Please try another spot or contact the owner.");
+      } else if (error.message?.includes("Edge Function returned a non-2xx status code")) {
+        toast.error("Payment service temporarily unavailable. Please try again in a moment.");
       } else {
         toast.error(error.message || 'Failed to initialize payment');
       }
