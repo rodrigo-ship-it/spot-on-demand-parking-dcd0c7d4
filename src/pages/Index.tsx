@@ -298,7 +298,7 @@ const Index = () => {
         <SearchResultsMap 
           searchLocation={searchLocation}
           searchCoordinates={searchCoordinates}
-          spots={filteredSpots.length > 0 ? filteredSpots : allParkingSpots}
+          spots={filteredSpots.length > 0 ? filteredSpots : transformedSpots}
           onSpotSelect={handleBookNow}
         />
       )}
