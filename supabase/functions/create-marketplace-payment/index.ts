@@ -15,9 +15,14 @@ serve(async (req) => {
   }
 
   try {
+    console.log("📝 Function started successfully");
     console.log("📝 Parsing request body...");
     const { booking_id } = await req.json();
     console.log("📝 Request data:", { booking_id });
+    
+    if (!booking_id) {
+      throw new Error("Missing booking_id in request");
+    }
     
     console.log("📝 Creating Supabase client...");
     const supabaseClient = createClient(
@@ -26,9 +31,15 @@ serve(async (req) => {
     );
 
     console.log("📝 Getting user from auth header...");
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header provided");
+    }
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    if (authError) {
+      throw new Error(`Authentication failed: ${authError.message}`);
+    }
     const user = data.user;
     console.log("📝 User authenticated:", { userId: user?.id, email: user?.email });
     
