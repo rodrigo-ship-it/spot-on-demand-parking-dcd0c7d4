@@ -43,7 +43,6 @@ serve(async (req) => {
         parking_spots!inner (*)
       `)
       .eq("id", booking_id)
-      .eq("renter_id", user.id)
       .maybeSingle();
 
     console.log("📝 Booking query result:", { booking, bookingError });
