@@ -175,7 +175,10 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
     </div>
   );
 
-  const ListView = () => (
+  const ListView = () => {
+    console.log('ListView spots with pricingType:', spotsWithDistance.map(s => ({ id: s.id, title: s.title, pricingType: s.pricingType })));
+    
+    return (
     <div className="space-y-4">
       {hasSpots ? (
         spotsWithDistance.map((spot) => (
@@ -206,7 +209,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
                     <div className="text-sm text-gray-500">
-                      {spot.pricingType === 'hourly' ? 'per hour' : spot.pricingType === 'daily' ? 'per day' : 'one-time'}
+                      {spot.pricingType === 'hourly' ? 'per hour' : spot.pricingType === 'daily' ? 'per day' : spot.pricingType === 'one_time' ? 'one-time' : 'one-time'}
                     </div>
                   </div>
                 </div>
@@ -262,7 +265,8 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   // Always show the map, even when no spots are found
   const hasSpots = spots.length > 0;
