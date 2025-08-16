@@ -35,6 +35,7 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
 
     // Get booking details with parking spot and owner info
+    console.log("📝 Fetching booking details...");
     const { data: booking, error: bookingError } = await supabaseClient
       .from("bookings")
       .select(`
@@ -49,9 +50,17 @@ serve(async (req) => {
       `)
       .eq("id", booking_id)
       .eq("renter_id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (bookingError || !booking) {
+    console.log("📝 Booking query result:", { booking, bookingError });
+
+    if (bookingError) {
+      console.error("❌ Booking query error:", bookingError);
+      throw new Error(`Database error: ${bookingError.message}`);
+    }
+
+    if (!booking) {
+      console.error("❌ Booking not found for user:", { booking_id, user_id: user.id });
       throw new Error("Booking not found or unauthorized");
     }
 
