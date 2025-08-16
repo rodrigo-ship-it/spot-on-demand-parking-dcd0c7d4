@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon, ClockIcon } from "lucide-react";
-import { PaymentIntegration } from "@/components/PaymentIntegration";
+import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
 
 import { toast } from "sonner";
 import { VehicleManagementDialog } from "@/components/VehicleManagementDialog";
@@ -685,14 +685,10 @@ const BookSpot = () => {
                     </div>
                   </>
                 ) : (
-                  <PaymentIntegration
+                  <MarketplacePaymentIntegration
                     bookingId={createdBookingId}
-                    baseAmount={subtotal}
-                    platformFee={platformFee}
-                    tax={tax}
                     totalAmount={total}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    onPaymentError={handlePaymentError}
+                    onSuccess={handlePaymentSuccess}
                   />
                 )}
               </CardContent>

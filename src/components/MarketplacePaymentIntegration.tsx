@@ -36,7 +36,7 @@ export const MarketplacePaymentIntegration = ({
 
       setPaymentDetails({
         platformFee: data.platform_fee,
-        ownerAmount: data.owner_amount,
+        ownerAmount: data.lister_amount,
         client_secret: data.client_secret,
       });
       
