@@ -10,11 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon, ClockIcon } from "lucide-react";
-import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
+import { secureSignOut } from "@/lib/auth-cleanup";
+import { cn } from "@/lib/utils";
 
 import { toast } from "sonner";
 import { VehicleManagementDialog } from "@/components/VehicleManagementDialog";
@@ -354,14 +355,24 @@ const BookSpot = () => {
           </Button>
           <h1 className="text-xl font-semibold flex-1">Complete Your Booking</h1>
           {user && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={signOut}
-              className="ml-4"
-            >
-              Sign Out ({user.email?.split('@')[0]})
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={() => secureSignOut(supabase)}
+                className="ml-4"
+              >
+                Force Sign Out
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={signOut}
+                className=""
+              >
+                Sign Out ({user.email?.split('@')[0]})
+              </Button>
+            </div>
           )}
         </div>
       </div>
