@@ -126,27 +126,18 @@ export const PaymentIntegration = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Payment Breakdown */}
+        {/* Amount Summary */}
         <div className="bg-muted p-4 rounded-lg space-y-2">
-          <h3 className="font-medium mb-3">Payment breakdown</h3>
           <div className="flex items-center justify-between">
             <span>Base price:</span>
             <span>${baseAmount.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span>Platform fee (renter):</span>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Service fee:</span>
             <span>${(baseAmount * 0.07).toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span>Platform fee (owner):</span>
-            <span>${(baseAmount * 0.07).toFixed(2)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span>Stripe processing fees</span>
-            <span>- ${(calculatedTotal * 0.029 + 0.30).toFixed(2)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span>Tax (8.75%):</span>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Tax:</span>
             <span>${calculatedTax.toFixed(2)}</span>
           </div>
           <hr className="my-2" />
@@ -155,12 +146,6 @@ export const PaymentIntegration = ({
             <span className="text-xl text-primary">
               ${calculatedTotal.toFixed(2)} {currency}
             </span>
-          </div>
-          <div className="mt-2 pt-2 border-t">
-            <div className="flex items-center justify-between text-sm text-green-600">
-              <span>Spot Owner Receives:</span>
-              <span className="font-medium">${(baseAmount * 0.93).toFixed(2)}</span>
-            </div>
           </div>
         </div>
 
