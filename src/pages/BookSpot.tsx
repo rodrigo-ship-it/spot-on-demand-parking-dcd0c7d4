@@ -28,7 +28,7 @@ const BookSpot = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   
   console.log('🔥 BookSpot params:', { id, pathname: location.pathname, search: location.search });
   
@@ -257,7 +257,7 @@ const BookSpot = () => {
       return;
     }
 
-    toast.loading("Creating your booking...");
+    const createBookingToast = toast.loading("Creating your booking...");
     
     try {
       // Create booking start and end times
@@ -284,10 +284,15 @@ const BookSpot = () => {
         throw error;
       }
 
+      // Dismiss the loading toast
+      toast.dismiss(createBookingToast);
+      
       setCreatedBookingId(booking.id);
       setShowPayment(true);
       toast.success("Booking created! Please complete payment.");
     } catch (error) {
+      // Dismiss the loading toast
+      toast.dismiss(createBookingToast);
       console.error('Booking error:', error);
       toast.error("Failed to create booking. Please try again.");
     }
@@ -347,7 +352,17 @@ const BookSpot = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-xl font-semibold">Complete Your Booking</h1>
+          <h1 className="text-xl font-semibold flex-1">Complete Your Booking</h1>
+          {user && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={signOut}
+              className="ml-4"
+            >
+              Sign Out ({user.email?.split('@')[0]})
+            </Button>
+          )}
         </div>
       </div>
 
