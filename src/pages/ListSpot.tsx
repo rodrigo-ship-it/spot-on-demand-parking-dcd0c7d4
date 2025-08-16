@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ImageUpload } from "@/components/ImageUpload";
+import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete";
 
 const ListSpot = () => {
   const { user } = useAuth();
@@ -34,6 +35,8 @@ const ListSpot = () => {
     
     // Location
     address: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
     city: "",
     state: "",
     zipCode: "",
@@ -113,7 +116,9 @@ const ListSpot = () => {
           description: data.description || '',
           type: data.spot_type || '',
           totalSpots: data.total_spots?.toString() || '1',
-          address: address,
+          address: data.address || '',
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
           city: city,
           state: state,
           zipCode: zipCode,
@@ -242,7 +247,13 @@ const ListSpot = () => {
 
     try {
       // Create the full address
-      const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+      const fullAddress = formData.address;
+      
+      // Validate that we have coordinates
+      if (!formData.latitude || !formData.longitude) {
+        toast.error("Please select a location from the suggestions to get accurate coordinates");
+        return;
+      }
       
       // Prepare availability schedule
       const availabilitySchedule = formData.availabilityType === 'custom' 
@@ -261,6 +272,8 @@ const ListSpot = () => {
         title: formData.title,
         description: formData.description,
         address: fullAddress,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         spot_type: spotType,
         pricing_type: formData.pricingType,
         price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 
@@ -395,47 +408,24 @@ const ListSpot = () => {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="address">Street Address *</Label>
-              <Input
-                id="address"
-                placeholder="123 Main Street"
+              <Label htmlFor="address">Address *</Label>
+              <GooglePlacesAutocomplete
                 value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-                required
+                onChange={(value) => setFormData({...formData, address: value})}
+                onLocationSelect={(location) => {
+                  setFormData({
+                    ...formData,
+                    address: location.description,
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                  });
+                }}
+                placeholder="Search for the parking spot address..."
+                className="w-full"
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="state">State *</Label>
-                <Input
-                  id="state"
-                  placeholder="State"
-                  value={formData.state}
-                  onChange={(e) => setFormData({...formData, state: e.target.value})}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="zipCode">ZIP Code *</Label>
-                <Input
-                  id="zipCode"
-                  placeholder="12345"
-                  value={formData.zipCode}
-                  onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
-                  required
-                />
-              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Use the search to select your exact address for accurate map positioning
+              </p>
             </div>
           </div>
         );
