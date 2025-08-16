@@ -130,16 +130,37 @@ export const PaymentIntegration = ({
         <div className="bg-muted p-4 rounded-lg space-y-2">
           <h3 className="font-medium mb-3">Payment breakdown</h3>
           <div className="flex items-center justify-between">
+            <span>Base price:</span>
+            <span>${baseAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span>Platform fee (renter):</span>
+            <span>${(baseAmount * 0.07).toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span>Platform fee (owner):</span>
+            <span>${(baseAmount * 0.07).toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span>Stripe processing fees</span>
+            <span>- ${(calculatedTotal * 0.029 + 0.30).toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span>Tax (8.75%):</span>
+            <span>${calculatedTax.toFixed(2)}</span>
+          </div>
+          <hr className="my-2" />
+          <div className="flex items-center justify-between font-bold">
             <span>Total Amount:</span>
-            <span className="font-bold">${calculatedTotal.toFixed(2)} {currency}</span>
+            <span className="text-xl text-primary">
+              ${calculatedTotal.toFixed(2)} {currency}
+            </span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span>Platform Fee (14% total):</span>
-            <span>${(calculatedTotal * 0.14).toFixed(2)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span>Spot Owner Receives:</span>
-            <span className="text-green-600 font-medium">${(calculatedTotal * 0.86).toFixed(2)}</span>
+          <div className="mt-2 pt-2 border-t">
+            <div className="flex items-center justify-between text-sm text-green-600">
+              <span>Spot Owner Receives:</span>
+              <span className="font-medium">${(baseAmount * 0.93).toFixed(2)}</span>
+            </div>
           </div>
         </div>
 
