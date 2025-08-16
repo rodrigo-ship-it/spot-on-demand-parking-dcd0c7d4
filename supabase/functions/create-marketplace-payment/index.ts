@@ -97,11 +97,21 @@ serve(async (req) => {
     // Lister gets base price minus their 7% platform fee and Stripe processing fee
     const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
 
-    // Create payment intent with marketplace setup and 7-day delayed payout
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalAmount,
-      currency: "usd",
-      customer: user.email,
+    // Create Checkout session with marketplace setup
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Parking: ${booking.parking_spots.title}`,
+            description: `${booking.parking_spots.address}`,
+          },
+          unit_amount: totalAmount,
+        },
+        quantity: 1,
+      }],
       metadata: {
         booking_id: booking.id,
         owner_id: booking.parking_spots.owner_id,
@@ -110,12 +120,15 @@ serve(async (req) => {
         stripe_processing_fee: stripeProcessingFee.toString(),
         base_spot_price: baseSpotPrice.toString(),
       },
-      transfer_data: {
-        destination: payoutSettings.stripe_connect_account_id,
-        amount: listerAmount, // Lister gets base price minus 7% platform fee and Stripe fees
-        // Removed delay_days for instant transfers
+      payment_intent_data: {
+        transfer_data: {
+          destination: payoutSettings.stripe_connect_account_id,
+          amount: listerAmount, // Lister gets base price minus 7% platform fee and Stripe fees
+        },
+        application_fee_amount: totalPlatformFee, // Platform keeps 14% total
       },
-      application_fee_amount: totalPlatformFee, // Platform keeps 14% total
+      success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/book-spot/${booking.spot_id}`,
     });
 
     // Update booking with fee information
@@ -126,14 +139,14 @@ serve(async (req) => {
     );
 
     await supabaseService.from("bookings").update({
-      payment_intent_id: paymentIntent.id,
+      payment_intent_id: session.id,
       platform_fee_amount: totalPlatformFee / 100, // Store in dollars
       owner_payout_amount: listerAmount / 100, // Store in dollars (after Stripe fees)
       updated_at: new Date().toISOString(),
     }).eq("id", booking_id);
 
     return new Response(JSON.stringify({ 
-      client_secret: paymentIntent.client_secret,
+      checkout_url: session.url,
       platform_fee: totalPlatformFee / 100,
       lister_amount: listerAmount / 100,
       stripe_processing_fee: stripeProcessingFee / 100,

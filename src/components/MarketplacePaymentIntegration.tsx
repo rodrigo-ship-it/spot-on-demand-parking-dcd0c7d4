@@ -34,6 +34,14 @@ export const MarketplacePaymentIntegration = ({
 
       if (error) throw error;
 
+      // If we get a checkout URL, redirect to Stripe Checkout
+      if (data?.checkout_url) {
+        window.open(data.checkout_url, '_blank');
+        toast.success('Redirecting to payment...');
+        return;
+      }
+
+      // Otherwise set payment details for inline form
       setPaymentDetails({
         platformFee: data.platform_fee,
         ownerAmount: data.lister_amount,
