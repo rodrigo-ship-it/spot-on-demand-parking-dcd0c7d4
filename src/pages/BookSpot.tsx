@@ -265,58 +265,13 @@ const BookSpot = () => {
     const createBookingToast = toast.loading("Creating your booking...");
     
     try {
-      // Create booking start and end times in UTC, treating input time as spot's local time
+      // Create booking start and end times - treat user input as spot's local time
       const bookingDate = format(bookingDetails.date, 'yyyy-MM-dd');
-      
-      // Get timezone for the spot location to properly handle time conversion
-      let spotTimezone = 'UTC'; // fallback
-      if (spotData.latitude && spotData.longitude) {
-        try {
-          // Use Google's Timezone API
-          const response = await supabase.functions.invoke('get-mapbox-token');
-          const { google_places_key } = response.data || {};
-          
-          if (google_places_key) {
-            const timezoneResponse = await fetch(
-              `https://maps.googleapis.com/maps/api/timezone/json?location=${spotData.latitude},${spotData.longitude}&timestamp=${Math.floor(Date.now() / 1000)}&key=${google_places_key}`
-            );
-            const timezoneData = await timezoneResponse.json();
-            if (timezoneData.status === 'OK') {
-              spotTimezone = timezoneData.timeZoneId;
-            }
-          }
-        } catch (error) {
-          console.error('Error getting timezone:', error);
-        }
-      }
-
-      // Create date objects treating the input times as being in the spot's timezone
-      const startTimeString = `${bookingDate}T${bookingDetails.startTime}:00`;
-      const startDateTime = new Date(startTimeString + 'Z'); // Parse as UTC first
-      
-      // Adjust for the timezone offset to get the actual UTC time for this local time
-      const tempDate = new Date(startTimeString);
-      const spotOffset = new Intl.DateTimeFormat('en', {
-        timeZone: spotTimezone,
-        timeZoneName: 'longOffset'
-      }).formatToParts(tempDate).find(part => part.type === 'timeZoneName')?.value || '+00:00';
-      
-      const offsetMatch = spotOffset.match(/([+-])(\d{2}):(\d{2})/);
-      let offsetMinutes = 0;
-      if (offsetMatch) {
-        const sign = offsetMatch[1] === '+' ? -1 : 1; // Opposite sign for conversion
-        offsetMinutes = sign * (parseInt(offsetMatch[2]) * 60 + parseInt(offsetMatch[3]));
-      }
-      
-      const actualStartDateTime = new Date(tempDate.getTime() + (offsetMinutes * 60 * 1000));
+      const startDateTime = new Date(`${bookingDate}T${bookingDetails.startTime}:00`);
       
       const endDateTime = isPricingDaily 
-        ? new Date(actualStartDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
-        : (() => {
-            const endTimeString = `${bookingDate}T${bookingDetails.endTime}:00`;
-            const tempEndDate = new Date(endTimeString);
-            return new Date(tempEndDate.getTime() + (offsetMinutes * 60 * 1000));
-          })();
+        ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
+        : new Date(`${bookingDate}T${bookingDetails.endTime}:00`);
 
       // Create booking in database
       const { data: booking, error } = await supabase
@@ -324,7 +279,7 @@ const BookSpot = () => {
         .insert({
           spot_id: spotData.id,
           renter_id: user?.id || null, // null for guest bookings
-          start_time: actualStartDateTime.toISOString(),
+          start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           total_amount: total,
           status: 'pending',
