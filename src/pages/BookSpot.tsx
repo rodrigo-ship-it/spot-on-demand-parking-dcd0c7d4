@@ -268,11 +268,11 @@ const BookSpot = () => {
       // Create booking start and end times
       const bookingDate = format(bookingDetails.date, 'yyyy-MM-dd');
       const startDateTime = isPricingDaily 
-        ? new Date(`${bookingDate}T00:00:00`)
+        ? new Date(`${bookingDate}T${bookingDetails.startTime}`) // Use selected start time for daily
         : new Date(`${bookingDate}T${bookingDetails.startTime}`);
       
       const endDateTime = isPricingDaily 
-        ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
+        ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000)) // End time based on numberOfDays
         : new Date(`${bookingDate}T${bookingDetails.endTime}`);
 
       // Create booking in database
@@ -412,7 +412,7 @@ const BookSpot = () => {
                <CardContent className="space-y-4">
                  {isPricingDaily ? (
                    // Daily pricing interface
-                   <div className="grid grid-cols-2 gap-3">
+                   <div className="grid grid-cols-3 gap-3">
                      <div>
                        <Label>Start Date</Label>
                        <Popover>
@@ -443,6 +443,24 @@ const BookSpot = () => {
                            />
                          </PopoverContent>
                        </Popover>
+                     </div>
+                     <div>
+                       <Label>Start Time</Label>
+                       <Select value={bookingDetails.startTime} onValueChange={(value) => setBookingDetails(prev => ({ ...prev, startTime: value }))}>
+                         <SelectTrigger className="w-full">
+                           <div className="flex items-center">
+                             <ClockIcon className="mr-2 h-4 w-4" />
+                             <SelectValue placeholder="Select time" />
+                           </div>
+                         </SelectTrigger>
+                         <SelectContent className="max-h-[200px]">
+                           {timeOptions.map((option) => (
+                             <SelectItem key={option.value} value={option.value}>
+                               {option.label}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
                      </div>
                      <div>
                        <Label>Number of Days</Label>
@@ -534,7 +552,7 @@ const BookSpot = () => {
                  
                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
                    {isPricingDaily 
-                     ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
+                     ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''} (starts at ${new Date(`2000-01-01T${bookingDetails.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })})`
                      : `Duration: ${bookingDetails.duration} hours`
                    }
                  </div>
