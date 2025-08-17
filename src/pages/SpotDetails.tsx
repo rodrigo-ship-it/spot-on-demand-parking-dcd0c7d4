@@ -186,7 +186,11 @@ const SpotDetails = () => {
         spotData: {
           id: id,
           title: spotData.title,
-          price: Number(spotData.price_per_hour),
+          price: spotData.pricing_type === 'hourly' 
+            ? Number(spotData.price_per_hour)
+            : spotData.pricing_type === 'daily'
+            ? Number(spotData.daily_price)
+            : Number(spotData.one_time_price),
           address: spotData.address,
           type: spotData.spot_type,
           features: spotData.amenities || [],
@@ -661,11 +665,13 @@ const SpotDetails = () => {
                     <div className="text-3xl font-bold text-gray-900">
                       ${spotData.pricing_type === 'hourly' 
                         ? Number(spotData.price_per_hour).toFixed(2)
+                        : spotData.pricing_type === 'daily'
+                        ? Number(spotData.daily_price).toFixed(2)
                         : Number(spotData.one_time_price).toFixed(2)
                       }
                     </div>
                     <div className="text-sm text-gray-600">
-                      {spotData.pricing_type === 'hourly' ? 'per hour' : 'one-time fee'}
+                      {spotData.pricing_type === 'hourly' ? 'per hour' : spotData.pricing_type === 'daily' ? 'per day' : 'one-time fee'}
                     </div>
                   </div>
 
@@ -674,8 +680,10 @@ const SpotDetails = () => {
                     <h4 className="font-semibold text-sm mb-2">Estimated Total Cost*</h4>
                     {(() => {
                       const isPricingHourly = spotData.pricing_type === 'hourly';
-                      const basePrice = isPricingHourly 
+                      const basePrice = spotData.pricing_type === 'hourly' 
                         ? Number(spotData.price_per_hour) 
+                        : spotData.pricing_type === 'daily'
+                        ? Number(spotData.daily_price)
                         : Number(spotData.one_time_price);
                       const estimatedDuration = isPricingHourly ? 4 : 1; // Estimate 4 hours for hourly spots
                       const subtotal = isPricingHourly ? basePrice * estimatedDuration : basePrice;
@@ -746,11 +754,13 @@ const SpotDetails = () => {
                       <div className="text-3xl font-bold text-gray-900">
                         ${spotData.pricing_type === 'hourly' 
                           ? Number(spotData.price_per_hour).toFixed(2)
+                          : spotData.pricing_type === 'daily'
+                          ? Number(spotData.daily_price).toFixed(2)
                           : Number(spotData.one_time_price).toFixed(2)
                         }
                       </div>
                       <div className="text-sm text-gray-600">
-                        {spotData.pricing_type === 'hourly' ? 'per hour' : 'one-time fee'}
+                        {spotData.pricing_type === 'hourly' ? 'per hour' : spotData.pricing_type === 'daily' ? 'per day' : 'one-time fee'}
                       </div>
                     </div>
                     <div className="pt-2 border-t">
