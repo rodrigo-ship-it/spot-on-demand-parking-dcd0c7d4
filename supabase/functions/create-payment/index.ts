@@ -84,15 +84,14 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Forward calculate fees properly
+    // Calculate fees properly - customer pays the pre-stripe total, stripe fee comes from lister payout
     const baseSpotPrice = Math.round(baseAmount * 100); // Base price in cents
     const platformFeeFromLister = Math.round(baseSpotPrice * 0.07); // 7% platform fee
     const subtotal = baseSpotPrice + platformFeeFromLister;
     const taxAmount = Math.round(subtotal * 0.0875); // 8.75% tax
-    const preStripeTotalAmount = subtotal + taxAmount;
-    const stripeProcessingFee = Math.round(preStripeTotalAmount * 0.029) + 30; // 2.9% + $0.30
-    const totalAmount = preStripeTotalAmount + stripeProcessingFee;
-    const listerAmount = baseSpotPrice - stripeProcessingFee;
+    const totalAmount = subtotal + taxAmount; // Customer pays this amount (no stripe fee added)
+    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + $0.30
+    const listerAmount = baseSpotPrice - stripeProcessingFee; // Lister amount after stripe fee is deducted
 
     // Create payment session config
     const sessionConfig = {
