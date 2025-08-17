@@ -2,7 +2,7 @@
 import { useLocation, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, MessageSquare, Zap, Shield } from "lucide-react";
+import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, MessageSquare, Zap, Shield, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ const BookingConfirmed = () => {
   const [searchParams] = useSearchParams();
   const [bookingData, setBookingData] = useState(location.state);
   const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   // Get URL parameters from Stripe redirect
   const sessionId = searchParams.get('session_id');
@@ -120,6 +121,84 @@ const BookingConfirmed = () => {
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  const sendConfirmationEmail = async () => {
+    if (!bookingData?.bookingId) {
+      toast.error('Booking information not available');
+      return;
+    }
+
+    setEmailLoading(true);
+    try {
+      // Get user profile to send email
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        toast.error('User email not found');
+        return;
+      }
+
+      // Get booking details
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingData.bookingId)
+        .single();
+
+      if (bookingError) {
+        toast.error('Failed to fetch booking details');
+        return;
+      }
+
+      // Get spot details
+      const { data: spot, error: spotError } = await supabase
+        .from('parking_spots')
+        .select('*')
+        .eq('id', booking.spot_id)
+        .single();
+
+      if (spotError) {
+        toast.error('Failed to fetch spot details');
+        return;
+      }
+
+      // Send confirmation email
+      const { error: emailError } = await supabase.functions.invoke('send-booking-confirmation', {
+        body: {
+          email: user.email,
+          booking: {
+            id: booking.id,
+            total_amount: booking.total_amount,
+            start_time: booking.start_time,
+            end_time: booking.end_time,
+            confirmation_number: booking.id.slice(0, 8).toUpperCase()
+          },
+          spot: {
+            title: spot.title,
+            address: spot.address,
+            price_per_hour: spot.price_per_hour,
+            one_time_price: spot.one_time_price,
+            daily_price: spot.daily_price,
+            pricing_type: spot.pricing_type
+          },
+          renter: {
+            full_name: user.user_metadata?.full_name || 'Customer'
+          }
+        }
+      });
+
+      if (emailError) {
+        console.error('Email error:', emailError);
+        toast.error('Failed to send confirmation email');
+      } else {
+        toast.success('Confirmation email sent successfully!');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send confirmation email');
+    } finally {
+      setEmailLoading(false);
+    }
   };
 
   return (
@@ -286,6 +365,22 @@ const BookingConfirmed = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Email Confirmation Button */}
+        <div className="mb-6">
+          <Button 
+            onClick={sendConfirmationEmail}
+            disabled={emailLoading}
+            className="w-full"
+            variant="outline"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            {emailLoading ? "Sending Email..." : "Send Confirmation Email"}
+          </Button>
+          <p className="text-sm text-gray-600 text-center mt-2">
+            Click to receive your booking confirmation via email
+          </p>
+        </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
