@@ -1,0 +1,212 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+interface BookingConfirmationRequest {
+  email: string;
+  booking: {
+    id: string;
+    total_amount: number;
+    start_time: string;
+    end_time: string;
+    confirmation_number: string;
+  };
+  spot: {
+    title: string;
+    address: string;
+    price_per_hour?: number;
+    one_time_price?: number;
+    pricing_type: string;
+  };
+  renter: {
+    full_name: string;
+  };
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { email, booking, spot, renter }: BookingConfirmationRequest = await req.json();
+
+    console.log("Sending booking confirmation email to:", email);
+
+    // Calculate duration and determine if it's daily
+    const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
+    const isDaily = durationInHours >= 24;
+    const price = spot.price_per_hour || spot.one_time_price || 8;
+
+    // Format dates and times
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    const formatTime = (dateString: string) => {
+      return new Date(dateString).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    };
+
+    const startDate = formatDate(booking.start_time);
+    const startTime = formatTime(booking.start_time);
+    const endTime = formatTime(booking.end_time);
+
+    // Create pricing display based on booking type
+    const pricingDisplay = isDaily 
+      ? `${Math.ceil(durationInHours / 24)} day${Math.ceil(durationInHours / 24) > 1 ? 's' : ''} × $${price}/day`
+      : `${durationInHours} hours × $${price}/hour`;
+
+    const emailResponse = await resend.emails.send({
+      from: "Arriv Parking <service@arrivparking.com>",
+      to: [email],
+      subject: "Booking Confirmed - Your Parking Spot is Reserved!",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Booking Confirmed</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <table role="presentation" style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="padding: 40px 30px; text-align: center;">
+                      <h1 style="margin: 0 0 24px; color: #1a1a1a; font-size: 28px; font-weight: 600;">
+                        🅿️ Arriv
+                      </h1>
+                      <div style="margin: 0 0 24px;">
+                        <span style="display: inline-block; width: 64px; height: 64px; background-color: #10b981; border-radius: 50%; color: white; font-size: 32px; line-height: 64px;">✓</span>
+                      </div>
+                      <h2 style="margin: 0 0 16px; color: #333; font-size: 22px; font-weight: 500;">
+                        Booking Confirmed!
+                      </h2>
+                      <p style="margin: 0 0 32px; color: #666; font-size: 16px; line-height: 1.5;">
+                        Hi ${renter.full_name}, your parking spot has been successfully reserved.
+                      </p>
+                      
+                      <!-- Booking Details -->
+                      <div style="background-color: #f8f9fa; border-radius: 8px; padding: 24px; margin-bottom: 24px; text-align: left;">
+                        <h3 style="margin: 0 0 16px; color: #333; font-size: 18px; font-weight: 600;">Booking Details</h3>
+                        
+                        <div style="margin-bottom: 16px;">
+                          <h4 style="margin: 0 0 8px; color: #1a1a1a; font-size: 16px; font-weight: 600;">${spot.title}</h4>
+                          <p style="margin: 0; color: #666; font-size: 14px;">📍 ${spot.address}</p>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                          <div style="flex: 1;">
+                            <p style="margin: 0 0 4px; color: #666; font-size: 14px; font-weight: 500;">Date</p>
+                            <p style="margin: 0; color: #333; font-size: 14px;">${startDate}</p>
+                          </div>
+                          <div style="flex: 1;">
+                            <p style="margin: 0 0 4px; color: #666; font-size: 14px; font-weight: 500;">Time</p>
+                            <p style="margin: 0; color: #333; font-size: 14px;">${startTime} - ${endTime}</p>
+                          </div>
+                        </div>
+                        
+                        <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #666; font-size: 14px;">Total Paid</span>
+                            <span style="color: #10b981; font-size: 18px; font-weight: 600;">$${booking.total_amount}</span>
+                          </div>
+                          <p style="margin: 0; color: #666; font-size: 12px;">${pricingDisplay} (includes fees & tax)</p>
+                        </div>
+                      </div>
+                      
+                      <!-- Confirmation Number -->
+                      <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                        <p style="margin: 0 0 4px; color: #666; font-size: 14px;">Confirmation Number</p>
+                        <p style="margin: 0; color: #1d4ed8; font-size: 18px; font-weight: 600; font-family: monospace;">${booking.confirmation_number}</p>
+                      </div>
+                      
+                      <!-- What's Next -->
+                      <div style="text-align: left; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px; color: #333; font-size: 18px; font-weight: 600;">What's Next?</h3>
+                        <div style="margin-bottom: 12px;">
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; color: #1d4ed8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">1</div>
+                            <div>
+                              <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Arrive at your spot</p>
+                              <p style="margin: 0; color: #666; font-size: 12px;">Use the address above to navigate to your parking spot</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; color: #1d4ed8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">2</div>
+                            <div>
+                              <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Park your vehicle</p>
+                              <p style="margin: 0; color: #666; font-size: 12px;">Follow any specific parking instructions from the owner</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; color: #1d4ed8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">3</div>
+                            <div>
+                              <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Relax & enjoy</p>
+                              <p style="margin: 0; color: #666; font-size: 12px;">Remember to return by your end time</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p style="margin: 24px 0 0; color: #999; font-size: 14px; line-height: 1.4;">
+                        Need help? Reply to this email or contact our support team.
+                        <br><br>
+                        Thank you for choosing Arriv!
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    });
+
+    console.log("Booking confirmation email sent successfully:", emailResponse);
+
+    return new Response(JSON.stringify({ success: true, id: emailResponse.data?.id }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error sending booking confirmation email:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  }
+};
+
+serve(handler);

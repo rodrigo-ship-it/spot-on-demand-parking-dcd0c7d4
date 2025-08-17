@@ -46,20 +46,26 @@ const BookingConfirmed = () => {
 
           if (spotError) throw spotError;
 
+          // Calculate duration in hours
+          const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
+          const isDaily = durationInHours >= 24;
+          
           // Format the data to match expected structure
           const formattedData = {
             date: new Date(booking.start_time).toISOString().split('T')[0],
             startTime: new Date(booking.start_time).toTimeString().split(' ')[0].substring(0, 5),
             endTime: new Date(booking.end_time).toTimeString().split(' ')[0].substring(0, 5),
-            duration: Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60)),
+            duration: durationInHours,
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
             autoExtend: false, // Default value
+            isDaily: isDaily,
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: spot.price_per_hour || spot.one_time_price
+              price: spot.price_per_hour || spot.one_time_price,
+              pricing_type: spot.pricing_type
             }
           };
 
@@ -171,7 +177,7 @@ const BookingConfirmed = () => {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">
-                  ${bookingData.spotData?.price || 8}/hr
+                  ${bookingData.spotData?.price || 8}/{bookingData.isDaily ? 'day' : 'hr'}
                 </div>
               </div>
             </div>
@@ -212,7 +218,10 @@ const BookingConfirmed = () => {
                 </span>
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {bookingData.duration} hours × ${bookingData.spotData?.price || 8}/hour (includes fees & tax)
+                {bookingData.isDaily 
+                  ? `${Math.ceil(bookingData.duration / 24)} day${Math.ceil(bookingData.duration / 24) > 1 ? 's' : ''} × $${bookingData.spotData?.price || 8}/day (includes fees & tax)`
+                  : `${bookingData.duration} hours × $${bookingData.spotData?.price || 8}/hour (includes fees & tax)`
+                }
               </p>
             </div>
           </CardContent>
