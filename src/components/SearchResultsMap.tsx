@@ -91,7 +91,11 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
   }, []);
 
   const handleGetDirections = (spot: ParkingSpot) => {
-    const url = `https://www.google.com/maps/dir/${userLocation?.lat || 40.7128},${userLocation?.lng || -74.006}/${spot.lat},${spot.lng}`;
+    if (!userLocation) {
+      alert('Location information unavailable. Please enable location access or try again.');
+      return;
+    }
+    const url = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${spot.lat},${spot.lng}`;
     window.open(url, '_blank');
   };
 
