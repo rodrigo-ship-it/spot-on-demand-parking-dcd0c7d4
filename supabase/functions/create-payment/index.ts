@@ -61,10 +61,16 @@ serve(async (req) => {
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
-      .single();
+      .maybeSingle();
 
-    if (bookingError || !booking) {
-      throw new Error(`Booking not found: ${bookingError?.message}`);
+    if (bookingError) {
+      console.error("❌ Booking query error:", bookingError);
+      throw new Error(`Database error: ${bookingError.message}`);
+    }
+    
+    if (!booking) {
+      console.error("❌ Booking not found:", bookingId);
+      throw new Error("Booking not found");
     }
     console.log("📝 Booking found:", booking.id);
 
@@ -73,10 +79,16 @@ serve(async (req) => {
       .from('parking_spots')
       .select('*')
       .eq('id', booking.spot_id)
-      .single();
+      .maybeSingle();
 
-    if (spotError || !parkingSpot) {
-      throw new Error(`Parking spot not found: ${spotError?.message}`);
+    if (spotError) {
+      console.error("❌ Spot query error:", spotError);
+      throw new Error(`Database error: ${spotError.message}`);
+    }
+    
+    if (!parkingSpot) {
+      console.error("❌ Parking spot not found:", booking.spot_id);
+      throw new Error("Parking spot not found");
     }
     console.log("📝 Spot owner:", parkingSpot.owner_id);
 
@@ -85,9 +97,15 @@ serve(async (req) => {
       .from('payout_settings')
       .select('*')
       .eq('user_id', parkingSpot.owner_id)
-      .single();
+      .maybeSingle();
 
-    if (payoutError || !payoutSettings?.stripe_connect_account_id) {
+    if (payoutError) {
+      console.error("❌ Payout settings query error:", payoutError);
+      throw new Error(`Database error: ${payoutError.message}`);
+    }
+    
+    if (!payoutSettings?.stripe_connect_account_id) {
+      console.error("❌ No payout settings found for owner:", parkingSpot.owner_id);
       throw new Error("Spot owner hasn't set up payouts yet. Please contact support.");
     }
     console.log("📝 Payout settings found for owner");
@@ -207,8 +225,12 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Payment creation error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('❌ Payment creation error:', error);
+    const errorMessage = error instanceof Error ? error.message : "Payment creation failed";
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: error instanceof Error ? error.stack : undefined
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
