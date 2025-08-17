@@ -79,24 +79,26 @@ const BookingConfirmed = () => {
           
           // Format the data to match expected structure with timezone-aware formatting
           const formatDateWithTimezone = (dateString: string) => {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
+            // Parse the datetime string and format for the spot's timezone
+            const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00Z'));
+            return new Intl.DateTimeFormat('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
               day: 'numeric',
               timeZone: spotTimezone
-            });
+            }).format(date);
           };
 
           const formatTimeWithTimezone = (dateString: string) => {
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('en-US', {
+            // Parse the datetime string and format for the spot's timezone
+            const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00Z'));
+            return new Intl.DateTimeFormat('en-US', {
               hour: 'numeric',
               minute: '2-digit',
               hour12: true,
               timeZone: spotTimezone
-            });
+            }).format(date);
           };
           
           const formattedData = {
