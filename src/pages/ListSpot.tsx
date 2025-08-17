@@ -124,7 +124,7 @@ const ListSpot = () => {
           zipCode: zipCode,
           pricingType: data.pricing_type || 'hourly',
           pricePerHour: data.pricing_type === 'hourly' ? data.price_per_hour?.toString() || '' : '',
-          dailyPrice: data.pricing_type === 'daily' ? data.price_per_hour?.toString() || '' : '',
+          dailyPrice: data.pricing_type === 'daily' ? data.daily_price?.toString() || '' : '',
           oneTimePrice: data.one_time_price?.toString() || '',
           availabilityType: data.availability_schedule ? 'custom' : 'always',
           customSchedule: (data.availability_schedule as any) || {
@@ -277,8 +277,8 @@ const ListSpot = () => {
         spot_type: spotType,
         pricing_type: formData.pricingType,
         price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 
-                        formData.pricingType === 'daily' ? parseFloat(formData.dailyPrice) : 
                         formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : 0,
+        daily_price: formData.pricingType === 'daily' ? parseFloat(formData.dailyPrice) : null,
         one_time_price: formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         total_spots: totalSpots,
         available_spots: totalSpots, // Initially all spots are available

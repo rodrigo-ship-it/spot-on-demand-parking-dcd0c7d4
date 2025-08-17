@@ -382,6 +382,7 @@ export type Database = {
           availability_schedule: Json | null
           available_spots: number | null
           created_at: string
+          daily_price: number | null
           description: string | null
           id: string
           images: string[] | null
@@ -407,6 +408,7 @@ export type Database = {
           availability_schedule?: Json | null
           available_spots?: number | null
           created_at?: string
+          daily_price?: number | null
           description?: string | null
           id?: string
           images?: string[] | null
@@ -432,6 +434,7 @@ export type Database = {
           availability_schedule?: Json | null
           available_spots?: number | null
           created_at?: string
+          daily_price?: number | null
           description?: string | null
           id?: string
           images?: string[] | null
