@@ -562,7 +562,7 @@ const ManageSpots = () => {
                 <TableRow>
                   <TableHead>Spot Details</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Price/Hour</TableHead>
+                  <TableHead>Price</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Bookings</TableHead>
                   <TableHead>Monthly Earnings</TableHead>
@@ -592,7 +592,12 @@ const ManageSpots = () => {
                     <TableCell>
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 text-green-600" />
-                        {spot.price}
+                        <span className="mr-2">${spot.price}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {spot.pricingType === 'hourly' ? 'Hourly' : 
+                           spot.pricingType === 'daily' ? 'Daily' : 
+                           'One-time'}
+                        </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
