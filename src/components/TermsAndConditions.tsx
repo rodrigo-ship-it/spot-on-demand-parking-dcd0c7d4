@@ -424,16 +424,272 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 </p>
               </section>
 
+              <section>
+                <h3 className="font-semibold text-sm mb-2">23. DATA PROTECTION AND PRIVACY COMPLIANCE</h3>
+                <p className="mb-3">
+                  <strong>GDPR Compliance:</strong> For users in the European Economic Area, we comply with the General Data Protection Regulation (GDPR). 
+                  You have rights including access, rectification, erasure, restriction, portability, and objection regarding your personal data.
+                </p>
+                <p className="mb-3">
+                  <strong>CCPA Compliance:</strong> California residents have rights under the California Consumer Privacy Act including 
+                  the right to know, delete, opt-out of sale, and non-discrimination regarding personal information.
+                </p>
+                <p className="mb-3">
+                  <strong>Data Retention:</strong> We retain personal data only as long as necessary for the purposes outlined in our Privacy Policy 
+                  or as required by applicable law. Account data may be retained for legal compliance purposes even after account deletion.
+                </p>
+                <p className="mb-3">
+                  <strong>Cross-Border Data Transfers:</strong> Your data may be transferred to and processed in countries other than your residence. 
+                  We implement appropriate safeguards for international data transfers.
+                </p>
+                <p className="mb-3">
+                  <strong>Biometric Data:</strong> We do not collect biometric identifiers or biometric information unless explicitly disclosed 
+                  and consented to for specific security or verification purposes.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">24. COOKIES AND TRACKING TECHNOLOGIES</h3>
+                <p className="mb-3">
+                  We use cookies, web beacons, and similar tracking technologies to enhance user experience, analyze usage patterns, 
+                  and deliver personalized content. You can control cookie preferences through your browser settings, though some 
+                  features may not function properly if cookies are disabled.
+                </p>
+                <p className="mb-3">
+                  <strong>Third-Party Analytics:</strong> We may use third-party analytics services that collect information about your use 
+                  of the Service. These services have their own privacy policies governing their data collection practices.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">25. ACCESSIBILITY AND NON-DISCRIMINATION</h3>
+                <p className="mb-3">
+                  We are committed to providing an accessible experience for all users and strive to comply with applicable accessibility 
+                  standards including the Web Content Accessibility Guidelines (WCAG). If you encounter accessibility barriers, 
+                  please contact our support team.
+                </p>
+                <p className="mb-3">
+                  Users must comply with all applicable fair housing, civil rights, and anti-discrimination laws. Discrimination 
+                  based on protected characteristics is strictly prohibited and may result in account termination.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">26. AGE RESTRICTIONS AND CHILDREN'S PRIVACY</h3>
+                <p className="mb-3">
+                  The Service is intended for users 18 years of age and older. We do not knowingly collect personal information 
+                  from children under 13. If we become aware that we have collected personal information from a child under 13, 
+                  we will take steps to delete such information.
+                </p>
+                <p className="mb-3">
+                  Users between 13-17 years of age may only use the Service with parental consent and supervision. 
+                  Such users may not list parking spaces or enter into rental agreements.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">27. INTERNATIONAL USERS AND SANCTIONS COMPLIANCE</h3>
+                <p className="mb-3">
+                  The Service may not be available in all countries. We comply with applicable export control laws and economic sanctions, 
+                  including those administered by the U.S. Department of Treasury's Office of Foreign Assets Control (OFAC).
+                </p>
+                <p className="mb-3">
+                  Users from sanctioned countries or individuals on sanctions lists are prohibited from using the Service. 
+                  We reserve the right to restrict access based on geographic location or sanctions compliance.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">28. DEVICE PERMISSIONS AND LOCATION SERVICES</h3>
+                <p className="mb-3">
+                  Our mobile application may request access to device features including camera, location services, push notifications, 
+                  and storage. You can control these permissions through your device settings, though some features may be limited without certain permissions.
+                </p>
+                <p className="mb-3">
+                  <strong>Location Data:</strong> We may collect precise location information to provide location-based services. 
+                  This data is used to show nearby parking options and facilitate bookings. You can disable location sharing through your device settings.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">29. CONTENT MODERATION AND MONITORING</h3>
+                <p className="mb-3">
+                  We reserve the right to monitor, review, and moderate user content and communications for compliance with these Terms, 
+                  safety purposes, and legal requirements. This includes but is not limited to listings, messages, reviews, and uploaded images.
+                </p>
+                <p className="mb-3">
+                  <strong>Automated Systems:</strong> We may use automated systems and artificial intelligence to detect prohibited content, 
+                  fraud, or policy violations. Appeals processes are available for automated decisions.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">30. BACKGROUND CHECKS AND IDENTITY VERIFICATION</h3>
+                <p className="mb-3">
+                  We may conduct background checks, identity verification, or fraud detection processes on users. 
+                  By using the Service, you consent to such verification processes and agree to provide accurate information when requested.
+                </p>
+                <p className="mb-3">
+                  Failure to pass verification processes or providing false information may result in account suspension or termination.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">31. INSURANCE AND COVERAGE REQUIREMENTS</h3>
+                <p className="mb-3">
+                  <strong>Host Insurance:</strong> Hosts must maintain appropriate property and liability insurance coverage. 
+                  Arriv does not provide insurance coverage for Host properties or incidents occurring on Host premises.
+                </p>
+                <p className="mb-3">
+                  <strong>Renter Insurance:</strong> Renters must maintain valid automotive insurance meeting applicable minimum requirements. 
+                  Your personal insurance is primary coverage for any incidents involving your vehicle.
+                </p>
+                <p className="mb-3">
+                  <strong>No Platform Coverage:</strong> Arriv does not provide insurance coverage for users and is not an insurance company. 
+                  Users are responsible for their own insurance needs.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">32. ENVIRONMENTAL AND REGULATORY COMPLIANCE</h3>
+                <p className="mb-3">
+                  Hosts must comply with all applicable environmental regulations, zoning laws, building codes, and local ordinances. 
+                  This includes proper waste disposal, environmental impact considerations, and permitting requirements.
+                </p>
+                <p className="mb-3">
+                  Users must comply with vehicle emissions standards and environmental regulations applicable to their vehicles and activities.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">33. THIRD-PARTY INTEGRATIONS AND API USAGE</h3>
+                <p className="mb-3">
+                  The Service may integrate with third-party services including payment processors, mapping services, and communication tools. 
+                  These integrations are subject to the third parties' own terms of service and privacy policies.
+                </p>
+                <p className="mb-3">
+                  Any use of Arriv APIs or developer tools is subject to separate API terms and conditions. 
+                  Unauthorized access to our systems or APIs is strictly prohibited.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">34. SECURITY INCIDENTS AND DATA BREACHES</h3>
+                <p className="mb-3">
+                  In the event of a security incident or data breach, we will notify affected users and relevant authorities 
+                  as required by applicable law. We maintain incident response procedures and security monitoring systems.
+                </p>
+                <p className="mb-3">
+                  Users must promptly report any suspected security incidents, unauthorized access, or data breaches to our security team.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">35. PROFESSIONAL LICENSING AND QUALIFICATIONS</h3>
+                <p className="mb-3">
+                  Hosts operating commercial parking facilities may be required to obtain business licenses, permits, or professional qualifications. 
+                  Hosts are responsible for determining and obtaining all required licenses and permits.
+                </p>
+                <p className="mb-3">
+                  Arriv does not verify professional licensing or qualifications and is not responsible for Host compliance with licensing requirements.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">36. CONSUMER PROTECTION AND FAIR TRADING</h3>
+                <p className="mb-3">
+                  We comply with applicable consumer protection laws and fair trading practices. This includes transparent pricing, 
+                  accurate service descriptions, and fair dispute resolution processes.
+                </p>
+                <p className="mb-3">
+                  Users have rights under applicable consumer protection laws that cannot be waived by these Terms. 
+                  These Terms do not limit any mandatory consumer rights under applicable law.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">37. TELECOMMUNICATIONS AND ELECTRONIC COMMUNICATIONS</h3>
+                <p className="mb-3">
+                  By using the Service, you consent to receive electronic communications from us including emails, SMS messages, 
+                  push notifications, and in-app messages. You can opt out of marketing communications but may continue to receive 
+                  transactional and service-related communications.
+                </p>
+                <p className="mb-3">
+                  Communications through the platform may be monitored or recorded for quality assurance, training, and compliance purposes.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">38. DIGITAL MILLENNIUM COPYRIGHT ACT (DMCA)</h3>
+                <p className="mb-3">
+                  We comply with the Digital Millennium Copyright Act. If you believe your copyrighted work has been infringed, 
+                  please provide our designated copyright agent with a detailed notice including identification of the copyrighted work, 
+                  location of the infringing material, and your contact information.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">39. BANKRUPTCY AND INSOLVENCY</h3>
+                <p className="mb-3">
+                  In the event of bankruptcy, insolvency, or business closure, these Terms will remain in effect to the extent possible. 
+                  User data will be handled in accordance with applicable law and our Privacy Policy.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">40. AUDIT AND COMPLIANCE MONITORING</h3>
+                <p className="mb-3">
+                  We may conduct audits and compliance monitoring to ensure adherence to these Terms and applicable laws. 
+                  Users agree to cooperate with reasonable audit requests and compliance investigations.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">41. ELECTRONIC SIGNATURES AND RECORDS</h3>
+                <p className="mb-3">
+                  You agree that electronic signatures, contracts, orders, and other records have the same legal effect as physical documents. 
+                  You consent to conducting transactions electronically and receiving agreements and disclosures electronically.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">42. ANTI-MONEY LAUNDERING (AML) AND KNOW YOUR CUSTOMER (KYC)</h3>
+                <p className="mb-3">
+                  We may implement anti-money laundering and know-your-customer procedures as required by applicable financial regulations. 
+                  This may include identity verification, transaction monitoring, and suspicious activity reporting.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">43. HEALTH AND SAFETY REGULATIONS</h3>
+                <p className="mb-3">
+                  Hosts must comply with applicable health and safety regulations for their properties. 
+                  This includes maintaining safe conditions, proper signage, emergency access, and compliance with fire safety codes.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-sm mb-2">44. SURVIVAL OF TERMS</h3>
+                <p className="mb-3">
+                  Provisions of these Terms that by their nature should survive termination will survive, including but not limited to 
+                  liability limitations, indemnification, intellectual property rights, and dispute resolution provisions.
+                </p>
+              </section>
+
               <section className="pt-4 border-t">
                 <p className="text-xs text-muted-foreground mb-2">
                   <strong>Effective Date:</strong> {new Date().toLocaleDateString()}
                 </p>
                 <p className="text-xs text-muted-foreground mb-2">
-                  <strong>Version:</strong> 2.0
+                  <strong>Version:</strong> 3.0 - Comprehensive Legal Compliance Edition
+                </p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  <strong>Document Length:</strong> This comprehensive agreement contains 44 sections covering all aspects of platform usage, 
+                  legal compliance, user responsibilities, and liability protections.
                 </p>
                 <p className="text-xs text-muted-foreground">
                   By using Arriv, you acknowledge that you have read, understood, and agree to be bound by these comprehensive Terms and Conditions. 
-                  These Terms constitute a legally binding agreement between you and Arriv Inc.
+                  These Terms constitute a legally binding agreement between you and Arriv Inc. and supersede all previous versions.
                 </p>
               </section>
             </div>
