@@ -680,13 +680,14 @@ const SpotDetails = () => {
                     <h4 className="font-semibold text-sm mb-2">Estimated Total Cost*</h4>
                     {(() => {
                       const isPricingHourly = spotData.pricing_type === 'hourly';
+                      const isPricingDaily = spotData.pricing_type === 'daily';
                       const basePrice = spotData.pricing_type === 'hourly' 
                         ? Number(spotData.price_per_hour) 
                         : spotData.pricing_type === 'daily'
                         ? Number(spotData.daily_price)
                         : Number(spotData.one_time_price);
-                      const estimatedDuration = isPricingHourly ? 4 : 1; // Estimate 4 hours for hourly spots
-                      const subtotal = isPricingHourly ? basePrice * estimatedDuration : basePrice;
+                      const estimatedDuration = isPricingHourly ? 4 : isPricingDaily ? 2 : 1; // Estimate 4 hours for hourly, 2 days for daily
+                      const subtotal = (isPricingHourly || isPricingDaily) ? basePrice * estimatedDuration : basePrice;
                       const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
                       const renterTotal = subtotal + platformFee;
                       const tax = Math.round(renterTotal * 0.0875 * 100) / 100; // 8.75% tax
@@ -695,7 +696,7 @@ const SpotDetails = () => {
                       return (
                         <>
                           <div className="flex justify-between text-sm">
-                            <span>Base price {isPricingHourly ? `(${estimatedDuration}h)` : ''}</span>
+                            <span>Base price {isPricingHourly ? `(${estimatedDuration}h)` : isPricingDaily ? `(${estimatedDuration} days)` : ''}</span>
                             <span>${subtotal.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
@@ -714,6 +715,11 @@ const SpotDetails = () => {
                           {isPricingHourly && (
                             <p className="text-xs text-gray-500 mt-2">
                               *Based on {estimatedDuration}-hour booking. Final price depends on actual duration.
+                            </p>
+                          )}
+                          {isPricingDaily && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              *Based on {estimatedDuration}-day booking. Final price depends on actual duration.
                             </p>
                           )}
                         </>
