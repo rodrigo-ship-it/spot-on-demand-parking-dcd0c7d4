@@ -592,11 +592,11 @@ const ManageSpots = () => {
                     <TableCell>
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 text-green-600" />
-                        <span className="mr-2">${spot.price}</span>
+                        <span className="mr-2">{spot.price}</span>
                         <Badge variant="outline" className="text-xs">
                           {spot.pricingType === 'hourly' ? 'Hourly' : 
                            spot.pricingType === 'daily' ? 'Daily' : 
-                           'One-time'}
+                           'Once'}
                         </Badge>
                       </div>
                     </TableCell>
