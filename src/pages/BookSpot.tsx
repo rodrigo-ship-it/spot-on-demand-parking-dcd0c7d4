@@ -184,11 +184,14 @@ const BookSpot = () => {
 
   // Pricing calculation - 7% upcharge for renters, 7% deduction for listers
   const isPricingHourly = spotData?.pricing_type === 'hourly';
+  const isPricingDaily = spotData?.pricing_type === 'daily';
   const basePrice = isPricingHourly 
-    ? (spotData?.price_per_hour || 8) 
+    ? (spotData?.price_per_hour || 8)
+    : isPricingDaily
+    ? (spotData?.daily_price || 25)
     : (spotData?.one_time_price || 25);
   const duration = bookingDetails.duration;
-  const subtotal = isPricingHourly ? basePrice * duration : basePrice;
+  const subtotal = (isPricingHourly || isPricingDaily) ? basePrice * duration : basePrice;
   const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
   const renterTotal = Math.round((subtotal + platformFee) * 100) / 100; // Renter pays 7% more
   const ownerPayout = Math.round((subtotal - platformFee) * 100) / 100; // Owner gets 7% less
@@ -470,9 +473,12 @@ const BookSpot = () => {
                      </Select>
                    </div>
                  </div>
-                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                  Duration: {bookingDetails.duration} hours
-                </div>
+                 <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                   Duration: {isPricingDaily 
+                     ? `${Math.ceil(bookingDetails.duration / 24)} days (${bookingDetails.duration} hours)`
+                     : `${bookingDetails.duration} hours`
+                   }
+                 </div>
               </CardContent>
             </Card>
 
@@ -573,15 +579,17 @@ const BookSpot = () => {
                 </CardTitle>
               </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>
-                      {isPricingHourly 
-                        ? `$${basePrice}/hr × ${duration} hours`
-                        : `$${basePrice} (flat rate)`
-                      }
-                    </span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
+                   <div className="flex justify-between">
+                     <span>
+                       {isPricingHourly 
+                         ? `$${basePrice}/hr × ${duration} hours`
+                         : isPricingDaily
+                         ? `$${basePrice}/day × ${Math.ceil(duration / 24)} days`
+                         : `$${basePrice} (flat rate)`
+                       }
+                     </span>
+                     <span>${subtotal.toFixed(2)}</span>
+                   </div>
                  <div className="flex justify-between text-sm text-gray-600">
                    <span>Platform fee</span>
                    <span>${platformFee.toFixed(2)}</span>
