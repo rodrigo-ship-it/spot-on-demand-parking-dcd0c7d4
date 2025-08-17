@@ -96,7 +96,7 @@ serve(async (req) => {
     const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
     const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% platform fee from subtotal
     const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + $0.30 of total charge
-    const listerAmount = Math.round(subtotalBeforeFees) - stripeProcessingFee; // Subtotal minus stripe fee
+    const listerAmount = Math.round(subtotalBeforeFees) - platformFeeFromLister - stripeProcessingFee; // Subtotal minus platform fee minus stripe fee
 
     // Create payment session config
     const sessionConfig = {
