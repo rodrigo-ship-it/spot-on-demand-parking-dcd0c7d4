@@ -36,7 +36,7 @@ const Index = () => {
       ? Number(spot.price_per_hour)
       : Number(spot.one_time_price),
     pricingType: spot.pricing_type,
-    rating: Number(spot.rating) || 4.5,
+    rating: Number(spot.rating) || 0,
     distance: "0.5 miles", // This would need real geolocation calculation
     type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
     spotType: spot.spot_type,
@@ -397,10 +397,12 @@ const Index = () => {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold flex items-center shadow-card animate-bounce-in">
-                      <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                      {spot.rating}
-                    </div>
+                    {spot.rating > 0 && (
+                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold flex items-center shadow-card animate-bounce-in">
+                        <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                        {spot.rating}
+                      </div>
+                    )}
                   </div>
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">

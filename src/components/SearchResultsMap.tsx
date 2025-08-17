@@ -142,10 +142,14 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
 
                 {/* Bottom row with rating and button */}
                 <div className="flex justify-between items-center mt-auto pt-2 border-t">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                    <span className="text-sm font-medium">{spot.rating}</span>
-                  </div>
+                  {spot.rating > 0 ? (
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                      <span className="text-sm font-medium">{spot.rating}</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400">No rating</span>
+                  )}
                   <Button
                     size="sm"
                     variant="default"
@@ -191,8 +195,14 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                   className="w-full h-full object-cover rounded-l-lg"
                 />
                 <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                  <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                  {spot.rating}
+                  {spot.rating > 0 ? (
+                    <>
+                      <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                      {spot.rating}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">No rating</span>
+                  )}
                 </div>
               </div>
               <div className="flex-1 p-4">
