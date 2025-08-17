@@ -87,6 +87,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
           setUserLocation({ lat: 40.7128, lng: -74.006 });
         }
       );
+    } else {
+      // Default to NYC if geolocation is not supported
+      setUserLocation({ lat: 40.7128, lng: -74.006 });
     }
   }, []);
 
