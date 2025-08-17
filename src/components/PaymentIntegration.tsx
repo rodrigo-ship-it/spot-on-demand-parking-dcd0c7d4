@@ -63,9 +63,8 @@ export const PaymentIntegration = ({
       if (paymentMethod === "card" || paymentMethod === "paypal") {
         // Redirect to Stripe Checkout (supports both card and PayPal)
         if (data?.url) {
-          window.open(data.url, '_blank');
-          toast.success("Redirecting to payment...");
-          // DO NOT call onPaymentSuccess here - only after actual payment completion
+          // Redirect in the same window instead of opening new tab
+          window.location.href = data.url;
           return;
         }
       } else if (paymentMethod === "apple_pay") {

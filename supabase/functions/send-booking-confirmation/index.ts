@@ -23,6 +23,7 @@ interface BookingConfirmationRequest {
     address: string;
     price_per_hour?: number;
     one_time_price?: number;
+    daily_price?: number;
     pricing_type: string;
   };
   renter: {
@@ -44,7 +45,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Calculate duration and determine if it's daily
     const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
     const isDaily = durationInHours >= 24;
-    const price = spot.price_per_hour || spot.one_time_price || 8;
+    const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
 
     // Format dates and times
     const formatDate = (dateString: string) => {

@@ -6,6 +6,7 @@ import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, Mes
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { handlePaymentSuccess } from "@/components/WebhookHandler";
 
 const BookingConfirmed = () => {
   const location = useLocation();
@@ -24,10 +25,13 @@ const BookingConfirmed = () => {
       // If we already have booking data from navigation state, use it
       if (bookingData) return;
 
-      // If we have URL parameters from Stripe, fetch the booking data
-      if (bookingId) {
+      // If we have URL parameters from Stripe, handle payment success and fetch the booking data
+      if (bookingId && sessionId) {
         setLoading(true);
         try {
+          // Call the webhook handler to process payment success
+          await handlePaymentSuccess(sessionId);
+          
           // Fetch booking details
           const { data: booking, error: bookingError } = await supabase
             .from('bookings')
@@ -64,7 +68,7 @@ const BookingConfirmed = () => {
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: spot.price_per_hour || spot.one_time_price,
+              price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
               pricing_type: spot.pricing_type
             }
           };
@@ -177,7 +181,7 @@ const BookingConfirmed = () => {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">
-                  ${bookingData.spotData?.price || 8}/{bookingData.isDaily ? 'day' : 'hr'}
+                  ${bookingData.spotData?.price}/{bookingData.isDaily ? 'day' : 'hr'}
                 </div>
               </div>
             </div>
@@ -219,8 +223,8 @@ const BookingConfirmed = () => {
               </div>
               <p className="text-sm text-gray-600 mt-1">
                 {bookingData.isDaily 
-                  ? `${Math.ceil(bookingData.duration / 24)} day${Math.ceil(bookingData.duration / 24) > 1 ? 's' : ''} × $${bookingData.spotData?.price || 8}/day (includes fees & tax)`
-                  : `${bookingData.duration} hours × $${bookingData.spotData?.price || 8}/hour (includes fees & tax)`
+                  ? `${Math.ceil(bookingData.duration / 24)} day${Math.ceil(bookingData.duration / 24) > 1 ? 's' : ''} × $${bookingData.spotData?.price}/day (includes fees & tax)`
+                  : `${bookingData.duration} hours × $${bookingData.spotData?.price}/hour (includes fees & tax)`
                 }
               </p>
             </div>

@@ -70,6 +70,7 @@ export const handlePaymentSuccess = async (paymentIntentId: string) => {
             address: spot.address,
             price_per_hour: spot.price_per_hour,
             one_time_price: spot.one_time_price,
+            daily_price: spot.daily_price,
             pricing_type: spot.pricing_type
           },
           renter: {
