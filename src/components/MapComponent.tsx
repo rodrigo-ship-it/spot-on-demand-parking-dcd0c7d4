@@ -214,18 +214,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               // Track current spot index for this marker
               let currentSpotIndex = 0;
               
-              // Function to update popup content and reattach listeners
-              const updatePopupContent = (newIndex) => {
-                currentSpotIndex = newIndex;
-                const newContent = createPopupContent(currentSpotIndex);
-                marker.getPopup().setHTML(newContent);
-                
-                // Reattach event listeners after content update
-                setTimeout(() => {
-                  attachEventListeners();
-                }, 50);
-              };
-              
               // Function to attach event listeners
               const attachEventListeners = () => {
                 const currentSpot = group.spots[currentSpotIndex];
@@ -245,22 +233,26 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                   const prevBtn = document.getElementById(`prev-btn-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
                   const nextBtn = document.getElementById(`next-btn-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
                   
-                  if (prevBtn && !prevBtn.disabled) {
+                  if (prevBtn) {
                     prevBtn.addEventListener('click', (e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       if (currentSpotIndex > 0) {
-                        updatePopupContent(currentSpotIndex - 1);
+                        currentSpotIndex--;
+                        marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
+                        setTimeout(attachEventListeners, 100);
                       }
                     });
                   }
                   
-                  if (nextBtn && !nextBtn.disabled) {
+                  if (nextBtn) {
                     nextBtn.addEventListener('click', (e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       if (currentSpotIndex < group.spots.length - 1) {
-                        updatePopupContent(currentSpotIndex + 1);
+                        currentSpotIndex++;
+                        marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
+                        setTimeout(attachEventListeners, 100);
                       }
                     });
                   }
@@ -269,9 +261,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               
               // Add click event listeners when popup opens
               marker.getPopup().on('open', () => {
-                setTimeout(() => {
-                  attachEventListeners();
-                }, 100);
+                currentSpotIndex = 0; // Reset to first spot
+                setTimeout(attachEventListeners, 150);
               });
             });
 
