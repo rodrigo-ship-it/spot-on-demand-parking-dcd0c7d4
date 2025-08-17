@@ -21,21 +21,24 @@ serve(async (req) => {
       throw new Error("Missing required fields: bookingId and baseAmount");
     }
 
-    // Use the baseAmount as-is (it already includes all fees calculated on frontend)
-    const totalAmountForRenter = baseAmount;
-
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Create Supabase client
+    // Create Supabase clients
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
+    
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
-    // Get authenticated user (if any)
+    // Get authenticated user
     let user = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
@@ -43,6 +46,26 @@ serve(async (req) => {
       const { data } = await supabaseClient.auth.getUser(token);
       user = data.user;
     }
+
+    // Get booking and spot data to calculate lister payout
+    const { data: booking } = await supabaseService
+      .from('bookings')
+      .select('*, parking_spots(*)')
+      .eq('id', bookingId)
+      .single();
+
+    if (!booking?.parking_spots) {
+      throw new Error("Booking or parking spot not found");
+    }
+
+    const parkingSpot = booking.parking_spots;
+
+    // Get payout settings for the spot owner
+    const { data: payoutSettings } = await supabaseService
+      .from("payout_settings")
+      .select("*")
+      .eq("user_id", parkingSpot.owner_id)
+      .maybeSingle();
 
     // Use provided email or user email or default
     const email = customerEmail || user?.email || "guest@example.com";
@@ -61,9 +84,18 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Create a one-time payment session with payment method options
+    // Calculate the same fees as marketplace payment
+    const totalAmount = Math.round(baseAmount * 100); // Total amount in cents
+    const baseSpotPrice = Math.round((baseAmount / 1.0875 / 1.07) * 100); // Reverse calculate base price
+    const platformFeeFromLister = Math.round(baseSpotPrice * 0.07);
+    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30;
+    const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
+
+    // Create payment session config
     const sessionConfig = {
       customer: customerId,
+      mode: "payment",
+      payment_method_types: paymentMethod === "paypal" ? ["card", "paypal"] : ["card"],
       line_items: [
         {
           price_data: {
@@ -72,47 +104,44 @@ serve(async (req) => {
               name: "Parking Spot Rental",
               description: `Booking ID: ${bookingId}`
             },
-            unit_amount: Math.round(totalAmountForRenter * 100), // Convert to cents
+            unit_amount: totalAmount,
           },
           quantity: 1,
         },
       ],
-      mode: "payment",
       success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
-      cancel_url: `${req.headers.get("origin")}/book-spot/${bookingId.split('-')[0]}?cancelled=true`,
+      cancel_url: `${req.headers.get("origin")}/book-spot/${parkingSpot.id}?cancelled=true`,
       metadata: {
         bookingId,
-        totalAmount: totalAmountForRenter.toString(),
+        totalAmount: baseAmount.toString(),
         currency,
         paymentMethod,
+        owner_id: parkingSpot.owner_id,
+        lister_amount: (listerAmount / 100).toString(),
       },
     };
 
-    // Add payment method types based on selection
-    if (paymentMethod === "paypal") {
-      sessionConfig.payment_method_types = ["card", "paypal"];
-    } else if (paymentMethod === "apple_pay") {
-      sessionConfig.payment_method_types = ["card"];
-      // Note: Apple Pay would typically be handled client-side with Payment Request API
-    } else {
-      sessionConfig.payment_method_types = ["card"];
+    // Add transfer to spot owner if they have payout settings
+    if (payoutSettings?.stripe_connect_account_id && payoutSettings?.payouts_enabled) {
+      sessionConfig.payment_intent_data = {
+        transfer_data: {
+          destination: payoutSettings.stripe_connect_account_id,
+          amount: listerAmount,
+        },
+      };
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    // Optional: Update booking with Stripe session ID using service role
+    // Update booking with Stripe session ID using service role
     try {
-      const supabaseService = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-        { auth: { persistSession: false } }
-      );
-
       await supabaseService
         .from("bookings")
         .update({ 
           payment_intent_id: session.id,
-          status: 'pending_payment'
+          status: 'pending_payment',
+          owner_payout_amount: listerAmount / 100,
+          platform_fee_amount: platformFeeFromLister / 100,
         })
         .eq('id', bookingId);
     } catch (error) {
