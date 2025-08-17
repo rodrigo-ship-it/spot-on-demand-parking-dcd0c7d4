@@ -42,12 +42,47 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending booking confirmation email to:", email);
 
+    // Get spot coordinates to determine timezone
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: spotData, error: spotError } = await supabase
+      .from('parking_spots')
+      .select('latitude, longitude')
+      .eq('title', spot.title)
+      .eq('address', spot.address)
+      .single();
+
+    if (spotError) {
+      console.error('Error fetching spot coordinates:', spotError);
+    }
+
+    // Get timezone for the spot location
+    let spotTimezone = 'UTC'; // fallback
+    if (spotData?.latitude && spotData?.longitude) {
+      try {
+        // Use Google's Timezone API
+        const timezoneResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/timezone/json?location=${spotData.latitude},${spotData.longitude}&timestamp=${Math.floor(Date.now() / 1000)}&key=${Deno.env.get('GOOGLE_PLACES_API_KEY')}`
+        );
+        const timezoneData = await timezoneResponse.json();
+        if (timezoneData.status === 'OK') {
+          spotTimezone = timezoneData.timeZoneId;
+        }
+      } catch (error) {
+        console.error('Error getting timezone:', error);
+      }
+    }
+
     // Calculate duration and determine if it's daily
     const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
     const isDaily = durationInHours >= 24;
     const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
 
-    // Format dates and times properly handling timezone
+    // Format dates and times using the spot's timezone
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
@@ -55,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-        timeZone: 'UTC' // Use UTC to avoid timezone conversion issues
+        timeZone: spotTimezone
       });
     };
 
@@ -65,7 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-        timeZone: 'UTC' // Use UTC to avoid timezone conversion issues
+        timeZone: spotTimezone
       });
     };
 

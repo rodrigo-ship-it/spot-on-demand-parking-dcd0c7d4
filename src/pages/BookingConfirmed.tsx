@@ -51,15 +51,58 @@ const BookingConfirmed = () => {
 
           if (spotError) throw spotError;
 
+          // Get timezone for the spot location
+          let spotTimezone = 'UTC'; // fallback
+          if (spot.latitude && spot.longitude) {
+            try {
+              // Use Google's Timezone API
+              const response = await supabase.functions.invoke('get-mapbox-token');
+              const { google_places_key } = response.data || {};
+              
+              if (google_places_key) {
+                const timezoneResponse = await fetch(
+                  `https://maps.googleapis.com/maps/api/timezone/json?location=${spot.latitude},${spot.longitude}&timestamp=${Math.floor(Date.now() / 1000)}&key=${google_places_key}`
+                );
+                const timezoneData = await timezoneResponse.json();
+                if (timezoneData.status === 'OK') {
+                  spotTimezone = timezoneData.timeZoneId;
+                }
+              }
+            } catch (error) {
+              console.error('Error getting timezone:', error);
+            }
+          }
+
           // Calculate duration in hours
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
-          // Format the data to match expected structure
+          // Format the data to match expected structure with timezone-aware formatting
+          const formatDateWithTimezone = (dateString: string) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              timeZone: spotTimezone
+            });
+          };
+
+          const formatTimeWithTimezone = (dateString: string) => {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+              timeZone: spotTimezone
+            });
+          };
+          
           const formattedData = {
-            date: new Date(booking.start_time).toISOString().split('T')[0],
-            startTime: new Date(booking.start_time).toTimeString().split(' ')[0].substring(0, 5),
-            endTime: new Date(booking.end_time).toTimeString().split(' ')[0].substring(0, 5),
+            date: formatDateWithTimezone(booking.start_time),
+            startTime: formatTimeWithTimezone(booking.start_time),
+            endTime: formatTimeWithTimezone(booking.end_time),
             duration: durationInHours,
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
@@ -106,33 +149,6 @@ const BookingConfirmed = () => {
     return null;
   }
 
-  const formatDate = (dateString: string) => {
-    // Handle both date-only strings (YYYY-MM-DD) and full datetime strings
-    const date = dateString.includes('T') ? new Date(dateString) : new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const formatTime = (timeString: string) => {
-    // Handle both time-only strings (HH:MM) and full datetime strings
-    if (timeString.includes('T')) {
-      return new Date(timeString).toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
-    } else {
-      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
-    }
-  };
 
   const sendConfirmationEmail = async () => {
     if (!bookingData?.bookingId) {
@@ -281,16 +297,16 @@ const BookingConfirmed = () => {
                 <Calendar className="w-5 h-5 mr-3 text-gray-400" />
                 <div>
                   <p className="font-medium">Date</p>
-                  <p className="text-gray-600">{formatDate(bookingData.date)}</p>
+                  <p className="text-gray-600">{bookingData.date}</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <Clock className="w-5 h-5 mr-3 text-gray-400" />
                 <div>
                   <p className="font-medium">Time</p>
-                  <p className="text-gray-600">
-                    {formatTime(bookingData.startTime)} - {formatTime(bookingData.endTime)}
-                  </p>
+                   <p className="text-gray-600">
+                     {bookingData.startTime} - {bookingData.endTime}
+                   </p>
                 </div>
               </div>
             </div>
