@@ -14,124 +14,38 @@ serve(async (req) => {
   }
 
   try {
-    console.log("🔥 create-payment function called");
-    
     // Parse request body with payment method support
     const { bookingId, baseAmount, currency = "usd", customerEmail, customerName, paymentMethod = "card" } = await req.json();
-    console.log("📝 Booking ID received:", bookingId);
 
     if (!bookingId || !baseAmount) {
       throw new Error("Missing required fields: bookingId and baseAmount");
     }
+
+    // Use the baseAmount as-is (it already includes all fees calculated on frontend)
+    const totalAmountForRenter = baseAmount;
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Create Supabase service role client for booking and spot data
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    // Create Supabase client for user auth
+    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Get authenticated user
+    // Get authenticated user (if any)
+    let user = null;
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("Authorization header is required");
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabaseClient.auth.getUser(token);
+      user = data.user;
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data, error: authError } = await supabaseClient.auth.getUser(token);
-    if (authError || !data.user) {
-      throw new Error("User not authenticated");
-    }
-    const user = data.user;
-    console.log("📝 User authenticated:", user.email);
-
-    // Get booking details
-    const { data: booking, error: bookingError } = await supabaseService
-      .from('bookings')
-      .select('*')
-      .eq('id', bookingId)
-      .maybeSingle();
-
-    if (bookingError) {
-      console.error("❌ Booking query error:", bookingError);
-      throw new Error(`Database error: ${bookingError.message}`);
-    }
-    
-    if (!booking) {
-      console.error("❌ Booking not found:", bookingId);
-      throw new Error("Booking not found");
-    }
-    console.log("📝 Booking found:", booking.id);
-
-    // Get parking spot details to find the owner
-    const { data: parkingSpot, error: spotError } = await supabaseService
-      .from('parking_spots')
-      .select('*')
-      .eq('id', booking.spot_id)
-      .maybeSingle();
-
-    if (spotError) {
-      console.error("❌ Spot query error:", spotError);
-      throw new Error(`Database error: ${spotError.message}`);
-    }
-    
-    if (!parkingSpot) {
-      console.error("❌ Parking spot not found:", booking.spot_id);
-      throw new Error("Parking spot not found");
-    }
-    console.log("📝 Spot owner:", parkingSpot.owner_id);
-
-    // Get spot owner's payout settings
-    const { data: payoutSettings, error: payoutError } = await supabaseService
-      .from('payout_settings')
-      .select('*')
-      .eq('user_id', parkingSpot.owner_id)
-      .maybeSingle();
-
-    if (payoutError) {
-      console.error("❌ Payout settings query error:", payoutError);
-      throw new Error(`Database error: ${payoutError.message}`);
-    }
-    
-    if (!payoutSettings?.stripe_connect_account_id) {
-      console.error("❌ No payout settings found for owner:", parkingSpot.owner_id);
-      throw new Error("Spot owner hasn't set up payouts yet. Please contact support.");
-    }
-    console.log("📝 Payout settings found for owner");
-
-    // Calculate fees (using the same logic as marketplace payment)
-    const totalAmountCents = Math.round(baseAmount * 100);
-    const platformFeeRate = 0.07; // 7% platform fee
-    const stripeFeeRate = 0.029; // 2.9% + $0.30
-    const stripeFeeFixed = 30; // $0.30 in cents
-
-    const platformFeeCents = Math.round(totalAmountCents * platformFeeRate);
-    const stripeFeeCents = Math.round(totalAmountCents * stripeFeeRate) + stripeFeeFixed;
-    const ownerPayoutCents = totalAmountCents - platformFeeCents - stripeFeeCents;
-
-    console.log("📝 Fee breakdown:", {
-      total: totalAmountCents,
-      platformFee: platformFeeCents,
-      stripeFee: stripeFeeCents,
-      ownerPayout: ownerPayoutCents
-    });
-
-    // Use provided email or user email
-    const email = customerEmail || user?.email;
-    if (!email) {
-      throw new Error("Email is required for payment");
-    }
+    // Use provided email or user email or default
+    const email = customerEmail || user?.email || "guest@example.com";
 
     // Check if a Stripe customer record exists for this email
     const customers = await stripe.customers.list({ email, limit: 1 });
@@ -147,7 +61,7 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Create a marketplace payment session with transfers
+    // Create a one-time payment session with payment method options
     const sessionConfig = {
       customer: customerId,
       line_items: [
@@ -156,34 +70,21 @@ serve(async (req) => {
             currency,
             product_data: { 
               name: "Parking Spot Rental",
-              description: `${parkingSpot.title} - ${parkingSpot.address}`
+              description: `Booking ID: ${bookingId}`
             },
-            unit_amount: totalAmountCents,
+            unit_amount: Math.round(totalAmountForRenter * 100), // Convert to cents
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      payment_intent_data: {
-        application_fee_amount: platformFeeCents + stripeFeeCents,
-        transfer_data: {
-          destination: payoutSettings.stripe_connect_account_id,
-        },
-        metadata: {
-          booking_id: bookingId,
-          owner_payout_amount: (ownerPayoutCents / 100).toString(),
-          platform_fee_amount: (platformFeeCents / 100).toString(),
-        },
-      },
       success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
-      cancel_url: `${req.headers.get("origin")}/book-spot/${booking.spot_id}?cancelled=true`,
+      cancel_url: `${req.headers.get("origin")}/book-spot/${bookingId.split('-')[0]}?cancelled=true`,
       metadata: {
         bookingId,
-        totalAmount: baseAmount.toString(),
+        totalAmount: totalAmountForRenter.toString(),
         currency,
         paymentMethod,
-        ownerPayoutAmount: (ownerPayoutCents / 100).toString(),
-        platformFeeAmount: (platformFeeCents / 100).toString(),
       },
     };
 
@@ -192,30 +93,32 @@ serve(async (req) => {
       sessionConfig.payment_method_types = ["card", "paypal"];
     } else if (paymentMethod === "apple_pay") {
       sessionConfig.payment_method_types = ["card"];
+      // Note: Apple Pay would typically be handled client-side with Payment Request API
     } else {
       sessionConfig.payment_method_types = ["card"];
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
-    console.log("📝 Stripe session created:", session.id);
 
-    // Update booking with payment details
-    const { error: updateError } = await supabaseService
-      .from("bookings")
-      .update({ 
-        payment_intent_id: session.id,
-        status: 'pending_payment',
-        platform_fee_amount: platformFeeCents / 100,
-        owner_payout_amount: ownerPayoutCents / 100,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', bookingId);
+    // Optional: Update booking with Stripe session ID using service role
+    try {
+      const supabaseService = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        { auth: { persistSession: false } }
+      );
 
-    if (updateError) {
-      console.error('Error updating booking:', updateError);
-      throw new Error(`Failed to update booking: ${updateError.message}`);
+      await supabaseService
+        .from("bookings")
+        .update({ 
+          payment_intent_id: session.id,
+          status: 'pending_payment'
+        })
+        .eq('id', bookingId);
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      // Continue even if this fails
     }
-    console.log("📝 Booking updated with payment details");
 
     return new Response(JSON.stringify({ 
       url: session.url,
@@ -225,12 +128,8 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('❌ Payment creation error:', error);
-    const errorMessage = error instanceof Error ? error.message : "Payment creation failed";
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: error instanceof Error ? error.stack : undefined
-    }), {
+    console.error('Payment creation error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
