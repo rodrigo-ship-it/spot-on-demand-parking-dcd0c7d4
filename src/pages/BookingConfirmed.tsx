@@ -91,8 +91,8 @@ const BookingConfirmed = () => {
           };
 
           const formatTimeWithTimezone = (dateString: string) => {
-            // Parse the datetime string and format for the spot's timezone
-            const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00Z'));
+            // Parse the datetime string as UTC (since it's stored as ISO string in UTC)
+            const date = new Date(dateString);
             return new Intl.DateTimeFormat('en-US', {
               hour: 'numeric',
               minute: '2-digit',
