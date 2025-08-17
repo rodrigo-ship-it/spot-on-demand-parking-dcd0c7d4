@@ -47,21 +47,25 @@ const handler = async (req: Request): Promise<Response> => {
     const isDaily = durationInHours >= 24;
     const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
 
-    // Format dates and times
+    // Format dates and times properly handling timezone
     const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC' // Use UTC to avoid timezone conversion issues
       });
     };
 
     const formatTime = (dateString: string) => {
-      return new Date(dateString).toLocaleTimeString('en-US', {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
+        timeZone: 'UTC' // Use UTC to avoid timezone conversion issues
       });
     };
 

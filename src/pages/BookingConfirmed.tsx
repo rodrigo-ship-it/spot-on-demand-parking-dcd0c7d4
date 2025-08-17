@@ -107,7 +107,9 @@ const BookingConfirmed = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Handle both date-only strings (YYYY-MM-DD) and full datetime strings
+    const date = dateString.includes('T') ? new Date(dateString) : new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -116,11 +118,20 @@ const BookingConfirmed = () => {
   };
 
   const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    // Handle both time-only strings (HH:MM) and full datetime strings
+    if (timeString.includes('T')) {
+      return new Date(timeString).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } else {
+      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
   };
 
   const sendConfirmationEmail = async () => {
