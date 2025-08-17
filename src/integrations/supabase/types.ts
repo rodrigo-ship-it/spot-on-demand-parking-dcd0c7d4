@@ -391,7 +391,7 @@ export type Database = {
           longitude: number | null
           one_time_price: number | null
           owner_id: string
-          price_per_hour: number
+          price_per_hour: number | null
           pricing_type: string
           rating: number | null
           spot_type: string
@@ -417,7 +417,7 @@ export type Database = {
           longitude?: number | null
           one_time_price?: number | null
           owner_id: string
-          price_per_hour?: number
+          price_per_hour?: number | null
           pricing_type?: string
           rating?: number | null
           spot_type: string
@@ -443,7 +443,7 @@ export type Database = {
           longitude?: number | null
           one_time_price?: number | null
           owner_id?: string
-          price_per_hour?: number
+          price_per_hour?: number | null
           pricing_type?: string
           rating?: number | null
           spot_type?: string
