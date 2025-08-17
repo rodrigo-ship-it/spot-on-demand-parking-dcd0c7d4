@@ -278,7 +278,7 @@ const ListSpot = () => {
         pricing_type: formData.pricingType,
         price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 
                         formData.pricingType === 'daily' ? parseFloat(formData.dailyPrice) : 
-                        parseFloat(formData.oneTimePrice) || 1,
+                        formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : 0,
         one_time_price: formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         total_spots: totalSpots,
         available_spots: totalSpots, // Initially all spots are available
