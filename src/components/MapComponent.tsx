@@ -106,73 +106,157 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Add parking spot markers after (so they appear on top and are clickable)
+            // Group spots by location (within ~50 meters)
+            const groupedSpots = new Map();
+            const tolerance = 0.0005; // ~50 meters
+            
             spots.forEach((spot) => {
-              // Skip spots without valid coordinates
               if (!spot.latitude || !spot.longitude) {
                 console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
                 return;
               }
               
-              // If spot is very close to search location, offset it slightly so both are visible
-              let spotLng = spot.longitude;
-              let spotLat = spot.latitude;
-              
-              if (centerLocation) {
+              // Check if there's already a group for this location
+              let foundGroup = false;
+              for (const [key, group] of groupedSpots) {
+                const [groupLat, groupLng] = key.split(',').map(Number);
                 const distance = Math.sqrt(
-                  Math.pow(spot.longitude - centerLocation.longitude, 2) + 
-                  Math.pow(spot.latitude - centerLocation.latitude, 2)
+                  Math.pow(spot.longitude - groupLng, 2) + 
+                  Math.pow(spot.latitude - groupLat, 2)
                 );
                 
-                // If markers are too close (within ~50 meters), offset the parking spot marker slightly
-                if (distance < 0.0005) {
-                  spotLng += 0.0002; // Small offset to make both markers visible and clickable
-                  spotLat += 0.0001;
+                if (distance < tolerance) {
+                  group.spots.push(spot);
+                  foundGroup = true;
+                  break;
                 }
               }
               
-              const marker = new mapboxgl.Marker({
-                color: '#3B82F6',
-                scale: 1.1, // Make parking spot markers slightly larger
-              })
-                .setLngLat([spotLng, spotLat])
-                .setPopup(
-                  new mapboxgl.Popup({ offset: 25 }).setHTML(`
-                    <div class="p-2">
-                      <h3 class="font-bold text-sm">${spot.title}</h3>
-                      <p class="text-xs text-gray-600">${spot.address}</p>
+              if (!foundGroup) {
+                // If spot is very close to search location, offset it slightly
+                let spotLng = spot.longitude;
+                let spotLat = spot.latitude;
+                
+                if (centerLocation) {
+                  const distance = Math.sqrt(
+                    Math.pow(spot.longitude - centerLocation.longitude, 2) + 
+                    Math.pow(spot.latitude - centerLocation.latitude, 2)
+                  );
+                  
+                  if (distance < tolerance) {
+                    spotLng += 0.0002;
+                    spotLat += 0.0001;
+                  }
+                }
+                
+                groupedSpots.set(`${spotLat},${spotLng}`, {
+                  latitude: spotLat,
+                  longitude: spotLng,
+                  spots: [spot]
+                });
+              }
+            });
+            
+            // Create markers for each group
+            groupedSpots.forEach((group) => {
+              const isMultipleSpots = group.spots.length > 1;
+              
+              // Create popup content
+              const createPopupContent = (currentIndex = 0) => {
+                const spot = group.spots[currentIndex];
+                const isMultiple = group.spots.length > 1;
+                
+                return `
+                  <div class="p-2" style="min-width: 200px;">
+                    ${isMultiple ? `
                       <div class="flex justify-between items-center mb-2">
-                        <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
-                        ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+                        <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
+                        <div class="flex gap-1">
+                          <button 
+                            id="prev-btn-${group.latitude}-${group.longitude}" 
+                            class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                            ${currentIndex === 0 ? 'disabled style="opacity: 0.5;"' : ''}
+                          >←</button>
+                          <button 
+                            id="next-btn-${group.latitude}-${group.longitude}" 
+                            class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                            ${currentIndex === group.spots.length - 1 ? 'disabled style="opacity: 0.5;"' : ''}
+                          >→</button>
+                        </div>
                       </div>
-                      <button 
-                        id="book-btn-${spot.id}" 
-                        class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
-                      >
-                        Book Now
-                      </button>
+                    ` : ''}
+                    <h3 class="font-bold text-sm">${spot.title}</h3>
+                    <p class="text-xs text-gray-600">${spot.address}</p>
+                    <div class="flex justify-between items-center mb-2">
+                      <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
+                      ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
                     </div>
-                  `)
+                    <button 
+                      id="book-btn-${spot.id}" 
+                      class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+                    >
+                      Book Now
+                    </button>
+                  </div>
+                `;
+              };
+              
+              const marker = new mapboxgl.Marker({
+                color: isMultipleSpots ? '#F59E0B' : '#3B82F6', // Orange for multiple spots, blue for single
+                scale: isMultipleSpots ? 1.3 : 1.1,
+              })
+                .setLngLat([group.longitude, group.latitude])
+                .setPopup(
+                  new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
                 )
                 .addTo(map.current!);
 
-              // Add click event listener to the popup after it opens
+              // Track current spot index for this marker
+              let currentSpotIndex = 0;
+              
+              // Add click event listeners when popup opens
               marker.getPopup().on('open', () => {
                 setTimeout(() => {
-                  const bookBtn = document.getElementById(`book-btn-${spot.id}`);
+                  const currentSpot = group.spots[currentSpotIndex];
+                  
+                  // Book button event
+                  const bookBtn = document.getElementById(`book-btn-${currentSpot.id}`);
                   if (bookBtn) {
-                    console.log('Adding event listener to button for spot:', spot.id);
                     bookBtn.addEventListener('click', (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('Map popup button clicked for spot:', spot.id);
-                      console.log('onSpotSelectRef.current:', onSpotSelectRef.current);
-                      onSpotSelectRef.current(spot.id);
+                      onSpotSelectRef.current(currentSpot.id);
                     });
-                  } else {
-                    console.error('Could not find book button for spot:', spot.id);
                   }
-                }, 100); // Small delay to ensure DOM is ready
+                  
+                  // Navigation buttons for multiple spots
+                  if (group.spots.length > 1) {
+                    const prevBtn = document.getElementById(`prev-btn-${group.latitude}-${group.longitude}`);
+                    const nextBtn = document.getElementById(`next-btn-${group.latitude}-${group.longitude}`);
+                    
+                    if (prevBtn) {
+                      prevBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (currentSpotIndex > 0) {
+                          currentSpotIndex--;
+                          marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
+                        }
+                      });
+                    }
+                    
+                    if (nextBtn) {
+                      nextBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (currentSpotIndex < group.spots.length - 1) {
+                          currentSpotIndex++;
+                          marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
+                        }
+                      });
+                    }
+                  }
+                }, 100);
               });
             });
 
@@ -210,11 +294,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
     console.log('Updating markers for', spots.length, 'spots');
     
-    // Clear existing markers (we'll recreate them)
-    // Note: In a production app, you'd want to track markers and only update what changed
-    
-    // Clear existing markers (we'll recreate them)
-    // Note: In a production app, you'd want to track markers and only update what changed
+    // Clear existing markers by removing them
+    // Note: In production, you'd want to track markers more efficiently
     
     // Add search location marker first (if exists)
     if (centerLocation) {
@@ -223,7 +304,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       
       new mapboxgl.Marker({
         color: '#ef4444',
-        scale: 0.8, // Make search marker slightly smaller
+        scale: 0.8,
       })
         .setLngLat([centerLocation.longitude, centerLocation.latitude])
         .setPopup(
@@ -237,73 +318,157 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         .addTo(map.current!);
     }
     
-    // Add parking spot markers after (so they appear on top)
+    // Group spots by location (within ~50 meters) - same logic as initialization
+    const groupedSpots = new Map();
+    const tolerance = 0.0005;
+    
     spots.forEach((spot) => {
-      // Skip spots without valid coordinates
       if (!spot.latitude || !spot.longitude) {
         console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
         return;
       }
       
-      // If spot is very close to search location, offset it slightly so both are visible
-      let spotLng = spot.longitude;
-      let spotLat = spot.latitude;
-      
-      if (centerLocation) {
+      // Check if there's already a group for this location
+      let foundGroup = false;
+      for (const [key, group] of groupedSpots) {
+        const [groupLat, groupLng] = key.split(',').map(Number);
         const distance = Math.sqrt(
-          Math.pow(spot.longitude - centerLocation.longitude, 2) + 
-          Math.pow(spot.latitude - centerLocation.latitude, 2)
+          Math.pow(spot.longitude - groupLng, 2) + 
+          Math.pow(spot.latitude - groupLat, 2)
         );
         
-        // If markers are too close (within ~50 meters), offset the parking spot marker slightly
-        if (distance < 0.0005) {
-          spotLng += 0.0002; // Small offset to make both markers visible and clickable
-          spotLat += 0.0001;
+        if (distance < tolerance) {
+          group.spots.push(spot);
+          foundGroup = true;
+          break;
         }
       }
       
-      const marker = new mapboxgl.Marker({
-        color: '#3B82F6',
-        scale: 1.1, // Make parking spot markers slightly larger
-      })
-        .setLngLat([spotLng, spotLat])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(`
-            <div class="p-2">
-              <h3 class="font-bold text-sm">${spot.title}</h3>
-              <p class="text-xs text-gray-600">${spot.address}</p>
+      if (!foundGroup) {
+        // If spot is very close to search location, offset it slightly
+        let spotLng = spot.longitude;
+        let spotLat = spot.latitude;
+        
+        if (centerLocation) {
+          const distance = Math.sqrt(
+            Math.pow(spot.longitude - centerLocation.longitude, 2) + 
+            Math.pow(spot.latitude - centerLocation.latitude, 2)
+          );
+          
+          if (distance < tolerance) {
+            spotLng += 0.0002;
+            spotLat += 0.0001;
+          }
+        }
+        
+        groupedSpots.set(`${spotLat},${spotLng}`, {
+          latitude: spotLat,
+          longitude: spotLng,
+          spots: [spot]
+        });
+      }
+    });
+    
+    // Create markers for each group
+    groupedSpots.forEach((group) => {
+      const isMultipleSpots = group.spots.length > 1;
+      
+      // Create popup content
+      const createPopupContent = (currentIndex = 0) => {
+        const spot = group.spots[currentIndex];
+        const isMultiple = group.spots.length > 1;
+        
+        return `
+          <div class="p-2" style="min-width: 200px;">
+            ${isMultiple ? `
               <div class="flex justify-between items-center mb-2">
-                <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
-                ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+                <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
+                <div class="flex gap-1">
+                  <button 
+                    id="prev-btn-update-${group.latitude}-${group.longitude}" 
+                    class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                    ${currentIndex === 0 ? 'disabled style="opacity: 0.5;"' : ''}
+                  >←</button>
+                  <button 
+                    id="next-btn-update-${group.latitude}-${group.longitude}" 
+                    class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                    ${currentIndex === group.spots.length - 1 ? 'disabled style="opacity: 0.5;"' : ''}
+                  >→</button>
+                </div>
               </div>
-              <button 
-                id="book-btn-update-${spot.id}" 
-                class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
-              >
-                Book Now
-              </button>
+            ` : ''}
+            <h3 class="font-bold text-sm">${spot.title}</h3>
+            <p class="text-xs text-gray-600">${spot.address}</p>
+            <div class="flex justify-between items-center mb-2">
+              <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
+              ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
             </div>
-          `)
+            <button 
+              id="book-btn-update-${spot.id}" 
+              class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+            >
+              Book Now
+            </button>
+          </div>
+        `;
+      };
+      
+      const marker = new mapboxgl.Marker({
+        color: isMultipleSpots ? '#F59E0B' : '#3B82F6',
+        scale: isMultipleSpots ? 1.3 : 1.1,
+      })
+        .setLngLat([group.longitude, group.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
         )
         .addTo(map.current!);
 
-      // Add click event listener to the popup after it opens
+      // Track current spot index for this marker
+      let currentSpotIndex = 0;
+      
+      // Add click event listeners when popup opens
       marker.getPopup().on('open', () => {
         setTimeout(() => {
-          const bookBtn = document.getElementById(`book-btn-update-${spot.id}`);
+          const currentSpot = group.spots[currentSpotIndex];
+          
+          // Book button event
+          const bookBtn = document.getElementById(`book-btn-update-${currentSpot.id}`);
           if (bookBtn) {
-            console.log('Adding event listener to updated button for spot:', spot.id);
             bookBtn.addEventListener('click', (e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('Map popup button clicked for spot:', spot.id);
-              console.log('onSpotSelectRef.current:', onSpotSelectRef.current);
-              onSpotSelectRef.current(spot.id);
+              onSpotSelectRef.current(currentSpot.id);
             });
-          } else {
-            console.error('Could not find book button for spot:', spot.id);
           }
-        }, 100); // Small delay to ensure DOM is ready
+          
+          // Navigation buttons for multiple spots
+          if (group.spots.length > 1) {
+            const prevBtn = document.getElementById(`prev-btn-update-${group.latitude}-${group.longitude}`);
+            const nextBtn = document.getElementById(`next-btn-update-${group.latitude}-${group.longitude}`);
+            
+            if (prevBtn) {
+              prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (currentSpotIndex > 0) {
+                  currentSpotIndex--;
+                  marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
+                }
+              });
+            }
+            
+            if (nextBtn) {
+              nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (currentSpotIndex < group.spots.length - 1) {
+                  currentSpotIndex++;
+                  marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
+                }
+              });
+            }
+          }
+        }, 100);
       });
     });
   }, [spots, centerLocation, isInitialized]);
