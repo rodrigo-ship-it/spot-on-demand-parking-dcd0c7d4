@@ -84,12 +84,15 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Calculate the same fees as marketplace payment
-    const totalAmount = Math.round(baseAmount * 100); // Total amount in cents
-    const baseSpotPrice = Math.round((baseAmount / 1.0875 / 1.07) * 100); // Reverse calculate base price
-    const platformFeeFromLister = Math.round(baseSpotPrice * 0.07);
-    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30;
-    const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
+    // Forward calculate fees properly
+    const baseSpotPrice = Math.round(baseAmount * 100); // Base price in cents
+    const platformFeeFromLister = Math.round(baseSpotPrice * 0.07); // 7% platform fee
+    const subtotal = baseSpotPrice + platformFeeFromLister;
+    const taxAmount = Math.round(subtotal * 0.07); // 7% tax
+    const preStripeTotalAmount = subtotal + taxAmount;
+    const stripeProcessingFee = Math.round(preStripeTotalAmount * 0.029) + 30; // 2.9% + $0.30
+    const totalAmount = preStripeTotalAmount + stripeProcessingFee;
+    const listerAmount = baseSpotPrice - stripeProcessingFee;
 
     // Create payment session config
     const sessionConfig = {
