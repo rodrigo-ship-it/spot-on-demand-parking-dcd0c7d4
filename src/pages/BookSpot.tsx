@@ -60,6 +60,7 @@ const BookSpot = () => {
     startTime: "09:00",
     endTime: "17:00",
     duration: 8,
+    numberOfDays: 1,
     autoExtend: true,
     maxExtension: 2 // hours
   });
@@ -190,7 +191,7 @@ const BookSpot = () => {
     : isPricingDaily
     ? (spotData?.daily_price || 25)
     : (spotData?.one_time_price || 25);
-  const duration = bookingDetails.duration;
+  const duration = isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration;
   const subtotal = (isPricingHourly || isPricingDaily) ? basePrice * duration : basePrice;
   const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
   const renterTotal = Math.round((subtotal + platformFee) * 100) / 100; // Renter pays 7% more
@@ -266,8 +267,13 @@ const BookSpot = () => {
     try {
       // Create booking start and end times
       const bookingDate = format(bookingDetails.date, 'yyyy-MM-dd');
-      const startDateTime = new Date(`${bookingDate}T${bookingDetails.startTime}`);
-      const endDateTime = new Date(`${bookingDate}T${bookingDetails.endTime}`);
+      const startDateTime = isPricingDaily 
+        ? new Date(`${bookingDate}T00:00:00`)
+        : new Date(`${bookingDate}T${bookingDetails.startTime}`);
+      
+      const endDateTime = isPricingDaily 
+        ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
+        : new Date(`${bookingDate}T${bookingDetails.endTime}`);
 
       // Create booking in database
       const { data: booking, error } = await supabase
@@ -404,79 +410,132 @@ const BookSpot = () => {
                 </CardTitle>
               </CardHeader>
                <CardContent className="space-y-4">
-                 <div className="grid grid-cols-3 gap-3">
-                   <div>
-                     <Label>Date</Label>
-                     <Popover>
-                       <PopoverTrigger asChild>
-                         <Button
-                           variant="outline"
-                           className={cn(
-                             "w-full justify-center text-center font-normal",
-                             !bookingDetails.date && "text-muted-foreground"
-                           )}
-                         >
-                           <CalendarIcon className="mr-2 h-4 w-4" />
-                           {bookingDetails.date ? (
-                             format(bookingDetails.date, "MMM d, yyyy")
-                           ) : (
-                             <span>Pick a date</span>
-                           )}
-                         </Button>
-                       </PopoverTrigger>
-                       <PopoverContent className="w-auto p-0" align="start">
-                         <CalendarComponent
-                           mode="single"
-                           selected={bookingDetails.date}
-                           onSelect={handleDateChange}
-                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                           initialFocus
-                           className={cn("p-3 pointer-events-auto")}
-                         />
-                       </PopoverContent>
-                     </Popover>
+                 {isPricingDaily ? (
+                   // Daily pricing interface
+                   <div className="grid grid-cols-2 gap-3">
+                     <div>
+                       <Label>Start Date</Label>
+                       <Popover>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             className={cn(
+                               "w-full justify-center text-center font-normal",
+                               !bookingDetails.date && "text-muted-foreground"
+                             )}
+                           >
+                             <CalendarIcon className="mr-2 h-4 w-4" />
+                             {bookingDetails.date ? (
+                               format(bookingDetails.date, "MMM d, yyyy")
+                             ) : (
+                               <span>Pick a date</span>
+                             )}
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                           <CalendarComponent
+                             mode="single"
+                             selected={bookingDetails.date}
+                             onSelect={handleDateChange}
+                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                             initialFocus
+                             className={cn("p-3 pointer-events-auto")}
+                           />
+                         </PopoverContent>
+                       </Popover>
+                     </div>
+                     <div>
+                       <Label>Number of Days</Label>
+                       <Input
+                         type="number"
+                         min="1"
+                         max="30"
+                         value={bookingDetails.numberOfDays}
+                         onChange={(e) => setBookingDetails(prev => ({ 
+                           ...prev, 
+                           numberOfDays: Math.max(1, parseInt(e.target.value) || 1)
+                         }))}
+                         className="w-full"
+                       />
+                     </div>
                    </div>
-                   <div>
-                     <Label>Start Time</Label>
-                     <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
-                       <SelectTrigger className="w-full">
-                         <div className="flex items-center">
-                           <ClockIcon className="mr-2 h-4 w-4" />
-                           <SelectValue placeholder="Select time" />
-                         </div>
-                       </SelectTrigger>
-                       <SelectContent className="max-h-[200px]">
-                         {timeOptions.map((option) => (
-                           <SelectItem key={option.value} value={option.value}>
-                             {option.label}
-                           </SelectItem>
-                         ))}
-                       </SelectContent>
-                     </Select>
+                 ) : (
+                   // Hourly pricing interface
+                   <div className="grid grid-cols-3 gap-3">
+                     <div>
+                       <Label>Date</Label>
+                       <Popover>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             className={cn(
+                               "w-full justify-center text-center font-normal",
+                               !bookingDetails.date && "text-muted-foreground"
+                             )}
+                           >
+                             <CalendarIcon className="mr-2 h-4 w-4" />
+                             {bookingDetails.date ? (
+                               format(bookingDetails.date, "MMM d, yyyy")
+                             ) : (
+                               <span>Pick a date</span>
+                             )}
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                           <CalendarComponent
+                             mode="single"
+                             selected={bookingDetails.date}
+                             onSelect={handleDateChange}
+                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                             initialFocus
+                             className={cn("p-3 pointer-events-auto")}
+                           />
+                         </PopoverContent>
+                       </Popover>
+                     </div>
+                     <div>
+                       <Label>Start Time</Label>
+                       <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
+                         <SelectTrigger className="w-full">
+                           <div className="flex items-center">
+                             <ClockIcon className="mr-2 h-4 w-4" />
+                             <SelectValue placeholder="Select time" />
+                           </div>
+                         </SelectTrigger>
+                         <SelectContent className="max-h-[200px]">
+                           {timeOptions.map((option) => (
+                             <SelectItem key={option.value} value={option.value}>
+                               {option.label}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div>
+                       <Label>End Time</Label>
+                       <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
+                         <SelectTrigger className="w-full">
+                           <div className="flex items-center">
+                             <ClockIcon className="mr-2 h-4 w-4" />
+                             <SelectValue placeholder="Select time" />
+                           </div>
+                         </SelectTrigger>
+                         <SelectContent className="max-h-[200px]">
+                           {timeOptions.map((option) => (
+                             <SelectItem key={option.value} value={option.value}>
+                               {option.label}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
                    </div>
-                   <div>
-                     <Label>End Time</Label>
-                     <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
-                       <SelectTrigger className="w-full">
-                         <div className="flex items-center">
-                           <ClockIcon className="mr-2 h-4 w-4" />
-                           <SelectValue placeholder="Select time" />
-                         </div>
-                       </SelectTrigger>
-                       <SelectContent className="max-h-[200px]">
-                         {timeOptions.map((option) => (
-                           <SelectItem key={option.value} value={option.value}>
-                             {option.label}
-                           </SelectItem>
-                         ))}
-                       </SelectContent>
-                     </Select>
-                   </div>
-                 </div>
+                 )}
+                 
                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                   Duration: {isPricingDaily 
-                     ? `${Math.ceil(bookingDetails.duration / 24)} days (${bookingDetails.duration} hours)`
-                     : `${bookingDetails.duration} hours`
+                   {isPricingDaily 
+                     ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
+                     : `Duration: ${bookingDetails.duration} hours`
                    }
                  </div>
               </CardContent>
@@ -584,7 +643,7 @@ const BookSpot = () => {
                        {isPricingHourly 
                          ? `$${basePrice}/hr × ${duration} hours`
                          : isPricingDaily
-                         ? `$${basePrice}/day × ${Math.ceil(duration / 24)} days`
+                         ? `$${basePrice}/day × ${duration} day${duration !== 1 ? 's' : ''}`
                          : `$${basePrice} (flat rate)`
                        }
                      </span>
