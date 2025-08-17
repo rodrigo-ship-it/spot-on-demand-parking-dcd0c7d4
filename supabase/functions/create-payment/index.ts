@@ -84,14 +84,19 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Calculate fees properly - customer pays the pre-stripe total, stripe fee comes from lister payout
-    const baseSpotPrice = Math.round(baseAmount * 100); // Base price in cents
-    const platformFeeFromLister = Math.round(baseSpotPrice * 0.07); // 7% platform fee
-    const subtotal = baseSpotPrice + platformFeeFromLister;
-    const taxAmount = Math.round(subtotal * 0.0875); // 8.75% tax
-    const totalAmount = subtotal + taxAmount; // Customer pays this amount (no stripe fee added)
-    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + $0.30
-    const listerAmount = baseSpotPrice - stripeProcessingFee; // Lister amount after stripe fee is deducted
+    // Use the exact same calculation as frontend - baseAmount is the final total the customer should pay
+    const totalAmount = Math.round(baseAmount * 100); // Customer pays exactly what frontend calculated
+    
+    // Work backwards to calculate what goes to the lister (same as frontend logic)
+    // Frontend: total = (subtotal + platformFee) + tax
+    // Frontend: tax = (subtotal + platformFee) * 0.0875
+    // Frontend: platformFee = subtotal * 0.07
+    // So: total = (subtotal * 1.07) * 1.0875
+    // Therefore: subtotal = total / (1.07 * 1.0875)
+    const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
+    const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% platform fee from subtotal
+    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + $0.30 of total charge
+    const listerAmount = Math.round(subtotalBeforeFees) - stripeProcessingFee; // Subtotal minus stripe fee
 
     // Create payment session config
     const sessionConfig = {
