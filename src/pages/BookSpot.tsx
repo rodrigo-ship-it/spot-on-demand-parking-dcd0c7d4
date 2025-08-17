@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
+import { PaymentIntegration } from "@/components/PaymentIntegration";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon, ClockIcon } from "lucide-react";
@@ -711,10 +711,17 @@ const BookSpot = () => {
                     </div>
                   </>
                 ) : (
-                  <MarketplacePaymentIntegration
+                  <PaymentIntegration
                     bookingId={createdBookingId}
+                    baseAmount={subtotal}
+                    platformFee={platformFee}
+                    tax={tax}
                     totalAmount={total}
-                    onSuccess={handlePaymentSuccess}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={(error) => {
+                      console.error("Payment error:", error);
+                      toast.error(`Payment failed: ${error}`);
+                    }}
                   />
                 )}
               </CardContent>
