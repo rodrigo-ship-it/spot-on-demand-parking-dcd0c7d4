@@ -89,7 +89,10 @@ const ManageSpots = () => {
           title: spot.title,
           address: spot.address,
           type: spot.spot_type || 'Standard',
-          price: Number(spot.price_per_hour),
+          price: spot.pricing_type === 'hourly' ? Number(spot.price_per_hour) :
+                 spot.pricing_type === 'daily' ? Number(spot.daily_price) :
+                 Number(spot.one_time_price),
+          pricingType: spot.pricing_type,
           status: spot.is_active ? "Active" : "Paused",
           totalBookings: spot.bookings?.length || 0,
           monthlyEarnings: thisMonthEarnings,
@@ -144,6 +147,7 @@ const ManageSpots = () => {
             title,
             address,
             price_per_hour,
+            daily_price,
             one_time_price,
             pricing_type
           )
@@ -389,7 +393,7 @@ const ManageSpots = () => {
                           {spot.status}
                         </Badge>
                         <p className="text-sm text-gray-600">
-                          {spot.price} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
+                          ${spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ' flat'} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
                         </p>
                       </div>
                       <Button
