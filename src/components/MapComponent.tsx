@@ -214,48 +214,63 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               // Track current spot index for this marker
               let currentSpotIndex = 0;
               
-              // Add click event listeners when popup opens
-              marker.getPopup().on('open', () => {
+              // Function to update popup content and reattach listeners
+              const updatePopupContent = (newIndex) => {
+                currentSpotIndex = newIndex;
+                const newContent = createPopupContent(currentSpotIndex);
+                marker.getPopup().setHTML(newContent);
+                
+                // Reattach event listeners after content update
                 setTimeout(() => {
-                  const currentSpot = group.spots[currentSpotIndex];
+                  attachEventListeners();
+                }, 50);
+              };
+              
+              // Function to attach event listeners
+              const attachEventListeners = () => {
+                const currentSpot = group.spots[currentSpotIndex];
+                
+                // Book button event
+                const bookBtn = document.getElementById(`book-btn-${currentSpot.id}`);
+                if (bookBtn) {
+                  bookBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSpotSelectRef.current(currentSpot.id);
+                  });
+                }
+                
+                // Navigation buttons for multiple spots
+                if (group.spots.length > 1) {
+                  const prevBtn = document.getElementById(`prev-btn-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
+                  const nextBtn = document.getElementById(`next-btn-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
                   
-                  // Book button event
-                  const bookBtn = document.getElementById(`book-btn-${currentSpot.id}`);
-                  if (bookBtn) {
-                    bookBtn.addEventListener('click', (e) => {
+                  if (prevBtn && !prevBtn.disabled) {
+                    prevBtn.addEventListener('click', (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      onSpotSelectRef.current(currentSpot.id);
+                      if (currentSpotIndex > 0) {
+                        updatePopupContent(currentSpotIndex - 1);
+                      }
                     });
                   }
                   
-                  // Navigation buttons for multiple spots
-                  if (group.spots.length > 1) {
-                    const prevBtn = document.getElementById(`prev-btn-${group.latitude}-${group.longitude}`);
-                    const nextBtn = document.getElementById(`next-btn-${group.latitude}-${group.longitude}`);
-                    
-                    if (prevBtn) {
-                      prevBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (currentSpotIndex > 0) {
-                          currentSpotIndex--;
-                          marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
-                        }
-                      });
-                    }
-                    
-                    if (nextBtn) {
-                      nextBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (currentSpotIndex < group.spots.length - 1) {
-                          currentSpotIndex++;
-                          marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
-                        }
-                      });
-                    }
+                  if (nextBtn && !nextBtn.disabled) {
+                    nextBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (currentSpotIndex < group.spots.length - 1) {
+                        updatePopupContent(currentSpotIndex + 1);
+                      }
+                    });
                   }
+                }
+              };
+              
+              // Add click event listeners when popup opens
+              marker.getPopup().on('open', () => {
+                setTimeout(() => {
+                  attachEventListeners();
                 }, 100);
               });
             });
@@ -426,48 +441,63 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       // Track current spot index for this marker
       let currentSpotIndex = 0;
       
-      // Add click event listeners when popup opens
-      marker.getPopup().on('open', () => {
+      // Function to update popup content and reattach listeners
+      const updatePopupContent = (newIndex) => {
+        currentSpotIndex = newIndex;
+        const newContent = createPopupContent(currentSpotIndex);
+        marker.getPopup().setHTML(newContent);
+        
+        // Reattach event listeners after content update
         setTimeout(() => {
-          const currentSpot = group.spots[currentSpotIndex];
+          attachEventListeners();
+        }, 50);
+      };
+      
+      // Function to attach event listeners
+      const attachEventListeners = () => {
+        const currentSpot = group.spots[currentSpotIndex];
+        
+        // Book button event
+        const bookBtn = document.getElementById(`book-btn-update-${currentSpot.id}`);
+        if (bookBtn) {
+          bookBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSpotSelectRef.current(currentSpot.id);
+          });
+        }
+        
+        // Navigation buttons for multiple spots
+        if (group.spots.length > 1) {
+          const prevBtn = document.getElementById(`prev-btn-update-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
+          const nextBtn = document.getElementById(`next-btn-update-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
           
-          // Book button event
-          const bookBtn = document.getElementById(`book-btn-update-${currentSpot.id}`);
-          if (bookBtn) {
-            bookBtn.addEventListener('click', (e) => {
+          if (prevBtn && !prevBtn.disabled) {
+            prevBtn.addEventListener('click', (e) => {
               e.preventDefault();
               e.stopPropagation();
-              onSpotSelectRef.current(currentSpot.id);
+              if (currentSpotIndex > 0) {
+                updatePopupContent(currentSpotIndex - 1);
+              }
             });
           }
           
-          // Navigation buttons for multiple spots
-          if (group.spots.length > 1) {
-            const prevBtn = document.getElementById(`prev-btn-update-${group.latitude}-${group.longitude}`);
-            const nextBtn = document.getElementById(`next-btn-update-${group.latitude}-${group.longitude}`);
-            
-            if (prevBtn) {
-              prevBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (currentSpotIndex > 0) {
-                  currentSpotIndex--;
-                  marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
-                }
-              });
-            }
-            
-            if (nextBtn) {
-              nextBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (currentSpotIndex < group.spots.length - 1) {
-                  currentSpotIndex++;
-                  marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
-                }
-              });
-            }
+          if (nextBtn && !nextBtn.disabled) {
+            nextBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (currentSpotIndex < group.spots.length - 1) {
+                updatePopupContent(currentSpotIndex + 1);
+              }
+            });
           }
+        }
+      };
+      
+      // Add click event listeners when popup opens
+      marker.getPopup().on('open', () => {
+        setTimeout(() => {
+          attachEventListeners();
         }, 100);
       });
     });
