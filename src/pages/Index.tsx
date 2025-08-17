@@ -34,6 +34,8 @@ const Index = () => {
     address: spot.address,
     price: spot.pricing_type === 'hourly' 
       ? Number(spot.price_per_hour)
+      : spot.pricing_type === 'daily'
+      ? Number(spot.daily_price)
       : Number(spot.one_time_price),
     pricingType: spot.pricing_type,
     rating: Number(spot.rating) || 0,
