@@ -75,7 +75,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Simple admin check - replace with your actual admin email
-  const isAdmin = user?.email === 'rodrigonavarro01@me.com'; // Update this to your email
+  const isAdmin = user?.email === 'rodrigo@arrivparking.com' || user?.email === 'rodrigonavarro01@me.com'; // Multiple admin emails
 
   useEffect(() => {
     if (isAdmin) {
