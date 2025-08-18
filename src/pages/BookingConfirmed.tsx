@@ -38,7 +38,54 @@ const BookingConfirmed = () => {
           });
 
           if (sessionError || !sessionData?.payment_intent_id) {
-            throw new Error('Could not retrieve session details');
+            // If we can't get session details, try to find a recent booking
+            const { data: recentBookings, error: recentError } = await supabase
+              .from('bookings')
+              .select('*')
+              .gte('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString()) // Last 10 minutes
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (!recentError && recentBookings && recentBookings.length > 0) {
+              // Use the most recent booking
+              const booking = recentBookings[0];
+              
+              // Fetch spot details
+              const { data: spot, error: spotError } = await supabase
+                .from('parking_spots')
+                .select('*')
+                .eq('id', booking.spot_id)
+                .single();
+
+              if (!spotError && spot) {
+                const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
+                const isDaily = durationInHours >= 24;
+                
+                const formattedData = {
+                  date: booking.display_date || "Your selected date",
+                  startTime: booking.display_start_time || "Your selected start time", 
+                  endTime: booking.display_end_time || "Your selected end time",
+                  duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
+                  total: booking.total_amount,
+                  confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+                  bookingId: booking.id,
+                  autoExtend: false,
+                  isDaily: isDaily,
+                  numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
+                  spotData: {
+                    title: spot.title,
+                    address: spot.address,
+                    price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
+                    pricing_type: spot.pricing_type
+                  }
+                };
+
+                setBookingData(formattedData);
+                return;
+              }
+            }
+            
+            throw new Error('Could not retrieve session details or find recent booking');
           }
 
           // Find booking by payment_intent_id

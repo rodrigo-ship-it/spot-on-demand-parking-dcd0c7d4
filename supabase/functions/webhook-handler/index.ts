@@ -127,16 +127,6 @@ serve(async (req) => {
         }
 
         console.log("Booking created successfully:", booking.id);
-        
-        // Update the checkout session's success URL to include booking_id
-        try {
-          await stripe.checkout.sessions.update(session.id, {
-            success_url: `${session.success_url}&booking_id=${booking.id}`
-          });
-        } catch (updateError) {
-          console.error("Warning: Could not update success URL:", updateError);
-          // This is not critical, so we don't break the flow
-        }
 
         // Send confirmation email if user exists
         if (metadata.user_id) {

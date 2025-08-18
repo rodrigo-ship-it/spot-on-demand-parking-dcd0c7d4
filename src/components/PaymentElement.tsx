@@ -47,7 +47,7 @@ export const PaymentElementForm = ({
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/booking-confirmed`,
+          return_url: `${window.location.origin}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}`,
         },
         redirect: 'if_required',
       });
