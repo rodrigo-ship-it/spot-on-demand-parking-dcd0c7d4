@@ -58,7 +58,7 @@ const BookSpot = () => {
   const [bookingDetails, setBookingDetails] = useState({
     date: new Date(),
     startTime: "09:00",
-    endTime: "17:00",
+    endTime: "09:00", // Will be updated based on pricing type
     duration: 8,
     numberOfDays: 1,
     autoExtend: true,
@@ -186,6 +186,17 @@ const BookSpot = () => {
   // Pricing calculation - 7% upcharge for renters, 7% deduction for listers
   const isPricingHourly = spotData?.pricing_type === 'hourly';
   const isPricingDaily = spotData?.pricing_type === 'daily';
+
+  // Update end time to match start time for daily spots
+  useEffect(() => {
+    if (isPricingDaily) {
+      setBookingDetails(prev => ({ ...prev, endTime: prev.startTime }));
+    } else if (bookingDetails.endTime === bookingDetails.startTime) {
+      // Reset to default end time for hourly spots
+      setBookingDetails(prev => ({ ...prev, endTime: "17:00" }));
+    }
+  }, [isPricingDaily, bookingDetails.startTime]);
+
   const basePrice = isPricingHourly 
     ? (spotData?.price_per_hour || 8)
     : isPricingDaily

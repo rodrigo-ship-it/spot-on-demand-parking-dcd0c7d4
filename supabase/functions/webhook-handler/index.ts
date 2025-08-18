@@ -162,7 +162,9 @@ serve(async (req) => {
             day: 'numeric' 
           }),
           display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-          display_end_time: timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
+          display_end_time: isPricingDaily 
+            ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
+            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
           display_duration_text: isPricingDaily 
             ? `${bookingDetails.numberOfDays || 1} day${(bookingDetails.numberOfDays || 1) !== 1 ? 's' : ''}`
             : `${bookingDetails.duration || 1} hour${(bookingDetails.duration || 1) !== 1 ? 's' : ''}`

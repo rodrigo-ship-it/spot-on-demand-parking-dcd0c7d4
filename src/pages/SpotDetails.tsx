@@ -174,7 +174,7 @@ const SpotDetails = () => {
   // Time Management
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("17:00");
+  const [endTime, setEndTime] = useState("09:00"); // Will be updated based on pricing type
 
   // Handle continue to book button click
   const handleContinueToBook = () => {
