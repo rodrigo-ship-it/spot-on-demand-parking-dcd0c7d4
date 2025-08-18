@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
@@ -192,6 +193,28 @@ const ManageSpots = () => {
       setUpcomingReservations(processedReservations);
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  const handleDeleteSpot = async (spotId: string, spotTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('parking_spots')
+        .delete()
+        .eq('id', spotId)
+        .eq('owner_id', user?.id);
+
+      if (error) {
+        console.error('Error deleting spot:', error);
+        toast.error("Failed to delete parking spot");
+        return;
+      }
+
+      toast.success(`"${spotTitle}" has been deleted successfully`);
+      fetchUserSpots(); // Refresh the list
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -638,6 +661,30 @@ const ManageSpots = () => {
                         >
                           <QrCode className="w-4 h-4" />
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Parking Spot</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{spot.title}"? This action cannot be undone and will remove all associated data including bookings and reviews.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteSpot(spot.id, spot.title)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
