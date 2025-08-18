@@ -77,34 +77,32 @@ const BookingConfirmed = () => {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
-          // Format the data to match expected structure - just show times as stored without conversion
-          const formatDateWithTimezone = (dateString: string) => {
-            // Parse the datetime and show the date part in spot's timezone
-            const date = new Date(dateString);
-            return new Intl.DateTimeFormat('en-US', {
+          // Extract just the time portion from the stored datetime - no conversion
+          const extractTime = (dateString: string) => {
+            // Extract time portion (HH:MM) from ISO string and format as 12-hour
+            const time = dateString.split('T')[1].split(':');
+            const hours = parseInt(time[0]);
+            const minutes = time[1];
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            return `${displayHours}:${minutes} ${ampm}`;
+          };
+
+          const extractDate = (dateString: string) => {
+            // Extract date portion and format nicely
+            const date = new Date(dateString.split('T')[0]);
+            return date.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
-              day: 'numeric',
-              timeZone: spotTimezone
-            }).format(date);
-          };
-
-          const formatTimeWithTimezone = (dateString: string) => {
-            // Parse the datetime and show the time in spot's timezone
-            const date = new Date(dateString);
-            return new Intl.DateTimeFormat('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-              timeZone: spotTimezone
-            }).format(date);
+              day: 'numeric'
+            });
           };
           
           const formattedData = {
-            date: formatDateWithTimezone(booking.start_time),
-            startTime: formatTimeWithTimezone(booking.start_time),
-            endTime: formatTimeWithTimezone(booking.end_time),
+            date: extractDate(booking.start_time),
+            startTime: extractTime(booking.start_time),
+            endTime: extractTime(booking.end_time),
             duration: durationInHours,
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),

@@ -82,31 +82,31 @@ const handler = async (req: Request): Promise<Response> => {
     const isDaily = durationInHours >= 24;
     const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
 
-    // Format dates and times using the spot's timezone
-    const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
+    // Extract time and date from stored values - no timezone conversion
+    const extractTime = (dateString: string) => {
+      // Extract time portion (HH:MM) from ISO string and format as 12-hour
+      const time = dateString.split('T')[1].split(':');
+      const hours = parseInt(time[0]);
+      const minutes = time[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes} ${ampm}`;
+    };
+
+    const extractDate = (dateString: string) => {
+      // Extract date portion and format nicely
+      const date = new Date(dateString.split('T')[0]);
       return date.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric',
-        timeZone: spotTimezone
+        day: 'numeric'
       });
     };
 
-    const formatTime = (dateString: string) => {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: spotTimezone
-      });
-    };
-
-    const startDate = formatDate(booking.start_time);
-    const startTime = formatTime(booking.start_time);
-    const endTime = formatTime(booking.end_time);
+    const startDate = extractDate(booking.start_time);
+    const startTime = extractTime(booking.start_time);
+    const endTime = extractTime(booking.end_time);
 
     // Create pricing display based on booking type
     const pricingDisplay = isDaily 
