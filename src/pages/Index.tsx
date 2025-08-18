@@ -149,6 +149,13 @@ const Index = () => {
               <NotificationSettings />
               {user ? (
                 <>
+                  {user.email === 'rodrigo@arrivparking.com' && (
+                    <Link to="/admin">
+                      <Button variant="outline" className="border-orange-200 hover:bg-orange-50 text-orange-600">
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/bookings">
                     <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
                       My Bookings
@@ -199,6 +206,13 @@ const Index = () => {
                     <div className="border-t pt-4 flex flex-col space-y-3">
                       {user ? (
                         <>
+                          {user.email === 'rodrigo@arrivparking.com' && (
+                            <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                              <Button variant="outline" className="w-full justify-start h-12 border-orange-200 hover:bg-orange-50 text-orange-600">
+                                Admin
+                              </Button>
+                            </Link>
+                          )}
                           <Link to="/bookings" onClick={() => setMobileMenuOpen(false)} className="w-full">
                             <Button variant="outline" className="w-full justify-start h-12">
                               My Bookings
