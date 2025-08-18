@@ -61,12 +61,21 @@ serve(async (req) => {
 
         const metadata = session.metadata;
         if (!metadata?.spot_id) {
-          console.error("No spot_id in session metadata");
+          console.error("❌ [CHECKOUT_ERROR] No spot_id in session metadata");
           break;
         }
 
-        const bookingDetails = JSON.parse(metadata.booking_details || "{}");
-        const guestDetails = JSON.parse(metadata.guest_details || "{}");
+        let bookingDetails;
+        let guestDetails;
+        
+        try {
+          bookingDetails = JSON.parse(metadata.booking_details || "{}");
+          guestDetails = JSON.parse(metadata.guest_details || "{}");
+        } catch (error) {
+          console.error("❌ [CHECKOUT_ERROR] Failed to parse booking/guest details:", error);
+          break;
+        }
+        
         const isQRBooking = metadata.is_qr_booking === "true";
         
         // Parse time options to get display labels
@@ -97,13 +106,38 @@ serve(async (req) => {
 
         const isPricingDaily = spot.pricing_type === 'daily';
         
-        // Calculate dates and times
-        const bookingDate = new Date(bookingDetails.date).toISOString().split('T')[0];
-        const startDateTime = new Date(`${bookingDate}T${bookingDetails.startTime}:00`);
+        // Calculate dates and times with better error handling
+        let startDateTime, endDateTime;
         
-        const endDateTime = isPricingDaily 
-          ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
-          : new Date(`${bookingDate}T${bookingDetails.endTime}:00`);
+        try {
+          console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
+          
+          const bookingDate = new Date(bookingDetails.date);
+          if (isNaN(bookingDate.getTime())) {
+            throw new Error(`Invalid booking date: ${bookingDetails.date}`);
+          }
+          
+          const dateStr = bookingDate.toISOString().split('T')[0];
+          startDateTime = new Date(`${dateStr}T${bookingDetails.startTime}:00`);
+          
+          if (isNaN(startDateTime.getTime())) {
+            throw new Error(`Invalid start time: ${bookingDetails.startTime}`);
+          }
+          
+          if (isPricingDaily) {
+            endDateTime = new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+          } else {
+            endDateTime = new Date(`${dateStr}T${bookingDetails.endTime}:00`);
+            if (isNaN(endDateTime.getTime())) {
+              throw new Error(`Invalid end time: ${bookingDetails.endTime}`);
+            }
+          }
+          
+          console.log(`📅 [DATE_SUCCESS] Start: ${startDateTime.toISOString()}, End: ${endDateTime.toISOString()}`);
+        } catch (error) {
+          console.error("❌ [DATE_ERROR] Error parsing dates:", error);
+          break;
+        }
 
         // Create booking
         console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);
@@ -116,7 +150,7 @@ serve(async (req) => {
           end_time: endDateTime.toISOString(),
           total_amount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'confirmed',
-          payment_intent_id: session.payment_intent,
+          payment_intent_id: session.payment_intent?.toString(),
           qr_code_used: isQRBooking,
           platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
           owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
@@ -127,12 +161,10 @@ serve(async (req) => {
             day: 'numeric' 
           }),
           display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-          display_end_time: isPricingDaily 
-            ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
-            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
+          display_end_time: timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
           display_duration_text: isPricingDaily 
-            ? `${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
-            : `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`
+            ? `${bookingDetails.numberOfDays || 1} day${(bookingDetails.numberOfDays || 1) !== 1 ? 's' : ''}`
+            : `${bookingDetails.duration || 1} hour${(bookingDetails.duration || 1) !== 1 ? 's' : ''}`
         };
         
         console.log(`💾 [BOOKING_DATA] Inserting booking data:`, bookingData);

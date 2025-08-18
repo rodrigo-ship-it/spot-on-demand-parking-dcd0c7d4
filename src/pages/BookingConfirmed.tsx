@@ -33,59 +33,80 @@ const BookingConfirmed = () => {
         setLoading(true);
         try {
           // First get the checkout session to find the payment intent
-          const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-session-details', {
+          let { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-session-details', {
             body: { session_id: sessionId }
           });
 
           if (sessionError || !sessionData?.payment_intent_id) {
-            // If we can't get session details, try to find a recent booking
-            const { data: recentBookings, error: recentError } = await supabase
-              .from('bookings')
-              .select('*')
-              .gte('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString()) // Last 10 minutes
-              .order('created_at', { ascending: false })
-              .limit(1);
-
-            if (!recentError && recentBookings && recentBookings.length > 0) {
-              // Use the most recent booking
-              const booking = recentBookings[0];
-              
-              // Fetch spot details
-              const { data: spot, error: spotError } = await supabase
-                .from('parking_spots')
-                .select('*')
-                .eq('id', booking.spot_id)
-                .single();
-
-              if (!spotError && spot) {
-                const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
-                const isDaily = durationInHours >= 24;
-                
-                const formattedData = {
-                  date: booking.display_date || "Your selected date",
-                  startTime: booking.display_start_time || "Your selected start time", 
-                  endTime: booking.display_end_time || "Your selected end time",
-                  duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
-                  total: booking.total_amount,
-                  confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
-                  bookingId: booking.id,
-                  autoExtend: false,
-                  isDaily: isDaily,
-                  numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
-                  spotData: {
-                    title: spot.title,
-                    address: spot.address,
-                    price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
-                    pricing_type: spot.pricing_type
-                  }
-                };
-
-                setBookingData(formattedData);
-                return;
-              }
-            }
+            console.error('❌ [SESSION_ERROR] Failed to get session details:', sessionError);
             
-            throw new Error('Could not retrieve session details or find recent booking');
+            // Wait a bit and retry session details (webhook might be processing)
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            const { data: retrySessionData, error: retrySessionError } = await supabase.functions.invoke('get-session-details', {
+              body: { session_id: sessionId }
+            });
+            
+            if (retrySessionError || !retrySessionData?.payment_intent_id) {
+              console.error('❌ [RETRY_SESSION_ERROR] Still failed to get session details');
+              
+              // As final fallback, check for recent bookings with this session_id or payment_intent
+              // But wait a bit more for webhook to process
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              
+              // Try to find booking by session_id stored somewhere or recent confirmed booking
+              const { data: recentBookings, error: recentError } = await supabase
+                .from('bookings')
+                .select('*')
+                .eq('status', 'confirmed')
+                .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Last 5 minutes
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+              if (!recentError && recentBookings && recentBookings.length > 0) {
+                // Use the most recent confirmed booking
+                const booking = recentBookings[0];
+                
+                // Fetch spot details
+                const { data: spot, error: spotError } = await supabase
+                  .from('parking_spots')
+                  .select('*')
+                  .eq('id', booking.spot_id)
+                  .single();
+
+                if (!spotError && spot) {
+                  const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
+                  const isDaily = durationInHours >= 24;
+                  
+                  const formattedData = {
+                    date: booking.display_date || "Your selected date",
+                    startTime: booking.display_start_time || "Your selected start time", 
+                    endTime: booking.display_end_time || "Your selected end time",
+                    duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
+                    total: booking.total_amount,
+                    confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+                    bookingId: booking.id,
+                    autoExtend: false,
+                    isDaily: isDaily,
+                    numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
+                    spotData: {
+                      title: spot.title,
+                      address: spot.address,
+                      price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
+                      pricing_type: spot.pricing_type
+                    }
+                  };
+
+                  setBookingData(formattedData);
+                  return;
+                }
+              }
+              
+              throw new Error('Could not retrieve session details or find recent booking');
+            } else {
+              // Use retry session data
+              sessionData = retrySessionData;
+            }
           }
 
           // Find booking by payment_intent_id

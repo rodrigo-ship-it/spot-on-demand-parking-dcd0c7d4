@@ -158,6 +158,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       checkout_url: session.url,
+      session_id: session.id,
       platform_fee: totalPlatformFee / 100,
       lister_amount: listerAmount / 100,
       stripe_processing_fee: stripeProcessingFee / 100,

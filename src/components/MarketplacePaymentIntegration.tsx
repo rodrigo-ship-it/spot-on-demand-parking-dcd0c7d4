@@ -71,9 +71,10 @@ export const MarketplacePaymentIntegration = ({
           totalAmount: data.total_amount
         });
         
-        // Store session ID for success callback
+        // Store session ID for tracking
         if (data.session_id) {
           localStorage.setItem('stripe_session_id', data.session_id);
+          console.log('💾 [SESSION_STORED] Session ID stored:', data.session_id);
         }
         
         // Add a small delay to ensure logs are captured
