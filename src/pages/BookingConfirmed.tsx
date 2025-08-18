@@ -23,22 +23,15 @@ const BookingConfirmed = () => {
   // Fetch booking data if coming from Stripe redirect
   useEffect(() => {
     const fetchBookingData = async () => {
-      console.log('=== BOOKING CONFIRMATION DEBUG ===');
-      console.log('Initial bookingData from location.state:', bookingData);
-      
       // If we already have booking data from navigation state, use it directly
       if (bookingData) {
-        console.log('Using navigation state data - display values:');
-        console.log('date:', bookingData.date);
-        console.log('startTime:', bookingData.startTime);
-        console.log('endTime:', bookingData.endTime);
-        
         // Use the exact values passed from BookSpot (already formatted for display)
         setBookingData(bookingData);
         return;
       }
 
-      // If we have URL parameters from Stripe, handle payment success and fetch the booking data
+      // If we have URL parameters from Stripe, just show a basic confirmation
+      // since we don't have the original user display values
       if (bookingId && sessionId) {
         setLoading(true);
         try {
@@ -63,40 +56,20 @@ const BookingConfirmed = () => {
 
           if (spotError) throw spotError;
 
-          // Calculate duration 
+          // For Stripe redirects, we'll show a basic confirmation
+          // The times might not match exactly what the user selected due to timezone handling
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
-          // Convert stored UTC times to display times
-          const startDate = new Date(booking.start_time);
-          const endDate = new Date(booking.end_time);
-          
-          const formatDisplayTime = (date: Date) => {
-            return date.toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            });
-          };
-
-          const formatDisplayDate = (date: Date) => {
-            return date.toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-          };
-          
           const formattedData = {
-            date: formatDisplayDate(startDate),
-            startTime: formatDisplayTime(startDate),
-            endTime: formatDisplayTime(endDate),
+            date: "Your selected date",
+            startTime: "Your selected start time", 
+            endTime: "Your selected end time",
             duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
-            autoExtend: false, // Default value
+            autoExtend: false,
             isDaily: isDaily,
             numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
             spotData: {
