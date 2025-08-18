@@ -606,31 +606,142 @@ export default function AdminDashboard() {
   // Function to check for missing users and sync data
   const syncUserData = async () => {
     try {
-      toast.info('Syncing user data...');
+      toast.info('Syncing user data and checking for missing profiles...');
       
-      // First, let's check if there are any auth users without profiles
-      // Note: We can't directly query auth.users from client, but we can check for gaps in data
-      
+      // Get all parking spot owners
+      const { data: allSpots, error: spotsError } = await supabase
+        .from('parking_spots')
+        .select('owner_id')
+        .order('created_at', { ascending: false });
+
+      if (spotsError) {
+        console.error('Error fetching spots:', spotsError);
+        toast.error('Failed to fetch parking spots');
+        return;
+      }
+
+      // Get unique owner IDs
+      const uniqueOwnerIds = [...new Set(allSpots?.map(spot => spot.owner_id) || [])];
+      console.log('Found unique spot owners:', uniqueOwnerIds);
+
+      // Get all existing profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, email')
         .order('created_at', { ascending: false });
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
-        toast.error('Failed to sync user data');
+        toast.error('Failed to fetch user profiles');
         return;
       }
 
+      const existingProfileUserIds = profiles?.map(p => p.user_id) || [];
+      
+      // Find spot owners without profiles
+      const missingProfileOwners = uniqueOwnerIds.filter(ownerId => 
+        !existingProfileUserIds.includes(ownerId)
+      );
+
+      console.log('Spot owners without profiles:', missingProfileOwners);
+
+      if (missingProfileOwners.length > 0) {
+        toast.error(`Found ${missingProfileOwners.length} spot owners without profiles! Check console for details.`);
+        console.log('Missing profile owner IDs:', missingProfileOwners);
+        
+        // You could create these profiles manually or investigate why they're missing
+        // For now, let's just alert the admin
+        alert(`MISSING PROFILES DETECTED!\n\nFound ${missingProfileOwners.length} users who own parking spots but don't have profiles:\n\n${missingProfileOwners.join('\n')}\n\nCheck the browser console for full details.`);
+      }
+
       console.log(`Found ${profiles?.length || 0} user profiles`);
+      console.log(`Found ${uniqueOwnerIds.length} unique spot owners`);
       
       // Reload dashboard data to show updated information
       await loadDashboardData();
       
-      toast.success(`User data synced successfully. Found ${profiles?.length || 0} users.`);
+      toast.success(`User data synced successfully. Found ${profiles?.length || 0} users and ${uniqueOwnerIds.length} spot owners.`);
     } catch (error) {
       console.error('Error syncing user data:', error);
       toast.error('Failed to sync user data');
+    }
+  };
+
+  // Function to check for orphaned data across the system
+  const checkDataIntegrity = async () => {
+    try {
+      toast.info('Running data integrity check...');
+      
+      // Check for bookings without valid users or spots
+      const { data: allBookings } = await supabase
+        .from('bookings')
+        .select('renter_id, spot_id');
+
+      const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('user_id');
+
+      const { data: allSpots } = await supabase
+        .from('parking_spots')
+        .select('id, owner_id');
+
+      const profileUserIds = allProfiles?.map(p => p.user_id) || [];
+      const spotIds = allSpots?.map(s => s.id) || [];
+      const spotOwnerIds = allSpots?.map(s => s.owner_id) || [];
+
+      // Find issues
+      const orphanedBookings = allBookings?.filter(booking => 
+        !profileUserIds.includes(booking.renter_id) || !spotIds.includes(booking.spot_id)
+      ) || [];
+
+      const missingSpotOwnerProfiles = [...new Set(spotOwnerIds)].filter(ownerId => 
+        !profileUserIds.includes(ownerId)
+      );
+
+      console.log('Data Integrity Report:');
+      console.log('- Orphaned bookings:', orphanedBookings.length);
+      console.log('- Spot owners without profiles:', missingSpotOwnerProfiles);
+      console.log('- Total profiles:', profileUserIds.length);
+      console.log('- Total spots:', spotIds.length);
+      console.log('- Total bookings:', allBookings?.length || 0);
+
+      if (orphanedBookings.length > 0 || missingSpotOwnerProfiles.length > 0) {
+        const issues = [];
+        if (orphanedBookings.length > 0) issues.push(`${orphanedBookings.length} orphaned bookings`);
+        if (missingSpotOwnerProfiles.length > 0) issues.push(`${missingSpotOwnerProfiles.length} spot owners without profiles`);
+        
+        toast.error(`Data integrity issues found: ${issues.join(', ')}`);
+        
+        alert(`DATA INTEGRITY ISSUES DETECTED:\n\n${issues.join('\n')}\n\nMissing spot owner profiles:\n${missingSpotOwnerProfiles.join('\n')}\n\nCheck console for full details.`);
+      } else {
+        toast.success('Data integrity check passed!');
+      }
+
+    } catch (error) {
+      console.error('Error checking data integrity:', error);
+      toast.error('Failed to check data integrity');
+    }
+  };
+
+  // Function to create profile for missing spot owner
+  const createProfileForSpotOwner = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          email: `missing-user-${userId.slice(0, 8)}@placeholder.com`,
+          full_name: `Spot Owner (${userId.slice(0, 8)})`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      toast.success('Created missing profile for spot owner');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error creating profile for spot owner:', error);
+      toast.error('Failed to create profile');
     }
   };
 
@@ -824,6 +935,14 @@ export default function AdminDashboard() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>User Management</CardTitle>
                 <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={checkDataIntegrity}
+                    className="bg-background"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Find Missing
+                  </Button>
                   <Button 
                     variant="outline" 
                     onClick={syncUserData}
@@ -1365,14 +1484,24 @@ export default function AdminDashboard() {
               <Card className="md:col-span-2">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>System Diagnostics</CardTitle>
-                  <Button 
-                    variant="outline" 
-                    onClick={syncUserData}
-                    className="bg-background"
-                  >
-                    <Activity className="w-4 h-4 mr-2" />
-                    Refresh Data
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={checkDataIntegrity}
+                      className="bg-background"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Check Integrity
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={syncUserData}
+                      className="bg-background"
+                    >
+                      <Activity className="w-4 h-4 mr-2" />
+                      Refresh Data
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
