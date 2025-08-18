@@ -606,7 +606,7 @@ export default function AdminDashboard() {
   // Function to check for missing users and sync data
   const syncUserData = async () => {
     try {
-      toast.info('Syncing user data and checking for missing profiles...');
+      toast.info('Running detailed user ID analysis...');
       
       // Get all parking spot owners with detailed info
       const { data: allSpots, error: spotsError } = await supabase
@@ -632,6 +632,10 @@ export default function AdminDashboard() {
         return;
       }
 
+      console.log('=== DETAILED USER ID ANALYSIS ===');
+      console.log('Raw spot data:', allSpots);
+      console.log('Raw profile data:', profiles);
+
       // Get unique owner IDs and their spot details
       const spotOwnerDetails = allSpots?.reduce((acc, spot) => {
         if (!acc[spot.owner_id]) {
@@ -651,70 +655,101 @@ export default function AdminDashboard() {
       const uniqueOwnerIds = Object.keys(spotOwnerDetails);
       const existingProfileUserIds = profiles?.map(p => p.user_id) || [];
 
-      console.log('=== DETAILED DIAGNOSTIC ===');
-      console.log('All spot owners and their spots:');
-      Object.values(spotOwnerDetails).forEach(owner => {
-        console.log(`Owner ID: ${owner.ownerId}`);
-        console.log(`  Spots: ${owner.spots.length}`);
-        owner.spots.forEach(spot => {
-          console.log(`    - ${spot.title} (${spot.id.slice(0, 8)}...)`);
-        });
-        console.log(`  Has Profile: ${existingProfileUserIds.includes(owner.ownerId) ? 'YES' : 'NO'}`);
-        const profile = profiles?.find(p => p.user_id === owner.ownerId);
-        if (profile) {
-          console.log(`    Profile: ${profile.full_name} (${profile.email})`);
-        }
-        console.log('---');
-      });
+      console.log('\n=== ID COMPARISON ===');
+      console.log('Spot owner IDs:', uniqueOwnerIds);
+      console.log('Profile user IDs:', existingProfileUserIds);
 
-      console.log('\nAll profiles:');
-      profiles?.forEach(profile => {
-        const ownsSpots = uniqueOwnerIds.includes(profile.user_id);
-        console.log(`${profile.full_name} (${profile.email}) - Owns spots: ${ownsSpots ? 'YES' : 'NO'}`);
-      });
-
-      // Find spot owners without profiles
-      const missingProfileOwners = uniqueOwnerIds.filter(ownerId => 
+      // Check for exact matches vs. partial matches
+      const exactMatches = uniqueOwnerIds.filter(ownerId => 
+        existingProfileUserIds.includes(ownerId)
+      );
+      const missingProfiles = uniqueOwnerIds.filter(ownerId => 
         !existingProfileUserIds.includes(ownerId)
       );
 
-      // Show results
+      console.log('Exact matches:', exactMatches);
+      console.log('Missing profiles:', missingProfiles);
+
+      // Check for potential ID format issues
+      console.log('\n=== ID FORMAT ANALYSIS ===');
+      uniqueOwnerIds.forEach(ownerId => {
+        console.log(`Spot owner ID: "${ownerId}" (length: ${ownerId.length}, type: ${typeof ownerId})`);
+      });
+      existingProfileUserIds.forEach(userId => {
+        console.log(`Profile user ID: "${userId}" (length: ${userId.length}, type: ${typeof userId})`);
+      });
+
+      // Show detailed results
+      console.log('\n=== DETAILED BREAKDOWN ===');
+      Object.values(spotOwnerDetails).forEach(owner => {
+        console.log(`\nOwner ID: "${owner.ownerId}"`);
+        console.log(`  Spots owned: ${owner.spots.length}`);
+        owner.spots.forEach(spot => {
+          console.log(`    - ${spot.title} (created: ${new Date(spot.created_at).toLocaleDateString()})`);
+        });
+        
+        const hasProfile = existingProfileUserIds.includes(owner.ownerId);
+        console.log(`  Has Profile: ${hasProfile ? 'YES' : 'NO'}`);
+        
+        if (hasProfile) {
+          const profile = profiles?.find(p => p.user_id === owner.ownerId);
+          console.log(`    Profile details: ${profile?.full_name} (${profile?.email})`);
+          console.log(`    Profile created: ${new Date(profile?.created_at || '').toLocaleDateString()}`);
+        } else {
+          console.log(`    ❌ MISSING PROFILE FOR SPOT OWNER!`);
+          // Check for similar IDs (in case of formatting issues)
+          const similarIds = existingProfileUserIds.filter(pid => 
+            pid.toLowerCase().includes(owner.ownerId.toLowerCase().slice(0, 8)) ||
+            owner.ownerId.toLowerCase().includes(pid.toLowerCase().slice(0, 8))
+          );
+          if (similarIds.length > 0) {
+            console.log(`    Possible similar profile IDs: ${similarIds.join(', ')}`);
+          }
+        }
+      });
+
+      // Create detailed alert
       const alertMessage = `
-DIAGNOSTIC RESULTS:
+🔍 DETAILED USER ID ANALYSIS:
 
 Total Profiles: ${profiles?.length || 0}
 Total Spot Owners: ${uniqueOwnerIds.length}
-Missing Profiles: ${missingProfileOwners.length}
+Exact Matches: ${exactMatches.length}
+Missing Profiles: ${missingProfiles.length}
 
-SPOT OWNERS:
+📋 SPOT OWNERS:
 ${Object.values(spotOwnerDetails).map(owner => {
   const hasProfile = existingProfileUserIds.includes(owner.ownerId);
   const profile = profiles?.find(p => p.user_id === owner.ownerId);
-  return `• ${owner.ownerId.slice(0, 8)}... (${owner.spots.length} spots) - ${hasProfile ? `Profile: ${profile?.email}` : 'NO PROFILE'}`;
-}).join('\n')}
+  return `• ID: ${owner.ownerId.slice(0, 12)}...
+  Spots: ${owner.spots.length}
+  Profile: ${hasProfile ? `✅ ${profile?.email}` : '❌ MISSING'}`;
+}).join('\n\n')}
 
-${missingProfileOwners.length > 0 ? 
-  `\nMISSING PROFILES:\n${missingProfileOwners.map(id => `• ${id}`).join('\n')}` : 
+${missingProfiles.length > 0 ? 
+  `\n🚨 MISSING PROFILES:\n${missingProfiles.map(id => `• ${id}`).join('\n')}
+
+This is a DATA INTEGRITY ISSUE - users who own spots should ALWAYS have profiles!` : 
   '\n✅ All spot owners have profiles!'
 }
 
-Check browser console for detailed breakdown.
+Check browser console for detailed ID analysis.
       `;
 
       alert(alertMessage);
 
-      if (missingProfileOwners.length > 0) {
-        toast.error(`Found ${missingProfileOwners.length} spot owners without profiles!`);
+      if (missingProfiles.length > 0) {
+        toast.error(`CRITICAL: ${missingProfiles.length} spot owners have no profiles! This shouldn't be possible.`);
       } else {
-        toast.success('All spot owners have profiles!');
+        toast.success('All spot owners have profiles - data is consistent!');
       }
 
       // Reload dashboard data
       await loadDashboardData();
       
     } catch (error) {
-      console.error('Error syncing user data:', error);
-      toast.error('Failed to sync user data');
+      console.error('Error in user ID analysis:', error);
+      toast.error('Failed to analyze user data');
     }
   };
 
