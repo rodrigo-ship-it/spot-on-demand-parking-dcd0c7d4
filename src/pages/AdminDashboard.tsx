@@ -610,6 +610,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const deleteSpot = async (spotId: string) => {
+    if (!confirm('Are you sure you want to delete this parking spot? This action cannot be undone.')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('parking_spots')
+        .delete()
+        .eq('id', spotId);
+
+      if (error) throw error;
+      toast.success('Parking spot deleted successfully');
+      
+      // Remove the spot from userOwnedSpots state
+      setUserOwnedSpots(prev => prev.filter(spot => spot.id !== spotId));
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error deleting spot:', error);
+      toast.error('Failed to delete parking spot');
+    }
+  };
+
   // Function to check for missing users and sync data
   const syncUserData = async () => {
     try {
@@ -1779,6 +1800,14 @@ Check browser console for detailed ID analysis.
                               className="bg-background"
                             >
                               <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => deleteSpot(spot.id)}
+                              className="bg-background text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
