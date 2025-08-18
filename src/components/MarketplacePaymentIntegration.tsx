@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { StripeProvider } from "./StripeProvider";
-import { PaymentElementForm } from "./PaymentElement";
 
 interface MarketplacePaymentProps {
   bookingData: {
@@ -26,14 +24,9 @@ export const MarketplacePaymentIntegration = ({
   totalAmount, 
   onSuccess 
 }: MarketplacePaymentProps) => {
-  const [paymentDetails, setPaymentDetails] = useState<{
-    platformFee: number;
-    ownerAmount: number;
-    client_secret: string;
-  } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const createPaymentIntent = async () => {
+  const proceedToCheckout = async () => {
     if (loading) return; // Prevent multiple calls
     
     setLoading(true);
@@ -60,32 +53,15 @@ export const MarketplacePaymentIntegration = ({
         throw error;
       }
 
-      // If we get a checkout URL, redirect to Stripe Checkout
+      // Redirect to Stripe Checkout
       if (data?.checkout_url) {
         console.log("✅ Got checkout URL, redirecting:", data.checkout_url);
-        window.open(data.checkout_url, '_blank');
+        window.location.href = data.checkout_url; // Use direct redirect instead of new tab
         toast.success('Redirecting to payment...');
         return;
       }
 
-      // If we get success but no checkout URL, show the test response
-      if (data?.success) {
-        toast.success('Function test successful: ' + data.message);
-        return;
-      }
-
-      // Otherwise set payment details for inline form
-      if (data?.client_secret) {
-        setPaymentDetails({
-          platformFee: data.platform_fee,
-          ownerAmount: data.lister_amount,
-          client_secret: data.client_secret,
-        });
-        toast.success('Payment ready - please enter your payment details');
-        return;
-      }
-
-      throw new Error("No valid response from payment function");
+      throw new Error("No checkout URL received from payment function");
       
     } catch (error: any) {
       console.error('❌ Error creating payment:', error);
@@ -103,75 +79,36 @@ export const MarketplacePaymentIntegration = ({
     }
   };
 
-  const handlePaymentSuccess = () => {
-    toast.success('Payment successful! The spot owner received their payout instantly.');
-    onSuccess();
-  };
-
-  const handlePaymentError = (error: string) => {
-    toast.error(`Payment failed: ${error}`);
-  };
-
-  if (!paymentDetails) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Complete Payment
-            <Badge variant="secondary">Secure Marketplace Payment</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="p-4 bg-muted rounded-lg space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total Amount:</span>
-                <span className="font-bold">${(totalAmount || 0).toFixed(2)}</span>
-              </div>
-            </div>
-
-            <Button onClick={createPaymentIntent} disabled={loading} className="w-full">
-              {loading ? 'Preparing Payment...' : 'Proceed to Payment'}
-            </Button>
-            
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                💡 <strong>Marketplace Payment</strong><br />
-                The spot owner will receive an instant payout (93% of the base price) after payment confirmation.
-                Platform fee: 7% from both renter and owner.
-              </p>
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          Complete Payment
+          <Badge variant="secondary">Secure Marketplace Payment</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div className="p-4 bg-muted rounded-lg space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Total Amount:</span>
+              <span className="font-bold">${(totalAmount || 0).toFixed(2)}</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
-  return (
-    <div className="space-y-4">
-      <div className="p-4 bg-muted rounded-lg space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="font-medium">Total Amount:</span>
-          <span className="font-bold">${(totalAmount || 0).toFixed(2)}</span>
+          <Button onClick={proceedToCheckout} disabled={loading} className="w-full">
+            {loading ? 'Preparing Payment...' : 'Pay with Stripe'}
+          </Button>
+          
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Secure Checkout</strong><br />
+              You'll be redirected to Stripe's secure payment page to complete your booking.
+              The spot owner will receive an instant payout after payment confirmation.
+            </p>
+          </div>
         </div>
-        <div className="flex justify-between items-center text-sm">
-          <span>Platform Fee (14% total):</span>
-          <span>${(paymentDetails?.platformFee || 0).toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between items-center text-sm">
-          <span>Spot Owner Receives:</span>
-          <span className="text-green-600 font-medium">${(paymentDetails?.ownerAmount || 0).toFixed(2)}</span>
-        </div>
-      </div>
-
-      <StripeProvider clientSecret={paymentDetails.client_secret}>
-        <PaymentElementForm
-          bookingData={bookingData}
-          totalAmount={totalAmount}
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
-        />
-      </StripeProvider>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
