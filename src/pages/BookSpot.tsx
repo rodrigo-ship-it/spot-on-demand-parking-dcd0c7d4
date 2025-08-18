@@ -267,9 +267,15 @@ const BookSpot = () => {
       return;
     }
 
-    // For logged in users, require user
+    // For logged in users, require user and vehicle selection
     if (!isQRCodeBooking && !user) {
       toast.error("Missing required data");
+      return;
+    }
+
+    // Require vehicle selection for logged in users
+    if (!isQRCodeBooking && !selectedVehicle) {
+      toast.error("Please select a vehicle before proceeding to payment");
       return;
     }
 
@@ -659,34 +665,6 @@ const BookSpot = () => {
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Payment
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                  <div className="flex items-center">
-                    <div className="w-8 h-5 bg-blue-600 rounded mr-3"></div>
-                    <div>
-                      <div className="font-medium">{userProfile.paymentMethod.type} ****{userProfile.paymentMethod.lastFour}</div>
-                      <div className="text-sm text-gray-600">Expires {userProfile.paymentMethod.expiry}</div>
-                    </div>
-                  </div>
-                  <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                    >
-                      Change
-                    </Button>
-                  </PaymentMethodDialog>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Contact Information */}
             <Card>
