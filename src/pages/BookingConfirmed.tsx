@@ -23,17 +23,29 @@ const BookingConfirmed = () => {
   // Fetch booking data if coming from Stripe redirect
   useEffect(() => {
     const fetchBookingData = async () => {
+      console.log('=== BOOKING CONFIRMATION DEBUG ===');
+      console.log('Initial bookingData from location.state:', bookingData);
+      console.log('sessionId from URL:', sessionId);
+      console.log('bookingId from URL:', bookingId);
+      
       // If we already have booking data from navigation state, format it properly
       if (bookingData) {
-        console.log('Using navigation state data:', bookingData);
+        console.log('Using navigation state data - original times:');
+        console.log('startTime:', bookingData.startTime);
+        console.log('endTime:', bookingData.endTime);
+        console.log('date:', bookingData.date);
+        
         // Format user input times properly
         const formatUserTime = (timeString: string) => {
+          console.log('Formatting time string:', timeString);
           const time = timeString.split(':');
           const hours = parseInt(time[0]);
           const minutes = time[1];
           const ampm = hours >= 12 ? 'PM' : 'AM';
           const displayHours = hours % 12 || 12;
-          return `${displayHours}:${minutes} ${ampm}`;
+          const result = `${displayHours}:${minutes} ${ampm}`;
+          console.log('Formatted result:', result);
+          return result;
         };
 
         const formattedData = {
@@ -50,6 +62,7 @@ const BookingConfirmed = () => {
             : formatUserTime(bookingData.endTime)
         };
         
+        console.log('Final formatted data:', formattedData);
         setBookingData(formattedData);
         return;
       }
