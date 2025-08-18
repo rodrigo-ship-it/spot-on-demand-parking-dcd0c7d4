@@ -27,17 +27,32 @@ serve(async (req) => {
     
     if (!user?.email) throw new Error("User not authenticated");
 
+    // Use service role key to get booking details (bypasses RLS)
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     // Get booking details with payment intent
-    const { data: booking, error: bookingError } = await supabaseClient
+    const { data: booking, error: bookingError } = await supabaseService
       .from("bookings")
       .select("*")
       .eq("id", booking_id)
       .eq("renter_id", user.id)
       .single();
 
-    if (bookingError || !booking) {
+    if (bookingError) {
+      console.error("Database error finding booking:", bookingError);
+      throw new Error(`Database error: ${bookingError.message}`);
+    }
+    
+    if (!booking) {
+      console.error("Booking not found for ID:", booking_id, "User:", user.id);
       throw new Error("Booking not found or unauthorized");
     }
+
+    console.log("Found booking:", booking.id, "Status:", booking.status, "Payment Intent:", booking.payment_intent_id);
 
     if (!booking.payment_intent_id) {
       throw new Error("No payment found for this booking");
@@ -62,12 +77,7 @@ serve(async (req) => {
       }
     });
 
-    // Log the refund in our database
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
+    // Log the refund in our database (service client already initialized above)
 
     await supabaseService.from("refunds").insert({
       booking_id: booking.id,

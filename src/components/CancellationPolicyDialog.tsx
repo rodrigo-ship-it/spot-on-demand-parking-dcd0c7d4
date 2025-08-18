@@ -14,6 +14,7 @@ interface CancellationPolicyDialogProps {
     id: string;
     start_time: string;
     total_amount: number;
+    payment_intent_id?: string;
     parking_spots: {
       title: string;
     };
@@ -79,6 +80,12 @@ export const CancellationPolicyDialog = ({
 
     setIsProcessing(true);
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Authentication required to cancel booking");
+        return;
+      }
       // Update booking status to cancelled
       const { error: updateError } = await supabase
         .from('bookings')
@@ -92,20 +99,36 @@ export const CancellationPolicyDialog = ({
 
       // If there's a refund due, create a refund request
       if (refundInfo.refundAmount > 0) {
-        const { error: refundError } = await supabase.functions.invoke('process-refund', {
-          body: {
-            booking_id: booking.id,
-            refund_amount: refundInfo.refundAmount,
-            reason: `Cancellation - ${refundInfo.description}`,
-            cancellation_fee: refundInfo.cancellationFee
-          }
-        });
-
-        if (refundError) {
-          console.warn('Refund processing failed, but booking was cancelled:', refundError);
-          toast.warning('Booking cancelled successfully. Refund will be processed manually.');
+        // Check if booking has payment intent for refund processing
+        if (!booking.payment_intent_id) {
+          console.warn('No payment intent found for booking:', booking.id);
+          toast.warning('Booking cancelled successfully. Refund will be processed manually as no payment record was found.');
         } else {
-          toast.success(`Booking cancelled! $${refundInfo.refundAmount.toFixed(2)} refund will be processed within 3-5 business days.`);
+          const { error: refundError } = await supabase.functions.invoke('process-refund', {
+            body: {
+              booking_id: booking.id,
+              refund_amount: refundInfo.refundAmount,
+              reason: `Cancellation - ${refundInfo.description}`,
+              cancellation_fee: refundInfo.cancellationFee
+            }
+          });
+
+          if (refundError) {
+            console.error('Refund processing failed:', refundError);
+            toast.warning('Booking cancelled successfully. Refund will be processed manually - please contact support if you don\'t receive it within 5 business days.');
+            
+            // Still log the refund request for manual processing
+            await supabase.from('refunds').insert({
+              booking_id: booking.id,
+              user_id: user.id,
+              amount: refundInfo.refundAmount,
+              reason: `Manual processing required - ${refundInfo.description}`,
+              status: 'pending',
+              admin_notes: `Automatic refund failed: ${refundError.message}`
+            });
+          } else {
+            toast.success(`Booking cancelled! $${refundInfo.refundAmount.toFixed(2)} refund will be processed within 3-5 business days.`);
+          }
         }
       } else {
         toast.success('Booking cancelled successfully.');
