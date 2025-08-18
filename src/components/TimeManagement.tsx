@@ -45,9 +45,21 @@ export const TimeManagement = ({
 
       if (bookingError) throw bookingError;
 
-      if (minutesOver > 15) {
-        // Apply late checkout penalty
-        const penaltyAmount = minutesOver > 60 ? 50 : 25;
+      if (minutesOver > 30) {
+        // Apply late checkout penalty with more forgiving structure
+        let penaltyAmount = 0;
+        let description = '';
+        
+        if (minutesOver <= 60) {
+          penaltyAmount = 5;
+          description = `Late checkout by ${minutesOver} minutes (first-time grace fee)`;
+        } else if (minutesOver <= 120) {
+          penaltyAmount = 15;
+          description = `Extended late checkout by ${minutesOver} minutes`;
+        } else {
+          penaltyAmount = 35;
+          description = `Excessive late checkout by ${minutesOver} minutes`;
+        }
 
         const { error: penaltyError } = await supabase
           .from('penalties')
@@ -56,12 +68,14 @@ export const TimeManagement = ({
             booking_id: bookingId,
             penalty_type: 'late_checkout',
             amount: penaltyAmount,
-            description: `Late checkout by ${minutesOver} minutes`
+            description: description
           });
 
         if (penaltyError) throw penaltyError;
         
         toast.warning(`Late checkout fee applied: $${penaltyAmount}`);
+      } else if (minutesOver > 0) {
+        toast.success("Thanks for checking out! No fees applied during grace period.");
       }
       
       setCheckOutCompleted(true);
@@ -158,12 +172,13 @@ export const TimeManagement = ({
               </div>
               
               <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded">
-                <h4 className="font-medium mb-2">Rating Impact Policy:</h4>
+                <h4 className="font-medium mb-2">Fair Usage Policy:</h4>
                 <ul className="space-y-1 text-xs">
-                  <li>• Late check-out (16-30 min): -0.1 rating points</li>
-                  <li>• Late check-out (31-60 min): -0.2 rating points</li>
-                  <li>• Late check-out (60+ min): -0.5 rating points</li>
-                  <li>• No check-out: -1.0 rating points + suspension review</li>
+                  <li>• Grace period: First 30 minutes free</li>
+                  <li>• Late check-out (31-60 min): Small fee only</li>
+                  <li>• Extended late (61-120 min): Moderate fee</li>
+                  <li>• Excessive late (120+ min): Higher fee + rating impact</li>
+                  <li>• No check-out: Contact required for resolution</li>
                 </ul>
               </div>
             </CardContent>

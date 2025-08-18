@@ -46,11 +46,12 @@ export const PenaltySystem = ({ violations, accountStatus, totalPenalties }: Pen
 
   const getPenaltySchedule = () => {
     return [
-      { offense: "1st Late Check-out", penalty: "$10", action: "Warning issued" },
-      { offense: "2nd Late Check-out", penalty: "$25", action: "Rating impact" },
-      { offense: "3rd Late Check-out", penalty: "$50", action: "Account review" },
-      { offense: "No Check-out", penalty: "$100", action: "Immediate suspension review" },
-      { offense: "Damage/Dispute", penalty: "$200+", action: "Account suspension" }
+      { offense: "1st Late Check-out (30+ min)", penalty: "$5", action: "Gentle reminder" },
+      { offense: "2nd Late Check-out (30+ min)", penalty: "$10", action: "Warning issued" },
+      { offense: "3rd Late Check-out (30+ min)", penalty: "$20", action: "Rating impact" },
+      { offense: "Excessive Late Check-out (2+ hours)", penalty: "$35", action: "Account review" },
+      { offense: "No Check-out", penalty: "$50", action: "Immediate contact required" },
+      { offense: "Damage/Dispute", penalty: "$100+", action: "Case-by-case review" }
     ];
   };
 
