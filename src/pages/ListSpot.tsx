@@ -462,6 +462,7 @@ const ListSpot = () => {
                   id="price"
                   type="number"
                   step="0.01"
+                  min="0"
                   placeholder="8.00"
                   value={formData.pricePerHour}
                   onChange={(e) => setFormData({...formData, pricePerHour: e.target.value})}
@@ -480,6 +481,7 @@ const ListSpot = () => {
                   id="dailyPrice"
                   type="number"
                   step="0.01"
+                  min="0"
                   placeholder="40.00"
                   value={formData.dailyPrice}
                   onChange={(e) => setFormData({...formData, dailyPrice: e.target.value})}
@@ -501,6 +503,7 @@ const ListSpot = () => {
                   id="oneTimePrice"
                   type="number"
                   step="0.01"
+                  min="0"
                   placeholder="25.00"
                   value={formData.oneTimePrice}
                   onChange={(e) => setFormData({...formData, oneTimePrice: e.target.value})}

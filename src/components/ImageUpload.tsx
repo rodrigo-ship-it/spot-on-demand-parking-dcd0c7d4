@@ -118,15 +118,15 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 5, spotId }: I
 
       {/* Upload Button */}
       {images.length < maxImages && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:border-muted-foreground/50 transition-colors">
           <div className="text-center">
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <div className="flex text-sm text-gray-600">
+            <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <div className="flex justify-center items-center text-sm text-muted-foreground">
               <Label
                 htmlFor="file-upload"
-                className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none"
+                className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
               >
-                <span>{uploading ? "Uploading..." : "Upload images"}</span>
+                <span>{uploading ? "Uploading..." : "Add pictures"}</span>
                 <Input
                   id="file-upload"
                   type="file"
@@ -137,9 +137,9 @@ export const ImageUpload = ({ images, onImagesChange, maxImages = 5, spotId }: I
                   disabled={uploading}
                 />
               </Label>
-              <p className="pl-1">or drag and drop</p>
+              <p className="ml-1">or drag and drop</p>
             </div>
-            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+            <p className="text-xs text-muted-foreground mt-2">PNG, JPG, GIF up to 10MB each</p>
           </div>
         </div>
       )}
