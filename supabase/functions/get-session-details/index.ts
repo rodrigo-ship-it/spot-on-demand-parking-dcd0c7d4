@@ -42,11 +42,19 @@ serve(async (req) => {
       metadata: session.metadata 
     });
 
+    // Extract payment_intent_id - handle both string and expanded object
+    const paymentIntentId = typeof session.payment_intent === 'string' 
+      ? session.payment_intent 
+      : session.payment_intent?.id;
+    
+    console.log("🔍 [PAYMENT_INTENT_EXTRACTION] Type:", typeof session.payment_intent, "ID:", paymentIntentId);
+
     return new Response(JSON.stringify({ 
-      payment_intent_id: session.payment_intent,
+      payment_intent_id: paymentIntentId,
       payment_status: session.payment_status,
       customer_email: session.customer_email || session.customer_details?.email,
       amount_total: session.amount_total,
+      session_id: session.id,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

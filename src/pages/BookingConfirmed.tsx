@@ -39,6 +39,7 @@ const BookingConfirmed = () => {
 
           if (sessionError || !sessionData?.payment_intent_id) {
             console.error('❌ [SESSION_ERROR] Failed to get session details:', sessionError);
+            console.error('🔍 [SESSION_DATA] Received session data:', sessionData);
             
             // Wait a bit and retry session details (webhook might be processing)
             await new Promise(resolve => setTimeout(resolve, 3000));
@@ -48,7 +49,8 @@ const BookingConfirmed = () => {
             });
             
             if (retrySessionError || !retrySessionData?.payment_intent_id) {
-              console.error('❌ [RETRY_SESSION_ERROR] Still failed to get session details');
+              console.error('❌ [RETRY_SESSION_ERROR] Still failed to get session details:', retrySessionError);
+              console.error('🔍 [RETRY_SESSION_DATA] Received retry session data:', retrySessionData);
               
               // As final fallback, check for recent bookings with this session_id or payment_intent
               // But wait a bit more for webhook to process
@@ -110,13 +112,19 @@ const BookingConfirmed = () => {
           }
 
           // Find booking by payment_intent_id
+          console.log('🔍 [BOOKING_LOOKUP] Looking for booking with payment_intent_id:', sessionData.payment_intent_id);
+          
           const { data: booking, error: bookingError } = await supabase
             .from('bookings')
             .select('*')
             .eq('payment_intent_id', sessionData.payment_intent_id)
             .single();
 
-          if (bookingError) throw bookingError;
+          if (bookingError) {
+            console.error('❌ [BOOKING_ERROR] Failed to find booking:', bookingError);
+            console.error('🔍 [BOOKING_ERROR_DETAILS] Payment intent ID used:', sessionData.payment_intent_id);
+            throw bookingError;
+          }
 
           // Fetch spot details
           const { data: spot, error: spotError } = await supabase
