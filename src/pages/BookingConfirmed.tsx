@@ -6,7 +6,6 @@ import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, Mes
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { handlePaymentSuccess } from "@/components/WebhookHandler";
 
 const BookingConfirmed = () => {
   const location = useLocation();
@@ -29,14 +28,72 @@ const BookingConfirmed = () => {
         return;
       }
 
-      // If we have URL parameters from Stripe, fetch the stored display values
-      if (bookingId && sessionId) {
+      // If we have sessionId from Stripe redirect, find the booking
+      if (sessionId) {
         setLoading(true);
         try {
-          // Call the webhook handler to process payment success
-          await handlePaymentSuccess(sessionId);
+          // First get the checkout session to find the payment intent
+          const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-session-details', {
+            body: { session_id: sessionId }
+          });
+
+          if (sessionError || !sessionData?.payment_intent_id) {
+            throw new Error('Could not retrieve session details');
+          }
+
+          // Find booking by payment_intent_id
+          const { data: booking, error: bookingError } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('payment_intent_id', sessionData.payment_intent_id)
+            .single();
+
+          if (bookingError) throw bookingError;
+
+          // Fetch spot details
+          const { data: spot, error: spotError } = await supabase
+            .from('parking_spots')
+            .select('*')
+            .eq('id', booking.spot_id)
+            .single();
+
+          if (spotError) throw spotError;
+
+          // Use the stored display values - exactly what the user originally saw
+          const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
+          const isDaily = durationInHours >= 24;
           
-          // Fetch booking details with the stored display values
+          const formattedData = {
+            date: booking.display_date || "Your selected date",
+            startTime: booking.display_start_time || "Your selected start time", 
+            endTime: booking.display_end_time || "Your selected end time",
+            duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
+            total: booking.total_amount,
+            confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+            bookingId: booking.id,
+            autoExtend: false,
+            isDaily: isDaily,
+            numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
+            spotData: {
+              title: spot.title,
+              address: spot.address,
+              price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
+              pricing_type: spot.pricing_type
+            }
+          };
+
+          setBookingData(formattedData);
+        } catch (error) {
+          console.error('Error fetching booking data:', error);
+          toast.error('Failed to load booking details');
+          navigate('/');
+        } finally {
+          setLoading(false);
+        }
+      } else if (bookingId) {
+        // If we only have booking_id, fetch directly
+        setLoading(true);
+        try {
           const { data: booking, error: bookingError } = await supabase
             .from('bookings')
             .select('*')
@@ -54,7 +111,6 @@ const BookingConfirmed = () => {
 
           if (spotError) throw spotError;
 
-          // Use the stored display values - exactly what the user originally saw
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
