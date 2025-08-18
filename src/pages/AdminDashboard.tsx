@@ -771,19 +771,22 @@ Check browser console for detailed ID analysis.
       console.log('Creating missing profiles for users:', userIds);
       
       for (const userId of userIds) {
+        console.log(`Attempting to create profile for user ID: "${userId}"`);
+        
         // Create profile with minimal information - the user can update it later
-        const { error: profileError } = await supabase
+        const { data: insertedProfile, error: profileError } = await supabase
           .from('profiles')
           .insert({
             user_id: userId,
             email: 'unknown@example.com', // Placeholder - user can update
-            full_name: 'Unknown User'      // Placeholder - user can update
-          });
+            full_name: 'Spot Owner (Auto-created)'      // Placeholder - user can update
+          })
+          .select();
 
         if (profileError) {
           console.error(`Failed to create profile for ${userId}:`, profileError);
         } else {
-          console.log(`✅ Created profile for user ${userId}`);
+          console.log(`✅ Created profile for user ${userId}:`, insertedProfile);
         }
       }
       
