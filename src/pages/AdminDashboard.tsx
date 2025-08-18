@@ -739,7 +739,13 @@ Check browser console for detailed ID analysis.
       alert(alertMessage);
 
       if (missingProfiles.length > 0) {
-        toast.error(`CRITICAL: ${missingProfiles.length} spot owners have no profiles! This shouldn't be possible.`);
+        const shouldCreate = confirm(`CRITICAL: ${missingProfiles.length} spot owners have no profiles!\n\nThis is a data integrity issue. Would you like to automatically create the missing profiles now?`);
+        
+        if (shouldCreate) {
+          await createMissingProfiles(missingProfiles);
+        } else {
+          toast.error(`CRITICAL: ${missingProfiles.length} spot owners have no profiles! This shouldn't be possible.`);
+        }
       } else {
         toast.success('All spot owners have profiles - data is consistent!');
       }
@@ -750,6 +756,38 @@ Check browser console for detailed ID analysis.
     } catch (error) {
       console.error('Error in user ID analysis:', error);
       toast.error('Failed to analyze user data');
+    }
+  };
+
+  const createMissingProfiles = async (userIds: string[]) => {
+    try {
+      console.log('Creating missing profiles for users:', userIds);
+      
+      for (const userId of userIds) {
+        // Create profile with minimal information - the user can update it later
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: userId,
+            email: 'unknown@example.com', // Placeholder - user can update
+            full_name: 'Unknown User'      // Placeholder - user can update
+          });
+
+        if (profileError) {
+          console.error(`Failed to create profile for ${userId}:`, profileError);
+        } else {
+          console.log(`✅ Created profile for user ${userId}`);
+        }
+      }
+      
+      toast.success(`Created ${userIds.length} missing profiles with placeholder data`);
+      
+      // Refresh the data
+      await loadDashboardData();
+      
+    } catch (error) {
+      console.error('Error creating missing profiles:', error);
+      toast.error('Failed to create missing profiles');
     }
   };
 
