@@ -283,7 +283,16 @@ const BookSpot = () => {
           end_time: endDateTime.toISOString(),
           total_amount: total,
           status: 'pending',
-          qr_code_used: isQRCodeBooking
+          qr_code_used: isQRCodeBooking,
+          // Store the exact display values the user sees
+          display_date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
+          display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
+          display_end_time: isPricingDaily 
+            ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
+            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
+          display_duration_text: isPricingDaily 
+            ? `${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
+            : `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`
         })
         .select()
         .single();

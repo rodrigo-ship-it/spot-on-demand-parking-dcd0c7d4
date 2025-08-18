@@ -17,6 +17,10 @@ export type Database = {
       bookings: {
         Row: {
           created_at: string
+          display_date: string | null
+          display_duration_text: string | null
+          display_end_time: string | null
+          display_start_time: string | null
           end_time: string
           id: string
           owner_payout_amount: number | null
@@ -33,6 +37,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_date?: string | null
+          display_duration_text?: string | null
+          display_end_time?: string | null
+          display_start_time?: string | null
           end_time: string
           id?: string
           owner_payout_amount?: number | null
@@ -49,6 +57,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_date?: string | null
+          display_duration_text?: string | null
+          display_end_time?: string | null
+          display_start_time?: string | null
           end_time?: string
           id?: string
           owner_payout_amount?: number | null

@@ -25,20 +25,18 @@ const BookingConfirmed = () => {
     const fetchBookingData = async () => {
       // If we already have booking data from navigation state, use it directly
       if (bookingData) {
-        // Use the exact values passed from BookSpot (already formatted for display)
         setBookingData(bookingData);
         return;
       }
 
-      // If we have URL parameters from Stripe, just show a basic confirmation
-      // since we don't have the original user display values
+      // If we have URL parameters from Stripe, fetch the stored display values
       if (bookingId && sessionId) {
         setLoading(true);
         try {
           // Call the webhook handler to process payment success
           await handlePaymentSuccess(sessionId);
           
-          // Fetch booking details
+          // Fetch booking details with the stored display values
           const { data: booking, error: bookingError } = await supabase
             .from('bookings')
             .select('*')
@@ -56,15 +54,14 @@ const BookingConfirmed = () => {
 
           if (spotError) throw spotError;
 
-          // For Stripe redirects, we'll show a basic confirmation
-          // The times might not match exactly what the user selected due to timezone handling
+          // Use the stored display values - exactly what the user originally saw
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
           const formattedData = {
-            date: "Your selected date",
-            startTime: "Your selected start time", 
-            endTime: "Your selected end time",
+            date: booking.display_date || "Your selected date",
+            startTime: booking.display_start_time || "Your selected start time", 
+            endTime: booking.display_end_time || "Your selected end time",
             duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
