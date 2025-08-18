@@ -26,6 +26,24 @@ export const NotificationSystem = ({ bookings = [] }: NotificationSystemProps) =
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
+
+  // Load dismissed notifications from localStorage on mount
+  useEffect(() => {
+    if (!user) return;
+    
+    const storageKey = `dismissed-notifications-${user.id}`;
+    const dismissed = localStorage.getItem(storageKey);
+    if (dismissed) {
+      try {
+        const dismissedArray: string[] = JSON.parse(dismissed);
+        const dismissedSet = new Set<string>(dismissedArray);
+        setDismissedNotifications(dismissedSet);
+      } catch (error) {
+        console.error('Error loading dismissed notifications:', error);
+      }
+    }
+  }, [user]);
 
   // Generate real notifications based on actual bookings
   useEffect(() => {
@@ -48,31 +66,37 @@ export const NotificationSystem = ({ bookings = [] }: NotificationSystemProps) =
         const minutesLeft = Math.floor(timeUntilEnd / (1000 * 60));
         
         if (minutesLeft > 0 && minutesLeft <= 30) {
-          realNotifications.push({
-            id: `checkout-${booking.id}`,
-            type: "checkout_reminder",
-            title: "Check-out Reminder",
-            message: `Your parking session at ${booking.spotTitle} ends in ${minutesLeft} minutes. Please prepare to check out.`,
-            bookingId: booking.id,
-            timestamp: new Date(now.getTime() - 2 * 60 * 1000), // 2 minutes ago
-            read: false,
-            urgent: minutesLeft <= 15
-          });
+          const notificationId = `checkout-${booking.id}`;
+          if (!dismissedNotifications.has(notificationId)) {
+            realNotifications.push({
+              id: notificationId,
+              type: "checkout_reminder",
+              title: "Check-out Reminder",
+              message: `Your parking session at ${booking.spotTitle} ends in ${minutesLeft} minutes. Please prepare to check out.`,
+              bookingId: booking.id,
+              timestamp: new Date(now.getTime() - 2 * 60 * 1000), // 2 minutes ago
+              read: false,
+              urgent: minutesLeft <= 15
+            });
+          }
         }
         
         // Check for overstay
         if (timeUntilEnd < 0) {
           const overstayMinutes = Math.abs(minutesLeft);
-          realNotifications.push({
-            id: `overstay-${booking.id}`,
-            type: "overstay_warning",
-            title: "Overstay Warning",
-            message: `You are ${overstayMinutes} minutes past your reserved time at ${booking.spotTitle}. Additional fees may apply.`,
-            bookingId: booking.id,
-            timestamp: new Date(endTime.getTime() + 1 * 60 * 1000), // 1 minute after end time
-            read: false,
-            urgent: true
-          });
+          const notificationId = `overstay-${booking.id}`;
+          if (!dismissedNotifications.has(notificationId)) {
+            realNotifications.push({
+              id: notificationId,
+              type: "overstay_warning",
+              title: "Overstay Warning",
+              message: `You are ${overstayMinutes} minutes past your reserved time at ${booking.spotTitle}. Additional fees may apply.`,
+              bookingId: booking.id,
+              timestamp: new Date(endTime.getTime() + 1 * 60 * 1000), // 1 minute after end time
+              read: false,
+              urgent: true
+            });
+          }
         }
       }
       
@@ -83,23 +107,26 @@ export const NotificationSystem = ({ bookings = [] }: NotificationSystemProps) =
         
         if (hoursLeft > 0 && hoursLeft <= 2) {
           const minutesLeft = Math.floor(timeUntilStart / (1000 * 60));
-          realNotifications.push({
-            id: `upcoming-${booking.id}`,
-            type: "checkout_reminder",
-            title: "Upcoming Reservation",
-            message: `Your parking reservation at ${booking.spotTitle} starts in ${minutesLeft} minutes.`,
-            bookingId: booking.id,
-            timestamp: new Date(now.getTime() - 5 * 60 * 1000), // 5 minutes ago
-            read: false,
-            urgent: hoursLeft <= 0.5
-          });
+          const notificationId = `upcoming-${booking.id}`;
+          if (!dismissedNotifications.has(notificationId)) {
+            realNotifications.push({
+              id: notificationId,
+              type: "checkout_reminder",
+              title: "Upcoming Reservation",
+              message: `Your parking reservation at ${booking.spotTitle} starts in ${minutesLeft} minutes.`,
+              bookingId: booking.id,
+              timestamp: new Date(now.getTime() - 5 * 60 * 1000), // 5 minutes ago
+              read: false,
+              urgent: hoursLeft <= 0.5
+            });
+          }
         }
       }
     });
 
     setNotifications(realNotifications);
     setUnreadCount(realNotifications.filter(n => !n.read).length);
-  }, [user, bookings]);
+  }, [user, bookings, dismissedNotifications]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -128,6 +155,18 @@ export const NotificationSystem = ({ bookings = [] }: NotificationSystemProps) =
   };
 
   const dismissNotification = (id: string) => {
+    // Add to dismissed set
+    const newDismissed = new Set(dismissedNotifications);
+    newDismissed.add(id);
+    setDismissedNotifications(newDismissed);
+    
+    // Save to localStorage
+    if (user) {
+      const storageKey = `dismissed-notifications-${user.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(newDismissed)));
+    }
+    
+    // Remove from current notifications
     setNotifications(prev => prev.filter(n => n.id !== id));
     const notification = notifications.find(n => n.id === id);
     if (notification && !notification.read) {
