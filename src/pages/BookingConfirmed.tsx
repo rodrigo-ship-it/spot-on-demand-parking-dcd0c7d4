@@ -157,15 +157,10 @@ const BookingConfirmed = () => {
             id: booking.id,
             total_amount: booking.total_amount,
             confirmation_number: booking.id.slice(0, 8).toUpperCase(),
-            // Pass the display values the user actually sees
-            display_date: bookingData?.date || new Date(booking.start_time).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric', 
-              month: 'long',
-              day: 'numeric'
-            }),
-            display_start_time: bookingData?.startTime || '9:00 AM',
-            display_end_time: bookingData?.endTime || '5:00 PM',
+            // Use the stored display values from the database
+            display_date: booking.display_date || bookingData?.date || 'Date not available',
+            display_start_time: booking.display_start_time || bookingData?.startTime || 'Time not available',
+            display_end_time: booking.display_end_time || bookingData?.endTime || 'Time not available',
             number_of_days: bookingData?.numberOfDays || 1,
             is_daily: bookingData?.isDaily || false
           },
