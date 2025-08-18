@@ -63,46 +63,23 @@ const BookingConfirmed = () => {
 
           if (spotError) throw spotError;
 
-          // Get timezone for the spot location
-          let spotTimezone = 'UTC'; // fallback
-          if (spot.latitude && spot.longitude) {
-            try {
-              // Use Google's Timezone API
-              const response = await supabase.functions.invoke('get-mapbox-token');
-              const { google_places_key } = response.data || {};
-              
-              if (google_places_key) {
-                const timezoneResponse = await fetch(
-                  `https://maps.googleapis.com/maps/api/timezone/json?location=${spot.latitude},${spot.longitude}&timestamp=${Math.floor(Date.now() / 1000)}&key=${google_places_key}`
-                );
-                const timezoneData = await timezoneResponse.json();
-                if (timezoneData.status === 'OK') {
-                  spotTimezone = timezoneData.timeZoneId;
-                }
-              }
-            } catch (error) {
-              console.error('Error getting timezone:', error);
-            }
-          }
-
-          // Calculate duration in hours
+          // Calculate duration 
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
-          // Extract just the time portion from the stored datetime - no conversion
-          const extractTime = (dateString: string) => {
-            // Extract time portion (HH:MM) from ISO string and format as 12-hour
-            const time = dateString.split('T')[1].split(':');
-            const hours = parseInt(time[0]);
-            const minutes = time[1];
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
-            return `${displayHours}:${minutes} ${ampm}`;
+          // Convert stored UTC times to display times
+          const startDate = new Date(booking.start_time);
+          const endDate = new Date(booking.end_time);
+          
+          const formatDisplayTime = (date: Date) => {
+            return date.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
           };
 
-          const extractDate = (dateString: string) => {
-            // Extract date portion and format nicely
-            const date = new Date(dateString.split('T')[0]);
+          const formatDisplayDate = (date: Date) => {
             return date.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -112,15 +89,16 @@ const BookingConfirmed = () => {
           };
           
           const formattedData = {
-            date: extractDate(booking.start_time),
-            startTime: extractTime(booking.start_time),
-            endTime: extractTime(booking.end_time),
-            duration: durationInHours,
+            date: formatDisplayDate(startDate),
+            startTime: formatDisplayTime(startDate),
+            endTime: formatDisplayTime(endDate),
+            duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
             autoExtend: false, // Default value
             isDaily: isDaily,
+            numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
             spotData: {
               title: spot.title,
               address: spot.address,

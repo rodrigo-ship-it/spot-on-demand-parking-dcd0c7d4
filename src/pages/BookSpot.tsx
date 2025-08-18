@@ -317,12 +317,13 @@ const BookSpot = () => {
           ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
           : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
         numberOfDays: bookingDetails.numberOfDays,
-        duration: bookingDetails.duration,
+        duration: isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration,
         spotData,
         total,
         confirmationNumber: createdBookingId.slice(0, 8).toUpperCase(),
         bookingId: createdBookingId,
-        isDaily: isPricingDaily
+        isDaily: isPricingDaily,
+        autoExtend: bookingDetails.autoExtend
       }
     });
   };
