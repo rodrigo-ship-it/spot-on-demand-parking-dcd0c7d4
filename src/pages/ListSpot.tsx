@@ -67,7 +67,6 @@ const ListSpot = () => {
     photos: [],
     
     // Settings
-    instantBooking: true,
     minimumBooking: "1",
     maximumBooking: "24"
   });
@@ -141,7 +140,6 @@ const ListSpot = () => {
           accessRequirements: data.access_requirements || '',
           accessInstructions: '', // Keep this empty for backward compatibility
           photos: data.images || [],
-          instantBooking: true,
           minimumBooking: "1",
           maximumBooking: "24"
         });
@@ -663,16 +661,6 @@ const ListSpot = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <h3 className="font-medium">Instant Booking</h3>
-                <p className="text-sm text-gray-600">Allow renters to book without approval</p>
-              </div>
-              <Switch
-                checked={formData.instantBooking}
-                onCheckedChange={(checked) => setFormData({...formData, instantBooking: checked})}
-              />
-            </div>
 
             <div>
               <Label>Photos</Label>

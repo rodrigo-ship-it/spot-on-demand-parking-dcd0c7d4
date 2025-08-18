@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { PaymentIntegration } from "@/components/PaymentIntegration";
+import { MarketplacePaymentIntegration } from "@/components/MarketplacePaymentIntegration";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, MapPin, Clock, DollarSign, Shield, Car, CreditCard, Calendar, Zap, CalendarIcon, ClockIcon } from "lucide-react";
@@ -262,10 +262,13 @@ const BookSpot = () => {
       return;
     }
 
-    const createBookingToast = toast.loading("Creating your booking...");
-    
+    // Just proceed to payment without creating booking first
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = async () => {
+    // Create booking in database after successful payment
     try {
-      // Create booking start and end times - treat user input as spot's local time
       const bookingDate = format(bookingDetails.date, 'yyyy-MM-dd');
       const startDateTime = new Date(`${bookingDate}T${bookingDetails.startTime}:00`);
       
@@ -273,18 +276,16 @@ const BookSpot = () => {
         ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
         : new Date(`${bookingDate}T${bookingDetails.endTime}:00`);
 
-      // Create booking in database
       const { data: booking, error } = await supabase
         .from('bookings')
         .insert({
           spot_id: spotData.id,
-          renter_id: user?.id || null, // null for guest bookings
+          renter_id: user?.id || null,
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           total_amount: total,
-          status: 'pending',
+          status: 'confirmed',
           qr_code_used: isQRCodeBooking,
-          // Store the exact display values the user sees
           display_date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
           display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
           display_end_time: isPricingDaily 
@@ -298,43 +299,35 @@ const BookSpot = () => {
         .single();
 
       if (error) {
-        throw error;
+        console.error('Error creating booking after payment:', error);
+        toast.error("Payment successful but booking creation failed. Please contact support.");
+        return;
       }
 
-      // Dismiss the loading toast
-      toast.dismiss(createBookingToast);
-      
       setCreatedBookingId(booking.id);
-      setShowPayment(true);
-      toast.success("Booking created! Please complete payment.");
+      toast.success("Payment successful! Your booking has been confirmed.");
+      
+      navigate('/booking-confirmed', { 
+        state: { 
+          date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
+          startTime: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
+          endTime: isPricingDaily 
+            ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
+            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
+          numberOfDays: bookingDetails.numberOfDays,
+          duration: isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration,
+          spotData,
+          total,
+          confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+          bookingId: booking.id,
+          isDaily: isPricingDaily,
+          autoExtend: bookingDetails.autoExtend
+        }
+      });
     } catch (error) {
-      // Dismiss the loading toast
-      toast.dismiss(createBookingToast);
-      console.error('Booking error:', error);
-      toast.error("Failed to create booking. Please try again.");
+      console.error('Error creating booking after payment:', error);
+      toast.error("Payment successful but booking creation failed. Please contact support.");
     }
-  };
-
-  const handlePaymentSuccess = () => {
-    toast.success("Payment successful! Your booking has been confirmed.");
-    navigate('/booking-confirmed', { 
-      state: { 
-        // Pass the exact display values the user sees on the form
-        date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
-        startTime: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-        endTime: isPricingDaily 
-          ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
-          : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
-        numberOfDays: bookingDetails.numberOfDays,
-        duration: isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration,
-        spotData,
-        total,
-        confirmationNumber: createdBookingId.slice(0, 8).toUpperCase(),
-        bookingId: createdBookingId,
-        isDaily: isPricingDaily,
-        autoExtend: bookingDetails.autoExtend
-      }
-    });
   };
 
   const handlePaymentError = (error: string) => {
@@ -812,17 +805,10 @@ const BookSpot = () => {
                     </div>
                   </>
                 ) : (
-                  <PaymentIntegration
-                    bookingId={createdBookingId}
-                    baseAmount={subtotal}
-                    platformFee={platformFee}
-                    tax={tax}
+                  <MarketplacePaymentIntegration
+                    bookingId=""
                     totalAmount={total}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    onPaymentError={(error) => {
-                      console.error("Payment error:", error);
-                      toast.error(`Payment failed: ${error}`);
-                    }}
+                    onSuccess={handlePaymentSuccess}
                   />
                 )}
               </CardContent>
