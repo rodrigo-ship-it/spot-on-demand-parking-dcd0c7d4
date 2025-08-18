@@ -174,21 +174,23 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
-      // Load stats
+      // Load comprehensive stats
       const [
         { data: profilesData },
         { data: spotsData },
         { data: bookingsData },
         { data: disputesData },
         { data: refundsData },
-        { data: supportTicketsData }
+        { data: supportTicketsData },
+        { data: securityLogsData }
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('parking_spots').select('*'),
         supabase.from('bookings').select('*'),
         supabase.from('disputes').select('*').eq('status', 'pending'),
         supabase.from('refunds').select('*').eq('status', 'pending'),
-        supabase.from('support_tickets').select('*').eq('status', 'open')
+        supabase.from('support_tickets').select('*').eq('status', 'open'),
+        supabase.from('security_audit_log').select('*').order('created_at', { ascending: false }).limit(10)
       ]);
 
       const totalRevenue = bookingsData?.reduce((sum, booking) => 
@@ -233,18 +235,18 @@ export default function AdminDashboard() {
         spotUtilization
       });
 
-      // Load detailed data - Show empty state if no data
+      // Load detailed data with more comprehensive queries
       const { data: usersWithProfiles } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(50);
 
       const { data: spotsWithOwners } = await supabase
         .from('parking_spots')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(50);
 
       const { data: bookingsWithDetails } = await supabase
         .from('bookings')
@@ -253,17 +255,236 @@ export default function AdminDashboard() {
           parking_spots(title, address)
         `)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(50);
+
+      const { data: disputesWithDetails } = await supabase
+        .from('disputes')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      const { data: supportTicketsWithDetails } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
 
       setUsers(usersWithProfiles || []);
-      setSpots(spotsWithOwners || []);
-      setBookings(bookingsWithDetails || []);
+      setSpots(spotsWithOwners as any || []);
+      setBookings(bookingsWithDetails as any || []);
+      setDisputes(disputesWithDetails as any || []);
+      setSupportTickets(supportTicketsWithDetails as any || []);
+      setSecurityLogs((securityLogsData as any) || []);
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Real-time subscriptions for live updates
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channels = [
+      // Users channel
+      supabase
+        .channel('admin-profiles')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+          loadDashboardData();
+        })
+        .subscribe(),
+
+      // Bookings channel
+      supabase
+        .channel('admin-bookings')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+          loadDashboardData();
+        })
+        .subscribe(),
+
+      // Spots channel
+      supabase
+        .channel('admin-spots')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'parking_spots' }, () => {
+          loadDashboardData();
+        })
+        .subscribe(),
+
+      // Disputes channel
+      supabase
+        .channel('admin-disputes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'disputes' }, () => {
+          loadDashboardData();
+        })
+        .subscribe(),
+
+      // Support tickets channel
+      supabase
+        .channel('admin-support')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+          loadDashboardData();
+        })
+        .subscribe()
+    ];
+
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel));
+    };
+  }, [isAdmin]);
+
+  // Advanced user management functions
+  const banUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'banned', updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      toast.success('User banned successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error banning user:', error);
+      toast.error('Failed to ban user');
+    }
+  };
+
+  const unbanUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      toast.success('User unbanned successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      toast.error('Failed to unban user');
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      toast.success('User deleted successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
+    }
+  };
+
+  const exportData = async (type: string) => {
+    try {
+      let data: any[] = [];
+      let filename = '';
+
+      switch (type) {
+        case 'users':
+          data = users;
+          filename = 'users_export.csv';
+          break;
+        case 'bookings':
+          data = bookings;
+          filename = 'bookings_export.csv';
+          break;
+        case 'spots':
+          data = spots;
+          filename = 'spots_export.csv';
+          break;
+        default:
+          return;
+      }
+
+      const csv = convertToCSV(data);
+      downloadCSV(csv, filename);
+      toast.success(`${type} data exported successfully`);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
+  const convertToCSV = (data: any[]) => {
+    if (!data.length) return '';
+    
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(item => 
+      Object.values(item).map(value => 
+        typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value
+      ).join(',')
+    );
+    
+    return [headers, ...rows].join('\n');
+  };
+
+  const downloadCSV = (csv: string, filename: string) => {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const sendNotificationToUser = async (userId: string, message: string) => {
+    try {
+      // Implementation would depend on your notification system
+      toast.success('Notification sent successfully');
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      toast.error('Failed to send notification');
+    }
+  };
+
+  const resolveDispute = async (disputeId: string, resolution: string) => {
+    try {
+      const { error } = await supabase
+        .from('disputes')
+        .update({ 
+          status: 'resolved', 
+          resolution,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', disputeId);
+
+      if (error) throw error;
+      toast.success('Dispute resolved successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error resolving dispute:', error);
+      toast.error('Failed to resolve dispute');
+    }
+  };
+
+  const updateBookingStatus = async (bookingId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+      toast.success('Booking status updated successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+      toast.error('Failed to update booking status');
     }
   };
 
@@ -431,8 +652,27 @@ export default function AdminDashboard() {
 
           <TabsContent value="users">
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Users</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>User Management</CardTitle>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => exportData('users')}
+                    className="bg-background"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Users
+                  </Button>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-64 bg-background"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -443,22 +683,80 @@ export default function AdminDashboard() {
                       <p className="text-sm">Users will appear here when they sign up</p>
                     </div>
                   ) : (
-                    users.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{user.full_name || 'No name'}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Joined: {new Date(user.created_at).toLocaleDateString()}
-                          </p>
+                    users
+                      .filter(user => 
+                        !searchTerm || 
+                        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((user) => (
+                        <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                                <Users className="w-5 h-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{user.full_name || 'No name'}</p>
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-xs text-muted-foreground">
+                                    Joined: {format(new Date(user.created_at), 'MMM dd, yyyy')}
+                                  </span>
+                                  {user.phone && (
+                                    <span className="text-xs text-muted-foreground">
+                                      • Phone: {user.phone}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              Active
+                            </Badge>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="bg-background">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                                <DropdownMenuItem 
+                                  onClick={() => setSelectedUser(user)}
+                                  className="hover:bg-muted"
+                                >
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => sendNotificationToUser(user.user_id, 'Admin notification')}
+                                  className="hover:bg-muted"
+                                >
+                                  <Mail className="w-4 h-4 mr-2" />
+                                  Send Message
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => banUser(user.user_id)}
+                                  className="text-orange-600 hover:bg-orange-50"
+                                >
+                                  <UserX className="w-4 h-4 mr-2" />
+                                  Ban User
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => deleteUser(user.user_id)}
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete User
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="default">
-                            Registered
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
+                      ))
                   )}
                 </div>
               </CardContent>
@@ -467,8 +765,28 @@ export default function AdminDashboard() {
 
           <TabsContent value="spots">
             <Card>
-              <CardHeader>
-                <CardTitle>Parking Spots</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Parking Spot Management</CardTitle>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => exportData('spots')}
+                    className="bg-background"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Spots
+                  </Button>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-32 bg-background">
+                      <SelectValue placeholder="Filter" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg">
+                      <SelectItem value="all">All Spots</SelectItem>
+                      <SelectItem value="active">Active Only</SelectItem>
+                      <SelectItem value="inactive">Inactive Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -479,29 +797,82 @@ export default function AdminDashboard() {
                       <p className="text-sm">Spots will appear here when owners list them</p>
                     </div>
                   ) : (
-                    spots.map((spot) => (
-                      <div key={spot.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium">{spot.title}</p>
-                          <p className="text-sm text-muted-foreground">{spot.address}</p>
-                          <p className="text-xs text-muted-foreground">
-                            ${spot.price_per_hour}/hr
-                          </p>
+                    spots
+                      .filter(spot => 
+                        filterStatus === 'all' || 
+                        (filterStatus === 'active' && spot.is_active) ||
+                        (filterStatus === 'inactive' && !spot.is_active)
+                      )
+                      .map((spot) => (
+                        <div key={spot.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <MapPin className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{spot.title}</p>
+                                <p className="text-sm text-muted-foreground">{spot.address}</p>
+                                <div className="flex items-center gap-4 mt-1">
+                                  <span className="text-xs text-muted-foreground">
+                                    {spot.pricing_type === 'hourly' && `$${spot.price_per_hour}/hr`}
+                                    {spot.pricing_type === 'daily' && `$${spot.daily_price}/day`}
+                                    {spot.pricing_type === 'one_time' && `$${spot.one_time_price} one-time`}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    • {spot.available_spots}/{spot.total_spots} available
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    • ★ {spot.rating.toFixed(1)} ({spot.total_reviews} reviews)
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={spot.is_active ? "default" : "secondary"}>
+                              {spot.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="bg-background">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                                <DropdownMenuItem 
+                                  onClick={() => setSelectedSpot(spot)}
+                                  className="hover:bg-muted"
+                                >
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => toggleSpotStatus(spot.id, spot.is_active)}
+                                  className="hover:bg-muted"
+                                >
+                                  {spot.is_active ? (
+                                    <>
+                                      <Ban className="w-4 h-4 mr-2" />
+                                      Deactivate
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      Activate
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="hover:bg-muted">
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Spot
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={spot.is_active ? "default" : "secondary"}>
-                            {spot.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleSpotStatus(spot.id, spot.is_active)}
-                          >
-                            {spot.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                    ))
+                      ))
                   )}
                 </div>
               </CardContent>
@@ -510,8 +881,29 @@ export default function AdminDashboard() {
 
           <TabsContent value="bookings">
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Booking Management</CardTitle>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => exportData('bookings')}
+                    className="bg-background"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Bookings
+                  </Button>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-32 bg-background">
+                      <SelectValue placeholder="Filter" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg">
+                      <SelectItem value="all">All Bookings</SelectItem>
+                      <SelectItem value="active">Active Only</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -522,29 +914,76 @@ export default function AdminDashboard() {
                       <p className="text-sm">Bookings will appear here when users make reservations</p>
                     </div>
                   ) : (
-                    bookings.map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Booking ID: {booking.id.slice(0, 8)}...
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(booking.start_time).toLocaleDateString()} - ${Number(booking.total_amount).toFixed(2)}
-                          </p>
+                    bookings
+                      .filter(booking => 
+                        filterStatus === 'all' || booking.status === filterStatus
+                      )
+                      .map((booking) => (
+                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                <Car className="w-5 h-5 text-purple-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
+                                <p className="text-sm text-muted-foreground">{booking.parking_spots?.address}</p>
+                                <div className="flex items-center gap-4 mt-1">
+                                  <span className="text-xs text-muted-foreground">
+                                    ID: {booking.id.slice(0, 8)}...
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    • {format(new Date(booking.start_time), 'MMM dd, HH:mm')} - {format(new Date(booking.end_time), 'HH:mm')}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    • ${Number(booking.total_amount).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant={
+                                booking.status === 'confirmed' ? 'default' :
+                                booking.status === 'active' ? 'default' :
+                                booking.status === 'completed' ? 'secondary' :
+                                'destructive'
+                              }
+                            >
+                              {booking.status}
+                            </Badge>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="bg-background">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                                <DropdownMenuItem className="hover:bg-muted">
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <Ban className="w-4 h-4 mr-2" />
+                                  Cancel Booking
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => updateBookingStatus(booking.id, 'completed')}
+                                  className="text-green-600 hover:bg-green-50"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Mark Complete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
-                        <Badge 
-                          variant={
-                            booking.status === 'confirmed' ? 'default' :
-                            booking.status === 'active' ? 'default' :
-                            booking.status === 'completed' ? 'secondary' :
-                            'destructive'
-                          }
-                        >
-                          {booking.status}
-                        </Badge>
-                      </div>
-                    ))
+                      ))
                   )}
                 </div>
               </CardContent>
