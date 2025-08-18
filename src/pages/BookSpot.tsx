@@ -288,7 +288,7 @@ const BookSpot = () => {
           display_date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
           display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
           display_end_time: isPricingDaily 
-            ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
+            ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
             : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
           display_duration_text: isPricingDaily 
             ? `${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
@@ -323,7 +323,7 @@ const BookSpot = () => {
         date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
         startTime: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
         endTime: isPricingDaily 
-          ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
+          ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
           : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
         numberOfDays: bookingDetails.numberOfDays,
         duration: isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration,
