@@ -32,11 +32,14 @@ serve(async (req) => {
     });
 
     // Get the checkout session details
-    const session = await stripe.checkout.sessions.retrieve(session_id);
+    const session = await stripe.checkout.sessions.retrieve(session_id, {
+      expand: ['payment_intent']
+    });
     console.log("📝 Session retrieved:", { 
       id: session.id, 
       payment_intent: session.payment_intent,
-      payment_status: session.payment_status 
+      payment_status: session.payment_status,
+      metadata: session.metadata 
     });
 
     return new Response(JSON.stringify({ 
