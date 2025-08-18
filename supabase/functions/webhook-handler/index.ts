@@ -8,28 +8,38 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log(`🎯 [WEBHOOK_START] ${new Date().toISOString()} - Webhook received`);
+  console.log(`📋 [WEBHOOK_HEADERS] Headers:`, Object.fromEntries(req.headers.entries()));
+  
   if (req.method === "OPTIONS") {
+    console.log("🔄 [WEBHOOK_CORS] Handling CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("🔧 [WEBHOOK_INIT] Initializing Stripe client");
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
+    
+    console.log(`📦 [WEBHOOK_BODY] Body length: ${body.length} characters`);
+    console.log(`🔐 [WEBHOOK_SIG] Signature present: ${!!signature}`);
 
     // Verify webhook signature
     let event;
     try {
+      console.log("🔍 [WEBHOOK_VERIFY] Verifying webhook signature...");
       event = await stripe.webhooks.constructEventAsync(
         body,
         signature!,
         Deno.env.get("STRIPE_WEBHOOK_SECRET") || ""
       );
+      console.log(`✅ [WEBHOOK_VERIFIED] Signature verified for event: ${event.type}`);
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
+      console.error("❌ [WEBHOOK_SIG_FAILED] Webhook signature verification failed:", err);
       return new Response("Webhook signature verification failed", { status: 400 });
     }
 
@@ -39,10 +49,15 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    console.log(`🚀 [WEBHOOK_PROCESSING] Processing event type: ${event.type}`);
+    console.log(`📄 [EVENT_DATA] Event ID: ${event.id}, Created: ${new Date(event.created * 1000).toISOString()}`);
+    
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("Processing checkout session:", session.id);
+        console.log(`💳 [CHECKOUT_SESSION] Processing session: ${session.id}`);
+        console.log(`💰 [SESSION_AMOUNT] Amount: ${session.amount_total}, Payment Intent: ${session.payment_intent}`);
+        console.log(`📋 [SESSION_METADATA] Metadata:`, session.metadata);
 
         const metadata = session.metadata;
         if (!metadata?.spot_id) {
@@ -91,86 +106,110 @@ serve(async (req) => {
           : new Date(`${bookingDate}T${bookingDetails.endTime}:00`);
 
         // Create booking
+        console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);
+        console.log(`📅 [BOOKING_TIMES] Start: ${startDateTime.toISOString()}, End: ${endDateTime.toISOString()}`);
+        
+        const bookingData = {
+          spot_id: metadata.spot_id,
+          renter_id: metadata.user_id || null,
+          start_time: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
+          total_amount: session.amount_total ? session.amount_total / 100 : 0,
+          status: 'confirmed',
+          payment_intent_id: session.payment_intent,
+          qr_code_used: isQRBooking,
+          platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
+          owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
+          display_date: new Date(bookingDetails.date).toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
+          display_end_time: isPricingDaily 
+            ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
+            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
+          display_duration_text: isPricingDaily 
+            ? `${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
+            : `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`
+        };
+        
+        console.log(`💾 [BOOKING_DATA] Inserting booking data:`, bookingData);
+        
         const { data: booking, error: bookingError } = await supabaseService
           .from('bookings')
-          .insert({
-            spot_id: metadata.spot_id,
-            renter_id: metadata.user_id || null,
-            start_time: startDateTime.toISOString(),
-            end_time: endDateTime.toISOString(),
-            total_amount: session.amount_total ? session.amount_total / 100 : 0,
-            status: 'confirmed',
-            payment_intent_id: session.payment_intent,
-            qr_code_used: isQRBooking,
-            platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
-            owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
-            display_date: new Date(bookingDetails.date).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            }),
-            display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-            display_end_time: isPricingDaily 
-              ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
-              : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
-            display_duration_text: isPricingDaily 
-              ? `${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
-              : `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`
-          })
+          .insert(bookingData)
           .select()
           .single();
 
         if (bookingError) {
-          console.error("Error creating booking:", bookingError);
+          console.error("❌ [BOOKING_ERROR] Error creating booking:", bookingError);
+          console.error("🔍 [BOOKING_ERROR_DETAILS] Error details:", JSON.stringify(bookingError, null, 2));
           break;
         }
 
-        console.log("Booking created successfully:", booking.id);
+        console.log(`✅ [BOOKING_SUCCESS] Booking created successfully: ${booking.id}`);
+        console.log(`📊 [BOOKING_DETAILS] Amount: $${booking.total_amount}, Status: ${booking.status}`);
 
         // Send confirmation email if user exists
         if (metadata.user_id) {
           try {
+            console.log(`📧 [EMAIL_START] Attempting to send confirmation email for user: ${metadata.user_id}`);
+            
             const { data: profile } = await supabaseService
               .from('profiles')
               .select('*')
               .eq('user_id', metadata.user_id)
               .single();
 
+            console.log(`👤 [PROFILE_FOUND] Profile found: ${profile ? 'Yes' : 'No'}, Email: ${profile?.email ? 'Yes' : 'No'}`);
+
             if (profile?.email) {
-              await supabaseService.functions.invoke('send-booking-confirmation', {
-                body: {
-                  email: profile.email,
-                  booking: {
-                    id: booking.id,
-                    total_amount: booking.total_amount,
-                    start_time: booking.start_time,
-                    end_time: booking.end_time,
-                    confirmation_number: booking.id.slice(0, 8).toUpperCase(),
-                    display_date: booking.display_date,
-                    display_start_time: booking.display_start_time,
-                    display_end_time: booking.display_end_time,
-                    number_of_days: bookingDetails.numberOfDays || 1,
-                    is_daily: isPricingDaily
-                  },
-                  spot: {
-                    title: spot.title,
-                    address: spot.address,
-                    price_per_hour: spot.price_per_hour,
-                    one_time_price: spot.one_time_price,
-                    daily_price: spot.daily_price,
-                    pricing_type: spot.pricing_type
-                  },
-                  renter: {
-                    full_name: profile.full_name || 'Customer'
-                  }
+              console.log(`📨 [EMAIL_SENDING] Sending confirmation email to: ${profile.email}`);
+              
+              const emailPayload = {
+                email: profile.email,
+                booking: {
+                  id: booking.id,
+                  total_amount: booking.total_amount,
+                  start_time: booking.start_time,
+                  end_time: booking.end_time,
+                  confirmation_number: booking.id.slice(0, 8).toUpperCase(),
+                  display_date: booking.display_date,
+                  display_start_time: booking.display_start_time,
+                  display_end_time: booking.display_end_time,
+                  number_of_days: bookingDetails.numberOfDays || 1,
+                  is_daily: isPricingDaily
+                },
+                spot: {
+                  title: spot.title,
+                  address: spot.address,
+                  price_per_hour: spot.price_per_hour,
+                  one_time_price: spot.one_time_price,
+                  daily_price: spot.daily_price,
+                  pricing_type: spot.pricing_type
+                },
+                renter: {
+                  full_name: profile.full_name || 'Customer'
                 }
+              };
+              
+              await supabaseService.functions.invoke('send-booking-confirmation', {
+                body: emailPayload
               });
+              
+              console.log(`✅ [EMAIL_SUCCESS] Confirmation email sent successfully`);
+            } else {
+              console.log(`⚠️ [EMAIL_SKIP] No email found for user profile`);
             }
           } catch (emailError) {
-            console.error("Error sending confirmation email:", emailError);
+            console.error("❌ [EMAIL_ERROR] Error sending confirmation email:", emailError);
+            console.error("🔍 [EMAIL_ERROR_DETAILS] Email error details:", JSON.stringify(emailError, null, 2));
             // Don't fail the webhook if email fails
           }
+        } else {
+          console.log(`ℹ️ [EMAIL_SKIP] No user_id provided, skipping email`);
         }
         break;
       }
@@ -262,16 +301,21 @@ serve(async (req) => {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`⚠️ [WEBHOOK_UNHANDLED] Unhandled event type: ${event.type}`);
     }
 
+    console.log(`✅ [WEBHOOK_SUCCESS] ${new Date().toISOString()} - Webhook processed successfully`);
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("Webhook handler error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error(`❌ [WEBHOOK_FATAL_ERROR] ${new Date().toISOString()} - Webhook handler error:`, error);
+    console.error("🔍 [WEBHOOK_ERROR_STACK] Error stack:", error.stack);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

@@ -31,47 +31,73 @@ export const MarketplacePaymentIntegration = ({
     
     setLoading(true);
     try {
-      console.log("🚀 Starting payment process for spot:", bookingData.spotData?.id);
-      console.log("🔍 Full booking data:", JSON.stringify(bookingData, null, 2));
-      console.log("💰 Total amount:", totalAmount);
+      console.log("🚀 [PAYMENT_FLOW_START] Starting payment process for spot:", bookingData.spotData?.id);
+      console.log("🔍 [PAYMENT_DATA] Full booking data:", JSON.stringify(bookingData, null, 2));
+      console.log("💰 [PAYMENT_AMOUNT] Total amount:", totalAmount);
+      console.log("👤 [USER_INFO] User:", bookingData.user?.id ? 'Authenticated' : 'Guest');
       
+      const paymentPayload = { 
+        spot_id: bookingData.spotData?.id,
+        booking_details: bookingData.bookingDetails,
+        total_amount: totalAmount,
+        user_id: bookingData.user?.id,
+        is_qr_booking: bookingData.isQRCodeBooking,
+        guest_details: bookingData.guestDetails
+      };
+      
+      console.log("📦 [PAYMENT_PAYLOAD] Sending to edge function:", JSON.stringify(paymentPayload, null, 2));
+      
+      const startTime = Date.now();
       const { data, error } = await supabase.functions.invoke('create-marketplace-payment', {
-        body: { 
-          spot_id: bookingData.spotData?.id,
-          booking_details: bookingData.bookingDetails,
-          total_amount: totalAmount,
-          user_id: bookingData.user?.id,
-          is_qr_booking: bookingData.isQRCodeBooking,
-          guest_details: bookingData.guestDetails
-        }
+        body: paymentPayload
       });
-
-      console.log("📝 Function response:", { data, error });
+      
+      const responseTime = Date.now() - startTime;
+      console.log(`⏱️ [PAYMENT_RESPONSE_TIME] Edge function took ${responseTime}ms`);
+      console.log("📝 [PAYMENT_RESPONSE] Function response:", { data, error });
 
       if (error) {
-        console.error("❌ Function error:", error);
+        console.error("❌ [PAYMENT_ERROR] Function error:", error);
+        console.error("🔍 [ERROR_DETAILS] Error details:", JSON.stringify(error, null, 2));
         throw error;
       }
 
       // Redirect to Stripe Checkout
       if (data?.checkout_url) {
-        console.log("✅ Got checkout URL, redirecting:", data.checkout_url);
-        window.location.href = data.checkout_url; // Use direct redirect instead of new tab
-        toast.success('Redirecting to payment...');
+        console.log("✅ [CHECKOUT_REDIRECT] Got checkout URL, redirecting to Stripe:", data.checkout_url);
+        console.log("🧾 [PAYMENT_BREAKDOWN] Fee breakdown:", {
+          platformFee: data.platform_fee,
+          listerAmount: data.lister_amount,
+          totalAmount: data.total_amount
+        });
+        
+        // Add a small delay to ensure logs are captured
+        setTimeout(() => {
+          window.location.href = data.checkout_url;
+        }, 100);
+        
+        toast.success('Redirecting to secure payment...');
         return;
       }
 
       throw new Error("No checkout URL received from payment function");
       
     } catch (error: any) {
-      console.error('❌ Error creating payment:', error);
+      console.error('❌ [PAYMENT_FLOW_ERROR] Error creating payment:', error);
+      console.error('🔍 [ERROR_STACK] Error stack:', error.stack);
       
       // Provide specific error message for payout setup issues
       if (error.message?.includes("payout setup")) {
+        console.error("💳 [PAYOUT_ERROR] Spot owner payout setup incomplete");
         toast.error("The spot owner needs to complete their payout setup before accepting bookings. Please try another spot or contact the owner.");
       } else if (error.message?.includes("Edge Function returned a non-2xx status code")) {
+        console.error("🚫 [SERVICE_ERROR] Edge function returned non-2xx status");
         toast.error("Payment service temporarily unavailable. Please try again in a moment.");
+      } else if (error.message?.includes("Network error") || error.message?.includes("Failed to fetch")) {
+        console.error("🌐 [NETWORK_ERROR] Network connectivity issue");
+        toast.error("Network error. Please check your connection and try again.");
       } else {
+        console.error("⚠️ [GENERIC_ERROR] Unhandled error:", error.message);
         toast.error(error.message || 'Failed to initialize payment');
       }
     } finally {
