@@ -338,9 +338,14 @@ export default function AdminDashboard() {
   // Advanced user management functions
   const banUser = async (userId: string) => {
     try {
+      // Note: Since we can't add a status column directly, we'll use a workaround
+      // In a real implementation, you'd need a user_status table or add a status column
       const { error } = await supabase
         .from('profiles')
-        .update({ status: 'banned', updated_at: new Date().toISOString() })
+        .update({ 
+          full_name: `[BANNED] ${users.find(u => u.user_id === userId)?.full_name || 'User'}`,
+          updated_at: new Date().toISOString() 
+        })
         .eq('user_id', userId);
 
       if (error) throw error;
@@ -354,9 +359,15 @@ export default function AdminDashboard() {
 
   const unbanUser = async (userId: string) => {
     try {
+      const user = users.find(u => u.user_id === userId);
+      const cleanName = user?.full_name?.replace('[BANNED] ', '') || 'User';
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .update({ 
+          full_name: cleanName,
+          updated_at: new Date().toISOString() 
+        })
         .eq('user_id', userId);
 
       if (error) throw error;
@@ -393,19 +404,49 @@ export default function AdminDashboard() {
 
       switch (type) {
         case 'users':
-          data = users;
-          filename = 'users_export.csv';
+          data = users.map(user => ({
+            id: user.id,
+            email: user.email,
+            full_name: user.full_name,
+            phone: user.phone,
+            created_at: user.created_at,
+            updated_at: user.updated_at
+          }));
+          filename = `users_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
           break;
         case 'bookings':
-          data = bookings;
-          filename = 'bookings_export.csv';
+          data = bookings.map(booking => ({
+            id: booking.id,
+            status: booking.status,
+            total_amount: booking.total_amount,
+            start_time: booking.start_time,
+            end_time: booking.end_time,
+            created_at: booking.created_at,
+            spot_title: booking.parking_spots?.title,
+            spot_address: booking.parking_spots?.address
+          }));
+          filename = `bookings_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
           break;
         case 'spots':
-          data = spots;
-          filename = 'spots_export.csv';
+          data = spots.map(spot => ({
+            id: spot.id,
+            title: spot.title,
+            address: spot.address,
+            pricing_type: spot.pricing_type,
+            price_per_hour: spot.price_per_hour,
+            daily_price: spot.daily_price,
+            one_time_price: spot.one_time_price,
+            is_active: spot.is_active,
+            total_spots: spot.total_spots,
+            available_spots: spot.available_spots,
+            rating: spot.rating,
+            total_reviews: spot.total_reviews,
+            created_at: spot.created_at
+          }));
+          filename = `spots_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
           break;
         default:
-          return;
+          throw new Error('Invalid export type');
       }
 
       const csv = convertToCSV(data);
@@ -422,9 +463,15 @@ export default function AdminDashboard() {
     
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map(item => 
-      Object.values(item).map(value => 
-        typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value
-      ).join(',')
+      Object.values(item).map(value => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }).join(',')
     );
     
     return [headers, ...rows].join('\n');
@@ -440,11 +487,24 @@ export default function AdminDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const sendNotificationToUser = async (userId: string, message: string) => {
     try {
-      // Implementation would depend on your notification system
+      // Create a support ticket as a notification system
+      const { error } = await supabase
+        .from('support_tickets')
+        .insert({
+          user_id: userId,
+          subject: 'Admin Notification',
+          message: message,
+          category: 'admin_notification',
+          priority: 'high',
+          status: 'open'
+        });
+
+      if (error) throw error;
       toast.success('Notification sent successfully');
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -485,6 +545,42 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error updating booking status:', error);
       toast.error('Failed to update booking status');
+    }
+  };
+
+  const resolveSupportTicket = async (ticketId: string, resolution: string) => {
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({ 
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
+
+      if (error) throw error;
+      toast.success('Support ticket resolved successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error resolving support ticket:', error);
+      toast.error('Failed to resolve support ticket');
+    }
+  };
+
+  const editSpot = async (spotId: string, updates: Partial<ParkingSpot>) => {
+    try {
+      const { error } = await supabase
+        .from('parking_spots')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', spotId);
+
+      if (error) throw error;
+      toast.success('Spot updated successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error updating spot:', error);
+      toast.error('Failed to update spot');
     }
   };
 
@@ -996,10 +1092,58 @@ export default function AdminDashboard() {
                 <CardTitle>Dispute Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No disputes to display</p>
-                  <p className="text-sm">Disputes will appear here when reported</p>
+                <div className="space-y-3">
+                  {disputes.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No disputes to display</p>
+                      <p className="text-sm">Disputes will appear here when reported</p>
+                    </div>
+                  ) : (
+                    disputes.map((dispute) => (
+                      <div key={dispute.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                              <AlertTriangle className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Dispute #{dispute.id.slice(0, 8)}...</p>
+                              <p className="text-sm text-muted-foreground">Type: {dispute.dispute_type}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Created: {format(new Date(dispute.created_at), 'MMM dd, yyyy HH:mm')}
+                              </p>
+                              {dispute.description && (
+                                <p className="text-sm mt-1 max-w-md truncate">{dispute.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={
+                            dispute.status === 'pending' ? 'destructive' :
+                            dispute.status === 'resolved' ? 'default' : 'secondary'
+                          }>
+                            {dispute.status}
+                          </Badge>
+                          {dispute.status === 'pending' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                const resolution = prompt('Enter resolution for this dispute:');
+                                if (resolution) resolveDispute(dispute.id, resolution);
+                              }}
+                              className="bg-background"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Resolve
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1015,10 +1159,64 @@ export default function AdminDashboard() {
                 <CardTitle>Support Tickets</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <HelpCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No support tickets</p>
-                  <p className="text-sm">Support requests will appear here</p>
+                <div className="space-y-3">
+                  {supportTickets.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <HelpCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No support tickets</p>
+                      <p className="text-sm">Support requests will appear here</p>
+                    </div>
+                  ) : (
+                    supportTickets.map((ticket) => (
+                      <div key={ticket.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <HelpCircle className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{ticket.subject}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Ticket: {ticket.ticket_number} • Category: {ticket.category}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Created: {format(new Date(ticket.created_at), 'MMM dd, yyyy HH:mm')}
+                              </p>
+                              <p className="text-sm mt-1 max-w-md truncate">{ticket.message}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={
+                            ticket.priority === 'high' ? 'destructive' :
+                            ticket.priority === 'medium' ? 'default' : 'secondary'
+                          }>
+                            {ticket.priority}
+                          </Badge>
+                          <Badge variant={
+                            ticket.status === 'open' ? 'destructive' :
+                            ticket.status === 'resolved' ? 'default' : 'secondary'
+                          }>
+                            {ticket.status}
+                          </Badge>
+                          {ticket.status === 'open' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                const resolution = prompt('Enter resolution for this ticket:');
+                                if (resolution) resolveSupportTicket(ticket.id, resolution);
+                              }}
+                              className="bg-background"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Resolve
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1087,6 +1285,201 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* User Details Dialog */}
+        <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+          <DialogContent className="bg-background max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>User Details</DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                    <p className="text-lg font-semibold">{selectedUser.full_name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Email</label>
+                    <p className="text-lg">{selectedUser.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                    <p className="text-lg">{selectedUser.phone || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">User ID</label>
+                    <p className="text-sm text-muted-foreground font-mono">{selectedUser.user_id}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Join Date</label>
+                    <p className="text-lg">{format(new Date(selectedUser.created_at), 'PPP')}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
+                    <p className="text-lg">{format(new Date(selectedUser.updated_at), 'PPP')}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <label className="text-sm font-medium text-muted-foreground block mb-2">Admin Actions</label>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        const message = prompt('Enter notification message:');
+                        if (message) sendNotificationToUser(selectedUser.user_id, message);
+                      }}
+                      className="bg-background"
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Notification
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        if (selectedUser.full_name?.includes('[BANNED]')) {
+                          unbanUser(selectedUser.user_id);
+                        } else {
+                          banUser(selectedUser.user_id);
+                        }
+                        setSelectedUser(null);
+                      }}
+                      className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                    >
+                      {selectedUser.full_name?.includes('[BANNED]') ? (
+                        <>
+                          <UserCheck className="w-4 h-4 mr-2" />
+                          Unban User
+                        </>
+                      ) : (
+                        <>
+                          <UserX className="w-4 h-4 mr-2" />
+                          Ban User
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => {
+                        deleteUser(selectedUser.user_id);
+                        setSelectedUser(null);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete User
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Spot Details Dialog */}
+        <Dialog open={!!selectedSpot} onOpenChange={() => setSelectedSpot(null)}>
+          <DialogContent className="bg-background max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Parking Spot Details</DialogTitle>
+            </DialogHeader>
+            {selectedSpot && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Title</label>
+                    <p className="text-lg font-semibold">{selectedSpot.title}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Status</label>
+                    <Badge variant={selectedSpot.is_active ? "default" : "secondary"}>
+                      {selectedSpot.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">Address</label>
+                    <p className="text-lg">{selectedSpot.address}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Pricing Type</label>
+                    <p className="text-lg capitalize">{selectedSpot.pricing_type}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Price</label>
+                    <p className="text-lg font-semibold">
+                      {selectedSpot.pricing_type === 'hourly' && `$${selectedSpot.price_per_hour}/hr`}
+                      {selectedSpot.pricing_type === 'daily' && `$${selectedSpot.daily_price}/day`}
+                      {selectedSpot.pricing_type === 'one_time' && `$${selectedSpot.one_time_price} one-time`}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Total Spots</label>
+                    <p className="text-lg">{selectedSpot.total_spots}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Available Spots</label>
+                    <p className="text-lg">{selectedSpot.available_spots}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Rating</label>
+                    <p className="text-lg">★ {selectedSpot.rating.toFixed(1)} ({selectedSpot.total_reviews} reviews)</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Created</label>
+                    <p className="text-lg">{format(new Date(selectedSpot.created_at), 'PPP')}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Spot ID</label>
+                    <p className="text-sm text-muted-foreground font-mono">{selectedSpot.id}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Owner ID</label>
+                    <p className="text-sm text-muted-foreground font-mono">{selectedSpot.owner_id}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <label className="text-sm font-medium text-muted-foreground block mb-2">Admin Actions</label>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        toggleSpotStatus(selectedSpot.id, selectedSpot.is_active);
+                        setSelectedSpot(null);
+                      }}
+                      className="bg-background"
+                    >
+                      {selectedSpot.is_active ? (
+                        <>
+                          <Ban className="w-4 h-4 mr-2" />
+                          Deactivate Spot
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Activate Spot
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        const newTitle = prompt('Enter new title:', selectedSpot.title);
+                        if (newTitle && newTitle !== selectedSpot.title) {
+                          editSpot(selectedSpot.id, { title: newTitle });
+                          setSelectedSpot(null);
+                        }
+                      }}
+                      className="bg-background"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Title
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
