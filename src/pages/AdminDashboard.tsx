@@ -157,9 +157,11 @@ export default function AdminDashboard() {
   const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [spotSearchTerm, setSpotSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
+  const [userOwnedSpots, setUserOwnedSpots] = useState<ParkingSpot[]>([]);
 
   // Simple admin check - replace with your actual admin email
   const isAdmin = user?.email === 'rodrigo@arrivparking.com'; // Update this to your email
@@ -568,6 +570,23 @@ export default function AdminDashboard() {
     }
   };
 
+  // Function to fetch spots owned by a specific user
+  const fetchUserOwnedSpots = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('parking_spots')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserOwnedSpots(data || []);
+    } catch (error) {
+      console.error('Error fetching user owned spots:', error);
+      setUserOwnedSpots([]);
+    }
+  };
+
   const editSpot = async (spotId: string, updates: Partial<ParkingSpot>) => {
     try {
       const { error } = await supabase
@@ -882,6 +901,15 @@ export default function AdminDashboard() {
                       <SelectItem value="inactive">Inactive Only</SelectItem>
                     </SelectContent>
                   </Select>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Search spots..."
+                      value={spotSearchTerm}
+                      onChange={(e) => setSpotSearchTerm(e.target.value)}
+                      className="pl-10 w-64 bg-background"
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -894,11 +922,15 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     spots
-                      .filter(spot => 
-                        filterStatus === 'all' || 
-                        (filterStatus === 'active' && spot.is_active) ||
-                        (filterStatus === 'inactive' && !spot.is_active)
-                      )
+                      .filter(spot => {
+                        const matchesSearch = !spotSearchTerm || 
+                          spot.title.toLowerCase().includes(spotSearchTerm.toLowerCase()) ||
+                          spot.address.toLowerCase().includes(spotSearchTerm.toLowerCase());
+                        const matchesStatus = filterStatus === 'all' || 
+                          (filterStatus === 'active' && spot.is_active) ||
+                          (filterStatus === 'inactive' && !spot.is_active);
+                        return matchesSearch && matchesStatus;
+                      })
                       .map((spot) => (
                         <div key={spot.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
                           <div className="flex-1">
@@ -1287,8 +1319,11 @@ export default function AdminDashboard() {
         </Tabs>
 
         {/* User Details Dialog */}
-        <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-          <DialogContent className="bg-background max-w-2xl">
+        <Dialog open={!!selectedUser} onOpenChange={() => {
+          setSelectedUser(null);
+          setUserOwnedSpots([]);
+        }}>
+          <DialogContent className="bg-background max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>User Details</DialogTitle>
             </DialogHeader>
@@ -1319,6 +1354,67 @@ export default function AdminDashboard() {
                     <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
                     <p className="text-lg">{format(new Date(selectedUser.updated_at), 'PPP')}</p>
                   </div>
+                </div>
+
+                {/* User's Owned Spots Section */}
+                <div className="pt-4 border-t">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Owned Parking Spots ({userOwnedSpots.length})</h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => fetchUserOwnedSpots(selectedUser.user_id)}
+                      className="bg-background"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Load Spots
+                    </Button>
+                  </div>
+                  
+                  {userOwnedSpots.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No parking spots found</p>
+                      <p className="text-sm">Click "Load Spots" to see spots owned by this user</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {userOwnedSpots.map((spot) => (
+                        <div key={spot.id} className="flex items-center justify-between p-3 border rounded-lg bg-background/50">
+                          <div className="flex-1">
+                            <p className="font-medium">{spot.title}</p>
+                            <p className="text-sm text-muted-foreground">{spot.address}</p>
+                            <div className="flex items-center gap-4 mt-1">
+                              <span className="text-xs text-muted-foreground">
+                                {spot.pricing_type === 'hourly' && `$${spot.price_per_hour}/hr`}
+                                {spot.pricing_type === 'daily' && `$${spot.daily_price}/day`}
+                                {spot.pricing_type === 'one_time' && `$${spot.one_time_price} one-time`}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                • {spot.available_spots}/{spot.total_spots} available
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={spot.is_active ? "default" : "secondary"}>
+                              {spot.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSpot(spot);
+                                setSelectedUser(null);
+                              }}
+                              className="bg-background"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t">
