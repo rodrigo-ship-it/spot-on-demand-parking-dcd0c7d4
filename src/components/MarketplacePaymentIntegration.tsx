@@ -38,11 +38,13 @@ export const MarketplacePaymentIntegration = ({
     
     setLoading(true);
     try {
-      console.log("🚀 Starting payment process for spot:", bookingData.spotData.id);
+      console.log("🚀 Starting payment process for spot:", bookingData.spotData?.id);
+      console.log("🔍 Full booking data:", JSON.stringify(bookingData, null, 2));
+      console.log("💰 Total amount:", totalAmount);
       
       const { data, error } = await supabase.functions.invoke('create-marketplace-payment', {
         body: { 
-          spot_id: bookingData.spotData.id,
+          spot_id: bookingData.spotData?.id,
           booking_details: bookingData.bookingDetails,
           total_amount: totalAmount,
           user_id: bookingData.user?.id,
