@@ -23,8 +23,36 @@ const BookingConfirmed = () => {
   // Fetch booking data if coming from Stripe redirect
   useEffect(() => {
     const fetchBookingData = async () => {
-      // If we already have booking data from navigation state, use it
-      if (bookingData) return;
+      // If we already have booking data from navigation state, format it properly
+      if (bookingData) {
+        console.log('Using navigation state data:', bookingData);
+        // Format user input times properly
+        const formatUserTime = (timeString: string) => {
+          const time = timeString.split(':');
+          const hours = parseInt(time[0]);
+          const minutes = time[1];
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const displayHours = hours % 12 || 12;
+          return `${displayHours}:${minutes} ${ampm}`;
+        };
+
+        const formattedData = {
+          ...bookingData,
+          date: new Date(bookingData.date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          startTime: formatUserTime(bookingData.startTime),
+          endTime: bookingData.isDaily 
+            ? formatUserTime(bookingData.startTime) 
+            : formatUserTime(bookingData.endTime)
+        };
+        
+        setBookingData(formattedData);
+        return;
+      }
 
       // If we have URL parameters from Stripe, handle payment success and fetch the booking data
       if (bookingId && sessionId) {
