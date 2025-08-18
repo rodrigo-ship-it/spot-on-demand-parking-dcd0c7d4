@@ -608,10 +608,10 @@ export default function AdminDashboard() {
     try {
       toast.info('Syncing user data and checking for missing profiles...');
       
-      // Get all parking spot owners
+      // Get all parking spot owners with detailed info
       const { data: allSpots, error: spotsError } = await supabase
         .from('parking_spots')
-        .select('owner_id')
+        .select('id, title, owner_id, created_at')
         .order('created_at', { ascending: false });
 
       if (spotsError) {
@@ -620,14 +620,10 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Get unique owner IDs
-      const uniqueOwnerIds = [...new Set(allSpots?.map(spot => spot.owner_id) || [])];
-      console.log('Found unique spot owners:', uniqueOwnerIds);
-
-      // Get all existing profiles
+      // Get all existing profiles with detailed info
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, email')
+        .select('user_id, email, full_name, created_at')
         .order('created_at', { ascending: false });
 
       if (profilesError) {
@@ -636,31 +632,86 @@ export default function AdminDashboard() {
         return;
       }
 
+      // Get unique owner IDs and their spot details
+      const spotOwnerDetails = allSpots?.reduce((acc, spot) => {
+        if (!acc[spot.owner_id]) {
+          acc[spot.owner_id] = {
+            ownerId: spot.owner_id,
+            spots: []
+          };
+        }
+        acc[spot.owner_id].spots.push({
+          id: spot.id,
+          title: spot.title,
+          created_at: spot.created_at
+        });
+        return acc;
+      }, {} as Record<string, { ownerId: string; spots: any[] }>) || {};
+
+      const uniqueOwnerIds = Object.keys(spotOwnerDetails);
       const existingProfileUserIds = profiles?.map(p => p.user_id) || [];
-      
+
+      console.log('=== DETAILED DIAGNOSTIC ===');
+      console.log('All spot owners and their spots:');
+      Object.values(spotOwnerDetails).forEach(owner => {
+        console.log(`Owner ID: ${owner.ownerId}`);
+        console.log(`  Spots: ${owner.spots.length}`);
+        owner.spots.forEach(spot => {
+          console.log(`    - ${spot.title} (${spot.id.slice(0, 8)}...)`);
+        });
+        console.log(`  Has Profile: ${existingProfileUserIds.includes(owner.ownerId) ? 'YES' : 'NO'}`);
+        const profile = profiles?.find(p => p.user_id === owner.ownerId);
+        if (profile) {
+          console.log(`    Profile: ${profile.full_name} (${profile.email})`);
+        }
+        console.log('---');
+      });
+
+      console.log('\nAll profiles:');
+      profiles?.forEach(profile => {
+        const ownsSpots = uniqueOwnerIds.includes(profile.user_id);
+        console.log(`${profile.full_name} (${profile.email}) - Owns spots: ${ownsSpots ? 'YES' : 'NO'}`);
+      });
+
       // Find spot owners without profiles
       const missingProfileOwners = uniqueOwnerIds.filter(ownerId => 
         !existingProfileUserIds.includes(ownerId)
       );
 
-      console.log('Spot owners without profiles:', missingProfileOwners);
+      // Show results
+      const alertMessage = `
+DIAGNOSTIC RESULTS:
+
+Total Profiles: ${profiles?.length || 0}
+Total Spot Owners: ${uniqueOwnerIds.length}
+Missing Profiles: ${missingProfileOwners.length}
+
+SPOT OWNERS:
+${Object.values(spotOwnerDetails).map(owner => {
+  const hasProfile = existingProfileUserIds.includes(owner.ownerId);
+  const profile = profiles?.find(p => p.user_id === owner.ownerId);
+  return `• ${owner.ownerId.slice(0, 8)}... (${owner.spots.length} spots) - ${hasProfile ? `Profile: ${profile?.email}` : 'NO PROFILE'}`;
+}).join('\n')}
+
+${missingProfileOwners.length > 0 ? 
+  `\nMISSING PROFILES:\n${missingProfileOwners.map(id => `• ${id}`).join('\n')}` : 
+  '\n✅ All spot owners have profiles!'
+}
+
+Check browser console for detailed breakdown.
+      `;
+
+      alert(alertMessage);
 
       if (missingProfileOwners.length > 0) {
-        toast.error(`Found ${missingProfileOwners.length} spot owners without profiles! Check console for details.`);
-        console.log('Missing profile owner IDs:', missingProfileOwners);
-        
-        // You could create these profiles manually or investigate why they're missing
-        // For now, let's just alert the admin
-        alert(`MISSING PROFILES DETECTED!\n\nFound ${missingProfileOwners.length} users who own parking spots but don't have profiles:\n\n${missingProfileOwners.join('\n')}\n\nCheck the browser console for full details.`);
+        toast.error(`Found ${missingProfileOwners.length} spot owners without profiles!`);
+      } else {
+        toast.success('All spot owners have profiles!');
       }
 
-      console.log(`Found ${profiles?.length || 0} user profiles`);
-      console.log(`Found ${uniqueOwnerIds.length} unique spot owners`);
-      
-      // Reload dashboard data to show updated information
+      // Reload dashboard data
       await loadDashboardData();
       
-      toast.success(`User data synced successfully. Found ${profiles?.length || 0} users and ${uniqueOwnerIds.length} spot owners.`);
     } catch (error) {
       console.error('Error syncing user data:', error);
       toast.error('Failed to sync user data');
