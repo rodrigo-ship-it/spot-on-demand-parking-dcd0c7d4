@@ -26,38 +26,15 @@ const BookingConfirmed = () => {
       console.log('=== BOOKING CONFIRMATION DEBUG ===');
       console.log('Initial bookingData from location.state:', bookingData);
       
-      // If we already have booking data from navigation state, format it properly
+      // If we already have booking data from navigation state, use it directly
       if (bookingData) {
-        console.log('Using navigation state data - raw times:');
-        console.log('startTime (raw):', bookingData.startTime);
-        console.log('endTime (raw):', bookingData.endTime);
+        console.log('Using navigation state data - display values:');
+        console.log('date:', bookingData.date);
+        console.log('startTime:', bookingData.startTime);
+        console.log('endTime:', bookingData.endTime);
         
-        // Convert 24-hour format (like "09:00") to 12-hour format
-        const formatTimeFrom24Hour = (timeString: string) => {
-          console.log('Converting 24-hour time:', timeString);
-          const [hours24, minutes] = timeString.split(':');
-          const hours = parseInt(hours24);
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayHours = hours % 12 || 12;
-          const result = `${displayHours}:${minutes} ${ampm}`;
-          console.log('Converted to:', result);
-          return result;
-        };
-
-        const formattedData = {
-          ...bookingData,
-          date: new Date(bookingData.date).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-          startTime: formatTimeFrom24Hour(bookingData.startTime),
-          endTime: bookingData.endTime ? formatTimeFrom24Hour(bookingData.endTime) : formatTimeFrom24Hour(bookingData.startTime)
-        };
-        
-        console.log('Final formatted data for display:', formattedData);
-        setBookingData(formattedData);
+        // Use the exact values passed from BookSpot (already formatted for display)
+        setBookingData(bookingData);
         return;
       }
 
@@ -224,16 +201,25 @@ const BookingConfirmed = () => {
         return;
       }
 
-      // Send confirmation email
+      // Send confirmation email with display values (not database values)
       const { error: emailError } = await supabase.functions.invoke('send-booking-confirmation', {
         body: {
           email: user.email,
           booking: {
             id: booking.id,
             total_amount: booking.total_amount,
-            start_time: booking.start_time,
-            end_time: booking.end_time,
-            confirmation_number: booking.id.slice(0, 8).toUpperCase()
+            confirmation_number: booking.id.slice(0, 8).toUpperCase(),
+            // Pass the display values the user actually sees
+            display_date: bookingData?.date || new Date(booking.start_time).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric', 
+              month: 'long',
+              day: 'numeric'
+            }),
+            display_start_time: bookingData?.startTime || '9:00 AM',
+            display_end_time: bookingData?.endTime || '5:00 PM',
+            number_of_days: bookingData?.numberOfDays || 1,
+            is_daily: bookingData?.isDaily || false
           },
           spot: {
             title: spot.title,

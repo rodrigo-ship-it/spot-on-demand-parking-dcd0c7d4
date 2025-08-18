@@ -310,11 +310,19 @@ const BookSpot = () => {
     toast.success("Payment successful! Your booking has been confirmed.");
     navigate('/booking-confirmed', { 
       state: { 
-        ...bookingDetails,
+        // Pass the exact display values the user sees on the form
+        date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
+        startTime: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
+        endTime: isPricingDaily 
+          ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
+          : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
+        numberOfDays: bookingDetails.numberOfDays,
+        duration: bookingDetails.duration,
         spotData,
         total,
         confirmationNumber: createdBookingId.slice(0, 8).toUpperCase(),
-        bookingId: createdBookingId
+        bookingId: createdBookingId,
+        isDaily: isPricingDaily
       }
     });
   };

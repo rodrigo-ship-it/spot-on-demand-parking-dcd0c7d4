@@ -14,9 +14,12 @@ interface BookingConfirmationRequest {
   booking: {
     id: string;
     total_amount: number;
-    start_time: string;
-    end_time: string;
     confirmation_number: string;
+    display_date: string;
+    display_start_time: string;
+    display_end_time: string;
+    number_of_days: number;
+    is_daily: boolean;
   };
   spot: {
     title: string;
@@ -77,41 +80,18 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Calculate duration and determine if it's daily
-    const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
-    const isDaily = durationInHours >= 24;
-    const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
-
-    // Extract time and date from stored values - no timezone conversion
-    const extractTime = (dateString: string) => {
-      // Extract time portion (HH:MM) from ISO string and format as 12-hour
-      const time = dateString.split('T')[1].split(':');
-      const hours = parseInt(time[0]);
-      const minutes = time[1];
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
-      return `${displayHours}:${minutes} ${ampm}`;
-    };
-
-    const extractDate = (dateString: string) => {
-      // Extract date portion and format nicely
-      const date = new Date(dateString.split('T')[0]);
-      return date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
-
-    const startDate = extractDate(booking.start_time);
-    const startTime = extractTime(booking.start_time);
-    const endTime = extractTime(booking.end_time);
+    // Use the display values passed from the confirmation page (no conversion needed)
+    const startDate = booking.display_date || 'Date not available';
+    const startTime = booking.display_start_time || 'Time not available';
+    const endTime = booking.display_end_time || 'Time not available';
+    const numberOfDays = booking.number_of_days || 1;
+    const isDaily = booking.is_daily || false;
 
     // Create pricing display based on booking type
+    const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
     const pricingDisplay = isDaily 
-      ? `${Math.ceil(durationInHours / 24)} day${Math.ceil(durationInHours / 24) > 1 ? 's' : ''} × $${price}/day`
-      : `${durationInHours} hours × $${price}/hour`;
+      ? `${numberOfDays} day${numberOfDays > 1 ? 's' : ''} × $${price}/day`
+      : `Duration × $${price}/hour`;
 
     const emailResponse = await resend.emails.send({
       from: "Arriv Parking <service@arrivparking.com>",
