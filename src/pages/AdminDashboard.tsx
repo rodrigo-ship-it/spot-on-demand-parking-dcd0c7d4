@@ -32,7 +32,8 @@ import {
   Mail,
   Edit,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Home
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -961,9 +962,19 @@ Check browser console for detailed ID analysis.
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Monitor and manage your parking platform</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Monitor and manage your parking platform</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/'} 
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Back to Home
+          </Button>
         </div>
 
         {/* Enhanced Stats Grid */}
