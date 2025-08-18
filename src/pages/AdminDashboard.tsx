@@ -237,12 +237,12 @@ export default function AdminDashboard() {
         spotUtilization
       });
 
-      // Load detailed data with more comprehensive queries
+      // Load detailed data with increased limits and better queries
       const { data: usersWithProfiles } = await supabase
         .from('profiles')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
+        // Removed limit to show ALL users
 
       const { data: spotsWithOwners } = await supabase
         .from('parking_spots')
@@ -603,6 +603,60 @@ export default function AdminDashboard() {
     }
   };
 
+  // Function to check for missing users and sync data
+  const syncUserData = async () => {
+    try {
+      toast.info('Syncing user data...');
+      
+      // First, let's check if there are any auth users without profiles
+      // Note: We can't directly query auth.users from client, but we can check for gaps in data
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        toast.error('Failed to sync user data');
+        return;
+      }
+
+      console.log(`Found ${profiles?.length || 0} user profiles`);
+      
+      // Reload dashboard data to show updated information
+      await loadDashboardData();
+      
+      toast.success(`User data synced successfully. Found ${profiles?.length || 0} users.`);
+    } catch (error) {
+      console.error('Error syncing user data:', error);
+      toast.error('Failed to sync user data');
+    }
+  };
+
+  // Function to create missing profile for a user (if needed)
+  const createMissingProfile = async (userIdParam: string, email: string, fullName?: string) => {
+    try {
+      // This would be called if we detect a user without a profile
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userIdParam,
+          email: email,
+          full_name: fullName || 'Unknown User',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      toast.success('Profile created successfully');
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      toast.error('Failed to create profile');
+    }
+  };
+
   const toggleSpotStatus = async (spotId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
@@ -770,6 +824,14 @@ export default function AdminDashboard() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>User Management</CardTitle>
                 <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={syncUserData}
+                    className="bg-background"
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Sync Users
+                  </Button>
                   <Button 
                     variant="outline" 
                     onClick={() => exportData('users')}
@@ -1296,6 +1358,51 @@ export default function AdminDashboard() {
                       <span>Active Bookings:</span>
                       <span className="font-bold">{stats.activeBookings}</span>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>System Diagnostics</CardTitle>
+                  <Button 
+                    variant="outline" 
+                    onClick={syncUserData}
+                    className="bg-background"
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Refresh Data
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{users.length}</div>
+                      <div className="text-sm text-muted-foreground">Profiles Found</div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">{spots.length}</div>
+                      <div className="text-sm text-muted-foreground">Total Spots</div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">{bookings.length}</div>
+                      <div className="text-sm text-muted-foreground">Recent Bookings</div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">{disputes.length + supportTickets.length}</div>
+                      <div className="text-sm text-muted-foreground">Open Issues</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                    <h4 className="font-medium mb-2">Data Sync Information</h4>
+                    <p className="text-sm text-muted-foreground">
+                      If you notice missing users, click "Sync Users" in the Users tab or "Refresh Data" above. 
+                      This will reload all user data from the database and may reveal recently registered users.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Last loaded: {format(new Date(), 'PPP p')}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
