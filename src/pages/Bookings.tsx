@@ -421,6 +421,7 @@ const Bookings = () => {
                               </DialogHeader>
                               <TimeManagement
                                 bookingId={reservation.id}
+                                spotId={reservation.spotId || ""}
                                 endTime={`${reservation.date} ${reservation.endTime}`}
                                 pricePerHour={reservation.pricePerHour}
                                 userViolations={userViolations}

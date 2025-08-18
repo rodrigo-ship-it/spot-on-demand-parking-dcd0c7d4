@@ -484,6 +484,7 @@ const SpotDetails = () => {
             {isBookingMode && mockBookingData.isActiveSession && (
               <TimeManagement 
                 bookingId={mockBookingData.bookingId}
+                spotId={spotData.id}
                 endTime={mockBookingData.endTime}
                 pricePerHour={Number(spotData.price_per_hour)}
                 userViolations={mockBookingData.userViolations}

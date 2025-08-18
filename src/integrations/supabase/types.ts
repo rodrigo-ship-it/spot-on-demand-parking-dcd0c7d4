@@ -16,6 +16,10 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          checkout_location_verified: boolean | null
+          checkout_photo_verified: boolean | null
+          checkout_timestamp_verified: boolean | null
+          checkout_verification_method: string | null
           created_at: string
           display_date: string | null
           display_duration_text: string | null
@@ -34,8 +38,13 @@ export type Database = {
           stripe_transfer_id: string | null
           total_amount: number
           updated_at: string
+          verification_score: number | null
         }
         Insert: {
+          checkout_location_verified?: boolean | null
+          checkout_photo_verified?: boolean | null
+          checkout_timestamp_verified?: boolean | null
+          checkout_verification_method?: string | null
           created_at?: string
           display_date?: string | null
           display_duration_text?: string | null
@@ -54,8 +63,13 @@ export type Database = {
           stripe_transfer_id?: string | null
           total_amount: number
           updated_at?: string
+          verification_score?: number | null
         }
         Update: {
+          checkout_location_verified?: boolean | null
+          checkout_photo_verified?: boolean | null
+          checkout_timestamp_verified?: boolean | null
+          checkout_verification_method?: string | null
           created_at?: string
           display_date?: string | null
           display_duration_text?: string | null
@@ -74,6 +88,7 @@ export type Database = {
           stripe_transfer_id?: string | null
           total_amount?: number
           updated_at?: string
+          verification_score?: number | null
         }
         Relationships: [
           {
@@ -603,6 +618,56 @@ export type Database = {
           },
         ]
       }
+      penalty_credits: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          credit_type: string
+          description: string
+          expires_at: string | null
+          forgiven_reason: string | null
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          credit_type?: string
+          description: string
+          expires_at?: string | null
+          forgiven_reason?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          credit_type?: string
+          description?: string
+          expires_at?: string | null
+          forgiven_reason?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "penalty_credits_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       places: {
         Row: {
           address: string | null
@@ -644,9 +709,14 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string | null
+          failed_checkouts: number | null
           full_name: string | null
           id: string
+          last_violation_at: string | null
           phone: string | null
+          successful_checkouts: number | null
+          total_penalty_credits: number | null
+          trust_score: number | null
           updated_at: string
           user_id: string
         }
@@ -654,9 +724,14 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          failed_checkouts?: number | null
           full_name?: string | null
           id?: string
+          last_violation_at?: string | null
           phone?: string | null
+          successful_checkouts?: number | null
+          total_penalty_credits?: number | null
+          trust_score?: number | null
           updated_at?: string
           user_id: string
         }
@@ -664,9 +739,14 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          failed_checkouts?: number | null
           full_name?: string | null
           id?: string
+          last_violation_at?: string | null
           phone?: string | null
+          successful_checkouts?: number | null
+          total_penalty_credits?: number | null
+          trust_score?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -874,6 +954,47 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      verification_attempts: {
+        Row: {
+          attempt_type: string
+          booking_id: string
+          created_at: string
+          failure_reason: string | null
+          id: string
+          success: boolean | null
+          user_id: string
+          verification_data: Json | null
+        }
+        Insert: {
+          attempt_type: string
+          booking_id: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          success?: boolean | null
+          user_id: string
+          verification_data?: Json | null
+        }
+        Update: {
+          attempt_type?: string
+          booking_id?: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          success?: boolean | null
+          user_id?: string
+          verification_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_attempts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

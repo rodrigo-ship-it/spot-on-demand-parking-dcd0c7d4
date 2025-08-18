@@ -1,17 +1,19 @@
 
 import { useState, useEffect } from "react";
-import { CheckOutSystem } from "./CheckOutSystem";
 import { ExtensionSystem } from "./ExtensionSystem";
-import { PenaltySystem } from "./PenaltySystem";
+import { EnhancedCheckOutSystem } from "./EnhancedCheckOutSystem";
+import { LenientPenaltySystem } from "./LenientPenaltySystem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Shield, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePenaltySystem } from "@/hooks/usePenaltySystem";
 import { toast } from "sonner";
 
 interface TimeManagementProps {
   bookingId: string;
+  spotId: string;
   endTime: string;
   pricePerHour: number;
   userViolations: any[];
@@ -19,8 +21,19 @@ interface TimeManagementProps {
   isActive: boolean;
 }
 
+interface VerificationData {
+  photo: string;
+  timestamp: string;
+  locationVerified: boolean;
+  photoVerified: boolean;
+  timestampVerified: boolean;
+  verificationScore: number;
+  method: string;
+}
+
 export const TimeManagement = ({ 
   bookingId, 
+  spotId,
   endTime, 
   pricePerHour, 
   userViolations, 
@@ -30,59 +43,67 @@ export const TimeManagement = ({
   const { user } = useAuth();
   const [isSpotAvailableAfter, setIsSpotAvailableAfter] = useState(true);
   const [checkOutCompleted, setCheckOutCompleted] = useState(false);
+  
+  const {
+    userProfile: penaltyProfile,
+    penaltyCredits,
+    loading: penaltyLoading,
+    calculatePenalty,
+    addPenaltyCredit,
+    recordSuccessfulCheckout,
+    refreshData
+  } = usePenaltySystem(user?.id || "");
 
-  const handleCheckOut = async (photo: string, timestamp: string) => {
+  const handleEnhancedCheckOut = async (verificationData: VerificationData) => {
     try {
       const endTimeDate = new Date(endTime);
-      const checkOutTime = new Date(timestamp);
+      const checkOutTime = new Date(verificationData.timestamp);
       const minutesOver = Math.floor((checkOutTime.getTime() - endTimeDate.getTime()) / (1000 * 60));
       
-      // Update booking status
+      // Update booking with verification details
       const { error: bookingError } = await supabase
         .from('bookings')
-        .update({ status: 'completed' })
+        .update({ 
+          status: 'completed',
+          checkout_verification_method: verificationData.method,
+          checkout_location_verified: verificationData.locationVerified,
+          checkout_photo_verified: verificationData.photoVerified,
+          checkout_timestamp_verified: verificationData.timestampVerified,
+          verification_score: verificationData.verificationScore
+        })
         .eq('id', bookingId);
 
-      if (bookingError) throw bookingError;
-
-      if (minutesOver > 30) {
-        // Apply late checkout penalty with more forgiving structure
-        let penaltyAmount = 0;
-        let description = '';
-        
-        if (minutesOver <= 60) {
-          penaltyAmount = 5;
-          description = `Late checkout by ${minutesOver} minutes (first-time grace fee)`;
-        } else if (minutesOver <= 120) {
-          penaltyAmount = 15;
-          description = `Extended late checkout by ${minutesOver} minutes`;
-        } else {
-          penaltyAmount = 35;
-          description = `Excessive late checkout by ${minutesOver} minutes`;
-        }
-
-        const { error: penaltyError } = await supabase
-          .from('penalties')
-          .insert({
-            user_id: user?.id,
-            booking_id: bookingId,
-            penalty_type: 'late_checkout',
-            amount: penaltyAmount,
-            description: description
-          });
-
-        if (penaltyError) throw penaltyError;
-        
-        toast.warning(`Late checkout fee applied: $${penaltyAmount}`);
-      } else if (minutesOver > 0) {
-        toast.success("Thanks for checking out! No fees applied during grace period.");
+      if (bookingError) {
+        console.error("Error updating booking:", bookingError);
+        toast.error("Failed to complete check-out");
+        return;
       }
-      
+
+      // Calculate and apply lenient penalty
+      const isFirstOffense = penaltyProfile?.failed_checkouts === 0;
+      const trustScore = penaltyProfile?.trust_score || 100;
+      const penaltyAmount = calculatePenalty(minutesOver, trustScore, isFirstOffense);
+
+      if (penaltyAmount > 0) {
+        let description = `Late check-out by ${minutesOver} minutes`;
+        if (verificationData.verificationScore < 70) {
+          description += " (verification issues detected)";
+        }
+        
+        await addPenaltyCredit(bookingId, penaltyAmount, 'late_checkout', description);
+      } else {
+        await recordSuccessfulCheckout();
+        if (minutesOver > 0 && minutesOver <= 30) {
+          toast.success("No penalty applied - you're in the grace period!");
+        } else {
+          toast.success("Perfect timing! Check-out completed successfully!");
+        }
+      }
+
       setCheckOutCompleted(true);
-      toast.success("Check-out completed successfully!");
     } catch (error) {
-      console.error('Error during checkout:', error);
-      toast.error("Failed to complete checkout");
+      console.error("Check-out error:", error);
+      toast.error("Failed to complete check-out");
     }
   };
 
@@ -122,10 +143,12 @@ export const TimeManagement = ({
                 onExtensionRequested={handleExtensionRequested}
               />
               
-              <CheckOutSystem
+              <EnhancedCheckOutSystem
                 bookingId={bookingId}
+                spotId={spotId}
                 endTime={endTime}
-                onCheckOut={handleCheckOut}
+                onCheckOut={handleEnhancedCheckOut}
+                userTrustScore={penaltyProfile?.trust_score || 100}
                 isOvertime={new Date() > new Date(endTime)}
               />
             </>
@@ -140,12 +163,22 @@ export const TimeManagement = ({
           )}
         </TabsContent>
 
-        <TabsContent value="violations">
-          <PenaltySystem
-            violations={userViolations}
-            accountStatus={accountStatus}
-            totalPenalties={totalPenalties}
-          />
+        <TabsContent value="violations" className="space-y-4">
+          {penaltyLoading ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                Loading penalty information...
+              </CardContent>
+            </Card>
+          ) : (
+            <LenientPenaltySystem 
+              userId={user?.id || ""}
+              userTrustScore={penaltyProfile?.trust_score || 100}
+              totalCredits={penaltyProfile?.total_penalty_credits || 0}
+              recentCredits={penaltyCredits}
+              onCreditsUpdate={refreshData}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="account">

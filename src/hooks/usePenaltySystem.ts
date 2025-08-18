@@ -1,0 +1,192 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface PenaltyCredit {
+  id: string;
+  amount: number;
+  credit_type: string;
+  description: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+  forgiven_reason?: string;
+}
+
+interface UserProfile {
+  trust_score: number;
+  successful_checkouts: number;
+  failed_checkouts: number;
+  total_penalty_credits: number;
+  last_violation_at: string | null;
+}
+
+export const usePenaltySystem = (userId: string) => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [penaltyCredits, setPenaltyCredits] = useState<PenaltyCredit[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserData = async () => {
+    try {
+      // Fetch user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('trust_score, successful_checkouts, failed_checkouts, total_penalty_credits, last_violation_at')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Fetch active penalty credits
+      const { data: credits, error: creditsError } = await supabase
+        .from('penalty_credits')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (creditsError) throw creditsError;
+
+      setUserProfile(profile);
+      setPenaltyCredits(credits || []);
+    } catch (error) {
+      console.error("Error fetching penalty data:", error);
+      toast.error("Failed to load penalty information");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculatePenalty = (minutesLate: number, userTrustScore: number, isFirstOffense: boolean): number => {
+    if (minutesLate <= 30) return 0; // Grace period
+
+    let basePenalty = 0;
+    if (minutesLate <= 60) basePenalty = 2;
+    else if (minutesLate <= 120) basePenalty = 8;
+    else basePenalty = 20;
+
+    // Trust score adjustments
+    if (userTrustScore >= 90) basePenalty *= 0.5; // 50% reduction for excellent users
+    else if (userTrustScore >= 70) basePenalty *= 0.8; // 20% reduction for good users
+    else if (userTrustScore < 50) basePenalty *= 1.5; // 50% increase for problematic users
+
+    // First offense forgiveness
+    if (isFirstOffense && basePenalty <= 8) basePenalty = 0;
+
+    return Math.round(basePenalty * 100) / 100; // Round to 2 decimal places
+  };
+
+  const addPenaltyCredit = async (
+    bookingId: string,
+    amount: number,
+    creditType: string,
+    description: string
+  ): Promise<boolean> => {
+    try {
+      // Add penalty credit
+      const { error: creditError } = await supabase
+        .from('penalty_credits')
+        .insert({
+          user_id: userId,
+          booking_id: bookingId,
+          amount,
+          credit_type: creditType,
+          description,
+          status: 'active'
+        });
+
+      if (creditError) throw creditError;
+
+      // Update user profile
+      const newTotalCredits = (userProfile?.total_penalty_credits || 0) + amount;
+      const newTrustScore = Math.max(0, (userProfile?.trust_score || 100) - Math.floor(amount));
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          total_penalty_credits: newTotalCredits,
+          trust_score: newTrustScore,
+          last_violation_at: new Date().toISOString(),
+          failed_checkouts: (userProfile?.failed_checkouts || 0) + 1
+        })
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Show user-friendly notification
+      if (amount === 0) {
+        toast.success("No penalty applied - thanks for being understanding!");
+      } else if (amount <= 5) {
+        toast.info(`Small $${amount} credit added to your account. No immediate payment needed.`);
+      } else {
+        toast.error(`$${amount} credit added to your account. You can dispute this if needed.`);
+      }
+
+      await fetchUserData();
+      return true;
+    } catch (error) {
+      console.error("Error adding penalty credit:", error);
+      toast.error("Failed to process penalty. Please contact support.");
+      return false;
+    }
+  };
+
+  const recordSuccessfulCheckout = async (): Promise<void> => {
+    try {
+      const newTrustScore = Math.min(100, (userProfile?.trust_score || 100) + 1);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          trust_score: newTrustScore,
+          successful_checkouts: (userProfile?.successful_checkouts || 0) + 1
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      await fetchUserData();
+    } catch (error) {
+      console.error("Error recording successful checkout:", error);
+    }
+  };
+
+  const forgivePenaltyCredit = async (creditId: string, reason: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('penalty_credits')
+        .update({
+          status: 'forgiven',
+          forgiven_reason: reason
+        })
+        .eq('id', creditId);
+
+      if (error) throw error;
+
+      toast.success("Penalty credit has been forgiven!");
+      await fetchUserData();
+      return true;
+    } catch (error) {
+      console.error("Error forgiving penalty credit:", error);
+      toast.error("Failed to forgive penalty credit");
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
+
+  return {
+    userProfile,
+    penaltyCredits,
+    loading,
+    calculatePenalty,
+    addPenaltyCredit,
+    recordSuccessfulCheckout,
+    forgivePenaltyCredit,
+    refreshData: fetchUserData
+  };
+};
