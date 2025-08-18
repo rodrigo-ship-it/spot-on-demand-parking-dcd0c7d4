@@ -74,6 +74,7 @@ interface ParkingSpot {
   id: string;
   title: string;
   address: string;
+  description?: string;
   price_per_hour?: number;
   daily_price?: number;
   one_time_price?: number;
@@ -85,6 +86,8 @@ interface ParkingSpot {
   total_reviews: number;
   total_spots: number;
   available_spots: number;
+  images?: string[];
+  amenities?: string[];
   profiles?: { full_name?: string };
 }
 
@@ -1931,6 +1934,52 @@ Check browser console for detailed ID analysis.
                     <p className="text-sm text-muted-foreground font-mono">{selectedSpot.owner_id}</p>
                   </div>
                 </div>
+
+                {/* Spot Images Section */}
+                {selectedSpot.images && selectedSpot.images.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <label className="text-sm font-medium text-muted-foreground block mb-3">
+                      Spot Images ({selectedSpot.images.length})
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {selectedSpot.images.map((imageUrl, index) => (
+                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                          <img
+                            src={imageUrl}
+                            alt={`${selectedSpot.title} - Image ${index + 1}`}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder.svg';
+                              e.currentTarget.alt = 'Image failed to load';
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Description Section */}
+                {selectedSpot.description && (
+                  <div className="pt-4 border-t">
+                    <label className="text-sm font-medium text-muted-foreground">Description</label>
+                    <p className="text-sm mt-1 text-muted-foreground">{selectedSpot.description}</p>
+                  </div>
+                )}
+
+                {/* Amenities Section */}
+                {selectedSpot.amenities && selectedSpot.amenities.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <label className="text-sm font-medium text-muted-foreground block mb-2">Amenities</label>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSpot.amenities.map((amenity, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {amenity}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="pt-4 border-t">
                   <label className="text-sm font-medium text-muted-foreground block mb-2">Admin Actions</label>
