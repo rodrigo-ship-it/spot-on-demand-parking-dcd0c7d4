@@ -266,67 +266,17 @@ const BookSpot = () => {
     setShowPayment(true);
   };
 
-  const handlePaymentSuccess = async () => {
-    // Create booking in database after successful payment
-    try {
-      const bookingDate = format(bookingDetails.date, 'yyyy-MM-dd');
-      const startDateTime = new Date(`${bookingDate}T${bookingDetails.startTime}:00`);
-      
-      const endDateTime = isPricingDaily 
-        ? new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000))
-        : new Date(`${bookingDate}T${bookingDetails.endTime}:00`);
-
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert({
-          spot_id: spotData.id,
-          renter_id: user?.id || null,
-          start_time: startDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
-          total_amount: total,
-          status: 'confirmed',
-          qr_code_used: isQRCodeBooking,
-          display_date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
-          display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-          display_end_time: isPricingDaily 
-            ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
-            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
-          display_duration_text: isPricingDaily 
-            ? `${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''}`
-            : `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating booking after payment:', error);
-        toast.error("Payment successful but booking creation failed. Please contact support.");
-        return;
-      }
-
-      setCreatedBookingId(booking.id);
-      toast.success("Payment successful! Your booking has been confirmed.");
-      
-      navigate('/booking-confirmed', { 
-        state: { 
-          date: format(bookingDetails.date, "EEEE, MMMM d, yyyy"),
-          startTime: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-          endTime: isPricingDaily 
-            ? timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime
-            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
-          numberOfDays: bookingDetails.numberOfDays,
-          duration: isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration,
-          spotData,
-          total,
-          confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
-          bookingId: booking.id,
-          isDaily: isPricingDaily,
-          autoExtend: bookingDetails.autoExtend
-        }
-      });
-    } catch (error) {
-      console.error('Error creating booking after payment:', error);
-      toast.error("Payment successful but booking creation failed. Please contact support.");
+  const handlePaymentSuccess = async (sessionId?: string) => {
+    // Booking will be created by webhook after payment success
+    // Navigate directly to confirmation page with session_id
+    console.log("💰 [PAYMENT_SUCCESS] Payment completed, redirecting to confirmation...");
+    
+    if (sessionId) {
+      // Navigate with session_id so confirmation page can fetch webhook-created booking
+      navigate(`/booking-confirmed?session_id=${sessionId}`);
+    } else {
+      // Fallback navigation for edge cases
+      navigate('/booking-confirmed');
     }
   };
 
