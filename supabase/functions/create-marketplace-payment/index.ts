@@ -15,14 +15,12 @@ serve(async (req) => {
   }
 
   try {
-    const { booking_id } = await req.json();
-    console.log("📝 Booking ID received:", booking_id);
-    console.log("📝 Booking ID type:", typeof booking_id);
-    console.log("📝 Request headers:", Object.fromEntries(req.headers.entries()));
+    const { spot_id, booking_details, total_amount, user_id, is_qr_booking, guest_details } = await req.json();
+    console.log("📝 Request data:", { spot_id, booking_details, total_amount, user_id, is_qr_booking });
     
-    if (!booking_id) {
-      console.log("❌ No booking_id provided");
-      return new Response(JSON.stringify({ error: "Missing booking_id" }), {
+    if (!spot_id || !total_amount) {
+      console.log("❌ Missing required data");
+      return new Response(JSON.stringify({ error: "Missing spot_id or total_amount" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
@@ -65,51 +63,12 @@ serve(async (req) => {
     const user = data.user;
     console.log("📝 User authenticated:", user.email);
 
-    // Get booking details using service role to bypass RLS
-    console.log("📝 Searching for booking:", booking_id);
-    console.log("📝 Using service role with URL:", Deno.env.get("SUPABASE_URL"));
-    console.log("📝 Service role key exists:", !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
-    
-    // First, let's check what bookings exist
-    const { data: allBookings, error: allBookingsError } = await supabaseService
-      .from("bookings")
-      .select("id, renter_id, spot_id, created_at")
-      .limit(10);
-    console.log("📝 All recent bookings:", { allBookings, allBookingsError });
-    
-    const { data: booking, error: bookingError } = await supabaseService
-      .from("bookings")
-      .select("*")
-      .eq("id", booking_id)
-      .maybeSingle();
-
-    console.log("📝 Booking result:", { booking, bookingError });
-
-    if (bookingError) {
-      console.log("❌ Booking query error:", bookingError);
-      return new Response(JSON.stringify({ error: "Database error: " + bookingError.message }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-
-    if (!booking) {
-      console.log("❌ Booking not found - ID:", booking_id);
-      return new Response(JSON.stringify({ 
-        error: "Booking not found", 
-        booking_id: booking_id,
-        debug: "Booking does not exist in database"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 404,
-      });
-    }
-
-    // Get parking spot details separately
+    // Get parking spot details
+    console.log("📝 Getting parking spot:", spot_id);
     const { data: parkingSpot, error: spotError } = await supabaseService
       .from("parking_spots")
       .select("*")
-      .eq("id", booking.spot_id)
+      .eq("id", spot_id)
       .maybeSingle();
 
     console.log("📝 Parking spot result:", { parkingSpot, spotError });
@@ -141,13 +100,23 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Calculate fees
-    const baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
-    const totalAmount = Math.round(parseFloat(booking.total_amount.toString()) * 100);
+    // Calculate fees - use the total amount from the frontend
+    const totalAmountCents = Math.round(parseFloat(total_amount.toString()) * 100);
+    
+    // Calculate base price from the spot data based on pricing type
+    let baseSpotPrice = 0;
+    if (parkingSpot.pricing_type === 'hourly') {
+      baseSpotPrice = Math.round(parseFloat(parkingSpot.price_per_hour.toString()) * booking_details.duration * 100);
+    } else if (parkingSpot.pricing_type === 'daily') {
+      baseSpotPrice = Math.round(parseFloat(parkingSpot.daily_price.toString()) * booking_details.numberOfDays * 100);
+    } else {
+      baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
+    }
+    
     const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07);
     const platformFeeFromLister = Math.round(baseSpotPrice * 0.07);
     const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
-    const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30;
+    const stripeProcessingFee = Math.round(totalAmountCents * 0.029) + 30;
     const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
 
     console.log("📝 Creating Stripe checkout session...");
@@ -161,15 +130,19 @@ serve(async (req) => {
             name: `Parking: ${parkingSpot.title}`,
             description: `${parkingSpot.address}`,
           },
-          unit_amount: totalAmount,
+          unit_amount: totalAmountCents,
         },
         quantity: 1,
       }],
       metadata: {
-        booking_id: booking.id,
+        spot_id: spot_id,
         owner_id: parkingSpot.owner_id,
         platform_fee: totalPlatformFee.toString(),
         lister_amount: listerAmount.toString(),
+        user_id: user_id || "",
+        is_qr_booking: is_qr_booking ? "true" : "false",
+        booking_details: JSON.stringify(booking_details),
+        guest_details: JSON.stringify(guest_details || {}),
       },
       payment_intent_data: {
         transfer_data: {
@@ -178,18 +151,10 @@ serve(async (req) => {
         },
       },
       success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/book-spot/${booking.spot_id}`,
+      cancel_url: `${req.headers.get("origin")}/book-spot/${spot_id}`,
     });
 
     console.log("📝 Checkout session created successfully");
-
-    // Update booking with payment details
-    await supabaseService.from("bookings").update({
-      payment_intent_id: session.id,
-      platform_fee_amount: totalPlatformFee / 100,
-      owner_payout_amount: listerAmount / 100,
-      updated_at: new Date().toISOString(),
-    }).eq("id", booking_id);
 
     return new Response(JSON.stringify({ 
       checkout_url: session.url,

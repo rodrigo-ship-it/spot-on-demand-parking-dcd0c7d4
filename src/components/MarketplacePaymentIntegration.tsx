@@ -8,13 +8,21 @@ import { StripeProvider } from "./StripeProvider";
 import { PaymentElementForm } from "./PaymentElement";
 
 interface MarketplacePaymentProps {
-  bookingId: string;
+  bookingData: {
+    spotData: any;
+    bookingDetails: any;
+    user: any;
+    isQRCodeBooking: boolean;
+    guestDetails: any;
+    timeOptions: any[];
+    isPricingDaily: boolean;
+  };
   totalAmount: number;
   onSuccess: () => void;
 }
 
 export const MarketplacePaymentIntegration = ({ 
-  bookingId, 
+  bookingData, 
   totalAmount, 
   onSuccess 
 }: MarketplacePaymentProps) => {
@@ -30,10 +38,17 @@ export const MarketplacePaymentIntegration = ({
     
     setLoading(true);
     try {
-      console.log("🚀 Starting payment process for booking:", bookingId);
+      console.log("🚀 Starting payment process for spot:", bookingData.spotData.id);
       
       const { data, error } = await supabase.functions.invoke('create-marketplace-payment', {
-        body: { booking_id: bookingId }
+        body: { 
+          spot_id: bookingData.spotData.id,
+          booking_details: bookingData.bookingDetails,
+          total_amount: totalAmount,
+          user_id: bookingData.user?.id,
+          is_qr_booking: bookingData.isQRCodeBooking,
+          guest_details: bookingData.guestDetails
+        }
       });
 
       console.log("📝 Function response:", { data, error });
@@ -149,7 +164,7 @@ export const MarketplacePaymentIntegration = ({
 
       <StripeProvider clientSecret={paymentDetails.client_secret}>
         <PaymentElementForm
-          bookingId={bookingId}
+          bookingData={bookingData}
           totalAmount={totalAmount}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}

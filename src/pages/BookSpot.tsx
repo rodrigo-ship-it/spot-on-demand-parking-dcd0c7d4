@@ -806,7 +806,15 @@ const BookSpot = () => {
                   </>
                 ) : (
                   <MarketplacePaymentIntegration
-                    bookingId=""
+                    bookingData={{
+                      spotData,
+                      bookingDetails,
+                      user,
+                      isQRCodeBooking,
+                      guestDetails,
+                      timeOptions,
+                      isPricingDaily
+                    }}
                     totalAmount={total}
                     onSuccess={handlePaymentSuccess}
                   />

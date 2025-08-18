@@ -10,14 +10,22 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentElementFormProps {
-  bookingId: string;
+  bookingData: {
+    spotData: any;
+    bookingDetails: any;
+    user: any;
+    isQRCodeBooking: boolean;
+    guestDetails: any;
+    timeOptions: any[];
+    isPricingDaily: boolean;
+  };
   totalAmount: number;
   onSuccess: () => void;
   onError: (error: string) => void;
 }
 
 export const PaymentElementForm = ({ 
-  bookingId, 
+  bookingData, 
   totalAmount, 
   onSuccess, 
   onError 
@@ -47,17 +55,7 @@ export const PaymentElementForm = ({
       if (error) {
         onError(error.message || 'Payment failed');
       } else {
-        // Update booking status to confirmed
-        const { error: updateError } = await supabase
-          .from('bookings')
-          .update({ status: 'confirmed' })
-          .eq('id', bookingId);
-
-        if (updateError) {
-          console.error('Error updating booking status:', updateError);
-          toast.error('Payment successful but booking status update failed');
-        }
-
+        // Payment successful - booking will be created by the parent component
         toast.success('Payment successful! Your booking is confirmed.');
         onSuccess();
       }
