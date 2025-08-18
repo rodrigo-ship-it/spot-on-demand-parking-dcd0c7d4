@@ -77,10 +77,10 @@ const BookingConfirmed = () => {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           
-          // Format the data to match expected structure with timezone-aware formatting
+          // Format the data to match expected structure - just show times as stored without conversion
           const formatDateWithTimezone = (dateString: string) => {
-            // Parse the datetime string and format for the spot's timezone
-            const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00Z'));
+            // Parse the datetime and show the date part in spot's timezone
+            const date = new Date(dateString);
             return new Intl.DateTimeFormat('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -91,7 +91,7 @@ const BookingConfirmed = () => {
           };
 
           const formatTimeWithTimezone = (dateString: string) => {
-            // Parse the datetime string as UTC (since it's stored as ISO string in UTC)
+            // Parse the datetime and show the time in spot's timezone
             const date = new Date(dateString);
             return new Intl.DateTimeFormat('en-US', {
               hour: 'numeric',
