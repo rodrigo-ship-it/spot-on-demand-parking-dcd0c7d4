@@ -921,6 +921,10 @@ export type Database = {
         Args: { booking_id_param: string }
         Returns: number
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       log_security_event: {
         Args: { p_event_data?: Json; p_event_type: string; p_user_id?: string }
         Returns: string
