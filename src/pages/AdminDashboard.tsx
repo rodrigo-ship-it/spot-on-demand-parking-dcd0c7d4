@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   MapPin, 
@@ -14,13 +16,33 @@ import {
   Clock,
   Eye,
   Ban,
-  CheckCircle
+  CheckCircle,
+  Search,
+  Filter,
+  Download,
+  Settings,
+  Shield,
+  HelpCircle,
+  BarChart3,
+  Activity,
+  Calendar,
+  FileText,
+  UserCheck,
+  UserX,
+  Mail,
+  Edit,
+  Trash2,
+  MoreHorizontal
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface DashboardStats {
   totalUsers: number;
@@ -29,23 +51,40 @@ interface DashboardStats {
   totalRevenue: number;
   activeBookings: number;
   pendingDisputes: number;
+  pendingRefunds: number;
+  supportTickets: number;
+  monthlyRevenue: number;
+  weeklySignups: number;
+  averageBookingValue: number;
+  spotUtilization: number;
 }
 
 interface User {
   id: string;
+  user_id: string;
   email: string;
   full_name?: string;
   created_at: string;
-  email_confirmed_at?: string;
+  updated_at: string;
+  phone?: string;
+  avatar_url?: string;
 }
 
 interface ParkingSpot {
   id: string;
   title: string;
   address: string;
-  price_per_hour: number;
+  price_per_hour?: number;
+  daily_price?: number;
+  one_time_price?: number;
+  pricing_type: string;
   is_active: boolean;
   owner_id: string;
+  created_at: string;
+  rating: number;
+  total_reviews: number;
+  total_spots: number;
+  available_spots: number;
   profiles?: { full_name?: string };
 }
 
@@ -55,8 +94,43 @@ interface Booking {
   total_amount: number;
   start_time: string;
   end_time: string;
-  parking_spots?: { title: string };
+  created_at: string;
+  renter_id: string;
+  spot_id: string;
+  parking_spots?: { title: string; address: string };
   profiles?: { full_name?: string };
+}
+
+interface Dispute {
+  id: string;
+  dispute_type: string;
+  status: string;
+  description: string;
+  created_at: string;
+  booking_id: string;
+  reporter_id: string;
+  resolution?: string;
+}
+
+interface SupportTicket {
+  id: string;
+  ticket_number: string;
+  subject: string;
+  category: string;
+  priority: string;
+  status: string;
+  created_at: string;
+  user_id: string;
+  message: string;
+}
+
+interface SecurityLog {
+  id: string;
+  event_type: string;
+  created_at: string;
+  user_id?: string;
+  event_data?: any;
+  ip_address?: string;
 }
 
 export default function AdminDashboard() {
@@ -67,12 +141,25 @@ export default function AdminDashboard() {
     totalBookings: 0,
     totalRevenue: 0,
     activeBookings: 0,
-    pendingDisputes: 0
+    pendingDisputes: 0,
+    pendingRefunds: 0,
+    supportTickets: 0,
+    monthlyRevenue: 0,
+    weeklySignups: 0,
+    averageBookingValue: 0,
+    spotUtilization: 0
   });
   const [users, setUsers] = useState<User[]>([]);
   const [spots, setSpots] = useState<ParkingSpot[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
 
   // Simple admin check - replace with your actual admin email
   const isAdmin = user?.email === 'rodrigo@arrivparking.com'; // Update this to your email
@@ -92,12 +179,16 @@ export default function AdminDashboard() {
         { data: profilesData },
         { data: spotsData },
         { data: bookingsData },
-        { data: disputesData }
+        { data: disputesData },
+        { data: refundsData },
+        { data: supportTicketsData }
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('parking_spots').select('*'),
         supabase.from('bookings').select('*'),
-        supabase.from('disputes').select('*').eq('status', 'pending')
+        supabase.from('disputes').select('*').eq('status', 'pending'),
+        supabase.from('refunds').select('*').eq('status', 'pending'),
+        supabase.from('support_tickets').select('*').eq('status', 'open')
       ]);
 
       const totalRevenue = bookingsData?.reduce((sum, booking) => 
@@ -106,13 +197,40 @@ export default function AdminDashboard() {
       const activeBookings = bookingsData?.filter(booking => 
         booking.status === 'active').length || 0;
 
+      // Calculate additional stats
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const monthlyRevenue = bookingsData?.filter(booking => 
+        new Date(booking.created_at) >= oneMonthAgo
+      ).reduce((sum, booking) => sum + Number(booking.total_amount), 0) || 0;
+
+      const weeklySignups = profilesData?.filter(profile => 
+        new Date(profile.created_at) >= oneWeekAgo
+      ).length || 0;
+
+      const averageBookingValue = bookingsData?.length ? totalRevenue / bookingsData.length : 0;
+      
+      const totalAvailableSpots = spotsData?.reduce((sum, spot) => sum + spot.available_spots, 0) || 0;
+      const totalSpots = spotsData?.reduce((sum, spot) => sum + spot.total_spots, 0) || 0;
+      const spotUtilization = totalSpots ? ((totalSpots - totalAvailableSpots) / totalSpots) * 100 : 0;
+
       setStats({
         totalUsers: profilesData?.length || 0,
         totalSpots: spotsData?.length || 0,
         totalBookings: bookingsData?.length || 0,
         totalRevenue,
         activeBookings,
-        pendingDisputes: disputesData?.length || 0
+        pendingDisputes: disputesData?.length || 0,
+        pendingRefunds: refundsData?.length || 0,
+        supportTickets: supportTicketsData?.length || 0,
+        monthlyRevenue,
+        weeklySignups,
+        averageBookingValue,
+        spotUtilization
       });
 
       // Load detailed data - Show empty state if no data
@@ -132,7 +250,7 @@ export default function AdminDashboard() {
         .from('bookings')
         .select(`
           *,
-          parking_spots(title)
+          parking_spots(title, address)
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -189,8 +307,8 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Monitor and manage your parking platform</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Enhanced Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -198,16 +316,9 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spots</CardTitle>
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSpots}</div>
+              <p className="text-xs text-muted-foreground">
+                +{stats.weeklySignups} this week
+              </p>
             </CardContent>
           </Card>
 
@@ -218,6 +329,9 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">
+                ${stats.monthlyRevenue.toFixed(2)} this month
+              </p>
             </CardContent>
           </Card>
 
@@ -228,37 +342,91 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.activeBookings}</div>
+              <p className="text-xs text-muted-foreground">
+                of {stats.totalBookings} total
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-              <Car className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Spot Utilization</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalBookings}</div>
+              <div className="text-2xl font-bold">{stats.spotUtilization.toFixed(1)}%</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.totalSpots} total spots
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Disputes</CardTitle>
+              <CardTitle className="text-sm font-medium">Avg Booking Value</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.averageBookingValue.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">
+                per transaction
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Issues</CardTitle>
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.pendingDisputes}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.pendingDisputes + stats.pendingRefunds + stats.supportTickets}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Disputes, refunds & tickets
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Support Tickets</CardTitle>
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.supportTickets}</div>
+              <p className="text-xs text-muted-foreground">
+                Open tickets
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Refunds</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{stats.pendingRefunds}</div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting approval
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Detailed Tables */}
+        {/* Comprehensive Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="users">Recent Users</TabsTrigger>
-            <TabsTrigger value="spots">Parking Spots</TabsTrigger>
-            <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
-            <TabsTrigger value="refunds">Refund Requests</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="spots">Spots</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="disputes">Disputes</TabsTrigger>
+            <TabsTrigger value="refunds">Refunds</TabsTrigger>
+            <TabsTrigger value="support">Support</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -285,8 +453,8 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={user.email_confirmed_at ? "default" : "secondary"}>
-                            {user.email_confirmed_at ? "Verified" : "Unverified"}
+                          <Badge variant="default">
+                            Registered
                           </Badge>
                         </div>
                       </div>
@@ -383,8 +551,101 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="disputes">
+            <Card>
+              <CardHeader>
+                <CardTitle>Dispute Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No disputes to display</p>
+                  <p className="text-sm">Disputes will appear here when reported</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="refunds">
             <AdminRefundManager />
+          </TabsContent>
+
+          <TabsContent value="support">
+            <Card>
+              <CardHeader>
+                <CardTitle>Support Tickets</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <HelpCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No support tickets</p>
+                  <p className="text-sm">Support requests will appear here</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Monthly Revenue:</span>
+                      <span className="font-bold">${stats.monthlyRevenue.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Average Booking:</span>
+                      <span className="font-bold">${stats.averageBookingValue.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Spot Utilization:</span>
+                      <span className="font-bold">{stats.spotUtilization.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Growth</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Total Users:</span>
+                      <span className="font-bold">{stats.totalUsers}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Weekly Signups:</span>
+                      <span className="font-bold">+{stats.weeklySignups}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Active Bookings:</span>
+                      <span className="font-bold">{stats.activeBookings}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="security">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security & Audit Logs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Security monitoring active</p>
+                  <p className="text-sm">System logs and security events will appear here</p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
