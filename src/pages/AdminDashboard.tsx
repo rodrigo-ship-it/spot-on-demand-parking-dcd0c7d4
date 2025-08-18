@@ -238,11 +238,18 @@ export default function AdminDashboard() {
       });
 
       // Load detailed data with increased limits and better queries
-      const { data: usersWithProfiles } = await supabase
+      const { data: usersWithProfiles, error: usersError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
         // Removed limit to show ALL users
+        
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+      } else {
+        console.log('Fetched users count:', usersWithProfiles?.length);
+        console.log('Latest users:', usersWithProfiles?.slice(0, 3));
+      }
 
       const { data: spotsWithOwners } = await supabase
         .from('parking_spots')
