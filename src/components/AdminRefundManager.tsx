@@ -35,16 +35,31 @@ export default function AdminRefundManager() {
 
   const fetchRefunds = async () => {
     try {
-      const { data, error } = await supabase
-        .from("refunds" as any)
-        .select(`
-          *,
-          profiles!inner(full_name, email)
-        `)
+      // First fetch refunds
+      const { data: refundsData, error: refundsError } = await supabase
+        .from("refunds")
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setRefunds((data as any) || []);
+      if (refundsError) throw refundsError;
+
+      // Then fetch profile data for each refund
+      const refundsWithProfiles = await Promise.all(
+        (refundsData || []).map(async (refund) => {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("full_name, email")
+            .eq("user_id", refund.user_id)
+            .maybeSingle();
+
+          return {
+            ...refund,
+            profiles: profileData || { full_name: "Unknown User", email: "unknown@example.com" }
+          };
+        })
+      );
+
+      setRefunds(refundsWithProfiles);
     } catch (error: any) {
       toast({
         title: "Error Loading Refunds",
