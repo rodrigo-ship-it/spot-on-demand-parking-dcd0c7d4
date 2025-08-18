@@ -25,26 +25,22 @@ const BookingConfirmed = () => {
     const fetchBookingData = async () => {
       console.log('=== BOOKING CONFIRMATION DEBUG ===');
       console.log('Initial bookingData from location.state:', bookingData);
-      console.log('sessionId from URL:', sessionId);
-      console.log('bookingId from URL:', bookingId);
       
       // If we already have booking data from navigation state, format it properly
       if (bookingData) {
-        console.log('Using navigation state data - original times:');
-        console.log('startTime:', bookingData.startTime);
-        console.log('endTime:', bookingData.endTime);
-        console.log('date:', bookingData.date);
+        console.log('Using navigation state data - raw times:');
+        console.log('startTime (raw):', bookingData.startTime);
+        console.log('endTime (raw):', bookingData.endTime);
         
-        // Format user input times properly
-        const formatUserTime = (timeString: string) => {
-          console.log('Formatting time string:', timeString);
-          const time = timeString.split(':');
-          const hours = parseInt(time[0]);
-          const minutes = time[1];
+        // Convert 24-hour format (like "09:00") to 12-hour format
+        const formatTimeFrom24Hour = (timeString: string) => {
+          console.log('Converting 24-hour time:', timeString);
+          const [hours24, minutes] = timeString.split(':');
+          const hours = parseInt(hours24);
           const ampm = hours >= 12 ? 'PM' : 'AM';
           const displayHours = hours % 12 || 12;
           const result = `${displayHours}:${minutes} ${ampm}`;
-          console.log('Formatted result:', result);
+          console.log('Converted to:', result);
           return result;
         };
 
@@ -56,13 +52,11 @@ const BookingConfirmed = () => {
             month: 'long',
             day: 'numeric'
           }),
-          startTime: formatUserTime(bookingData.startTime),
-          endTime: bookingData.isDaily 
-            ? formatUserTime(bookingData.startTime) 
-            : formatUserTime(bookingData.endTime)
+          startTime: formatTimeFrom24Hour(bookingData.startTime),
+          endTime: bookingData.endTime ? formatTimeFrom24Hour(bookingData.endTime) : formatTimeFrom24Hour(bookingData.startTime)
         };
         
-        console.log('Final formatted data:', formattedData);
+        console.log('Final formatted data for display:', formattedData);
         setBookingData(formattedData);
         return;
       }
