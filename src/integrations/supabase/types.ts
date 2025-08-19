@@ -716,7 +716,6 @@ export type Database = {
           phone: string | null
           successful_checkouts: number | null
           total_penalty_credits: number | null
-          trust_score: number | null
           updated_at: string
           user_id: string
         }
@@ -731,7 +730,6 @@ export type Database = {
           phone?: string | null
           successful_checkouts?: number | null
           total_penalty_credits?: number | null
-          trust_score?: number | null
           updated_at?: string
           user_id: string
         }
@@ -746,7 +744,6 @@ export type Database = {
           phone?: string | null
           successful_checkouts?: number | null
           total_penalty_credits?: number | null
-          trust_score?: number | null
           updated_at?: string
           user_id?: string
         }
