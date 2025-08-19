@@ -297,7 +297,7 @@ export const EnhancedCheckOutSystem = ({
     } else if (minutesOver <= 120) {
       return { status: 'moderate', message: `${minutesOver} min over ($8 moderate fee)`, color: 'text-orange-600', penalty: 8 };
     } else {
-      return { status: 'overtime', message: `${minutesOver} min over ($20 overtime fee)`, color: 'text-red-600', penalty: 20 };
+      return { status: 'overtime', message: `${minutesOver} min over ($15 overtime fee)`, color: 'text-red-600', penalty: 15 };
     }
   };
 

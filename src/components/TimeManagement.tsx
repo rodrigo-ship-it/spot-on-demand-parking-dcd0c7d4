@@ -228,8 +228,8 @@ export const TimeManagement = ({
                   <li>• Grace period: First 30 minutes free</li>
                   <li>• Late check-out (31-60 min): $2 convenience fee</li>
                   <li>• Extended late (61-120 min): $8 moderate fee</li>
-                  <li>• Excessive late (120+ min): $20 overtime fee + rating impact</li>
-                  <li>• No check-out: Contact required for resolution</li>
+                  <li>• Excessive late (120+ min): $15 overtime fee + rating impact</li>
+                  <li>• Next person arrives & spot occupied: $30 penalty + contact required</li>
                 </ul>
               </div>
             </CardContent>

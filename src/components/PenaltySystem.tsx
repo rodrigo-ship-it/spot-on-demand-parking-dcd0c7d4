@@ -49,8 +49,8 @@ export const PenaltySystem = ({ violations, accountStatus, totalPenalties }: Pen
       { offense: "Grace Period (0-30 min)", penalty: "$0", action: "No penalty" },
       { offense: "Late Check-out (31-60 min)", penalty: "$2", action: "Convenience fee" },
       { offense: "Extended Late (61-120 min)", penalty: "$8", action: "Moderate fee" },
-      { offense: "Excessive Late (120+ min)", penalty: "$20", action: "Overtime fee + rating impact" },
-      { offense: "No Check-out", penalty: "$50", action: "Immediate contact required" },
+      { offense: "Excessive Late (120+ min)", penalty: "$15", action: "Overtime fee + rating impact" },
+      { offense: "Next Person Arrives & Spot Occupied", penalty: "$30", action: "Penalty + immediate contact required" },
       { offense: "Damage/Dispute", penalty: "$100+", action: "Case-by-case review" }
     ];
   };
