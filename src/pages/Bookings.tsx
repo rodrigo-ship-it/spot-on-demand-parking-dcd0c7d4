@@ -204,7 +204,9 @@ const Bookings = () => {
               pricePerHour: booking.parking_spots?.price_per_hour || 0,
               totalCost: Number(booking.total_amount) || 0,
               status,
-              paymentStatus: booking.status === 'pending' ? 'Pending' : 'Paid'
+              paymentStatus: booking.status === 'pending' ? 'Pending' : 'Paid',
+              // Include full booking data for dialogs
+              fullBookingData: booking
             };
           } catch (error) {
             console.error('Error processing booking:', booking.id, error);
@@ -574,10 +576,11 @@ const Bookings = () => {
                             size="sm"
                             onClick={() => setCancellationDialog({
                               isOpen: true,
-                              booking: {
+                              booking: reservation.fullBookingData || {
                                 id: reservation.id,
                                 start_time: `${reservation.date} ${reservation.startTime}`,
                                 total_amount: reservation.totalCost,
+                                payment_intent_id: null, // fallback if fullBookingData is missing
                                 parking_spots: {
                                   title: reservation.spotTitle
                                 }

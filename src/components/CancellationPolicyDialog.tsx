@@ -88,13 +88,21 @@ export const CancellationPolicyDialog = ({
   const handleCancellation = async () => {
     setIsProcessing(true);
     try {
+      console.log('=== CANCELLATION PROCESS STARTED ===');
+      console.log('Booking data received:', booking);
+      console.log('Refund info calculated:', refundInfo);
+      
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.error('No authenticated user found');
         toast.error("Authentication required to cancel booking");
         return;
       }
+      console.log('User authenticated:', user.id, user.email);
+      
       // Update booking status to cancelled
+      console.log('Updating booking status to cancelled...');
       const { error: updateError } = await supabase
         .from('bookings')
         .update({ 
@@ -103,11 +111,21 @@ export const CancellationPolicyDialog = ({
         })
         .eq('id', booking.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating booking status:', updateError);
+        throw updateError;
+      }
+      console.log('Booking status updated successfully');
 
       // If there's a refund due, process the refund
       if (refundInfo.refundAmount > 0) {
         console.log('Processing refund for booking:', booking.id, 'Amount:', refundInfo.refundAmount);
+        console.log('Calling process-refund function with data:', {
+          booking_id: booking.id,
+          refund_amount: refundInfo.refundAmount,
+          reason: `Cancellation - ${refundInfo.description}`,
+          cancellation_fee: refundInfo.cancellationFee
+        });
         
         const { data: refundData, error: refundError } = await supabase.functions.invoke('process-refund', {
           body: {
@@ -118,13 +136,15 @@ export const CancellationPolicyDialog = ({
           }
         });
 
+        console.log('Refund function response:', { refundData, refundError });
+
         if (refundError) {
           console.error('Refund processing failed:', refundError);
           console.error('Full refund error details:', refundError);
           toast.error(`Refund processing failed: ${refundError.message}. Please contact support.`);
           
           // Still log the refund request for manual processing
-          await supabase.from('refunds').insert({
+          const { error: insertError } = await supabase.from('refunds').insert({
             booking_id: booking.id,
             user_id: user.id,
             amount: refundInfo.refundAmount,
@@ -133,23 +153,34 @@ export const CancellationPolicyDialog = ({
             admin_notes: `Automatic refund failed: ${refundError.message}`
           });
           
+          if (insertError) {
+            console.error('Error creating manual refund request:', insertError);
+          }
+          
           toast.warning('Booking cancelled. Refund request created for manual processing.');
         } else if (refundData?.success) {
+          console.log('Refund processed successfully:', refundData);
           toast.success(`Booking cancelled! $${refundInfo.refundAmount.toFixed(2)} refund has been processed and will appear in your account within 3-5 business days.`);
         } else {
+          console.warn('Refund function returned without success flag:', refundData);
           toast.warning('Booking cancelled successfully. Refund will be processed manually.');
         }
       } else {
+        console.log('No refund due for this cancellation');
         toast.success('Booking cancelled successfully.');
       }
 
       onCancellationSuccess();
       onClose();
     } catch (error) {
+      console.error('=== CANCELLATION ERROR ===');
       console.error('Error cancelling booking:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       toast.error('Failed to cancel booking. Please contact support.');
     } finally {
       setIsProcessing(false);
+      console.log('=== CANCELLATION PROCESS ENDED ===');
     }
   };
 
