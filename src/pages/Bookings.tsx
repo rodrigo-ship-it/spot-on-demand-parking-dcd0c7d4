@@ -94,8 +94,17 @@ const Bookings = () => {
         const transformedBookings = await Promise.all(data?.map(async booking => {
           try {
             // Parse dates as local times (no timezone conversion)
-            const startDate = booking.start_time ? new Date(booking.start_time) : null;
-            const endDate = booking.end_time ? new Date(booking.end_time) : null;
+            // Since we're storing without 'Z', we need to ensure they're treated as local
+            const startDate = booking.start_time ? new Date(booking.start_time + (booking.start_time.includes('T') && !booking.start_time.includes('Z') ? '' : '')) : null;
+            const endDate = booking.end_time ? new Date(booking.end_time + (booking.end_time.includes('T') && !booking.end_time.includes('Z') ? '' : '')) : null;
+            
+            console.log('📅 [RAW_BOOKING_DATA]', {
+              id: booking.id.substring(0, 8),
+              start_time_raw: booking.start_time,
+              end_time_raw: booking.end_time,
+              startDate: startDate?.toString(),
+              endDate: endDate?.toString()
+            });
             
             // Check if dates are valid
             const isStartDateValid = startDate && !isNaN(startDate.getTime());
