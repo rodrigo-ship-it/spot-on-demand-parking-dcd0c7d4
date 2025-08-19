@@ -56,27 +56,40 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      const { error } = await supabase
-        .from("refunds" as any)
-        .insert({
+      // Calculate refund amount (full amount for now, could be partial in the future)
+      const refundAmount = booking.total_amount;
+      const cancellationFee = 0; // No cancellation fee for now
+
+      // Call the process-refund edge function
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: {
           booking_id: booking.id,
-          user_id: user.id,
-          amount: booking.total_amount,
-          reason: `${reason}: ${description}`
-        });
+          refund_amount: refundAmount,
+          reason: `${reason}: ${description}`,
+          cancellation_fee: cancellationFee
+        }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Refund Request Submitted",
-        description: "Your refund request has been submitted and will be reviewed within 24 hours."
-      });
+      if (data?.success) {
+        toast({
+          title: "Refund Processed",
+          description: `Your refund of $${refundAmount.toFixed(2)} has been processed successfully.`
+        });
+      } else {
+        toast({
+          title: "Refund Request Submitted",
+          description: "Your refund request has been submitted and will be processed manually."
+        });
+      }
       
       onClose();
     } catch (error: any) {
+      console.error('Refund error:', error);
       toast({
-        title: "Failed to Submit Request",
-        description: error.message,
+        title: "Failed to Process Refund",
+        description: error.message || "There was an error processing your refund. Please try again or contact support.",
         variant: "destructive"
       });
     } finally {
