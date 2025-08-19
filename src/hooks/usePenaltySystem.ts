@@ -63,7 +63,7 @@ export const usePenaltySystem = (userId: string) => {
     let basePenalty = 0;
     if (minutesLate <= 60) basePenalty = 2;
     else if (minutesLate <= 120) basePenalty = 8;
-    else basePenalty = 20;
+    else basePenalty = 15;
 
     // Trust score adjustments
     if (userTrustScore >= 90) basePenalty *= 0.5; // 50% reduction for excellent users
