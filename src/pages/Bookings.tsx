@@ -112,33 +112,23 @@ const Bookings = () => {
               return null;
             }
             
-            // Debug logging to see the actual dates
-            console.log('Booking dates debug:', {
-              bookingId: booking.id,
-              rawStartTime: booking.start_time,
-              rawEndTime: booking.end_time,
-              parsedStartDate: startDate.toISOString(),
-              parsedEndDate: endDate.toISOString(),
-              localStartTime: startDate.toLocaleString(),
-              localEndTime: endDate.toLocaleString(),
-              currentTime: new Date().toLocaleString(),
-              currentTimeUTC: new Date().toISOString()
-            });
-            
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             
             // Determine status based on times and current booking status
-            // Use local time for comparison since dates from DB are already parsed as Date objects
+            // Force comparison in local timezone by using getTime() which gives milliseconds since epoch
             let status = 'Upcoming';
             const now = new Date();
+            const nowTime = now.getTime();
+            const startTime = startDate.getTime();
+            const endTime = endDate.getTime();
             
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
             } else if (booking.status === 'completed') {
               status = 'Completed';
-            } else if (now >= startDate && now <= endDate) {
+            } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
-            } else if (now > endDate) {
+            } else if (nowTime > endTime) {
               status = 'Completed';
             }
 
