@@ -348,6 +348,60 @@ serve(async (req) => {
         break;
       }
 
+      case "charge.dispute.created": {
+        const dispute = event.data.object as Stripe.Dispute;
+        console.log(`Dispute created: ${dispute.id} for charge: ${dispute.charge}`);
+        break;
+      }
+
+      case "refund.created": {
+        const refund = event.data.object as Stripe.Refund;
+        console.log(`💰 [REFUND_CREATED] Refund created: ${refund.id} for payment intent: ${refund.payment_intent}`);
+        console.log(`💰 [REFUND_AMOUNT] Amount: ${refund.amount} cents, Status: ${refund.status}`);
+        
+        // Update our refunds table if we have a booking reference
+        if (refund.metadata?.booking_id) {
+          const { error } = await supabaseService
+            .from("refunds")
+            .update({
+              stripe_refund_id: refund.id,
+              status: refund.status,
+              processed_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq("booking_id", refund.metadata.booking_id);
+
+          if (error) {
+            console.error("❌ [REFUND_UPDATE_ERROR] Error updating refund status:", error);
+          } else {
+            console.log(`✅ [REFUND_UPDATED] Refund status updated for booking: ${refund.metadata.booking_id}`);
+          }
+        }
+        break;
+      }
+
+      case "refund.updated": {
+        const refund = event.data.object as Stripe.Refund;
+        console.log(`💰 [REFUND_UPDATED] Refund updated: ${refund.id}, Status: ${refund.status}`);
+        
+        // Update our refunds table
+        if (refund.metadata?.booking_id) {
+          const { error } = await supabaseService
+            .from("refunds")
+            .update({
+              status: refund.status,
+              updated_at: new Date().toISOString()
+            })
+            .eq("stripe_refund_id", refund.id);
+
+          if (error) {
+            console.error("❌ [REFUND_UPDATE_ERROR] Error updating refund status:", error);
+          } else {
+            console.log(`✅ [REFUND_STATUS_UPDATED] Refund status updated to: ${refund.status}`);
+          }
+        }
+        break;
+
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
         
