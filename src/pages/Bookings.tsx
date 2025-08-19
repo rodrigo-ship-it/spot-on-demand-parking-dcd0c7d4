@@ -93,7 +93,7 @@ const Bookings = () => {
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
           try {
-            // Validate and parse dates safely
+            // Validate and parse dates safely - database times are in UTC
             const startDate = booking.start_time ? new Date(booking.start_time) : null;
             const endDate = booking.end_time ? new Date(booking.end_time) : null;
             
@@ -112,9 +112,23 @@ const Bookings = () => {
               return null;
             }
             
+            // Debug logging to see the actual dates
+            console.log('Booking dates debug:', {
+              bookingId: booking.id,
+              rawStartTime: booking.start_time,
+              rawEndTime: booking.end_time,
+              parsedStartDate: startDate.toISOString(),
+              parsedEndDate: endDate.toISOString(),
+              localStartTime: startDate.toLocaleString(),
+              localEndTime: endDate.toLocaleString(),
+              currentTime: new Date().toLocaleString(),
+              currentTimeUTC: new Date().toISOString()
+            });
+            
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             
             // Determine status based on times and current booking status
+            // Use local time for comparison since dates from DB are already parsed as Date objects
             let status = 'Upcoming';
             const now = new Date();
             
