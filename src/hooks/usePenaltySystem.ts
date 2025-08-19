@@ -4,11 +4,14 @@ import { toast } from "sonner";
 
 interface PenaltyCredit {
   id: string;
+  user_id: string;
+  booking_id?: string;
   amount: number;
   credit_type: string;
   description: string;
   status: string;
   created_at: string;
+  updated_at: string;
   expires_at: string;
   forgiven_reason?: string;
 }

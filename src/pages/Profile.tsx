@@ -20,11 +20,13 @@ import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { usePenaltySystem } from "@/hooks/usePenaltySystem";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const { userProfile, penaltyCredits, loading: penaltyLoading } = usePenaltySystem(user?.id || "");
   
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -381,6 +383,70 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Penalty Credits */}
+          {penaltyCredits.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Penalty Credits
+                </CardTitle>
+                <CardDescription>
+                  Outstanding penalty charges that need to be paid.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {penaltyCredits.map((credit) => (
+                  <div key={credit.id} className="p-4 border rounded-lg bg-red-50 border-red-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-red-900">${credit.amount}</p>
+                        <p className="text-sm text-red-700">{credit.description}</p>
+                        <p className="text-xs text-red-600">
+                          Created: {new Date(credit.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const response = await supabase.functions.invoke('create-marketplace-payment', {
+                              body: {
+                                type: 'penalty',
+                                bookingId: credit.booking_id || 'test-booking-id',
+                                amount: credit.amount,
+                                description: credit.description,
+                                penaltyCreditId: credit.id,
+                                penaltyBreakdown: {
+                                  penaltyFee: 9.6,
+                                  hourlyCharge: 16
+                                }
+                              }
+                            });
+
+                            if (response.error) {
+                              throw new Error(response.error.message);
+                            }
+
+                            if (response.data?.checkout_url) {
+                              window.open(response.data.checkout_url, '_blank');
+                            }
+                          } catch (error) {
+                            console.error('Error creating payment:', error);
+                            toast.error('Failed to create payment session');
+                          }
+                        }}
+                      >
+                        Pay Penalty
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Payment Settings */}
           <Card>
