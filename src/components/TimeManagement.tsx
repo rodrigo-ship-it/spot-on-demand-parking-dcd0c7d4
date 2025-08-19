@@ -56,10 +56,15 @@ export const TimeManagement = ({
 
   const handleEnhancedCheckOut = async (verificationData: VerificationData) => {
     try {
-      // Get booking details to calculate duration-based end time
+      // Get booking details and spot information
       const { data: bookingData } = await supabase
         .from('bookings')
-        .select('start_time, end_time')
+        .select(`
+          start_time, 
+          end_time,
+          spot_id,
+          parking_spots!inner(price_per_hour, pricing_type)
+        `)
         .eq('id', bookingId)
         .single();
 
@@ -115,17 +120,30 @@ export const TimeManagement = ({
         return;
       }
 
-      // Calculate and apply lenient penalty
+      // Calculate and apply lenient penalty with hourly charges
       const isFirstOffense = penaltyProfile?.failed_checkouts === 0;
-      const penaltyAmount = calculatePenalty(minutesOver, isFirstOffense);
+      const spotPricePerHour = bookingData.parking_spots?.pricing_type === 'hourly' ? Number(bookingData.parking_spots.price_per_hour) : undefined;
+      const penaltyCalculation = calculatePenalty(minutesOver, isFirstOffense, spotPricePerHour);
+      
+      let penaltyDescription = '';
+      if (penaltyCalculation.penaltyFee > 0 && penaltyCalculation.hourlyCharge > 0) {
+        penaltyDescription = `Late checkout penalty: $${penaltyCalculation.penaltyFee} fine + $${penaltyCalculation.hourlyCharge} for ${Math.floor(minutesOver / 60)}h ${minutesOver % 60}m extra time`;
+      } else if (penaltyCalculation.penaltyFee > 0) {
+        penaltyDescription = `Late checkout penalty: $${penaltyCalculation.penaltyFee}`;
+      } else if (penaltyCalculation.hourlyCharge > 0) {
+        penaltyDescription = `Extra time charge: $${penaltyCalculation.hourlyCharge} for ${Math.floor(minutesOver / 60)}h ${minutesOver % 60}m`;
+      }
 
-      if (penaltyAmount > 0) {
-        let description = `Late check-out by ${minutesOver} minutes`;
-        if (verificationData.verificationScore < 70) {
-          description += " (verification issues detected)";
-        }
-        
-        await addPenaltyCredit(bookingId, penaltyAmount, 'late_checkout', description);
+      // Apply penalty if user was late
+      if (minutesOver > 30 && penaltyCalculation.totalAmount > 0) {
+        await addPenaltyCredit(
+          bookingId,
+          penaltyCalculation.totalAmount,
+          'late_checkout',
+          penaltyDescription,
+          true, // autoCharge
+          true  // splitPayment - divide between platform and spot owner
+        );
       } else {
         await recordSuccessfulCheckout();
         if (minutesOver > 0 && minutesOver <= 30) {

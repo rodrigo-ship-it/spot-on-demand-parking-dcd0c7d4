@@ -56,8 +56,8 @@ export const usePenaltySystem = (userId: string) => {
     }
   };
 
-  const calculatePenalty = (minutesLate: number, isFirstOffense: boolean): number => {
-    if (minutesLate <= 30) return 0; // Grace period
+  const calculatePenalty = (minutesLate: number, isFirstOffense: boolean, spotPricePerHour?: number): { penaltyFee: number; hourlyCharge: number; totalAmount: number } => {
+    if (minutesLate <= 30) return { penaltyFee: 0, hourlyCharge: 0, totalAmount: 0 }; // Grace period
 
     let basePenalty = 0;
     if (minutesLate <= 60) basePenalty = 8;
@@ -67,7 +67,18 @@ export const usePenaltySystem = (userId: string) => {
     // First offense leniency (20% reduction)
     if (isFirstOffense) basePenalty *= 0.8;
 
-    return Math.round(basePenalty * 100) / 100;
+    // Calculate hourly charge for extra time (if it's an hourly spot)
+    let hourlyCharge = 0;
+    if (spotPricePerHour && spotPricePerHour > 0) {
+      const hoursLate = minutesLate / 60;
+      hourlyCharge = hoursLate * spotPricePerHour;
+    }
+
+    const penaltyFee = Math.round(basePenalty * 100) / 100;
+    hourlyCharge = Math.round(hourlyCharge * 100) / 100;
+    const totalAmount = penaltyFee + hourlyCharge;
+
+    return { penaltyFee, hourlyCharge, totalAmount };
   };
 
   const addPenaltyCredit = async (
@@ -75,7 +86,8 @@ export const usePenaltySystem = (userId: string) => {
     amount: number,
     creditType: string,
     description: string,
-    autoCharge: boolean = true
+    autoCharge: boolean = true,
+    splitPayment: boolean = false
   ): Promise<boolean> => {
     try {
       // Add penalty credit
@@ -111,12 +123,14 @@ export const usePenaltySystem = (userId: string) => {
       // Attempt automatic charging if enabled and amount is significant
       if (autoCharge && amount >= 5 && creditData) {
         try {
-          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('charge-penalty', {
+          const functionName = splitPayment ? 'create-marketplace-payment' : 'charge-penalty';
+          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke(functionName, {
             body: {
               bookingId,
               amount,
               description,
-              penaltyCreditId: creditData.id
+              penaltyCreditId: creditData.id,
+              ...(splitPayment && { type: 'penalty' })
             }
           });
 
