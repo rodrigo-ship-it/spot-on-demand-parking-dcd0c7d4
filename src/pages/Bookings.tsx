@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, DollarSign, Search, Filter, Download, ArrowLeft, MapPin, Navigation, Phone, Mail, Star, Camera } from "lucide-react";
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
+
 import { Link, useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReviewDialog } from "@/components/ReviewDialog";
@@ -118,21 +118,13 @@ const Bookings = () => {
             let status = 'Upcoming';
             const now = new Date();
             
-            // Get the user's timezone
-            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            
-            // Convert UTC times from database to user's local timezone for comparison
-            const nowInUserTz = toZonedTime(now, userTimezone);
-            const startInUserTz = toZonedTime(startDate, userTimezone);
-            const endInUserTz = toZonedTime(endDate, userTimezone);
-            
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
             } else if (booking.status === 'completed') {
               status = 'Completed';
-            } else if (nowInUserTz >= startInUserTz && nowInUserTz <= endInUserTz) {
+            } else if (now >= startDate && now <= endDate) {
               status = 'Active';
-            } else if (nowInUserTz > endInUserTz) {
+            } else if (now > endDate) {
               status = 'Completed';
             }
 
