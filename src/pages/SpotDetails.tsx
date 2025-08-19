@@ -139,23 +139,39 @@ const SpotDetails = () => {
     };
   }, [id]);
 
-  // Mock booking data for active session
-  const [mockBookingData] = useState({
-    bookingId: "booking-24hr-test",
-    startTime: new Date(Date.now() - 24.5 * 60 * 60 * 1000).toISOString(), // 24.5 hours ago (24-hour booking started)
-    endTime: new Date(Date.now() - 0.5 * 60 * 60 * 1000).toISOString(), // 30 minutes ago (24-hour period ended)
-    userViolations: [
-      {
-        id: "v1",
-        type: "late_checkout" as const,
-        date: "2024-06-10", 
-        penalty: 25,
-        description: "Late check-out (30 minutes over)"
+  // Real booking data - only show checkout/management if user has an actual active booking
+  const [actualBookingData, setActualBookingData] = useState<any>(null);
+  
+  // Check for actual active booking for this user and spot
+  useEffect(() => {
+    const checkActiveBooking = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !id) return;
+
+      const { data: activeBooking, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('renter_id', user.id)
+        .eq('spot_id', id)
+        .in('status', ['confirmed', 'active'])
+        .gte('end_time', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking active booking:', error);
+        return;
       }
-    ],
-    accountStatus: "good" as const,
-    isActiveSession: true // Set to true to test the 24-hour booking checkout
-  });
+
+      if (activeBooking && activeBooking.length > 0) {
+        setActualBookingData(activeBooking[0]);
+      } else {
+        setActualBookingData(null);
+      }
+    };
+
+    checkActiveBooking();
+  }, [id]);
 
   const [reviewDialog, setReviewDialog] = useState({ isOpen: false, type: null });
 
@@ -481,16 +497,16 @@ const SpotDetails = () => {
               spotId={spotData.id}
             />
 
-            {/* Time Management (only for booking mode with active session) */}
-            {isBookingMode && mockBookingData.isActiveSession && (
+            {/* Time Management (only show if user has an active booking for this spot) */}
+            {actualBookingData && (
               <TimeManagement 
-                bookingId={mockBookingData.bookingId}
+                bookingId={actualBookingData.id}
                 spotId={spotData.id}
-                endTime={mockBookingData.endTime}
+                endTime={actualBookingData.end_time}
                 pricePerHour={Number(spotData.price_per_hour)}
-                userViolations={mockBookingData.userViolations}
-                accountStatus={mockBookingData.accountStatus}
-                isActive={mockBookingData.isActiveSession}
+                userViolations={[]} // Will be fetched in TimeManagement component
+                accountStatus="good"
+                isActive={true}
               />
             )}
 
@@ -927,11 +943,11 @@ const SpotDetails = () => {
         </div>
       </div>
 
-      {/* Only render these components when there's an active booking session */}
-      {mockBookingData.isActiveSession && (
+      {/* Only render these components when there's an actual active booking */}
+      {actualBookingData && (
         <>
           <RatingSystem 
-            bookingId={mockBookingData.bookingId}
+            bookingId={actualBookingData.id}
             userType="renter"
             onSubmitRating={(rating, review) => console.log('Rating submitted:', rating, review)}
             onClose={() => console.log('Rating dialog closed')}
@@ -941,35 +957,35 @@ const SpotDetails = () => {
             isOpen={reviewDialog.isOpen}
             onClose={() => setReviewDialog({ isOpen: false, type: null })}
             type={reviewDialog.type}
-            bookingId={mockBookingData.bookingId}
+            bookingId={actualBookingData.id}
           />
 
           <DisputeCamera 
-            bookingId={mockBookingData.bookingId}
+            bookingId={actualBookingData.id}
             disputeType="overstay"
             onPhotoTaken={(photo, description) => console.log('Dispute photo taken:', photo, description)}
             onClose={() => console.log('Dispute camera closed')}
           />
 
           <CheckOutSystem 
-            bookingId={mockBookingData.bookingId}
-            endTime={mockBookingData.endTime}
+            bookingId={actualBookingData.id}
+            endTime={actualBookingData.end_time}
             onCheckOut={(photo, timestamp) => console.log('Check out completed:', photo, timestamp)}
             isOvertime={false} // Will be calculated dynamically based on start time + duration
           />
 
           <ExtensionSystem 
-            bookingId={mockBookingData.bookingId}
-            endTime={mockBookingData.endTime}
+            bookingId={actualBookingData.id}
+            endTime={actualBookingData.end_time}
             pricePerHour={spotData.price}
             isSpotAvailableAfter={true}
             onExtensionRequested={(hours, cost) => console.log('Extension requested:', hours, cost)}
           />
 
           <PenaltySystem 
-            violations={mockBookingData.userViolations}
-            accountStatus={mockBookingData.accountStatus}
-            totalPenalties={mockBookingData.userViolations.reduce((sum, v) => sum + v.penalty, 0)}
+            violations={[]} // Will be fetched in PenaltySystem component
+            accountStatus="good"
+            totalPenalties={0}
           />
         </>
       )}

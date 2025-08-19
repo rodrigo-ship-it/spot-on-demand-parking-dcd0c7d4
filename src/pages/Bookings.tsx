@@ -91,87 +91,92 @@ const Bookings = () => {
 
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
-          // Validate and parse dates safely
-          const startDate = booking.start_time ? new Date(booking.start_time) : null;
-          const endDate = booking.end_time ? new Date(booking.end_time) : null;
-          
-          // Check if dates are valid
-          const isStartDateValid = startDate && !isNaN(startDate.getTime());
-          const isEndDateValid = endDate && !isNaN(endDate.getTime());
-          
-          if (!isStartDateValid || !isEndDateValid) {
-            console.error('Invalid date in booking:', booking.id, {
-              start_time: booking.start_time,
-              end_time: booking.end_time,
-              startDateValid: isStartDateValid,
-              endDateValid: isEndDateValid
-            });
-            // Skip this booking or use fallback values
-            return null;
-          }
-          
-          const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
-          
-          // Determine status based on times and current booking status
-          let status = 'Upcoming';
-          const now = new Date();
-          if (booking.status === 'completed') {
-            status = 'Completed';
-          } else if (now >= startDate && now <= endDate) {
-            status = 'Active';
-          } else if (now > endDate) {
-            status = 'Completed';
-          }
-
-          // Get owner profile separately
-          let ownerName = 'Unknown Owner';
-          let ownerPhone = 'No phone';
-          let ownerId = null;
-          if (booking.parking_spots?.owner_id) {
-            ownerId = booking.parking_spots.owner_id;
-            const { data: ownerProfile } = await supabase
-              .from('profiles')
-              .select('full_name, phone')
-              .eq('user_id', booking.parking_spots.owner_id)
-              .single();
+          try {
+            // Validate and parse dates safely
+            const startDate = booking.start_time ? new Date(booking.start_time) : null;
+            const endDate = booking.end_time ? new Date(booking.end_time) : null;
             
-            if (ownerProfile) {
-              ownerName = ownerProfile.full_name || 'Unknown Owner';
-              ownerPhone = ownerProfile.phone || 'No phone';
+            // Check if dates are valid
+            const isStartDateValid = startDate && !isNaN(startDate.getTime());
+            const isEndDateValid = endDate && !isNaN(endDate.getTime());
+            
+            if (!isStartDateValid || !isEndDateValid) {
+              console.error('Invalid date in booking:', booking.id, {
+                start_time: booking.start_time,
+                end_time: booking.end_time,
+                startDateValid: isStartDateValid,
+                endDateValid: isEndDateValid
+              });
+              // Skip this booking
+              return null;
             }
-          }
+            
+            const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
+            
+            // Determine status based on times and current booking status
+            let status = 'Upcoming';
+            const now = new Date();
+            if (booking.status === 'completed') {
+              status = 'Completed';
+            } else if (now >= startDate && now <= endDate) {
+              status = 'Active';
+            } else if (now > endDate) {
+              status = 'Completed';
+            }
 
-          return {
-            id: booking.id,
-            spotId: booking.spot_id, // Add missing spotId
-            spotTitle: booking.parking_spots?.title || 'Unknown Spot',
-            spotAddress: booking.parking_spots?.address || 'Unknown Address',
-            spotOwner: ownerName,
-            ownerName: ownerName,
-            ownerId: ownerId,
-            ownerPhone: ownerPhone,
-            date: booking.display_date || startDate.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: '2-digit', 
-              day: '2-digit',
-              timeZone: 'America/Chicago' 
-            }),
-            startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              timeZone: 'America/Chicago'
-            }),
-            endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              timeZone: 'America/Chicago'
-            }),
-            duration: `${duration} hours`,
-            pricePerHour: booking.parking_spots?.price_per_hour || 0,
-            totalCost: Number(booking.total_amount) || 0,
-            status,
-            paymentStatus: booking.status === 'pending' ? 'Pending' : 'Paid'
-          };
+            // Get owner profile separately
+            let ownerName = 'Unknown Owner';
+            let ownerPhone = 'No phone';
+            let ownerId = null;
+            if (booking.parking_spots?.owner_id) {
+              ownerId = booking.parking_spots.owner_id;
+              const { data: ownerProfile } = await supabase
+                .from('profiles')
+                .select('full_name, phone')
+                .eq('user_id', booking.parking_spots.owner_id)
+                .single();
+              
+              if (ownerProfile) {
+                ownerName = ownerProfile.full_name || 'Unknown Owner';
+                ownerPhone = ownerProfile.phone || 'No phone';
+              }
+            }
+
+            return {
+              id: booking.id,
+              spotId: booking.spot_id,
+              spotTitle: booking.parking_spots?.title || 'Unknown Spot',
+              spotAddress: booking.parking_spots?.address || 'Unknown Address',
+              spotOwner: ownerName,
+              ownerName: ownerName,
+              ownerId: ownerId,
+              ownerPhone: ownerPhone,
+              date: booking.display_date || startDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                timeZone: 'America/Chicago' 
+              }),
+              startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'America/Chicago'
+              }),
+              endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'America/Chicago'
+              }),
+              duration: `${duration} hours`,
+              pricePerHour: booking.parking_spots?.price_per_hour || 0,
+              totalCost: Number(booking.total_amount) || 0,
+              status,
+              paymentStatus: booking.status === 'pending' ? 'Pending' : 'Paid'
+            };
+          } catch (error) {
+            console.error('Error processing booking:', booking.id, error);
+            return null; // Skip this booking if there's an error
+          }
         }) || []);
 
         // Filter out null entries (invalid bookings)
@@ -182,8 +187,6 @@ const Bookings = () => {
         console.error('Error loading bookings:', error);
         toast.error('Failed to load bookings. Please try again.');
         setBookings([]);
-        console.error('Error loading bookings:', error);
-        toast.error("Failed to load bookings");
       } finally {
         setLoading(false);
       }
