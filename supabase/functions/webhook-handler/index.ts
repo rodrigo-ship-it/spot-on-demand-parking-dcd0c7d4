@@ -401,6 +401,7 @@ serve(async (req) => {
           }
         }
         break;
+      }
 
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
