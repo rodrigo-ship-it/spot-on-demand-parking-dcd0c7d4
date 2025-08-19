@@ -273,8 +273,7 @@ export const CancellationPolicyDialog = ({
                   </span>
                 </div>
                 <p className="text-sm text-orange-600 mt-2">
-                  Cancelling with less than 3 hours notice means no refund will be issued. 
-                  You can still cancel the booking to free up the spot for other users.
+                  Cancelling with less than 3 hours notice means no refund will be issued.
                 </p>
               </CardContent>
             </Card>
