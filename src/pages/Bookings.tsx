@@ -24,6 +24,7 @@ const Bookings = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [advancedFilters, setAdvancedFilters] = useState<any>({});
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewDialog, setReviewDialog] = useState<{
@@ -184,6 +185,23 @@ const Bookings = () => {
                          reservation.spotAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || reservation.status.toLowerCase() === statusFilter;
+    
+    // Advanced filters
+    if (advancedFilters.dateRange) {
+      const reservationDate = new Date(reservation.date);
+      if (advancedFilters.dateRange.from && reservationDate < advancedFilters.dateRange.from) return false;
+      if (advancedFilters.dateRange.to && reservationDate > advancedFilters.dateRange.to) return false;
+    }
+    
+    if (advancedFilters.priceRange) {
+      if (advancedFilters.priceRange.min && reservation.totalCost < advancedFilters.priceRange.min) return false;
+      if (advancedFilters.priceRange.max && reservation.totalCost > advancedFilters.priceRange.max) return false;
+    }
+    
+    if (advancedFilters.location && !reservation.spotAddress.toLowerCase().includes(advancedFilters.location.toLowerCase())) {
+      return false;
+    }
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -356,8 +374,8 @@ const Bookings = () => {
             </SelectContent>
           </Select>
           <AdvancedFiltersDialog 
-            onFiltersApply={() => {}} 
-            currentFilters={{}}
+            onFiltersApply={setAdvancedFilters} 
+            currentFilters={advancedFilters}
           >
             <Button 
               variant="outline"
