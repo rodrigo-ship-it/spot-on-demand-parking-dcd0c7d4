@@ -91,8 +91,25 @@ const Bookings = () => {
 
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
-          const startDate = new Date(booking.start_time);
-          const endDate = new Date(booking.end_time);
+          // Validate and parse dates safely
+          const startDate = booking.start_time ? new Date(booking.start_time) : null;
+          const endDate = booking.end_time ? new Date(booking.end_time) : null;
+          
+          // Check if dates are valid
+          const isStartDateValid = startDate && !isNaN(startDate.getTime());
+          const isEndDateValid = endDate && !isNaN(endDate.getTime());
+          
+          if (!isStartDateValid || !isEndDateValid) {
+            console.error('Invalid date in booking:', booking.id, {
+              start_time: booking.start_time,
+              end_time: booking.end_time,
+              startDateValid: isStartDateValid,
+              endDateValid: isEndDateValid
+            });
+            // Skip this booking or use fallback values
+            return null;
+          }
+          
           const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
           
           // Determine status based on times and current booking status
@@ -157,8 +174,14 @@ const Bookings = () => {
           };
         }) || []);
 
-        setBookings(transformedBookings);
+        // Filter out null entries (invalid bookings)
+        const validBookings = transformedBookings.filter(booking => booking !== null);
+
+        setBookings(validBookings);
       } catch (error) {
+        console.error('Error loading bookings:', error);
+        toast.error('Failed to load bookings. Please try again.');
+        setBookings([]);
         console.error('Error loading bookings:', error);
         toast.error("Failed to load bookings");
       } finally {
