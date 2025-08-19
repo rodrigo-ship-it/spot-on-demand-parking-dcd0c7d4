@@ -121,16 +121,16 @@ export const PenaltySystemTest = () => {
               <div className="space-y-2">
                 <div><strong>Penalty Fee:</strong> ${calculationResult.penaltyFee}</div>
                 <div><strong>Hourly Charge:</strong> ${calculationResult.hourlyCharge}</div>
-                <div><strong>Base Total:</strong> ${calculationResult.totalAmount}</div>
-                <div><strong>Platform Fee (7%):</strong> ${(calculationResult.totalAmount * 0.07).toFixed(2)}</div>
-                <div><strong>Subtotal:</strong> ${(calculationResult.totalAmount * 1.07).toFixed(2)}</div>
-                <div><strong>Tax (8.5%):</strong> ${(calculationResult.totalAmount * 1.07 * 0.085).toFixed(2)}</div>
-                <div className="text-lg font-bold"><strong>User Pays:</strong> ${(calculationResult.totalAmount * 1.07 * 1.085).toFixed(2)}</div>
+                <div className="border-t pt-2">
+                  <div><strong>Charge 1 - Penalty:</strong> ${calculationResult.penaltyFee} + tax = ${(calculationResult.penaltyFee * 1.085).toFixed(2)}</div>
+                  <div><strong>Charge 2 - Hourly:</strong> ${calculationResult.hourlyCharge} + 7% fee + tax = ${(calculationResult.hourlyCharge * 1.07 * 1.085).toFixed(2)}</div>
+                  <div className="text-lg font-bold"><strong>User Pays Total:</strong> ${((calculationResult.penaltyFee * 1.085) + (calculationResult.hourlyCharge * 1.07 * 1.085)).toFixed(2)}</div>
+                </div>
                 <div className="text-sm text-muted-foreground">
                   {testData.minutesLate} minutes late = {Math.floor(testData.minutesLate / 60)}h {testData.minutesLate % 60}m
                 </div>
                 <div className="pt-2 border-t text-sm">
-                  <div><strong>Platform Gets:</strong> ${(calculationResult.penaltyFee + (calculationResult.totalAmount * 0.07) + (calculationResult.hourlyCharge * 0.07)).toFixed(2)}</div>
+                  <div><strong>Platform Gets:</strong> ${(calculationResult.penaltyFee + (calculationResult.hourlyCharge * 0.07) + (calculationResult.hourlyCharge * 0.07)).toFixed(2)} + tax</div>
                   <div><strong>Owner Gets:</strong> ${(calculationResult.hourlyCharge * 0.93).toFixed(2)}</div>
                 </div>
               </div>

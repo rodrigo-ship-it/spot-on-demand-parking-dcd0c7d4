@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createSeparatePenaltyCharges } from "./create-separate-penalty-charges.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -237,22 +238,19 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
   try {
     const penaltyFeeCents = Math.round((penaltyBreakdown.penaltyFee || 0) * 100);
     const hourlyChargeCents = Math.round((penaltyBreakdown.hourlyCharge || 0) * 100);
-    const baseAmountCents = penaltyFeeCents + hourlyChargeCents;
     
-    // Calculate platform fees
-    const renterPlatformFee = Math.round(baseAmountCents * 0.07); // 7% from renter
-    const ownerPlatformFee = Math.round(hourlyChargeCents * 0.07);  // 7% from owner (only on hourly charge)
+    // For penalties, create 2 separate charges for clarity
+    if (penaltyFeeCents > 0 && hourlyChargeCents > 0) {
+      return createSeparatePenaltyCharges(stripe, user, penaltyFeeCents, hourlyChargeCents, penaltyCreditId, connectAccountId, origin);
+    }
     
-    // User pays: base amount + their 7% platform fee + taxes
-    const subtotalCents = baseAmountCents + renterPlatformFee;
-    const taxRate = 0.085; // 8.5% tax rate (adjust as needed)
-    const totalAmountCents = Math.round(subtotalCents * (1 + taxRate));
+    // Single charge (either penalty only or hourly only)
+    const totalAmountCents = penaltyFeeCents + hourlyChargeCents;
+    const taxRate = 0.085; // 8.5% tax rate
+    const finalAmountCents = Math.round(totalAmountCents * (1 + taxRate));
     
-    // Platform gets: penalty fee + renter platform fee + owner platform fee
-    const totalPlatformRevenue = penaltyFeeCents + renterPlatformFee + ownerPlatformFee;
-    
-    // Owner gets: hourly charge minus their platform fee
-    const ownerAmount = hourlyChargeCents - ownerPlatformFee;
+    // If it's penalty only, 100% to platform
+    const ownerAmount = penaltyFeeCents > 0 ? 0 : (connectAccountId ? Math.round(hourlyChargeCents * 0.93) : 0);
     
     const sessionData: any = {
       mode: "payment",
@@ -261,10 +259,10 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
         price_data: {
           currency: "usd",
           product_data: {
-            name: "Parking Penalty",
+            name: penaltyFeeCents > 0 ? "Parking Penalty" : "Extra Parking Time",
             description: description,
           },
-          unit_amount: totalAmountCents,
+          unit_amount: finalAmountCents,
         },
         quantity: 1,
       }],
@@ -273,25 +271,19 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
         penalty_credit_id: penaltyCreditId,
         penalty_fee: penaltyFeeCents.toString(),
         hourly_charge: hourlyChargeCents.toString(),
-        base_amount: baseAmountCents.toString(),
-        renter_platform_fee: renterPlatformFee.toString(),
-        owner_platform_fee: ownerPlatformFee.toString(),
-        subtotal: subtotalCents.toString(),
-        tax_amount: (totalAmountCents - subtotalCents).toString(),
-        total_charged: totalAmountCents.toString(),
-        platform_revenue: totalPlatformRevenue.toString(),
-        owner_amount: connectAccountId ? ownerAmount.toString() : "0",
+        total_charged: finalAmountCents.toString(),
+        owner_amount: ownerAmount.toString(),
       },
       success_url: `${origin}/profile?penalty_paid=true`,
       cancel_url: `${origin}/profile`,
     };
     
-    // Add transfer data only for hourly charge portion (owner gets hourly charge minus 7% fee)
-    if (connectAccountId && ownerAmount > 0) {
+    // Add transfer data only for hourly charges (not penalties)
+    if (connectAccountId && ownerAmount > 0 && hourlyChargeCents > 0) {
       sessionData.payment_intent_data = {
         transfer_data: {
           destination: connectAccountId,
-          amount: ownerAmount, // Only the hourly charge portion minus platform fee
+          amount: ownerAmount,
         },
       };
     }
