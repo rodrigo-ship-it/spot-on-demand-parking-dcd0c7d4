@@ -40,6 +40,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
+import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -1088,12 +1089,13 @@ Check browser console for detailed ID analysis.
 
         {/* Comprehensive Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="spots">Spots</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
             <TabsTrigger value="refunds">Refunds</TabsTrigger>
+            <TabsTrigger value="penalties">Penalties</TabsTrigger>
             <TabsTrigger value="support">Support</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
@@ -1533,6 +1535,17 @@ Check browser console for detailed ID analysis.
 
           <TabsContent value="refunds">
             <AdminRefundManager />
+          </TabsContent>
+
+          <TabsContent value="penalties">
+            <Card>
+              <CardHeader>
+                <CardTitle>Penalty Management & Testing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LateChargeTestSystem />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="support">
