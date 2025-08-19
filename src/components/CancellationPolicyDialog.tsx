@@ -86,11 +86,6 @@ export const CancellationPolicyDialog = ({
   const refundInfo = getRefundInfo();
 
   const handleCancellation = async () => {
-    if (!canCancel) {
-      toast.error("Cannot cancel bookings less than 3 hours before start time");
-      return;
-    }
-
     setIsProcessing(true);
     try {
       // Get current user
@@ -269,17 +264,17 @@ export const CancellationPolicyDialog = ({
           </Card>
 
           {!canCancel && (
-            <Card className="border-red-200 bg-red-50">
+            <Card className="border-orange-200 bg-orange-50">
               <CardContent className="pt-6">
-                <div className="flex items-center gap-2 text-red-800">
+                <div className="flex items-center gap-2 text-orange-800">
                   <AlertTriangle className="w-5 h-5" />
                   <span className="font-medium">
-                    Cancellation not allowed - booking starts in less than 3 hours
+                    Late cancellation - No refund available
                   </span>
                 </div>
-                <p className="text-sm text-red-600 mt-2">
-                  You can only cancel bookings at least 3 hours before the start time. 
-                  Please contact the spot owner if you have an emergency.
+                <p className="text-sm text-orange-600 mt-2">
+                  Cancelling with less than 3 hours notice means no refund will be issued. 
+                  You can still cancel the booking to free up the spot for other users.
                 </p>
               </CardContent>
             </Card>
@@ -293,7 +288,7 @@ export const CancellationPolicyDialog = ({
           <Button 
             variant="destructive" 
             onClick={handleCancellation}
-            disabled={!canCancel || isProcessing}
+            disabled={isProcessing}
           >
             {isProcessing ? "Processing..." : "Cancel Booking"}
           </Button>

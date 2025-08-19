@@ -521,6 +521,41 @@ const BookingConfirmed = () => {
           </CardContent>
         </Card>
 
+        {/* Cancellation Policy */}
+        <Card className="mb-6 border-orange-200 bg-orange-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-800">
+              <Clock className="w-5 h-5" />
+              Cancellation Policy
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-3 mt-1 flex-shrink-0"></div>
+                <div>
+                  <p className="text-sm"><strong>24+ hours before booking:</strong> 100% refund, no cancellation fee</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3 mt-1 flex-shrink-0"></div>
+                <div>
+                  <p className="text-sm"><strong>3-24 hours before booking:</strong> 90% refund, 10% cancellation fee (max $5)</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <div className="w-3 h-3 bg-red-500 rounded-full mr-3 mt-1 flex-shrink-0"></div>
+                <div>
+                  <p className="text-sm"><strong>Less than 3 hours before:</strong> No refund available, but you can still cancel the booking</p>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-orange-700 mt-3 bg-orange-100 p-2 rounded-md">
+              You can manage your bookings and cancellations in the "My Bookings" section.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Email Confirmation Button */}
         <div className="mb-6">
           <Button 

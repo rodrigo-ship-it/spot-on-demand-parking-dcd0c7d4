@@ -192,6 +192,29 @@ const handler = async (req: Request): Promise<Response> => {
                         </div>
                       </div>
                       
+                      <!-- Cancellation Policy -->
+                      <div style="text-align: left; margin-bottom: 24px; background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px;">
+                        <h3 style="margin: 0 0 12px; color: #92400e; font-size: 16px; font-weight: 600;">Cancellation Policy</h3>
+                        <div style="margin-bottom: 8px;">
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-top: 6px; margin-right: 8px; flex-shrink: 0;"></div>
+                            <p style="margin: 0; color: #78350f; font-size: 13px;"><strong>24+ hours before:</strong> 100% refund, no fees</p>
+                          </div>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%; margin-top: 6px; margin-right: 8px; flex-shrink: 0;"></div>
+                            <p style="margin: 0; color: #78350f; font-size: 13px;"><strong>3-24 hours before:</strong> 90% refund, 10% fee (max $5)</p>
+                          </div>
+                        </div>
+                        <div>
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 6px; margin-right: 8px; flex-shrink: 0;"></div>
+                            <p style="margin: 0; color: #78350f; font-size: 13px;"><strong>Less than 3 hours:</strong> No refund, but you can still cancel</p>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <p style="margin: 24px 0 0; color: #999; font-size: 14px; line-height: 1.4;">
                         Need help? Reply to this email or contact our support team.
                         <br><br>
