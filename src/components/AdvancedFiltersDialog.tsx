@@ -18,7 +18,14 @@ interface AdvancedFilters {
     from?: Date;
     to?: Date;
   };
-  priceRange: [number, number];
+  pricePerHour: {
+    min: number;
+    max: number;
+  };
+  totalPrice: {
+    min: number;
+    max: number;
+  };
   location: string;
   radius: number;
   spotTypes: string[];
@@ -46,7 +53,8 @@ export const AdvancedFiltersDialog = ({ onFiltersApply, currentFilters, children
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<AdvancedFilters>({
     dateRange: currentFilters?.dateRange || {},
-    priceRange: currentFilters?.priceRange || [0, 50],
+    pricePerHour: currentFilters?.pricePerHour || { min: 0, max: 50 },
+    totalPrice: currentFilters?.totalPrice || { min: 0, max: 500 },
     location: currentFilters?.location || '',
     radius: currentFilters?.radius || 5,
     spotTypes: currentFilters?.spotTypes || [],
@@ -64,7 +72,8 @@ export const AdvancedFiltersDialog = ({ onFiltersApply, currentFilters, children
   const handleClearFilters = () => {
     const clearedFilters: AdvancedFilters = {
       dateRange: {},
-      priceRange: [0, 50],
+      pricePerHour: { min: 0, max: 50 },
+      totalPrice: { min: 0, max: 500 },
       location: '',
       radius: 5,
       spotTypes: [],
@@ -102,7 +111,8 @@ export const AdvancedFiltersDialog = ({ onFiltersApply, currentFilters, children
     if (filters.spotTypes.length > 0) count++;
     if (filters.amenities.length > 0) count++;
     if (filters.availability !== 'all') count++;
-    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 50) count++;
+    if (filters.pricePerHour.min > 0 || filters.pricePerHour.max < 50) count++;
+    if (filters.totalPrice.min > 0 || filters.totalPrice.max < 500) count++;
     return count;
   };
 
@@ -226,23 +236,84 @@ export const AdvancedFiltersDialog = ({ onFiltersApply, currentFilters, children
             </div>
           </div>
 
-          {/* Price Range */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Price Range</h3>
+          {/* Price Filters */}
+          <div className="space-y-4 lg:col-span-2">
+            <h3 className="text-lg font-semibold">Price Filters</h3>
             
-            <div>
-              <Label>
-                <DollarSign className="w-4 h-4 inline mr-1" />
-                ${filters.priceRange[0]} - ${filters.priceRange[1]} per hour
-              </Label>
-              <Slider
-                value={filters.priceRange}
-                onValueChange={(value) => setFilters(prev => ({...prev, priceRange: value as [number, number]}))}
-                max={100}
-                min={0}
-                step={1}
-                className="mt-2"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Per Hour Price */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">
+                  <DollarSign className="w-4 h-4 inline mr-1" />
+                  Per Hour Price
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={filters.pricePerHour.min || ''}
+                    onChange={(e) => setFilters(prev => ({
+                      ...prev,
+                      pricePerHour: { ...prev.pricePerHour, min: Number(e.target.value) || 0 }
+                    }))}
+                    className="w-20"
+                    min="0"
+                  />
+                  <span className="text-muted-foreground">to</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={filters.pricePerHour.max || ''}
+                    onChange={(e) => setFilters(prev => ({
+                      ...prev,
+                      pricePerHour: { ...prev.pricePerHour, max: Number(e.target.value) || 50 }
+                    }))}
+                    className="w-20"
+                    min="0"
+                  />
+                  <span className="text-sm text-muted-foreground">/hr</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Range: ${filters.pricePerHour.min} - ${filters.pricePerHour.max}
+                </div>
+              </div>
+
+              {/* Total Price */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">
+                  <DollarSign className="w-4 h-4 inline mr-1" />
+                  Total Session Price
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={filters.totalPrice.min || ''}
+                    onChange={(e) => setFilters(prev => ({
+                      ...prev,
+                      totalPrice: { ...prev.totalPrice, min: Number(e.target.value) || 0 }
+                    }))}
+                    className="w-20"
+                    min="0"
+                  />
+                  <span className="text-muted-foreground">to</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={filters.totalPrice.max || ''}
+                    onChange={(e) => setFilters(prev => ({
+                      ...prev,
+                      totalPrice: { ...prev.totalPrice, max: Number(e.target.value) || 500 }
+                    }))}
+                    className="w-20"
+                    min="0"
+                  />
+                  <span className="text-sm text-muted-foreground">total</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Range: ${filters.totalPrice.min} - ${filters.totalPrice.max}
+                </div>
+              </div>
             </div>
           </div>
 

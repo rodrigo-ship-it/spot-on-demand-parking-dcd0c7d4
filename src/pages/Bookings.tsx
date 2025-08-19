@@ -193,9 +193,15 @@ const Bookings = () => {
       if (advancedFilters.dateRange.to && reservationDate > advancedFilters.dateRange.to) return false;
     }
     
-    if (advancedFilters.priceRange) {
-      if (advancedFilters.priceRange.min && reservation.totalCost < advancedFilters.priceRange.min) return false;
-      if (advancedFilters.priceRange.max && reservation.totalCost > advancedFilters.priceRange.max) return false;
+    if (advancedFilters.pricePerHour) {
+      const hourlyRate = reservation.hourlyRate || 0;
+      if (advancedFilters.pricePerHour.min && hourlyRate < advancedFilters.pricePerHour.min) return false;
+      if (advancedFilters.pricePerHour.max && hourlyRate > advancedFilters.pricePerHour.max) return false;
+    }
+    
+    if (advancedFilters.totalPrice) {
+      if (advancedFilters.totalPrice.min && reservation.totalCost < advancedFilters.totalPrice.min) return false;
+      if (advancedFilters.totalPrice.max && reservation.totalCost > advancedFilters.totalPrice.max) return false;
     }
     
     if (advancedFilters.location && !reservation.spotAddress.toLowerCase().includes(advancedFilters.location.toLowerCase())) {
