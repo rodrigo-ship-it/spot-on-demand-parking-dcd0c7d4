@@ -93,7 +93,7 @@ const Bookings = () => {
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
           try {
-            // Validate and parse dates safely - database times are in UTC
+            // Parse dates as local times (no timezone conversion)
             const startDate = booking.start_time ? new Date(booking.start_time) : null;
             const endDate = booking.end_time ? new Date(booking.end_time) : null;
             

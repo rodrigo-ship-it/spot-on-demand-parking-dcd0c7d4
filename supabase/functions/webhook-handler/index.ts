@@ -147,8 +147,8 @@ serve(async (req) => {
         const bookingData = {
           spot_id: metadata.spot_id,
           renter_id: metadata.user_id || null,
-          start_time: startDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
+          start_time: startDateTime.toISOString().replace('Z', ''),
+          end_time: endDateTime.toISOString().replace('Z', ''),
           total_amount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'confirmed',
           payment_intent_id: session.payment_intent?.toString(),
