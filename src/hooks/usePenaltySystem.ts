@@ -130,7 +130,12 @@ export const usePenaltySystem = (userId: string) => {
               amount,
               description,
               penaltyCreditId: creditData.id,
-              ...(splitPayment && { type: 'penalty' })
+              type: 'penalty',
+              penaltyBreakdown: splitPayment ? {
+                penaltyFee: parseFloat(description.match(/\$([0-9.]+) fine/)?.[1] || "0"),
+                hourlyCharge: parseFloat(description.match(/\$([0-9.]+) for/)?.[1] || "0"),
+                totalAmount: amount
+              } : undefined
             }
           });
 

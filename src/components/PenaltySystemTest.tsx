@@ -149,7 +149,7 @@ export const PenaltySystemTest = () => {
               <li>Penalty tiers: 31-60min = $8, 61-120min = $12, 120min+ = $20</li>
               <li>First offense gets 20% reduction</li>
               <li>Hourly spots: Extra time charged at spot's hourly rate</li>
-              <li>Payments split: 70% to owner, 30% to platform</li>
+              <li><strong>Payment split:</strong> Penalty fee → 100% platform | Hourly charge → like regular booking (7% platform fee from both sides)</li>
             </ul>
           </AlertDescription>
         </Alert>

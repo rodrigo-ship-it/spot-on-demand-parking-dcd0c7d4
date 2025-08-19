@@ -15,12 +15,12 @@ serve(async (req) => {
   }
 
   try {
-    const { spot_id, booking_details, total_amount, user_id, is_qr_booking, guest_details, bookingId, amount, description, penaltyCreditId, type } = await req.json();
-    console.log("📝 Request data:", { spot_id, booking_details, total_amount, user_id, is_qr_booking, type, bookingId, amount });
+    const { spot_id, booking_details, total_amount, user_id, is_qr_booking, guest_details, bookingId, amount, description, penaltyCreditId, type, penaltyBreakdown } = await req.json();
+    console.log("📝 Request data:", { spot_id, booking_details, total_amount, user_id, is_qr_booking, type, bookingId, amount, penaltyBreakdown });
     
     // Handle penalty payments differently
     if (type === 'penalty') {
-      if (!bookingId || !amount || !description) {
+      if (!bookingId || !amount || !description || !penaltyBreakdown) {
         console.log("❌ Missing penalty payment data");
         return new Response(JSON.stringify({ error: "Missing penalty payment data" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -108,14 +108,8 @@ serve(async (req) => {
         .eq("user_id", bookingData.parking_spots.owner_id)
         .maybeSingle();
 
-      if (payoutError || !payoutSettings?.stripe_connect_account_id || !payoutSettings?.payouts_enabled) {
-        console.log("❌ Owner payout not set up, processing penalty without split");
-        // Still process penalty but don't split payment
-        return processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, null, req.headers.get("origin"));
-      }
-      
       // Process penalty with payment split
-      return processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, payoutSettings.stripe_connect_account_id, req.headers.get("origin"));
+      return processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, payoutSettings.stripe_connect_account_id, req.headers.get("origin"), penaltyBreakdown);
     }
     
     console.log("📝 User authenticated:", user.email);
@@ -234,7 +228,7 @@ serve(async (req) => {
 });
 
 // Helper function to process penalty payments
-async function processPenaltyPayment(stripe: any, user: any, amount: number, description: string, penaltyCreditId: string, connectAccountId: string | null, origin: string | null) {
+async function processPenaltyPayment(stripe: any, user: any, amount: number, description: string, penaltyCreditId: string, connectAccountId: string | null, origin: string | null, penaltyBreakdown: any) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -243,9 +237,16 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
   try {
     const totalAmountCents = Math.round(amount * 100);
     
-    // Calculate platform fee (30% for penalties)
-    const platformFee = Math.round(totalAmountCents * 0.30);
-    const ownerAmount = totalAmountCents - platformFee;
+    // Calculate platform fees based on penalty breakdown
+    const penaltyFeeCents = Math.round((penaltyBreakdown.penaltyFee || 0) * 100);
+    const hourlyChargeCents = Math.round((penaltyBreakdown.hourlyCharge || 0) * 100);
+    
+    // Penalty fee goes 100% to platform
+    // Hourly charge: platform gets 7% from both renter and owner
+    const renterFee = Math.round(hourlyChargeCents * 0.07); // 7% from renter
+    const ownerFee = Math.round(hourlyChargeCents * 0.07);  // 7% from owner
+    const totalPlatformFee = penaltyFeeCents + renterFee + ownerFee;
+    const ownerAmount = hourlyChargeCents - ownerFee;
     
     const sessionData: any = {
       mode: "payment",
@@ -264,19 +265,23 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
       metadata: {
         type: 'penalty',
         penalty_credit_id: penaltyCreditId,
-        platform_fee: platformFee.toString(),
+        penalty_fee: penaltyFeeCents.toString(),
+        hourly_charge: hourlyChargeCents.toString(),
+        platform_fee: totalPlatformFee.toString(),
         owner_amount: connectAccountId ? ownerAmount.toString() : "0",
+        renter_fee: renterFee.toString(),
+        owner_fee: ownerFee.toString(),
       },
       success_url: `${origin}/profile?penalty_paid=true`,
       cancel_url: `${origin}/profile`,
     };
     
-    // Add transfer data if spot owner has payout setup
-    if (connectAccountId) {
+    // Add transfer data only for hourly charge portion (owner gets hourly charge minus 7% fee)
+    if (connectAccountId && ownerAmount > 0) {
       sessionData.payment_intent_data = {
         transfer_data: {
           destination: connectAccountId,
-          amount: ownerAmount,
+          amount: ownerAmount, // Only the hourly charge portion minus platform fee
         },
       };
     }

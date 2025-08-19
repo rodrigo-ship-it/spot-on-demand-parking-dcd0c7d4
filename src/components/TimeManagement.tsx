@@ -141,7 +141,7 @@ export const TimeManagement = ({
           'late_checkout',
           penaltyDescription,
           true, // autoCharge
-          true  // splitPayment - divide between platform and spot owner
+          true  // splitPayment - penalty fee to platform, hourly charge split like regular booking
         );
       } else {
         await recordSuccessfulCheckout();
