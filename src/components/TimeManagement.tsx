@@ -226,9 +226,9 @@ export const TimeManagement = ({
                 <h4 className="font-medium mb-2">Fair Usage Policy:</h4>
                 <ul className="space-y-1 text-xs">
                   <li>• Grace period: First 30 minutes free</li>
-                  <li>• Late check-out (31-60 min): $2 convenience fee</li>
-                  <li>• Extended late (61-120 min): $8 moderate fee</li>
-                  <li>• Excessive late (120+ min): $15 overtime fee + rating impact</li>
+                  <li>• Late check-out (31-60 min): $8 convenience fee</li>
+                  <li>• Extended late (61-120 min): $12 moderate fee</li>
+                  <li>• Excessive late (120+ min): $20 overtime fee + rating impact</li>
                   <li>• Next person arrives & spot occupied: $30 penalty</li>
                 </ul>
               </div>

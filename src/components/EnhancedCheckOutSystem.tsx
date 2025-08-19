@@ -293,11 +293,11 @@ export const EnhancedCheckOutSystem = ({
     } else if (minutesOver <= 30) {
       return { status: 'grace', message: `${minutesOver} min over (Grace period - No fee)`, color: 'text-blue-600', penalty: 0 };
     } else if (minutesOver <= 60) {
-      return { status: 'warning', message: `${minutesOver} min over ($2 convenience fee)`, color: 'text-yellow-600', penalty: 2 };
+      return { status: 'warning', message: `${minutesOver} min over ($8 convenience fee)`, color: 'text-yellow-600', penalty: 8 };
     } else if (minutesOver <= 120) {
-      return { status: 'moderate', message: `${minutesOver} min over ($8 moderate fee)`, color: 'text-orange-600', penalty: 8 };
+      return { status: 'moderate', message: `${minutesOver} min over ($12 moderate fee)`, color: 'text-orange-600', penalty: 12 };
     } else {
-      return { status: 'overtime', message: `${minutesOver} min over ($15 overtime fee)`, color: 'text-red-600', penalty: 15 };
+      return { status: 'overtime', message: `${minutesOver} min over ($20 overtime fee)`, color: 'text-red-600', penalty: 20 };
     }
   };
 

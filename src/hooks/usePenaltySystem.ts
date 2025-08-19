@@ -61,9 +61,9 @@ export const usePenaltySystem = (userId: string) => {
     if (minutesLate <= 30) return 0; // Grace period
 
     let basePenalty = 0;
-    if (minutesLate <= 60) basePenalty = 2;
-    else if (minutesLate <= 120) basePenalty = 8;
-    else basePenalty = 15;
+    if (minutesLate <= 60) basePenalty = 8;
+    else if (minutesLate <= 120) basePenalty = 12;
+    else basePenalty = 20;
 
     // Trust score adjustments
     if (userTrustScore >= 90) basePenalty *= 0.5; // 50% reduction for excellent users

@@ -81,11 +81,11 @@ export const CheckOutSystem = ({ bookingId, endTime, onCheckOut, isOvertime }: C
     } else if (minutesOver <= 30) {
       return { status: 'grace', message: `${minutesOver} min over (Grace period - No fee)`, color: 'text-blue-600' };
     } else if (minutesOver <= 60) {
-      return { status: 'warning', message: `${minutesOver} min over ($2 convenience fee)`, color: 'text-yellow-600' };
+      return { status: 'warning', message: `${minutesOver} min over ($8 convenience fee)`, color: 'text-yellow-600' };
     } else if (minutesOver <= 120) {
-      return { status: 'moderate', message: `${minutesOver} min over ($8 moderate fee)`, color: 'text-orange-600' };
+      return { status: 'moderate', message: `${minutesOver} min over ($12 moderate fee)`, color: 'text-orange-600' };
     } else {
-      return { status: 'overtime', message: `${minutesOver} min over ($15 overtime fee)`, color: 'text-red-600' };
+      return { status: 'overtime', message: `${minutesOver} min over ($20 overtime fee)`, color: 'text-red-600' };
     }
   };
 
@@ -123,14 +123,14 @@ export const CheckOutSystem = ({ bookingId, endTime, onCheckOut, isOvertime }: C
         {(timeStatus.status === 'warning' || timeStatus.status === 'moderate') && (
           <div className="flex items-center space-x-2 text-yellow-600 bg-yellow-50 p-2 rounded">
             <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm">{timeStatus.status === 'warning' ? '$2 convenience fee' : '$8 moderate fee'} will be applied</span>
+            <span className="text-sm">{timeStatus.status === 'warning' ? '$8 convenience fee' : '$12 moderate fee'} will be applied</span>
           </div>
         )}
         
         {timeStatus.status === 'overtime' && (
           <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
             <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm">$15 overtime fee is being applied</span>
+            <span className="text-sm">$20 overtime fee is being applied</span>
           </div>
         )}
 
