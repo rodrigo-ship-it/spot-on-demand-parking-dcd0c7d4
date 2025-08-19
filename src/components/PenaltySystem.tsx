@@ -50,7 +50,7 @@ export const PenaltySystem = ({ violations, accountStatus, totalPenalties }: Pen
       { offense: "Late Check-out (31-60 min)", penalty: "$2", action: "Convenience fee" },
       { offense: "Extended Late (61-120 min)", penalty: "$8", action: "Moderate fee" },
       { offense: "Excessive Late (120+ min)", penalty: "$15", action: "Overtime fee + rating impact" },
-      { offense: "Next Person Arrives & Spot Occupied", penalty: "$30", action: "Penalty + immediate contact required" },
+      { offense: "Next Person Arrives & Spot Occupied", penalty: "$30", action: "Penalty applied" },
       { offense: "Damage/Dispute", penalty: "$100+", action: "Case-by-case review" }
     ];
   };
@@ -126,7 +126,10 @@ export const PenaltySystem = ({ violations, accountStatus, totalPenalties }: Pen
       {/* Penalty Schedule */}
       <Card>
         <CardHeader>
-          <CardTitle>Penalty Schedule</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Penalty Schedule</span>
+            <span className="text-xs text-gray-500 font-normal">Penalties may be disputed with service in case of emergencies</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
