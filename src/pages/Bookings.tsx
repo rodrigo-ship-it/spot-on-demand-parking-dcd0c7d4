@@ -116,7 +116,9 @@ const Bookings = () => {
             // Determine status based on times and current booking status
             let status = 'Upcoming';
             const now = new Date();
-            if (booking.status === 'completed') {
+            if (booking.status === 'cancelled') {
+              status = 'Cancelled';
+            } else if (booking.status === 'completed') {
               status = 'Completed';
             } else if (now >= startDate && now <= endDate) {
               status = 'Active';
