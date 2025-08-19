@@ -128,7 +128,8 @@ export const CancellationPolicyDialog = ({
 
           if (refundError) {
             console.error('Refund processing failed:', refundError);
-            toast.warning('Booking cancelled successfully. Refund will be processed manually - please contact support if you don\'t receive it within 5 business days.');
+            console.error('Full refund error details:', refundError);
+            toast.error(`Refund processing failed: ${refundError.message}. Please contact support.`);
             
             // Still log the refund request for manual processing
             await supabase.from('refunds').insert({
