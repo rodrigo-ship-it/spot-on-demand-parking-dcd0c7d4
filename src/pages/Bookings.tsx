@@ -115,12 +115,25 @@ const Bookings = () => {
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             
             // Determine status based on times and current booking status
-            // Force comparison in local timezone by using getTime() which gives milliseconds since epoch
             let status = 'Upcoming';
             const now = new Date();
             const nowTime = now.getTime();
             const startTime = startDate.getTime();
             const endTime = endDate.getTime();
+            
+            // Debug logging to see what's happening
+            console.log('🕐 [BOOKING_STATUS_DEBUG]', {
+              bookingId: booking.id.substring(0, 8),
+              now: now.toLocaleString(),
+              startDate: startDate.toLocaleString(),
+              endDate: endDate.toLocaleString(),
+              nowTime,
+              startTime,
+              endTime,
+              dbStatus: booking.status,
+              startTimeStr: booking.start_time,
+              endTimeStr: booking.end_time
+            });
             
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
@@ -128,8 +141,12 @@ const Bookings = () => {
               status = 'Completed';
             } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
+              console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
             } else if (nowTime > endTime) {
               status = 'Completed';
+              console.log('🔴 [STATUS] Setting as Completed - current time is past end time');
+            } else {
+              console.log('🟡 [STATUS] Setting as Upcoming - current time is before start time');
             }
 
             // Get owner profile separately
