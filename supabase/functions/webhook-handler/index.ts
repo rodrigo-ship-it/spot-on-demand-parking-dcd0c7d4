@@ -108,7 +108,7 @@ serve(async (req) => {
         const isPricingDaily = spot.pricing_type === 'daily';
         
         // Calculate dates and times with better error handling
-        let startDateTime, endDateTime;
+        let startTimeStr, endTimeStr;
         
         try {
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
@@ -118,23 +118,27 @@ serve(async (req) => {
             throw new Error(`Invalid booking date: ${bookingDetails.date}`);
           }
           
-          const dateStr = bookingDate.toISOString().split('T')[0];
-          startDateTime = new Date(`${dateStr}T${bookingDetails.startTime}:00`);
+          // Format date as YYYY-MM-DD using local timezone
+          const year = bookingDate.getFullYear();
+          const month = String(bookingDate.getMonth() + 1).padStart(2, '0');
+          const day = String(bookingDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
           
-          if (isNaN(startDateTime.getTime())) {
-            throw new Error(`Invalid start time: ${bookingDetails.startTime}`);
-          }
+          // Create local datetime strings without any timezone conversion
+          startTimeStr = `${dateStr}T${bookingDetails.startTime}:00`;
           
+          // For daily bookings, add days to the end time string
           if (isPricingDaily) {
-            endDateTime = new Date(startDateTime.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+            const endDate = new Date(bookingDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+            const endYear = endDate.getFullYear();
+            const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+            const endDay = String(endDate.getDate()).padStart(2, '0');
+            endTimeStr = `${endYear}-${endMonth}-${endDay}T${bookingDetails.startTime}:00`;
           } else {
-            endDateTime = new Date(`${dateStr}T${bookingDetails.endTime}:00`);
-            if (isNaN(endDateTime.getTime())) {
-              throw new Error(`Invalid end time: ${bookingDetails.endTime}`);
-            }
+            endTimeStr = `${dateStr}T${bookingDetails.endTime}:00`;
           }
           
-          console.log(`📅 [DATE_SUCCESS] Start: ${startDateTime.toISOString()}, End: ${endDateTime.toISOString()}`);
+          console.log(`📅 [DATE_SUCCESS] Start: ${startTimeStr}, End: ${endTimeStr}`);
         } catch (error) {
           console.error("❌ [DATE_ERROR] Error parsing dates:", error);
           break;
@@ -142,13 +146,12 @@ serve(async (req) => {
 
         // Create booking
         console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);
-        console.log(`📅 [BOOKING_TIMES] Start: ${startDateTime.toISOString()}, End: ${endDateTime.toISOString()}`);
         
         const bookingData = {
           spot_id: metadata.spot_id,
           renter_id: metadata.user_id || null,
-          start_time: startDateTime.toISOString().replace('Z', ''),
-          end_time: endDateTime.toISOString().replace('Z', ''),
+          start_time: startTimeStr,
+          end_time: endTimeStr,
           total_amount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'confirmed',
           payment_intent_id: session.payment_intent?.toString(),
