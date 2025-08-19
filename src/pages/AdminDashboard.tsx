@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
 import { PenaltySystemTest } from "@/components/PenaltySystemTest";
+import { PenaltyTestHelper } from "@/components/PenaltyTestHelper";
 import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -1539,7 +1540,10 @@ Check browser console for detailed ID analysis.
           </TabsContent>
 
           <TabsContent value="penalty-test">
-            <PenaltySystemTest />
+            <div className="space-y-6">
+              <PenaltySystemTest />
+              <PenaltyTestHelper />
+            </div>
           </TabsContent>
 
           <TabsContent value="penalties">
