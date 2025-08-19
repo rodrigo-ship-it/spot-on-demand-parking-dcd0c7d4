@@ -12,7 +12,6 @@ interface EnhancedCheckOutSystemProps {
   spotId: string;
   endTime: string;
   onCheckOut: (verificationData: VerificationData) => void;
-  userTrustScore?: number;
   isOvertime?: boolean;
 }
 
@@ -35,9 +34,8 @@ export const EnhancedCheckOutSystem = ({
   bookingId, 
   spotId, 
   endTime, 
-  onCheckOut, 
-  userTrustScore = 100,
-  isOvertime 
+  onCheckOut,
+  isOvertime
 }: EnhancedCheckOutSystemProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -47,14 +45,8 @@ export const EnhancedCheckOutSystem = ({
   const [verificationLevel, setVerificationLevel] = useState<'basic' | 'standard' | 'enhanced'>('standard');
 
   useEffect(() => {
-    // Determine verification level based on trust score
-    if (userTrustScore >= 90) {
-      setVerificationLevel('basic');
-    } else if (userTrustScore >= 70) {
-      setVerificationLevel('standard');
-    } else {
-      setVerificationLevel('enhanced');
-    }
+    // Set verification level to standard for all users
+    setVerificationLevel('standard');
 
     // Get current location for verification
     if (navigator.geolocation) {
@@ -71,7 +63,7 @@ export const EnhancedCheckOutSystem = ({
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
-  }, [userTrustScore]);
+  }, []);
 
   const recordVerificationAttempt = async (attemptType: string, success: boolean, failureReason?: string, data?: any) => {
     await supabase.from('verification_attempts').insert({
@@ -207,7 +199,7 @@ export const EnhancedCheckOutSystem = ({
         ctx.fillText(`Time: ${now.toLocaleString()}`, 20, canvas.height - 75);
         ctx.fillText(`Booking: ${bookingId.slice(0, 8)}...`, 20, canvas.height - 55);
         ctx.fillText(`Location: ${currentLocation ? '✓ Verified' : '⚠ Unverified'}`, 20, canvas.height - 35);
-        ctx.fillText(`Trust Level: ${userTrustScore}/100`, 20, canvas.height - 15);
+        ctx.fillText(`Check-out Verified`, 20, canvas.height - 15);
         
         const photoData = canvas.toDataURL('image/jpeg', 0.9);
         

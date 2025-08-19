@@ -14,7 +14,6 @@ interface PenaltyCredit {
 }
 
 interface UserProfile {
-  trust_score: number;
   successful_checkouts: number;
   failed_checkouts: number;
   total_penalty_credits: number;
@@ -31,7 +30,7 @@ export const usePenaltySystem = (userId: string) => {
       // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('trust_score, successful_checkouts, failed_checkouts, total_penalty_credits, last_violation_at')
+        .select('successful_checkouts, failed_checkouts, total_penalty_credits, last_violation_at')
         .eq('user_id', userId)
         .single();
 
@@ -57,7 +56,7 @@ export const usePenaltySystem = (userId: string) => {
     }
   };
 
-  const calculatePenalty = (minutesLate: number, userTrustScore: number, isFirstOffense: boolean): number => {
+  const calculatePenalty = (minutesLate: number, isFirstOffense: boolean): number => {
     if (minutesLate <= 30) return 0; // Grace period
 
     let basePenalty = 0;
@@ -65,15 +64,10 @@ export const usePenaltySystem = (userId: string) => {
     else if (minutesLate <= 120) basePenalty = 12;
     else basePenalty = 20;
 
-    // Trust score adjustments
-    if (userTrustScore >= 90) basePenalty *= 0.5; // 50% reduction for excellent users
-    else if (userTrustScore >= 70) basePenalty *= 0.8; // 20% reduction for good users
-    else if (userTrustScore < 50) basePenalty *= 1.5; // 50% increase for problematic users
+    // First offense leniency (20% reduction)
+    if (isFirstOffense) basePenalty *= 0.8;
 
-    // First offense forgiveness
-    if (isFirstOffense && basePenalty <= 8) basePenalty = 0;
-
-    return Math.round(basePenalty * 100) / 100; // Round to 2 decimal places
+    return Math.round(basePenalty * 100) / 100;
   };
 
   const addPenaltyCredit = async (
@@ -102,13 +96,11 @@ export const usePenaltySystem = (userId: string) => {
 
       // Update user profile
       const newTotalCredits = (userProfile?.total_penalty_credits || 0) + amount;
-      const newTrustScore = Math.max(0, (userProfile?.trust_score || 100) - Math.floor(amount));
 
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           total_penalty_credits: newTotalCredits,
-          trust_score: newTrustScore,
           last_violation_at: new Date().toISOString(),
           failed_checkouts: (userProfile?.failed_checkouts || 0) + 1
         })
@@ -162,12 +154,9 @@ export const usePenaltySystem = (userId: string) => {
 
   const recordSuccessfulCheckout = async (): Promise<void> => {
     try {
-      const newTrustScore = Math.min(100, (userProfile?.trust_score || 100) + 1);
-      
       const { error } = await supabase
         .from('profiles')
         .update({
-          trust_score: newTrustScore,
           successful_checkouts: (userProfile?.successful_checkouts || 0) + 1
         })
         .eq('user_id', userId);

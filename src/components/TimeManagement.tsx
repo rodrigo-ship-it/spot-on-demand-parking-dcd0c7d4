@@ -96,8 +96,7 @@ export const TimeManagement = ({
 
       // Calculate and apply lenient penalty
       const isFirstOffense = penaltyProfile?.failed_checkouts === 0;
-      const trustScore = penaltyProfile?.trust_score || 100;
-      const penaltyAmount = calculatePenalty(minutesOver, trustScore, isFirstOffense);
+      const penaltyAmount = calculatePenalty(minutesOver, isFirstOffense);
 
       if (penaltyAmount > 0) {
         let description = `Late check-out by ${minutesOver} minutes`;
@@ -163,7 +162,6 @@ export const TimeManagement = ({
                 spotId={spotId}
                 endTime={endTime}
                 onCheckOut={handleEnhancedCheckOut}
-                userTrustScore={penaltyProfile?.trust_score || 100}
                 isOvertime={false} // Will be calculated dynamically based on start time + duration
               />
             </>
@@ -188,7 +186,6 @@ export const TimeManagement = ({
           ) : (
             <LenientPenaltySystem 
               userId={user?.id || ""}
-              userTrustScore={penaltyProfile?.trust_score || 100}
               totalCredits={penaltyProfile?.total_penalty_credits || 0}
               recentCredits={penaltyCredits}
               onCreditsUpdate={refreshData}

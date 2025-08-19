@@ -22,15 +22,13 @@ interface PenaltyCredit {
 
 interface LenientPenaltySystemProps {
   userId: string;
-  userTrustScore: number;
   totalCredits: number;
   recentCredits: PenaltyCredit[];
   onCreditsUpdate: () => void;
 }
 
 export const LenientPenaltySystem = ({ 
-  userId, 
-  userTrustScore, 
+  userId,
   totalCredits, 
   recentCredits,
   onCreditsUpdate 
@@ -39,11 +37,11 @@ export const LenientPenaltySystem = ({
   const [disputeReason, setDisputeReason] = useState("");
   const [selectedCredit, setSelectedCredit] = useState<PenaltyCredit | null>(null);
 
-  const getTrustBadge = () => {
-    if (userTrustScore >= 95) return { label: "Platinum Parker", icon: Trophy, color: "bg-gradient-primary" };
-    if (userTrustScore >= 85) return { label: "Gold Parker", icon: Heart, color: "bg-yellow-500" };
-    if (userTrustScore >= 70) return { label: "Silver Parker", icon: CheckCircle, color: "bg-gray-400" };
-    return { label: "Growing Parker", icon: Zap, color: "bg-blue-500" };
+  const getStatusBadge = () => {
+    if (totalCredits === 0) return { label: "Perfect Parker", icon: Trophy, color: "bg-gradient-primary" };
+    if (totalCredits <= 10) return { label: "Good Parker", icon: CheckCircle, color: "bg-green-500" };
+    if (totalCredits <= 25) return { label: "Regular Parker", icon: Heart, color: "bg-yellow-500" };
+    return { label: "Needs Improvement", icon: Zap, color: "bg-red-500" };
   };
 
   const getCreditStatus = () => {
@@ -88,9 +86,9 @@ export const LenientPenaltySystem = ({
     toast.success("Payment feature coming soon! Credits can be paid or resolved through good behavior.");
   };
 
-  const trustBadge = getTrustBadge();
+  const statusBadge = getStatusBadge();
   const creditStatus = getCreditStatus();
-  const IconComponent = trustBadge.icon;
+  const IconComponent = statusBadge.icon;
 
   return (
     <div className="space-y-4">
@@ -99,28 +97,28 @@ export const LenientPenaltySystem = ({
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Account Standing</span>
-            <Badge className={`${trustBadge.color} text-white`}>
+            <Badge className={`${statusBadge.color} text-white`}>
               <IconComponent className="w-3 h-3 mr-1" />
-              {trustBadge.label}
+              {statusBadge.label}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className={`p-4 rounded-lg ${creditStatus.bgColor}`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-medium">Trust Score</span>
-              <span className="text-2xl font-bold text-primary">{userTrustScore}/100</span>
+              <span className="font-medium">Total Credits</span>
+              <span className="text-2xl font-bold text-primary">${totalCredits}</span>
             </div>
             <div className={`text-sm ${creditStatus.color}`}>
               {creditStatus.message}
             </div>
           </div>
           
-          {userTrustScore >= 90 && (
+          {totalCredits === 0 && (
             <Alert className="mt-3 border-green-200 bg-green-50">
               <Gift className="w-4 h-4" />
               <AlertDescription className="text-green-700">
-                Great job! You get extended grace periods and priority support.
+                Perfect record! Keep up the excellent parking behavior.
               </AlertDescription>
             </Alert>
           )}
@@ -195,7 +193,7 @@ export const LenientPenaltySystem = ({
       {/* Improvement Tips */}
       <Card>
         <CardHeader>
-          <CardTitle>Improve Your Trust Score</CardTitle>
+          <CardTitle>Parking Tips</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center space-x-2">
