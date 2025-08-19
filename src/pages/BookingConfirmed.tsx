@@ -433,7 +433,39 @@ const BookingConfirmed = () => {
           </CardContent>
         </Card>
 
-        {/* Confirmation Number */}
+        {/* Important Checkout Warning */}
+        <Card className="mb-6 border-2 border-red-200 bg-red-50">
+          <CardContent className="py-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-800 mb-2">
+                  ⚠️ Important: You Must Check Out When Leaving
+                </h3>
+                <div className="space-y-2 text-red-700">
+                  <p className="font-medium">
+                    Failure to check out upon leaving your parking spot will result in automatic penalty charges:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li><strong>0-30 minutes late:</strong> No penalty (grace period)</li>
+                    <li><strong>31-60 minutes late:</strong> $8 penalty</li>
+                    <li><strong>61-120 minutes late:</strong> $12 penalty</li>
+                    <li><strong>120+ minutes late:</strong> $20 penalty</li>
+                  </ul>
+                  <div className="mt-3 p-3 bg-red-100 rounded-md">
+                    <p className="font-semibold text-red-800">
+                      💳 Penalties are automatically charged to your payment method on file.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="mb-6">
           <CardContent className="py-4">
             <div className="text-center">
