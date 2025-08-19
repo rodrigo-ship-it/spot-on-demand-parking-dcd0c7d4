@@ -132,9 +132,22 @@ const Bookings = () => {
             ownerName: ownerName,
             ownerId: ownerId,
             ownerPhone: ownerPhone,
-            date: booking.display_date || startDate.toLocaleDateString(),
-            startTime: booking.display_start_time || startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            endTime: booking.display_end_time || endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: booking.display_date || startDate.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit',
+              timeZone: 'America/Chicago' 
+            }),
+            startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'America/Chicago'
+            }),
+            endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'America/Chicago'
+            }),
             duration: `${duration} hours`,
             pricePerHour: booking.parking_spots?.price_per_hour || 0,
             totalCost: Number(booking.total_amount) || 0,
