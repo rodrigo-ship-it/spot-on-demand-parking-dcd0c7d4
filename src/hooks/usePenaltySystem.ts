@@ -80,11 +80,12 @@ export const usePenaltySystem = (userId: string) => {
     bookingId: string,
     amount: number,
     creditType: string,
-    description: string
+    description: string,
+    autoCharge: boolean = true
   ): Promise<boolean> => {
     try {
       // Add penalty credit
-      const { error: creditError } = await supabase
+      const { data: creditData, error: creditError } = await supabase
         .from('penalty_credits')
         .insert({
           user_id: userId,
@@ -93,7 +94,9 @@ export const usePenaltySystem = (userId: string) => {
           credit_type: creditType,
           description,
           status: 'active'
-        });
+        })
+        .select()
+        .single();
 
       if (creditError) throw creditError;
 
@@ -113,13 +116,39 @@ export const usePenaltySystem = (userId: string) => {
 
       if (profileError) throw profileError;
 
-      // Show user-friendly notification
-      if (amount === 0) {
-        toast.success("No penalty applied - thanks for being understanding!");
-      } else if (amount <= 5) {
-        toast.info(`Small $${amount} credit added to your account. No immediate payment needed.`);
+      // Attempt automatic charging if enabled and amount is significant
+      if (autoCharge && amount >= 5 && creditData) {
+        try {
+          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('charge-penalty', {
+            body: {
+              bookingId,
+              amount,
+              description,
+              penaltyCreditId: creditData.id
+            }
+          });
+
+          if (chargeError) {
+            console.error('Auto-charge failed:', chargeError);
+            toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
+          } else if (chargeResult?.success) {
+            toast.success(`$${amount} penalty charged successfully to your payment method.`);
+          } else {
+            toast.info(`$${amount} penalty added. ${chargeResult?.message || 'Payment requires authentication.'}`);
+          }
+        } catch (autoChargeError) {
+          console.error('Auto-charge error:', autoChargeError);
+          toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
+        }
       } else {
-        toast.error(`$${amount} credit added to your account. You can dispute this if needed.`);
+        // Show user-friendly notification for small amounts or when auto-charge is disabled
+        if (amount === 0) {
+          toast.success("No penalty applied - thanks for being understanding!");
+        } else if (amount < 5) {
+          toast.info(`Small $${amount} credit added to your account. No immediate payment needed.`);
+        } else {
+          toast.error(`$${amount} credit added to your account. You can dispute this if needed.`);
+        }
       }
 
       await fetchUserData();
