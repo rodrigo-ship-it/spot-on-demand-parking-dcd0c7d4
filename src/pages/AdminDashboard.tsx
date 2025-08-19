@@ -40,6 +40,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
+import { PenaltySystemTest } from "@/components/PenaltySystemTest";
 import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -1094,7 +1095,7 @@ Check browser console for detailed ID analysis.
             <TabsTrigger value="spots">Spots</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
-            <TabsTrigger value="refunds">Refunds</TabsTrigger>
+            <TabsTrigger value="penalty-test">Penalty Test</TabsTrigger>
             <TabsTrigger value="penalties">Penalties</TabsTrigger>
             <TabsTrigger value="support">Support</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -1535,6 +1536,10 @@ Check browser console for detailed ID analysis.
 
           <TabsContent value="refunds">
             <AdminRefundManager />
+          </TabsContent>
+
+          <TabsContent value="penalty-test">
+            <PenaltySystemTest />
           </TabsContent>
 
           <TabsContent value="penalties">

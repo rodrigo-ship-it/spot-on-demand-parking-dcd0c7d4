@@ -120,9 +120,8 @@ export const TimeManagement = ({
         return;
       }
 
-      // Calculate and apply lenient penalty with hourly charges
       const isFirstOffense = penaltyProfile?.failed_checkouts === 0;
-      const spotPricePerHour = bookingData.parking_spots?.pricing_type === 'hourly' ? Number(bookingData.parking_spots.price_per_hour) : undefined;
+      const spotPricePerHour = bookingData?.parking_spots?.pricing_type === 'hourly' ? Number(bookingData.parking_spots.price_per_hour) : undefined;
       const penaltyCalculation = calculatePenalty(minutesOver, isFirstOffense, spotPricePerHour);
       
       let penaltyDescription = '';
