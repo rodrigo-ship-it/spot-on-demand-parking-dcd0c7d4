@@ -142,7 +142,8 @@ const SpotDetails = () => {
   // Mock booking data for active session
   const [mockBookingData] = useState({
     bookingId: "booking-123",
-    endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+    startTime: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(), // 25 hours ago (24-hour booking + 1 hour over)
+    endTime: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago (24-hour period ended)
     userViolations: [
       {
         id: "v1",
@@ -153,7 +154,7 @@ const SpotDetails = () => {
       }
     ],
     accountStatus: "good" as const,
-    isActiveSession: false
+    isActiveSession: true // Set to true to test the checkout system
   });
 
   const [reviewDialog, setReviewDialog] = useState({ isOpen: false, type: null });
@@ -954,7 +955,7 @@ const SpotDetails = () => {
             bookingId={mockBookingData.bookingId}
             endTime={mockBookingData.endTime}
             onCheckOut={(photo, timestamp) => console.log('Check out completed:', photo, timestamp)}
-            isOvertime={new Date() > new Date(mockBookingData.endTime)}
+            isOvertime={false} // Will be calculated dynamically based on start time + duration
           />
 
           <ExtensionSystem 
