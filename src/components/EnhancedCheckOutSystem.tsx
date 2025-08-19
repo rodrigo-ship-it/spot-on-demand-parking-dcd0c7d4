@@ -272,8 +272,20 @@ export const EnhancedCheckOutSystem = ({
   };
 
   const getTimeStatus = () => {
+    // Validate endTime before processing
+    if (!endTime) {
+      console.error("No endTime provided for time calculation");
+      return { message: "No time limit set", color: "text-gray-600" };
+    }
+
     const now = new Date();
     const end = new Date(endTime);
+    
+    // Validate the end date
+    if (isNaN(end.getTime())) {
+      console.error("Invalid endTime format:", endTime);
+      return { message: "Invalid time format", color: "text-red-600" };
+    }
     
     // For 24-hour bookings, calculate based on duration rather than just end time
     // This handles cases where start and end dates are the same for 24-hour periods

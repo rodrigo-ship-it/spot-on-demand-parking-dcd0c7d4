@@ -26,6 +26,17 @@ class ErrorBoundary extends React.Component<Props, State> {
     console.error('Error Boundary caught an error:', error, errorInfo);
     console.error('Error stack:', error.stack);
     console.error('Component stack:', errorInfo.componentStack);
+    
+    // Check if it's a date-related error
+    if (error.message.includes('Invalid time value') || 
+        error.message.includes('Invalid Date') ||
+        error.message.toLowerCase().includes('date')) {
+      console.error('🗓️ Date-related error detected! This might be caused by corrupted booking data.');
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 5).join('\n')
+      });
+    }
   }
 
   render() {
@@ -43,7 +54,11 @@ class ErrorBoundary extends React.Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-600 text-center">
-                We're sorry, but something unexpected happened. Please try refreshing the page or return to the homepage.
+                {this.state.error?.message.includes('Invalid time value') || 
+                 this.state.error?.message.includes('Invalid Date') 
+                  ? "We detected a date formatting issue. This usually happens with corrupted booking data and has been reported for fixing."
+                  : "We're sorry, but something unexpected happened. Please try refreshing the page or return to the homepage."
+                }
               </p>
               
               {this.state.error && (

@@ -173,6 +173,19 @@ const SpotDetails = () => {
     checkActiveBooking();
   }, [id]);
 
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString: string, fallback: string = "Invalid Date"): string => {
+    if (!dateString) return fallback;
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return fallback;
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return fallback;
+    }
+  };
+
   const [reviewDialog, setReviewDialog] = useState({ isOpen: false, type: null });
 
   // Dispute Camera

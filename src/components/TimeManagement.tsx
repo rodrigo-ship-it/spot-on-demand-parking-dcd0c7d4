@@ -68,9 +68,30 @@ export const TimeManagement = ({
         return;
       }
 
+      // Validate dates before processing
+      if (!bookingData?.start_time || !bookingData?.end_time || !verificationData?.timestamp) {
+        console.error("Missing required date data:", { bookingData, verificationData });
+        toast.error("Invalid booking data - cannot process checkout");
+        return;
+      }
+
       const startTime = new Date(bookingData.start_time);
       const endTime = new Date(bookingData.end_time);
       const checkOutTime = new Date(verificationData.timestamp);
+      
+      // Validate that all dates are valid
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime()) || isNaN(checkOutTime.getTime())) {
+        console.error("Invalid dates detected:", {
+          start_time: bookingData.start_time,
+          end_time: bookingData.end_time,
+          timestamp: verificationData.timestamp,
+          startValid: !isNaN(startTime.getTime()),
+          endValid: !isNaN(endTime.getTime()),
+          checkOutValid: !isNaN(checkOutTime.getTime())
+        });
+        toast.error("Invalid date format - cannot process checkout");
+        return;
+      }
       
       // Calculate how late the user is checking out
       const minutesOver = Math.floor((checkOutTime.getTime() - endTime.getTime()) / (1000 * 60));

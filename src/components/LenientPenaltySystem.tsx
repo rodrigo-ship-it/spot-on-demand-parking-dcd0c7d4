@@ -158,8 +158,9 @@ export const LenientPenaltySystem = ({
                     {credit.description}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(credit.created_at).toLocaleDateString()}
-                    {credit.expires_at && ` • Expires ${new Date(credit.expires_at).toLocaleDateString()}`}
+                    {credit.created_at ? new Date(credit.created_at).toLocaleDateString() : 'Date unknown'}
+                    {credit.expires_at && !isNaN(new Date(credit.expires_at).getTime()) && 
+                      ` • Expires ${new Date(credit.expires_at).toLocaleDateString()}`}
                   </div>
                   {credit.status === 'active' && (
                     <Button

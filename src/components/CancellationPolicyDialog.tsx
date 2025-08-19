@@ -37,7 +37,20 @@ export const CancellationPolicyDialog = ({
 
   // Calculate time until booking starts
   const now = new Date();
+  
+  // Validate booking start_time before parsing
+  if (!booking?.start_time) {
+    console.error("No start_time in booking data for cancellation policy");
+    return null;
+  }
+  
   const bookingStart = new Date(booking.start_time);
+  
+  // Validate the parsed date
+  if (isNaN(bookingStart.getTime())) {
+    console.error("Invalid start_time format in booking:", booking.start_time);
+    return null;
+  }
   const hoursUntilBooking = Math.max(0, (bookingStart.getTime() - now.getTime()) / (1000 * 60 * 60));
   const canCancel = hoursUntilBooking >= 3;
 

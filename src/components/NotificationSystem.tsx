@@ -56,7 +56,24 @@ export const NotificationSystem = ({ bookings = [] }: NotificationSystemProps) =
     const now = new Date();
     const realNotifications: Notification[] = [];
 
-    bookings.forEach((booking) => {
+    // Filter valid bookings first
+    const validBookings = bookings.filter(booking => {
+      if (!booking.date || !booking.startTime || !booking.endTime) {
+        console.warn("Booking missing date/time data:", booking.id);
+        return false;
+      }
+      
+      try {
+        const startTime = new Date(`${booking.date} ${booking.startTime}`);
+        const endTime = new Date(`${booking.date} ${booking.endTime}`);
+        return !isNaN(startTime.getTime()) && !isNaN(endTime.getTime());
+      } catch (error) {
+        console.warn("Invalid date format in booking:", booking.id, error);
+        return false;
+      }
+    });
+
+    validBookings.forEach((booking) => {
       const startTime = new Date(`${booking.date} ${booking.startTime}`);
       const endTime = new Date(`${booking.date} ${booking.endTime}`);
       

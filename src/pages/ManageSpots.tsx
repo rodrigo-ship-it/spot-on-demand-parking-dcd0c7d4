@@ -164,9 +164,34 @@ const ManageSpots = () => {
       }
 
       const processedReservations = data?.map(booking => {
-        const startTime = new Date(booking.start_time);
-        const endTime = new Date(booking.end_time);
-        const durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
+        // Safely parse dates with validation
+        let startTime, endTime, durationHours = 0;
+        
+        try {
+          if (!booking.start_time || !booking.end_time) {
+            console.error("Missing start_time or end_time in booking:", booking.id);
+            startTime = new Date();
+            endTime = new Date();
+          } else {
+            startTime = new Date(booking.start_time);
+            endTime = new Date(booking.end_time);
+            
+            if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+              console.error("Invalid dates in booking:", booking.id, {
+                start_time: booking.start_time,
+                end_time: booking.end_time
+              });
+              startTime = new Date();
+              endTime = new Date();
+            } else {
+              durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing dates for booking:", booking.id, error);
+          startTime = new Date();
+          endTime = new Date();
+        }
         
         return {
           id: booking.id,

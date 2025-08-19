@@ -26,8 +26,19 @@ export const ExtensionSystem = ({
 
   useEffect(() => {
     const timer = setInterval(() => {
+      // Validate endTime before processing
+      if (!endTime) {
+        return { message: "No end time set", color: "text-gray-600" };
+      }
+      
       const now = new Date();
       const end = new Date(endTime);
+      
+      // Validate the parsed date
+      if (isNaN(end.getTime())) {
+        console.error("Invalid endTime in ExtensionSystem:", endTime);
+        return { message: "Invalid time format", color: "text-red-600" };
+      }
       const diff = end.getTime() - now.getTime();
       const minutesLeft = Math.floor(diff / (1000 * 60));
       

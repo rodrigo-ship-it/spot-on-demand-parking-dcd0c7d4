@@ -485,7 +485,24 @@ const Bookings = () => {
                               <TimeManagement
                                 bookingId={reservation.id}
                                 spotId={reservation.spotId || ""}
-                                endTime={new Date(`${reservation.date}T${reservation.endTime}`).toISOString()}
+                                endTime={(() => {
+                                  try {
+                                    // Safely construct the end time
+                                    if (!reservation.date || !reservation.endTime) {
+                                      console.error("Missing date/endTime for reservation:", reservation.id);
+                                      return new Date().toISOString();
+                                    }
+                                    const endDate = new Date(`${reservation.date}T${reservation.endTime}`);
+                                    if (isNaN(endDate.getTime())) {
+                                      console.error("Invalid date format:", reservation.date, reservation.endTime);
+                                      return new Date().toISOString();
+                                    }
+                                    return endDate.toISOString();
+                                  } catch (error) {
+                                    console.error("Error constructing endTime:", error);
+                                    return new Date().toISOString();
+                                  }
+                                })()}
                                 pricePerHour={reservation.pricePerHour}
                                 userViolations={userViolations}
                                 accountStatus="good"
