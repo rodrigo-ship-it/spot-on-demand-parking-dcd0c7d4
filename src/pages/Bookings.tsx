@@ -194,7 +194,7 @@ const Bookings = () => {
     }
     
     if (advancedFilters.pricePerHour) {
-      const hourlyRate = reservation.hourlyRate || 0;
+      const hourlyRate = reservation.pricePerHour || 0;
       if (advancedFilters.pricePerHour.min && hourlyRate < advancedFilters.pricePerHour.min) return false;
       if (advancedFilters.pricePerHour.max && hourlyRate > advancedFilters.pricePerHour.max) return false;
     }
