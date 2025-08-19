@@ -121,9 +121,17 @@ export const PenaltySystemTest = () => {
               <div className="space-y-2">
                 <div><strong>Penalty Fee:</strong> ${calculationResult.penaltyFee}</div>
                 <div><strong>Hourly Charge:</strong> ${calculationResult.hourlyCharge}</div>
-                <div><strong>Total Amount:</strong> ${calculationResult.totalAmount}</div>
+                <div><strong>Base Total:</strong> ${calculationResult.totalAmount}</div>
+                <div><strong>Platform Fee (7%):</strong> ${(calculationResult.totalAmount * 0.07).toFixed(2)}</div>
+                <div><strong>Subtotal:</strong> ${(calculationResult.totalAmount * 1.07).toFixed(2)}</div>
+                <div><strong>Tax (8.5%):</strong> ${(calculationResult.totalAmount * 1.07 * 0.085).toFixed(2)}</div>
+                <div className="text-lg font-bold"><strong>User Pays:</strong> ${(calculationResult.totalAmount * 1.07 * 1.085).toFixed(2)}</div>
                 <div className="text-sm text-muted-foreground">
                   {testData.minutesLate} minutes late = {Math.floor(testData.minutesLate / 60)}h {testData.minutesLate % 60}m
+                </div>
+                <div className="pt-2 border-t text-sm">
+                  <div><strong>Platform Gets:</strong> ${(calculationResult.penaltyFee + (calculationResult.totalAmount * 0.07) + (calculationResult.hourlyCharge * 0.07)).toFixed(2)}</div>
+                  <div><strong>Owner Gets:</strong> ${(calculationResult.hourlyCharge * 0.93).toFixed(2)}</div>
                 </div>
               </div>
             </AlertDescription>
@@ -143,13 +151,15 @@ export const PenaltySystemTest = () => {
 
         <Alert>
           <AlertDescription className="text-sm">
-            <strong>How it works:</strong>
+            <strong>Updated Payment Structure:</strong>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Grace period: First 30 minutes are free</li>
               <li>Penalty tiers: 31-60min = $8, 61-120min = $12, 120min+ = $20</li>
               <li>First offense gets 20% reduction</li>
               <li>Hourly spots: Extra time charged at spot's hourly rate</li>
-              <li><strong>Payment split:</strong> Penalty fee → 100% platform | Hourly charge → like regular booking (7% platform fee from both sides)</li>
+              <li><strong>User pays:</strong> Base amount + 7% platform fee + 8.5% tax</li>
+              <li><strong>Platform gets:</strong> Penalty fee (100%) + 7% from both renter and owner</li>
+              <li><strong>Owner gets:</strong> Hourly charge - 7% platform fee</li>
             </ul>
           </AlertDescription>
         </Alert>

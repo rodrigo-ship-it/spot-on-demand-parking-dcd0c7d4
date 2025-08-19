@@ -235,18 +235,24 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
   };
   
   try {
-    const totalAmountCents = Math.round(amount * 100);
-    
-    // Calculate platform fees based on penalty breakdown
     const penaltyFeeCents = Math.round((penaltyBreakdown.penaltyFee || 0) * 100);
     const hourlyChargeCents = Math.round((penaltyBreakdown.hourlyCharge || 0) * 100);
+    const baseAmountCents = penaltyFeeCents + hourlyChargeCents;
     
-    // Penalty fee goes 100% to platform
-    // Hourly charge: platform gets 7% from both renter and owner
-    const renterFee = Math.round(hourlyChargeCents * 0.07); // 7% from renter
-    const ownerFee = Math.round(hourlyChargeCents * 0.07);  // 7% from owner
-    const totalPlatformFee = penaltyFeeCents + renterFee + ownerFee;
-    const ownerAmount = hourlyChargeCents - ownerFee;
+    // Calculate platform fees
+    const renterPlatformFee = Math.round(baseAmountCents * 0.07); // 7% from renter
+    const ownerPlatformFee = Math.round(hourlyChargeCents * 0.07);  // 7% from owner (only on hourly charge)
+    
+    // User pays: base amount + their 7% platform fee + taxes
+    const subtotalCents = baseAmountCents + renterPlatformFee;
+    const taxRate = 0.085; // 8.5% tax rate (adjust as needed)
+    const totalAmountCents = Math.round(subtotalCents * (1 + taxRate));
+    
+    // Platform gets: penalty fee + renter platform fee + owner platform fee
+    const totalPlatformRevenue = penaltyFeeCents + renterPlatformFee + ownerPlatformFee;
+    
+    // Owner gets: hourly charge minus their platform fee
+    const ownerAmount = hourlyChargeCents - ownerPlatformFee;
     
     const sessionData: any = {
       mode: "payment",
@@ -267,10 +273,14 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
         penalty_credit_id: penaltyCreditId,
         penalty_fee: penaltyFeeCents.toString(),
         hourly_charge: hourlyChargeCents.toString(),
-        platform_fee: totalPlatformFee.toString(),
+        base_amount: baseAmountCents.toString(),
+        renter_platform_fee: renterPlatformFee.toString(),
+        owner_platform_fee: ownerPlatformFee.toString(),
+        subtotal: subtotalCents.toString(),
+        tax_amount: (totalAmountCents - subtotalCents).toString(),
+        total_charged: totalAmountCents.toString(),
+        platform_revenue: totalPlatformRevenue.toString(),
         owner_amount: connectAccountId ? ownerAmount.toString() : "0",
-        renter_fee: renterFee.toString(),
-        owner_fee: ownerFee.toString(),
       },
       success_url: `${origin}/profile?penalty_paid=true`,
       cancel_url: `${origin}/profile`,
