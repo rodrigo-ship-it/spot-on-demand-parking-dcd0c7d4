@@ -89,7 +89,8 @@ export const CancellationPolicyDialog = ({
     setIsProcessing(true);
     try {
       console.log('=== CANCELLATION PROCESS STARTED ===');
-      console.log('Booking data received:', booking);
+      console.log('Booking data received:', JSON.stringify(booking, null, 2));
+      console.log('Has payment_intent_id:', !!booking?.payment_intent_id);
       console.log('Refund info calculated:', refundInfo);
       
       // Get current user
