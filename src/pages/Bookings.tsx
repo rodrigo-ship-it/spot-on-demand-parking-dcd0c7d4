@@ -116,13 +116,19 @@ const Bookings = () => {
             // Determine status based on times and current booking status
             let status = 'Upcoming';
             const now = new Date();
+            
+            // Convert times to same timezone for proper comparison
+            const nowInChicago = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const startInChicago = new Date(startDate.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const endInChicago = new Date(endDate.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
             } else if (booking.status === 'completed') {
               status = 'Completed';
-            } else if (now >= startDate && now <= endDate) {
+            } else if (nowInChicago >= startInChicago && nowInChicago <= endInChicago) {
               status = 'Active';
-            } else if (now > endDate) {
+            } else if (nowInChicago > endInChicago) {
               status = 'Completed';
             }
 
