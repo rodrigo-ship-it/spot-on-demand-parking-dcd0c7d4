@@ -38,3 +38,15 @@ verify_jwt = true
 
 [functions.get-session-details]
 verify_jwt = false
+
+[functions.process-refund]
+verify_jwt = true
+
+[functions.charge-penalty]
+verify_jwt = true
+
+[functions.send-booking-confirmation]
+verify_jwt = true
+
+[functions.send-dispute-notification]
+verify_jwt = true
