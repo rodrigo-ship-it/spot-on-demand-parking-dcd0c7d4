@@ -141,20 +141,20 @@ const SpotDetails = () => {
 
   // Mock booking data for active session
   const [mockBookingData] = useState({
-    bookingId: "booking-123",
-    startTime: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(), // 25 hours ago (24-hour booking + 1 hour over)
-    endTime: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago (24-hour period ended)
+    bookingId: "booking-24hr-test",
+    startTime: new Date(Date.now() - 24.5 * 60 * 60 * 1000).toISOString(), // 24.5 hours ago (24-hour booking started)
+    endTime: new Date(Date.now() - 0.5 * 60 * 60 * 1000).toISOString(), // 30 minutes ago (24-hour period ended)
     userViolations: [
       {
         id: "v1",
         type: "late_checkout" as const,
-        date: "2024-06-10",
+        date: "2024-06-10", 
         penalty: 25,
         description: "Late check-out (30 minutes over)"
       }
     ],
     accountStatus: "good" as const,
-    isActiveSession: true // Set to true to test the checkout system
+    isActiveSession: true // Set to true to test the 24-hour booking checkout
   });
 
   const [reviewDialog, setReviewDialog] = useState({ isOpen: false, type: null });
