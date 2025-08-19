@@ -72,11 +72,8 @@ export const TimeManagement = ({
       const endTime = new Date(bookingData.end_time);
       const checkOutTime = new Date(verificationData.timestamp);
       
-      // Calculate actual duration in hours and determine proper end time
-      const durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
-      const expectedEndTime = new Date(startTime.getTime() + (durationHours * 60 * 60 * 1000));
-      
-      const minutesOver = Math.floor((checkOutTime.getTime() - expectedEndTime.getTime()) / (1000 * 60));
+      // Calculate how late the user is checking out
+      const minutesOver = Math.floor((checkOutTime.getTime() - endTime.getTime()) / (1000 * 60));
       
       // Update booking with verification details
       const { error: bookingError } = await supabase

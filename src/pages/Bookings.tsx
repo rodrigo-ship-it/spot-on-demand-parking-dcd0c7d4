@@ -459,7 +459,7 @@ const Bookings = () => {
                               <TimeManagement
                                 bookingId={reservation.id}
                                 spotId={reservation.spotId || ""}
-                                endTime={`${reservation.date} ${reservation.endTime}`}
+                                endTime={new Date(`${reservation.date}T${reservation.endTime}`).toISOString()}
                                 pricePerHour={reservation.pricePerHour}
                                 userViolations={userViolations}
                                 accountStatus="good"
