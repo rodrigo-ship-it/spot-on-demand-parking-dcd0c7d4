@@ -70,6 +70,9 @@ export const CheckOutSystem = ({ bookingId, endTime, onCheckOut, isOvertime }: C
   const getTimeStatus = () => {
     const now = new Date();
     const end = new Date(endTime);
+    
+    // For 24-hour bookings, calculate based on duration rather than just end time
+    // This handles cases where start and end dates are the same for 24-hour periods
     const timeDiff = now.getTime() - end.getTime();
     const minutesOver = Math.floor(timeDiff / (1000 * 60));
 

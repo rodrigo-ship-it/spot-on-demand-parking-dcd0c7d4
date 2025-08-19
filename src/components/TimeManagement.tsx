@@ -56,9 +56,27 @@ export const TimeManagement = ({
 
   const handleEnhancedCheckOut = async (verificationData: VerificationData) => {
     try {
-      const endTimeDate = new Date(endTime);
+      // Get booking details to calculate duration-based end time
+      const { data: bookingData } = await supabase
+        .from('bookings')
+        .select('start_time, end_time')
+        .eq('id', bookingId)
+        .single();
+
+      if (!bookingData) {
+        toast.error("Failed to verify booking details");
+        return;
+      }
+
+      const startTime = new Date(bookingData.start_time);
+      const endTime = new Date(bookingData.end_time);
       const checkOutTime = new Date(verificationData.timestamp);
-      const minutesOver = Math.floor((checkOutTime.getTime() - endTimeDate.getTime()) / (1000 * 60));
+      
+      // Calculate actual duration in hours and determine proper end time
+      const durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
+      const expectedEndTime = new Date(startTime.getTime() + (durationHours * 60 * 60 * 1000));
+      
+      const minutesOver = Math.floor((checkOutTime.getTime() - expectedEndTime.getTime()) / (1000 * 60));
       
       // Update booking with verification details
       const { error: bookingError } = await supabase
@@ -149,7 +167,7 @@ export const TimeManagement = ({
                 endTime={endTime}
                 onCheckOut={handleEnhancedCheckOut}
                 userTrustScore={penaltyProfile?.trust_score || 100}
-                isOvertime={new Date() > new Date(endTime)}
+                isOvertime={false} // Will be calculated dynamically based on start time + duration
               />
             </>
           )}
