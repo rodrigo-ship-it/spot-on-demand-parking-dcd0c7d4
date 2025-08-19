@@ -63,9 +63,8 @@ const Bookings = () => {
     booking: null,
   });
 
-  // Load user bookings
-  useEffect(() => {
-    const loadBookings = async () => {
+  // Load user bookings function
+  const loadBookings = async () => {
       if (!user) {
         navigate('/auth');
         return;
@@ -226,6 +225,8 @@ const Bookings = () => {
       }
     };
 
+  // Load bookings on mount
+  useEffect(() => {
     loadBookings();
   }, [user, navigate]);
 
@@ -689,9 +690,8 @@ const Bookings = () => {
         onCancellationSuccess={() => {
           // Close the dialog and refresh bookings data
           setCancellationDialog({ isOpen: false, booking: null });
-          // Reload data instead of full page refresh
-          setLoading(true);
-          window.location.reload();
+          // Refresh the bookings data without full page reload
+          loadBookings();
         }}
       />
     </div>
