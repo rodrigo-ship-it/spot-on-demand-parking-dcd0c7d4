@@ -266,6 +266,55 @@ serve(async (req) => {
         console.log(`💳 [PAYMENT_INTENT] Processing payment intent: ${paymentIntent.id}`);
         console.log(`📋 [PAYMENT_METADATA] Payment intent metadata:`, paymentIntent.metadata);
         
+        // Check if this is a penalty charge payment
+        if (paymentIntent.metadata?.penalty_credit_id && paymentIntent.metadata?.penalty_type) {
+          console.log(`🚨 [PENALTY_PAYMENT] Processing penalty payment: ${paymentIntent.id}`);
+          console.log(`📊 [PENALTY_DETAILS] Credit ID: ${paymentIntent.metadata.penalty_credit_id}, Type: ${paymentIntent.metadata.penalty_type}`);
+          
+          // Update penalty credit status to paid
+          const { error: penaltyError } = await supabaseService
+            .from("penalty_credits")
+            .update({
+              status: "paid",
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", paymentIntent.metadata.penalty_credit_id);
+
+          if (penaltyError) {
+            console.error("❌ [PENALTY_UPDATE_ERROR] Error updating penalty credit:", penaltyError);
+          } else {
+            console.log(`✅ [PENALTY_PAID] Penalty credit marked as paid: ${paymentIntent.metadata.penalty_credit_id}`);
+          }
+          
+          // Also create a penalties record for tracking
+          const { error: penaltyRecordError } = await supabaseService
+            .from("penalties")
+            .insert({
+              user_id: paymentIntent.metadata.user_id || (
+                // Try to get user ID from penalty credit
+                await supabaseService
+                  .from("penalty_credits")
+                  .select("user_id")
+                  .eq("id", paymentIntent.metadata.penalty_credit_id)
+                  .single()
+              ).data?.user_id,
+              booking_id: paymentIntent.metadata.booking_id,
+              amount: paymentIntent.amount / 100, // Convert from cents
+              status: "paid",
+              penalty_type: paymentIntent.metadata.penalty_type,
+              description: paymentIntent.description || "Late checkout penalty",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+
+          if (penaltyRecordError) {
+            console.error("❌ [PENALTY_RECORD_ERROR] Error creating penalty record:", penaltyRecordError);
+          } else {
+            console.log(`✅ [PENALTY_RECORDED] Penalty record created for payment: ${paymentIntent.id}`);
+          }
+          break;
+        }
+        
         // If we have booking metadata, create the booking here as backup
         if (paymentIntent.metadata && Object.keys(paymentIntent.metadata).length > 0) {
           console.log(`🔄 [FALLBACK_BOOKING] Creating booking from payment_intent.succeeded event`);
@@ -306,8 +355,30 @@ serve(async (req) => {
 
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log(`❌ [PAYMENT_FAILED] Payment intent failed: ${paymentIntent.id}`);
         
-        // Update booking status to failed
+        // Check if this is a penalty charge payment failure
+        if (paymentIntent.metadata?.penalty_credit_id && paymentIntent.metadata?.penalty_type) {
+          console.log(`🚨 [PENALTY_PAYMENT_FAILED] Penalty payment failed: ${paymentIntent.id}`);
+          
+          // Update penalty credit status to failed
+          const { error: penaltyError } = await supabaseService
+            .from("penalty_credits")
+            .update({
+              status: "payment_failed",
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", paymentIntent.metadata.penalty_credit_id);
+
+          if (penaltyError) {
+            console.error("❌ [PENALTY_FAIL_UPDATE_ERROR] Error updating penalty credit:", penaltyError);
+          } else {
+            console.log(`❌ [PENALTY_PAYMENT_FAILED] Penalty credit marked as payment failed: ${paymentIntent.metadata.penalty_credit_id}`);
+          }
+          break;
+        }
+        
+        // Update booking status to failed for regular bookings
         const { error } = await supabaseService
           .from("bookings")
           .update({

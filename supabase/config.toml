@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.send-dispute-notification]
 verify_jwt = true
+
+[functions.check-late-checkouts]
+verify_jwt = false

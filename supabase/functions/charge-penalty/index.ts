@@ -120,7 +120,8 @@ serve(async (req) => {
       metadata: {
         booking_id: bookingId,
         penalty_credit_id: penaltyCreditId,
-        penalty_type: 'late_checkout'
+        penalty_type: 'late_checkout',
+        user_id: booking.renter_id
       }
     });
 
