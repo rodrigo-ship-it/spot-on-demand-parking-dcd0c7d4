@@ -653,7 +653,10 @@ const Bookings = () => {
         onClose={() => setCancellationDialog({ isOpen: false, booking: null })}
         booking={cancellationDialog.booking}
         onCancellationSuccess={() => {
-          // Reload bookings after successful cancellation
+          // Close the dialog and refresh bookings data
+          setCancellationDialog({ isOpen: false, booking: null });
+          // Reload data instead of full page refresh
+          setLoading(true);
           window.location.reload();
         }}
       />
