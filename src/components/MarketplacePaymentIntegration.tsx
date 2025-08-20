@@ -44,6 +44,10 @@ export const MarketplacePaymentIntegration = ({
           : bookingData.bookingDetails.date
       };
       
+      console.log("🗓️ [DATE_DEBUG] Original date:", bookingData.bookingDetails.date);
+      console.log("🗓️ [DATE_DEBUG] Processed date:", bookingDetailsForPayment.date);
+      console.log("🗓️ [DATE_DEBUG] Date type:", typeof bookingDetailsForPayment.date);
+      
       const paymentPayload = { 
         spot_id: bookingData.spotData?.id,
         booking_details: bookingDetailsForPayment,
