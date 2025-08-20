@@ -77,9 +77,7 @@ serve(async (req) => {
       try {
         logStep("Processing late booking", { bookingId: booking.id, endTime: booking.end_time });
 
-        // Parse the end_time correctly - it's stored as timestamp without timezone
-        // so we need to treat it as UTC to avoid timezone conversion issues
-        const endTime = new Date(booking.end_time + 'Z'); // Ensure UTC parsing
+        const endTime = new Date(booking.end_time);
         const minutesLate = Math.floor((now.getTime() - endTime.getTime()) / (1000 * 60));
         
         logStep("Calculated lateness", { minutesLate, bookingId: booking.id });

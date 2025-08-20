@@ -280,8 +280,7 @@ export const EnhancedCheckOutSystem = ({
     }
 
     const now = new Date();
-    // Parse end time correctly to avoid timezone issues
-    const end = new Date(endTime + (endTime.includes('Z') ? '' : 'Z'));
+    const end = new Date(endTime);
     
     // Validate the end date
     if (isNaN(end.getTime())) {
