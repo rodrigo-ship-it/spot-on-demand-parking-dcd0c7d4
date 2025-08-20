@@ -138,39 +138,29 @@ export const usePenaltySystem = (userId: string) => {
       // Attempt automatic charging if enabled and amount is significant
       if (autoCharge && amount >= 5 && creditData) {
         try {
-          const functionName = splitPayment ? 'create-marketplace-payment' : 'charge-penalty';
-          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke(functionName, {
+          // Use charge-penalty for automatic charging with saved payment methods
+          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('charge-penalty', {
             body: {
               bookingId,
               amount,
               description,
-              penaltyCreditId: creditData.id,
-              type: 'penalty',
-              penaltyBreakdown: splitPayment ? {
-                penaltyFee: parseFloat(description.match(/\$([0-9.]+) fine/)?.[1] || "0"),
-                hourlyCharge: parseFloat(description.match(/\$([0-9.]+) for/)?.[1] || "0"),
-                totalAmount: amount
-              } : undefined
+              penaltyCreditId: creditData.id
             }
           });
 
           if (chargeError) {
             console.error('Auto-charge failed:', chargeError);
-            toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
-          } else if (chargeResult?.success && chargeResult?.url) {
-            // Redirect to Stripe checkout for payment
-            toast.info(`Redirecting to payment for $${amount} penalty...`);
-            setTimeout(() => {
-              window.open(chargeResult.url, '_blank');
-            }, 1000);
+            toast.error(`$${amount} penalty added to your account. Auto-charge failed - please update your payment method.`);
           } else if (chargeResult?.success) {
-            toast.success(`$${amount} penalty processed successfully.`);
+            toast.success(`$${amount} penalty charged automatically to your payment method.`);
+          } else if (chargeResult?.requires_action) {
+            toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
           } else {
-            toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Payment session failed to create.'}`);
+            toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Please update your payment method.'}`);
           }
         } catch (autoChargeError) {
           console.error('Auto-charge error:', autoChargeError);
-          toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
+          toast.error(`$${amount} penalty added to your account. Auto-charge failed - please update your payment method.`);
         }
       } else {
         // Show user-friendly notification for small amounts or when auto-charge is disabled
