@@ -79,133 +79,55 @@ serve(async (req) => {
         
         logStep("Calculated lateness", { minutesLate, bookingId: booking.id });
 
-        // Check if we already have a penalty credit for this booking
-        const { data: existingCredit } = await supabaseService
-          .from('penalty_credits')
-          .select('id')
-          .eq('booking_id', booking.id)
-          .eq('credit_type', 'late_checkout')
-          .maybeSingle();
-
-        if (existingCredit) {
-          logStep("Penalty already exists for booking", { bookingId: booking.id });
-          continue;
-        }
-
-        // Get user profile to check if this is their first offense
-        const { data: profile } = await supabaseService
-          .from('profiles')
-          .select('failed_checkouts')
-          .eq('user_id', booking.renter_id)
-          .single();
-
-        const isFirstOffense = !profile || profile.failed_checkouts === 0;
-
-        // Calculate penalty amount using the same logic as the penalty system
-        let penaltyAmount = 0;
-        if (minutesLate > 30) {
-          if (minutesLate <= 60) penaltyAmount = 8;
-          else if (minutesLate <= 120) penaltyAmount = 12;
-          else penaltyAmount = 20;
-
-          // First offense leniency (20% reduction)
-          if (isFirstOffense) penaltyAmount *= 0.8;
-          penaltyAmount = Math.round(penaltyAmount * 100) / 100;
-        }
-
-        if (penaltyAmount > 0) {
-          logStep("Creating penalty credit", { bookingId: booking.id, amount: penaltyAmount, minutesLate });
-
-          // Create penalty credit
-          const { data: creditData, error: creditError } = await supabaseService
-            .from('penalty_credits')
-            .insert({
-              user_id: booking.renter_id,
-              booking_id: booking.id,
-              amount: penaltyAmount,
-              credit_type: 'late_checkout',
-              description: `Automatic late checkout penalty - ${minutesLate} minutes late`,
-              status: 'active'
-            })
-            .select()
-            .single();
-
-          if (creditError) {
-            logStep("Error creating penalty credit", { error: creditError, bookingId: booking.id });
-            continue;
-          }
-
-          // Update user profile
-          const newFailedCheckouts = (profile?.failed_checkouts || 0) + 1;
-          const { error: profileError } = await supabaseService
-            .from('profiles')
-            .update({
-              failed_checkouts: newFailedCheckouts,
-              last_violation_at: new Date().toISOString()
-            })
-            .eq('user_id', booking.renter_id);
-
-          if (profileError) {
-            logStep("Error updating profile", { error: profileError, userId: booking.renter_id });
-          }
-
-          // Attempt automatic charging if amount is significant
-          if (penaltyAmount >= 5) {
-            try {
-              logStep("Attempting automatic penalty charge", { bookingId: booking.id, amount: penaltyAmount });
-              
-              const { data: chargeResult, error: chargeError } = await supabaseService.functions.invoke('charge-penalty', {
-                body: {
-                  bookingId: booking.id,
-                  amount: penaltyAmount,
-                  description: `Automatic late checkout penalty - ${minutesLate} minutes late`,
-                  penaltyCreditId: creditData.id
-                }
-              });
-
-              if (chargeError) {
-                logStep("Auto-charge failed", { error: chargeError, bookingId: booking.id });
-              } else if (chargeResult?.success) {
-                logStep("Auto-charge succeeded", { bookingId: booking.id, amount: penaltyAmount });
-              } else {
-                logStep("Auto-charge requires action", { bookingId: booking.id, result: chargeResult });
-              }
-            } catch (autoChargeError) {
-              logStep("Auto-charge error", { error: autoChargeError, bookingId: booking.id });
-            }
-          }
-
-          results.push({
-            bookingId: booking.id,
-            minutesLate,
-            penaltyAmount,
-            status: 'penalty_created'
-          });
-        }
-
         // Auto-complete booking if 3+ hours (180 minutes) past end time
         const shouldAutoComplete = minutesLate >= 180;
         
         if (shouldAutoComplete) {
           logStep("Auto-completing booking after 3+ hours", { bookingId: booking.id, minutesLate });
           
-          // Mark booking as completed
-          const { error: updateError } = await supabaseService
-            .from('bookings')
-            .update({
-              status: 'completed',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', booking.id);
+          // Process auto-completion with penalty calculation via marketplace payment
+          try {
+            const { data: autoCompleteResult, error: autoCompleteError } = await supabaseService.functions.invoke('create-marketplace-payment', {
+              body: {
+                bookingId: booking.id,
+                autoComplete: true,
+                minutesLate: minutesLate
+              }
+            });
 
-          if (updateError) {
-            logStep("Error auto-completing booking", { error: updateError, bookingId: booking.id });
-          } else {
-            logStep("Booking auto-completed", { bookingId: booking.id });
+            if (autoCompleteError) {
+              logStep("Error in auto-complete processing", { error: autoCompleteError, bookingId: booking.id });
+              
+              // Fallback: just mark as completed without penalty processing
+              const { error: updateError } = await supabaseService
+                .from('bookings')
+                .update({
+                  status: 'completed',
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', booking.id);
+
+              if (updateError) {
+                logStep("Error marking booking as completed", { error: updateError, bookingId: booking.id });
+              } else {
+                logStep("Booking marked as completed (fallback)", { bookingId: booking.id });
+              }
+            } else {
+              logStep("Auto-completion processed successfully", { bookingId: booking.id, result: autoCompleteResult });
+            }
+
             results.push({
               bookingId: booking.id,
               minutesLate,
               status: 'auto_completed'
+            });
+          } catch (error) {
+            logStep("Auto-complete processing failed", { error: error, bookingId: booking.id });
+            results.push({
+              bookingId: booking.id,
+              minutesLate,
+              status: 'auto_complete_failed',
+              error: error.message
             });
           }
         } else {
