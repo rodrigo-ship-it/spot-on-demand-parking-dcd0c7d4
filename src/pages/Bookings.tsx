@@ -184,12 +184,13 @@ const Bookings = () => {
               ownerName: ownerName,
               ownerId: ownerId,
               ownerPhone: ownerPhone,
-              date: booking.display_date || startDate.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit',
-                timeZone: 'America/Chicago' 
-              }),
+              date: booking.display_date || (() => {
+                // Use the raw date components without timezone conversion
+                const year = startDate.getFullYear();
+                const month = String(startDate.getMonth() + 1).padStart(2, '0');
+                const day = String(startDate.getDate()).padStart(2, '0');
+                return `${month}/${day}/${year}`;
+              })(),
               startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit',

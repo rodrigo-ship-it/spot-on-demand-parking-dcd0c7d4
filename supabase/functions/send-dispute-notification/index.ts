@@ -84,7 +84,13 @@ const handler = async (req: Request): Promise<Response> => {
           <h3 style="margin-top: 0; color: #1976d2;">Parking Spot Information</h3>
           <p><strong>Spot:</strong> ${spot.title}</p>
           <p><strong>Address:</strong> ${spot.address}</p>
-          <p><strong>Booking Period:</strong> ${new Date(booking.start_time).toLocaleString()} - ${new Date(booking.end_time).toLocaleString()}</p>
+          <p><strong>Booking Period:</strong> ${(() => {
+            const startDate = new Date(booking.start_time);
+            const endDate = new Date(booking.end_time);
+            const startLocal = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startDate.getHours(), startDate.getMinutes());
+            const endLocal = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endDate.getHours(), endDate.getMinutes());
+            return `${startLocal.toLocaleString()} - ${endLocal.toLocaleString()}`;
+          })()}</p>
         </div>
 
         ${dispute.description ? `
