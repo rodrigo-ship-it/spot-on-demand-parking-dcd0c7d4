@@ -271,12 +271,21 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     
     const customerId = customers.data[0].id;
     
-    // Get their default payment method
-    const paymentMethods = await stripe.paymentMethods.list({
+    // Get their saved payment methods (try multiple approaches)
+    let paymentMethods = await stripe.paymentMethods.list({
       customer: customerId,
       type: 'card',
-      limit: 1
+      limit: 10
     });
+    
+    // If no attached payment methods, check if customer has a default payment method
+    if (paymentMethods.data.length === 0) {
+      const customer = await stripe.customers.retrieve(customerId);
+      if (customer.invoice_settings?.default_payment_method) {
+        const defaultPM = await stripe.paymentMethods.retrieve(customer.invoice_settings.default_payment_method);
+        paymentMethods = { data: [defaultPM] };
+      }
+    }
     
     if (paymentMethods.data.length === 0) {
       throw new Error("No saved payment method found for automatic charging");
