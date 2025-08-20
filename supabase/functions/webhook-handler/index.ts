@@ -113,46 +113,27 @@ serve(async (req) => {
         try {
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
           
-          // Parse the date string directly without timezone conversion
-          // If the date comes as an ISO string, extract just the date part
-          let dateStr;
-          if (typeof bookingDetails.date === 'string' && bookingDetails.date.includes('T')) {
-            // Extract date part from ISO string (YYYY-MM-DDTHH:mm:ss.sssZ -> YYYY-MM-DD)
-            dateStr = bookingDetails.date.split('T')[0];
-          } else if (typeof bookingDetails.date === 'string' && bookingDetails.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            // Already in YYYY-MM-DD format
-            dateStr = bookingDetails.date;
-          } else {
-            // Try to parse the date but prevent timezone conversion
-            const bookingDate = new Date(bookingDetails.date);
-            if (isNaN(bookingDate.getTime())) {
-              throw new Error(`Invalid booking date: ${bookingDetails.date}`);
-            }
-            
-            // Use getFullYear, getMonth, getDate to avoid timezone issues
-            const year = bookingDate.getFullYear();
-            const month = String(bookingDate.getMonth() + 1).padStart(2, '0');
-            const day = String(bookingDate.getDate()).padStart(2, '0');
-            dateStr = `${year}-${month}-${day}`;
+          const bookingDate = new Date(bookingDetails.date);
+          if (isNaN(bookingDate.getTime())) {
+            throw new Error(`Invalid booking date: ${bookingDetails.date}`);
           }
+          
+          // Format date as YYYY-MM-DD using local timezone
+          const year = bookingDate.getFullYear();
+          const month = String(bookingDate.getMonth() + 1).padStart(2, '0');
+          const day = String(bookingDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
           
           // Create local datetime strings without any timezone conversion
           startTimeStr = `${dateStr}T${bookingDetails.startTime}:00`;
           
           // For daily bookings, add days to the end time string
           if (isPricingDaily) {
-            // Calculate end date by parsing YYYY-MM-DD and adding days without timezone conversion
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const endYear = year;
-            const endMonth = month;
-            const endDay = day + bookingDetails.numberOfDays;
-            
-            // Handle month/year overflow correctly
-            const endDate = new Date(endYear, endMonth - 1, endDay); // month is 0-indexed in Date constructor
-            const finalYear = endDate.getFullYear();
-            const finalMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-            const finalDay = String(endDate.getDate()).padStart(2, '0');
-            endTimeStr = `${finalYear}-${finalMonth}-${finalDay}T${bookingDetails.startTime}:00`;
+            const endDate = new Date(bookingDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+            const endYear = endDate.getFullYear();
+            const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+            const endDay = String(endDate.getDate()).padStart(2, '0');
+            endTimeStr = `${endYear}-${endMonth}-${endDay}T${bookingDetails.startTime}:00`;
           } else {
             endTimeStr = `${dateStr}T${bookingDetails.endTime}:00`;
           }
@@ -177,7 +158,7 @@ serve(async (req) => {
           qr_code_used: isQRBooking,
           platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
           owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
-          display_date: new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { 
+          display_date: new Date(bookingDetails.date).toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 

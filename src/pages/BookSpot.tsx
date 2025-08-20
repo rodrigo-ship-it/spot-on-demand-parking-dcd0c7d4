@@ -56,7 +56,7 @@ const BookSpot = () => {
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
-    date: format(new Date(), "yyyy-MM-dd"), // Initialize as YYYY-MM-DD string
+    date: new Date(),
     startTime: "09:00",
     endTime: "09:00", // Will be updated based on pricing type
     duration: 8,
@@ -86,37 +86,24 @@ const BookSpot = () => {
       try {
         // Load parking spot data
         console.log('BookSpot - Attempting to load spot with ID:', id);
-        console.log('BookSpot - Auth status:', { 
-          user: !!user, 
-          userId: user?.id, 
-          isQRCodeBooking 
-        });
-        
         const { data: spot, error: spotError } = await supabase
           .from('parking_spots')
           .select('*')
           .eq('id', id)
-          .eq('is_active', true) // Explicitly filter for active spots
-          .maybeSingle();
+          .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
 
         console.log('BookSpot - Supabase response:', { spot, spotError });
 
         if (spotError) {
           console.error('BookSpot - Error loading spot:', spotError);
-          console.error('BookSpot - Error details:', {
-            message: spotError.message,
-            details: spotError.details,
-            hint: spotError.hint,
-            code: spotError.code
-          });
-          toast.error(`Failed to load spot details: ${spotError.message}`);
+          toast.error("Failed to load parking spot");
           navigate('/');
           return;
         }
 
         if (!spot) {
           console.error('BookSpot - No spot found with ID:', id);
-          toast.error("Parking spot not found or not active");
+          toast.error("Parking spot not found");
           navigate('/');
           return;
         }
@@ -245,7 +232,7 @@ const BookSpot = () => {
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      setBookingDetails(prev => ({ ...prev, date: format(date, "yyyy-MM-dd") }));
+      setBookingDetails(prev => ({ ...prev, date }));
     }
   };
 
@@ -415,7 +402,7 @@ const BookSpot = () => {
                            >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {bookingDetails.date ? (
-                                format(new Date(bookingDetails.date + 'T12:00:00'), "MMM d, yyyy")
+                               format(bookingDetails.date, "MMM d, yyyy")
                              ) : (
                                <span>Pick a date</span>
                              )}
@@ -424,7 +411,7 @@ const BookSpot = () => {
                          <PopoverContent className="w-auto p-0" align="start">
                            <CalendarComponent
                              mode="single"
-                              selected={new Date(bookingDetails.date + 'T12:00:00')}
+                             selected={bookingDetails.date}
                              onSelect={handleDateChange}
                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                              initialFocus
@@ -482,7 +469,7 @@ const BookSpot = () => {
                            >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {bookingDetails.date ? (
-                               format(new Date(bookingDetails.date + 'T12:00:00'), "MMM d, yyyy")
+                               format(bookingDetails.date, "MMM d, yyyy")
                              ) : (
                                <span>Pick a date</span>
                              )}
@@ -491,7 +478,7 @@ const BookSpot = () => {
                          <PopoverContent className="w-auto p-0" align="start">
                            <CalendarComponent
                              mode="single"
-                             selected={new Date(bookingDetails.date + 'T12:00:00')}
+                             selected={bookingDetails.date}
                              onSelect={handleDateChange}
                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                              initialFocus

@@ -15,28 +15,9 @@ serve(async (req) => {
   }
 
   try {
-    const { spot_id, booking_details, total_amount, user_id, is_qr_booking, guest_details, bookingId, amount, description, penaltyCreditId, type, penaltyBreakdown, autoComplete, minutesLate } = await req.json();
-    console.log("📝 Request data:", { spot_id, booking_details, total_amount, user_id, is_qr_booking, type, bookingId, amount, penaltyBreakdown, autoComplete, minutesLate });
+    const { spot_id, booking_details, total_amount, user_id, is_qr_booking, guest_details, bookingId, amount, description, penaltyCreditId, type, penaltyBreakdown } = await req.json();
+    console.log("📝 Request data:", { spot_id, booking_details, total_amount, user_id, is_qr_booking, type, bookingId, amount, penaltyBreakdown });
     
-    // Create service client for database operations (bypass RLS)
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-    
-    // Handle auto-completion requests
-    if (autoComplete) {
-      if (!bookingId || minutesLate === undefined) {
-        console.log("❌ Missing auto-completion data");
-        return new Response(JSON.stringify({ error: "Missing bookingId or minutesLate for auto-completion" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        });
-      }
-      return handleAutoCompletion(bookingId, minutesLate, supabaseService);
-    }
-
     // Handle penalty payments differently
     if (type === 'penalty') {
       if (!bookingId || !amount || !description || !penaltyBreakdown) {
@@ -63,7 +44,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
     
-    // supabaseService already created above
+    // Create service client for database operations (bypass RLS)
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -240,172 +226,6 @@ serve(async (req) => {
     });
   }
 });
-
-// Helper function to handle auto-completion with penalty processing
-async function handleAutoCompletion(bookingId: string, minutesLate: number, supabaseService: any) {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-  
-  try {
-    console.log("🔄 Processing auto-completion for booking:", bookingId, "minutesLate:", minutesLate);
-    
-    // Get booking details with spot information
-    const { data: booking, error: bookingError } = await supabaseService
-      .from('bookings')
-      .select(`
-        id,
-        renter_id,
-        end_time,
-        total_amount,
-        parking_spots!inner(title, address, price_per_hour, owner_id)
-      `)
-      .eq('id', bookingId)
-      .single();
-      
-    if (bookingError || !booking) {
-      console.log("❌ Booking not found:", bookingError);
-      return new Response(JSON.stringify({ error: "Booking not found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 404,
-      });
-    }
-    
-    // Get user profile for penalty calculation
-    const { data: profile } = await supabaseService
-      .from('profiles')
-      .select('failed_checkouts')
-      .eq('user_id', booking.renter_id)
-      .single();
-    
-    const isFirstOffense = !profile || profile.failed_checkouts === 0;
-    
-    // Calculate penalty using the same logic as the usePenaltySystem hook
-    const result = calculatePenalty(minutesLate, isFirstOffense, booking.parking_spots.price_per_hour);
-    
-    if (result.totalAmount > 0) {
-      console.log("💰 Creating penalty credit for auto-completion:", result);
-      
-      // Create penalty credit
-      const { data: creditData, error: creditError } = await supabaseService
-        .from('penalty_credits')
-        .insert({
-          user_id: booking.renter_id,
-          booking_id: bookingId,
-          amount: result.totalAmount,
-          credit_type: 'late_checkout',
-          description: `Auto-completion penalty - ${minutesLate} minutes late`,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (creditError) {
-        console.log("❌ Error creating penalty credit:", creditError);
-      } else {
-        console.log("✅ Penalty credit created:", creditData.id);
-        
-        // Update user profile
-        const newFailedCheckouts = (profile?.failed_checkouts || 0) + 1;
-        const { error: profileError } = await supabaseService
-          .from('profiles')
-          .update({
-            failed_checkouts: newFailedCheckouts,
-            total_penalty_credits: (profile?.total_penalty_credits || 0) + result.totalAmount,
-            last_violation_at: new Date().toISOString()
-          })
-          .eq('user_id', booking.renter_id);
-
-        if (profileError) {
-          console.log("❌ Error updating profile:", profileError);
-        }
-      }
-    }
-    
-    // Mark booking as completed
-    const { error: updateError } = await supabaseService
-      .from('bookings')
-      .update({
-        status: 'completed',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', bookingId);
-
-    if (updateError) {
-      console.log("❌ Error marking booking as completed:", updateError);
-      return new Response(JSON.stringify({ error: "Failed to complete booking" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-    
-    console.log("✅ Booking auto-completed successfully");
-    
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: "Booking auto-completed successfully",
-      penaltyAmount: result.totalAmount,
-      bookingId: bookingId
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-    
-  } catch (error) {
-    console.error("❌ Auto-completion error:", error);
-    return new Response(JSON.stringify({ 
-      error: error.message || "Auto-completion processing failed"
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
-  }
-}
-
-// Penalty calculation logic (same as usePenaltySystem hook)
-function calculatePenalty(minutesLate: number, isFirstOffense: boolean, spotPricePerHour?: number) {
-  console.log("Calculating penalty for:", { minutesLate, isFirstOffense, spotPricePerHour });
-  
-  let penaltyFee = 0;
-  let hourlyCharge = 0;
-  
-  // Base penalty calculation
-  if (minutesLate > 30) {
-    if (minutesLate <= 60) {
-      penaltyFee = 8;
-    } else if (minutesLate <= 120) {
-      penaltyFee = 12;
-    } else {
-      penaltyFee = 20;
-    }
-    
-    // First offense leniency (20% reduction)
-    if (isFirstOffense) {
-      penaltyFee *= 0.8;
-    }
-    
-    penaltyFee = Math.round(penaltyFee * 100) / 100;
-  }
-  
-  // Calculate hourly charges for extra time (if applicable)
-  if (minutesLate > 30 && spotPricePerHour) {
-    const extraHours = Math.ceil((minutesLate - 30) / 60);
-    hourlyCharge = extraHours * spotPricePerHour;
-    hourlyCharge = Math.round(hourlyCharge * 100) / 100;
-  }
-  
-  const totalAmount = penaltyFee + hourlyCharge;
-  
-  return {
-    penaltyFee,
-    hourlyCharge,
-    totalAmount,
-    tax: Math.round(totalAmount * 8.5) / 100, // 8.5% tax
-    platformFee: Math.round(totalAmount * 7) / 100, // 7% platform fee
-    isFirstOffense
-  };
-}
 
 // Helper function to process penalty payments
 async function processPenaltyPayment(stripe: any, user: any, amount: number, description: string, penaltyCreditId: string, connectAccountId: string | null, origin: string | null, penaltyBreakdown: any) {

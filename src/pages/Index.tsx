@@ -112,7 +112,7 @@ const Index = () => {
 
   const handleBookNow = (spotId: string | number) => {
     console.log('handleBookNow called with spotId:', spotId);
-    navigate(`/book-spot/${spotId}`);
+    navigate(`/spot/${spotId}`);
   };
 
   const handleSignIn = () => {

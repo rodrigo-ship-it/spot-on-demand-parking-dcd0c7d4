@@ -36,21 +36,9 @@ export const MarketplacePaymentIntegration = ({
       console.log("💰 [PAYMENT_AMOUNT] Total amount:", totalAmount);
       console.log("👤 [USER_INFO] User:", bookingData.user?.id ? 'Authenticated' : 'Guest');
       
-      // Convert date to string format to prevent timezone issues
-      const bookingDetailsForPayment = {
-        ...bookingData.bookingDetails,
-        date: bookingData.bookingDetails.date instanceof Date 
-          ? bookingData.bookingDetails.date.toISOString().split('T')[0] // Convert to YYYY-MM-DD
-          : bookingData.bookingDetails.date
-      };
-      
-      console.log("🗓️ [DATE_DEBUG] Original date:", bookingData.bookingDetails.date);
-      console.log("🗓️ [DATE_DEBUG] Processed date:", bookingDetailsForPayment.date);
-      console.log("🗓️ [DATE_DEBUG] Date type:", typeof bookingDetailsForPayment.date);
-      
       const paymentPayload = { 
         spot_id: bookingData.spotData?.id,
-        booking_details: bookingDetailsForPayment,
+        booking_details: bookingData.bookingDetails,
         total_amount: totalAmount,
         user_id: bookingData.user?.id,
         is_qr_booking: bookingData.isQRCodeBooking,
