@@ -183,20 +183,9 @@ serve(async (req) => {
           });
         }
 
-        // Mark booking as completed to prevent future processing
-        const { error: updateError } = await supabaseService
-          .from('bookings')
-          .update({
-            status: 'completed',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', booking.id);
-
-        if (updateError) {
-          logStep("Error updating booking status", { error: updateError, bookingId: booking.id });
-        } else {
-          logStep("Booking marked as completed", { bookingId: booking.id });
-        }
+        // Do NOT automatically mark booking as completed - let user manually check out
+        // This prevents duplicate penalty processing while preserving user control
+        logStep("Penalty processed, booking remains active for manual checkout", { bookingId: booking.id });
 
         processedCount++;
 
