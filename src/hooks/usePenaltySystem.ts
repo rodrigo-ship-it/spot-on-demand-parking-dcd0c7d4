@@ -157,17 +157,23 @@ export const usePenaltySystem = (userId: string) => {
           if (chargeError) {
             console.error('Auto-charge failed:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - please update your payment method.`);
-          } else if (chargeResult?.success) {
-            toast.success(`$${amount} penalty charged automatically. Penalty fee to platform, hourly charges split with spot owner.`);
-          } else if (chargeResult?.requires_action) {
-            toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
-          } else if (chargeResult?.checkout_url) {
-            // Auto-charge failed, redirect to checkout for manual payment immediately
-            toast.info(`$${amount} penalty added to your account. Redirecting to checkout...`);
-            // Immediate redirect - don't make users wait
-            window.location.href = chargeResult.checkout_url;
           } else {
-            toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Please update your payment method.'}`);
+            console.log('Charge result:', chargeResult);
+            
+            if (chargeResult?.success) {
+              toast.success(`$${amount} penalty charged automatically. Penalty fee to platform, hourly charges split with spot owner.`);
+            } else if (chargeResult?.requires_action) {
+              toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
+            } else if (chargeResult?.checkout_url) {
+              // Auto-charge failed, redirect to checkout for manual payment immediately
+              console.log('Redirecting to checkout:', chargeResult.checkout_url);
+              toast.info(`$${amount} penalty added to your account. Redirecting to checkout...`);
+              // Immediate redirect - don't make users wait
+              window.location.href = chargeResult.checkout_url;
+            } else {
+              console.error('Unexpected charge result:', chargeResult);
+              toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Please update your payment method.'}`);
+            }
           }
         } catch (autoChargeError) {
           console.error('Auto-charge error:', autoChargeError);

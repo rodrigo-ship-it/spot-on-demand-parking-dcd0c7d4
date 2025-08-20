@@ -108,8 +108,10 @@ serve(async (req) => {
         .eq("user_id", bookingData.parking_spots.owner_id)
         .maybeSingle();
 
+      console.log("📝 Payout settings:", { payoutSettings, payoutError });
+
       // Process penalty with payment split
-      return processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, payoutSettings.stripe_connect_account_id, req.headers.get("origin"), penaltyBreakdown);
+      return processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, payoutSettings?.stripe_connect_account_id || null, req.headers.get("origin"), penaltyBreakdown);
     }
     
     console.log("📝 User authenticated:", user.email);
@@ -186,7 +188,7 @@ serve(async (req) => {
       mode: "payment",
       customer: customerId,
       payment_method_types: ["card"],
-      payment_method_collection: "if_required",
+      payment_method_collection: "always", // Always collect payment method
       payment_method_options: {
         card: {
           setup_future_usage: "off_session", // Save for future automatic payments
@@ -360,6 +362,8 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
         success_url: `${origin}/profile?penalty_paid=true`,
         cancel_url: `${origin}/profile`,
       });
+      
+      console.log("🔗 Checkout session created:", session.url);
       
       return new Response(JSON.stringify({ 
         checkout_url: session.url,
