@@ -126,6 +126,8 @@ export const usePenaltySystem = (userId: string) => {
       // Attempt automatic charging if enabled and amount is significant
       if (autoCharge && amount >= 5 && creditData) {
         try {
+          console.log('Attempting auto-charge for penalty:', { bookingId, amount, penaltyCreditId: creditData.id });
+          
           const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('charge-penalty', {
             body: {
               bookingId,

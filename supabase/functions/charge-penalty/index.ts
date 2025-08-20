@@ -14,173 +14,324 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
   try {
-    logStep("Function started");
+    const { bookingId, amount, description, penaltyCreditId, autoCharge, splitPayment, penaltyBreakdown } = await req.json();
+    
+    logStep('Received penalty charge request', { bookingId, amount, description, penaltyCreditId, autoCharge, splitPayment });
 
-    const { bookingId, amount, description, penaltyCreditId } = await req.json();
-
-    if (!bookingId || !amount || !penaltyCreditId) {
-      throw new Error("Missing required fields: bookingId, amount, and penaltyCreditId");
+    if (!bookingId || !amount || !description) {
+      throw new Error('Missing required parameters: bookingId, amount, description');
     }
 
-    logStep("Request data received", { bookingId, amount, description, penaltyCreditId });
-
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
     });
 
-    // Create Supabase client with service role key
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    // Get booking data with user information
-    const { data: booking, error: bookingError } = await supabaseService
+    // Get booking details including user information
+    logStep('Fetching booking details');
+    const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select('*, profiles!inner(email, full_name)')
+      .select(`
+        *,
+        profiles!bookings_renter_id_fkey(email, full_name)
+      `)
       .eq('id', bookingId)
       .single();
 
     if (bookingError || !booking) {
-      throw new Error(`Booking not found: ${bookingError?.message}`);
+      logStep('Booking fetch error', bookingError);
+      throw new Error('Booking not found');
     }
 
-    logStep("Booking found", { bookingId, userEmail: booking.profiles.email });
+    const userEmail = booking.profiles?.email;
+    const userName = booking.profiles?.full_name || 'Customer';
+    
+    logStep('Booking details retrieved', { userEmail, userName, paymentIntentId: booking.payment_intent_id });
 
-    const userEmail = booking.profiles.email;
-    const userName = booking.profiles.full_name;
+    if (!userEmail) {
+      throw new Error('User email not found');
+    }
 
-    // Find Stripe customer
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+    // Find the Stripe customer
+    logStep('Finding Stripe customer');
+    const customers = await stripe.customers.list({
+      email: userEmail,
+      limit: 1
+    });
+
     if (customers.data.length === 0) {
-      throw new Error("No Stripe customer found for this user");
+      throw new Error('Stripe customer not found');
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Stripe customer found", { customerId });
+    const customer = customers.data[0];
+    logStep('Customer found', { customerId: customer.id });
 
-    // Get the user's default payment method or the one used for this booking
-    let paymentMethodId = null;
-
-    // First, try to get the payment method used for the original booking
-    if (booking.payment_intent_id) {
+    // If autoCharge is enabled, try to charge automatically with original payment method
+    if (autoCharge) {
       try {
-        logStep("Looking for payment method from booking payment intent", { payment_intent_id: booking.payment_intent_id });
+        // Get the payment method used for the original booking
+        let paymentMethodId = null;
         
-        // Get the checkout session to find the payment intent
-        const session = await stripe.checkout.sessions.retrieve(booking.payment_intent_id, {
-          expand: ['payment_intent']
-        });
-        
-        if (session.payment_intent && typeof session.payment_intent === 'object' && session.payment_intent.payment_method) {
-          paymentMethodId = session.payment_intent.payment_method as string;
-          logStep("Found payment method from booking", { paymentMethodId });
+        if (booking.payment_intent_id) {
+          logStep('Retrieving original payment intent', { paymentIntentId: booking.payment_intent_id });
+          try {
+            const originalPaymentIntent = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
+            if (originalPaymentIntent.payment_method) {
+              paymentMethodId = originalPaymentIntent.payment_method as string;
+              logStep('Found payment method from original booking', { paymentMethodId });
+            }
+          } catch (error) {
+            logStep('Could not retrieve original payment method', error);
+          }
         }
-      } catch (error) {
-        logStep("Could not retrieve payment method from booking", { error: error.message });
+
+        // If no payment method from booking, get customer's default
+        if (!paymentMethodId) {
+          logStep('Getting customer default payment method');
+          const paymentMethods = await stripe.paymentMethods.list({
+            customer: customer.id,
+            type: 'card',
+            limit: 1
+          });
+          
+          if (paymentMethods.data.length > 0) {
+            paymentMethodId = paymentMethods.data[0].id;
+            logStep('Using customer default payment method', { paymentMethodId });
+          }
+        }
+
+        if (paymentMethodId) {
+          // Handle split payment for penalties (penalty fee to platform, hourly charge to owner)
+          if (splitPayment && penaltyBreakdown) {
+            logStep('Processing split payment for penalty', penaltyBreakdown);
+            
+            const results = [];
+            
+            // Charge penalty fee to platform (no transfer)
+            if (penaltyBreakdown.penaltyFee > 0) {
+              const penaltyIntent = await stripe.paymentIntents.create({
+                amount: Math.round(penaltyBreakdown.penaltyFee * 100),
+                currency: 'usd',
+                customer: customer.id,
+                payment_method: paymentMethodId,
+                confirm: true,
+                description: `Penalty Fee: Late checkout violation`,
+                metadata: {
+                  booking_id: bookingId,
+                  penalty_credit_id: penaltyCreditId || '',
+                  type: 'penalty_fee'
+                }
+              });
+              results.push({ type: 'penalty_fee', paymentIntent: penaltyIntent });
+            }
+            
+            // Charge hourly fee to platform, then transfer to owner
+            if (penaltyBreakdown.hourlyCharge > 0) {
+              // Get spot owner for transfer
+              const { data: spot, error: spotError } = await supabase
+                .from('parking_spots')
+                .select('owner_id')
+                .eq('id', booking.spot_id)
+                .single();
+              
+              if (!spotError && spot) {
+                // Get owner's Stripe account
+                const { data: payoutSettings } = await supabase
+                  .from('payout_settings')
+                  .select('stripe_connect_account_id')
+                  .eq('user_id', spot.owner_id)
+                  .single();
+                
+                const hourlyIntent = await stripe.paymentIntents.create({
+                  amount: Math.round(penaltyBreakdown.hourlyCharge * 100),
+                  currency: 'usd',
+                  customer: customer.id,
+                  payment_method: paymentMethodId,
+                  confirm: true,
+                  description: `Hourly Extension: Additional parking time`,
+                  metadata: {
+                    booking_id: bookingId,
+                    penalty_credit_id: penaltyCreditId || '',
+                    type: 'hourly_charge'
+                  }
+                });
+                
+                // Transfer to owner if Stripe Connect is set up
+                if (payoutSettings?.stripe_connect_account_id && hourlyIntent.status === 'succeeded') {
+                  const ownerAmount = Math.round(penaltyBreakdown.hourlyCharge * 0.85 * 100); // 85% to owner
+                  await stripe.transfers.create({
+                    amount: ownerAmount,
+                    currency: 'usd',
+                    destination: payoutSettings.stripe_connect_account_id,
+                    metadata: {
+                      booking_id: bookingId,
+                      type: 'hourly_extension_payout'
+                    }
+                  });
+                }
+                
+                results.push({ type: 'hourly_charge', paymentIntent: hourlyIntent });
+              }
+            }
+            
+            const allSuccessful = results.every(r => r.paymentIntent.status === 'succeeded');
+            
+            // Update penalty credit
+            if (penaltyCreditId) {
+              await supabase
+                .from('penalty_credits')
+                .update({
+                  status: allSuccessful ? 'paid' : 'processing',
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', penaltyCreditId);
+            }
+            
+            return new Response(JSON.stringify({
+              success: allSuccessful,
+              splitPayment: true,
+              results: results.map(r => ({
+                type: r.type,
+                paymentIntentId: r.paymentIntent.id,
+                status: r.paymentIntent.status
+              })),
+              message: allSuccessful ? 'Split payment completed successfully' : 'Split payment processing'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            });
+            
+          } else {
+            // Regular single penalty charge
+            logStep('Creating single penalty charge', { amount, paymentMethodId });
+            const paymentIntent = await stripe.paymentIntents.create({
+              amount: Math.round(amount * 100),
+              currency: 'usd',
+              customer: customer.id,
+              payment_method: paymentMethodId,
+              confirm: true,
+              description: `Penalty: ${description}`,
+              metadata: {
+                booking_id: bookingId,
+                penalty_credit_id: penaltyCreditId || '',
+                type: 'penalty'
+              }
+            });
+
+            logStep('Auto-charge payment intent created', { 
+              paymentIntentId: paymentIntent.id, 
+              status: paymentIntent.status 
+            });
+
+            // Update penalty credit
+            if (penaltyCreditId) {
+              await supabase
+                .from('penalty_credits')
+                .update({
+                  status: paymentIntent.status === 'succeeded' ? 'paid' : 'processing',
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', penaltyCreditId);
+            }
+
+            return new Response(JSON.stringify({
+              success: paymentIntent.status === 'succeeded',
+              paymentIntentId: paymentIntent.id,
+              status: paymentIntent.status,
+              message: paymentIntent.status === 'succeeded' 
+                ? 'Payment completed automatically' 
+                : 'Auto-charge failed'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            });
+          }
+        }
+      } catch (autoChargeError) {
+        logStep('Auto-charge failed, falling back to Stripe checkout', autoChargeError);
+        // Fall through to create Stripe checkout session
       }
     }
 
-    // If we couldn't find the payment method from the booking, get the customer's default
-    if (!paymentMethodId) {
-      const paymentMethods = await stripe.paymentMethods.list({
-        customer: customerId,
-        type: 'card',
-        limit: 1,
-      });
-
-      if (paymentMethods.data.length === 0) {
-        throw new Error("No payment methods found for this customer");
+    // Fallback: Create Stripe checkout session for manual payment
+    logStep('Creating Stripe checkout session for manual payment');
+    
+    let lineItems;
+    if (splitPayment && penaltyBreakdown) {
+      lineItems = [];
+      if (penaltyBreakdown.penaltyFee > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Late Checkout Penalty' },
+            unit_amount: Math.round(penaltyBreakdown.penaltyFee * 100),
+          },
+          quantity: 1,
+        });
       }
-
-      paymentMethodId = paymentMethods.data[0].id;
-      logStep("Using customer's default payment method", { paymentMethodId });
+      if (penaltyBreakdown.hourlyCharge > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Additional Parking Time' },
+            unit_amount: Math.round(penaltyBreakdown.hourlyCharge * 100),
+          },
+          quantity: 1,
+        });
+      }
+    } else {
+      lineItems = [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `Penalty: ${description}` },
+          unit_amount: Math.round(amount * 100),
+        },
+        quantity: 1,
+      }];
     }
 
-    // Calculate amount in cents
-    const amountCents = Math.round(amount * 100);
-    logStep("Charging penalty", { amountCents, description });
-
-    // Create the payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: 'usd',
-      customer: customerId,
-      payment_method: paymentMethodId,
-      confirm: true,
-      return_url: `${req.headers.get("origin")}/bookings`,
-      description: `Parking Penalty: ${description}`,
+    const session = await stripe.checkout.sessions.create({
+      customer: customer.id,
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${req.headers.get('origin') || 'https://app.arrivparking.com'}/bookings?payment=success`,
+      cancel_url: `${req.headers.get('origin') || 'https://app.arrivparking.com'}/bookings?payment=cancelled`,
       metadata: {
         booking_id: bookingId,
-        penalty_credit_id: penaltyCreditId,
-        penalty_type: 'late_checkout',
-        user_id: booking.renter_id
+        penalty_credit_id: penaltyCreditId || '',
+        type: 'penalty'
       }
     });
 
-    logStep("Payment intent created", { 
-      paymentIntentId: paymentIntent.id, 
-      status: paymentIntent.status 
+    logStep('Stripe checkout session created', { sessionId: session.id, url: session.url });
+
+    return new Response(JSON.stringify({
+      success: false,
+      redirectUrl: session.url,
+      message: 'Redirecting to Stripe for payment'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     });
 
-    // Update the penalty credit with payment information
-    const { error: updateError } = await supabaseService
-      .from('penalty_credits')
-      .update({
-        status: paymentIntent.status === 'succeeded' ? 'paid' : 'payment_pending',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', penaltyCreditId);
-
-    if (updateError) {
-      logStep("Error updating penalty credit", { error: updateError });
-    } else {
-      logStep("Penalty credit updated successfully");
-    }
-
-    // If payment succeeded, we can mark it as paid
-    if (paymentIntent.status === 'succeeded') {
-      logStep("Payment succeeded immediately");
-      return new Response(JSON.stringify({ 
-        success: true,
-        paymentIntentId: paymentIntent.id,
-        status: 'succeeded',
-        message: `Penalty of $${amount} charged successfully`
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    } else {
-      logStep("Payment requires additional action", { status: paymentIntent.status });
-      return new Response(JSON.stringify({ 
-        success: false,
-        paymentIntentId: paymentIntent.id,
-        status: paymentIntent.status,
-        requires_action: true,
-        client_secret: paymentIntent.client_secret,
-        message: `Payment requires additional authentication`
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in charge-penalty", { message: errorMessage });
+    logStep('Error processing penalty charge', error);
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage 
+      error: error.message 
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
     });
   }
 });
