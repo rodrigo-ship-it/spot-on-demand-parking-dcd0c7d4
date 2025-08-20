@@ -188,7 +188,7 @@ serve(async (req) => {
       mode: "payment",
       customer: customerId,
       payment_method_types: ["card"],
-      payment_method_collection: "always", // Always collect payment method
+      payment_method_collection: "if_required",
       payment_method_options: {
         card: {
           setup_future_usage: "off_session", // Save for future automatic payments
