@@ -188,7 +188,7 @@ serve(async (req) => {
       mode: "payment",
       customer: customerId,
       payment_method_types: ["card"],
-      payment_method_collection: "if_required",
+      payment_method_collection: "always", // Force saving payment method
       payment_method_options: {
         card: {
           setup_future_usage: "off_session", // Save for future automatic payments
@@ -304,14 +304,38 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
       console.log("🔍 No payment methods found, checking recent payments...");
       const paymentIntents = await stripe.paymentIntents.list({
         customer: customerId,
-        limit: 10
+        limit: 20, // Check more recent payments
+        expand: ['data.payment_method'] // Expand payment method details
       });
       console.log("📝 Recent payments found:", paymentIntents.data.length);
       
       for (const pi of paymentIntents.data) {
         if (pi.status === 'succeeded' && pi.payment_method) {
           console.log("✅ Found payment method from successful payment:", pi.payment_method);
-          const pm = await stripe.paymentMethods.retrieve(pi.payment_method);
+          
+          // If payment_method is a string ID, retrieve the full object
+          let pm;
+          if (typeof pi.payment_method === 'string') {
+            try {
+              pm = await stripe.paymentMethods.retrieve(pi.payment_method);
+            } catch (e) {
+              console.log("❌ Failed to retrieve payment method:", e.message);
+              continue;
+            }
+          } else {
+            pm = pi.payment_method;
+          }
+          
+          // Try to attach it to the customer if not already attached
+          if (pm && pm.customer !== customerId) {
+            try {
+              await stripe.paymentMethods.attach(pm.id, { customer: customerId });
+              console.log("🔗 Attached payment method to customer");
+            } catch (e) {
+              console.log("⚠️ Could not attach payment method:", e.message);
+            }
+          }
+          
           paymentMethods = { data: [pm] };
           break;
         }
@@ -375,6 +399,7 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     try {
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
+        customer: customerId, // Link to existing customer
         payment_method_types: ["card"],
         line_items: [{
           price_data: {
