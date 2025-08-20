@@ -138,13 +138,19 @@ export const usePenaltySystem = (userId: string) => {
       // Attempt automatic charging if enabled and amount is significant
       if (autoCharge && amount >= 5 && creditData) {
         try {
-          // Use charge-penalty for automatic charging with saved payment methods
-          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('charge-penalty', {
+          // Use marketplace payment for proper splitting between platform and spot owner
+          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('create-marketplace-payment', {
             body: {
               bookingId,
               amount,
               description,
-              penaltyCreditId: creditData.id
+              penaltyCreditId: creditData.id,
+              type: 'penalty',
+              penaltyBreakdown: {
+                penaltyFee: parseFloat(description.match(/\$([0-9.]+) fine/)?.[1] || "0"),
+                hourlyCharge: parseFloat(description.match(/\$([0-9.]+) for/)?.[1] || "0"),
+                totalAmount: amount
+              }
             }
           });
 
@@ -152,7 +158,7 @@ export const usePenaltySystem = (userId: string) => {
             console.error('Auto-charge failed:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - please update your payment method.`);
           } else if (chargeResult?.success) {
-            toast.success(`$${amount} penalty charged automatically to your payment method.`);
+            toast.success(`$${amount} penalty charged automatically. Penalty fee to platform, hourly charges split with spot owner.`);
           } else if (chargeResult?.requires_action) {
             toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
           } else {
