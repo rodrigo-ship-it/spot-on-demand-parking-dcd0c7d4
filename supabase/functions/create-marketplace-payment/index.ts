@@ -235,80 +235,119 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
   };
   
   try {
+    console.log("💳 Processing automatic penalty charge");
+    
     const penaltyFeeCents = Math.round((penaltyBreakdown.penaltyFee || 0) * 100);
     const hourlyChargeCents = Math.round((penaltyBreakdown.hourlyCharge || 0) * 100);
+    const totalAmountCents = penaltyFeeCents + hourlyChargeCents;
     
-    // For penalties, create 2 separate charges for clarity
-    if (penaltyFeeCents > 0 && hourlyChargeCents > 0) {
-      return createSeparatePenaltyCharges(stripe, user, penaltyFeeCents, hourlyChargeCents, penaltyCreditId, connectAccountId, origin);
+    // Find customer and their payment method
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    if (customers.data.length === 0) {
+      throw new Error("No Stripe customer found for automatic charging");
     }
     
-    // Single charge (either penalty only or hourly only)
-    const totalAmountCents = penaltyFeeCents + hourlyChargeCents;
-    const taxRate = 0.085; // 8.5% tax rate
-    const finalAmountCents = Math.round(totalAmountCents * (1 + taxRate));
+    const customerId = customers.data[0].id;
     
-    // If it's penalty only, 100% to platform
-    const ownerAmount = penaltyFeeCents > 0 ? 0 : (connectAccountId ? Math.round(hourlyChargeCents * 0.93) : 0);
+    // Get their default payment method
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customerId,
+      type: 'card',
+      limit: 1
+    });
     
-    const sessionData: any = {
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: penaltyFeeCents > 0 ? "Parking Penalty" : "Extra Parking Time",
-            description: description,
-          },
-          unit_amount: finalAmountCents,
-        },
-        quantity: 1,
-      }],
+    if (paymentMethods.data.length === 0) {
+      throw new Error("No saved payment method found for automatic charging");
+    }
+    
+    const paymentMethodId = paymentMethods.data[0].id;
+    
+    // Create payment intent for automatic charge
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: totalAmountCents,
+      currency: 'usd',
+      customer: customerId,
+      payment_method: paymentMethodId,
+      confirm: true,
+      description: description,
       metadata: {
         type: 'penalty',
         penalty_credit_id: penaltyCreditId,
         penalty_fee: penaltyFeeCents.toString(),
         hourly_charge: hourlyChargeCents.toString(),
-        total_charged: finalAmountCents.toString(),
-        owner_amount: ownerAmount.toString(),
       },
-      success_url: `${origin}/profile?penalty_paid=true`,
-      cancel_url: `${origin}/profile`,
-    };
-    
-    // Add transfer data only for hourly charges (not penalties)
-    if (connectAccountId && ownerAmount > 0 && hourlyChargeCents > 0) {
-      sessionData.payment_intent_data = {
+      // Add transfer for hourly charges only (penalties stay with platform)
+      ...(connectAccountId && hourlyChargeCents > 0 ? {
         transfer_data: {
           destination: connectAccountId,
-          amount: ownerAmount,
+          amount: Math.round(hourlyChargeCents * 0.93), // 93% to owner, 7% platform fee
         },
-      };
-    }
+      } : {})
+    });
     
-    const session = await stripe.checkout.sessions.create(sessionData);
-    
-    console.log("📝 Penalty payment session created successfully");
+    console.log(`💰 Penalty charged automatically: $${amount} - Status: ${paymentIntent.status}`);
     
     return new Response(JSON.stringify({ 
-      checkout_url: session.url,
-      session_id: session.id,
       success: true,
-      message: "Penalty payment session created"
+      payment_intent_id: paymentIntent.id,
+      status: paymentIntent.status,
+      message: "Penalty charged automatically"
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
     
   } catch (error) {
-    console.error("❌ Penalty payment error:", error);
-    return new Response(JSON.stringify({ 
-      error: error.message || "Penalty payment processing failed"
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("❌ Automatic penalty charge failed:", error);
+    
+    // If automatic charging fails, fall back to creating a checkout session
+    console.log("🔄 Falling back to checkout session");
+    
+    const totalAmountCents = Math.round(amount * 100);
+    const taxRate = 0.085;
+    const finalAmountCents = Math.round(totalAmountCents * (1 + taxRate));
+    
+    try {
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Parking Penalty",
+              description: description,
+            },
+            unit_amount: finalAmountCents,
+          },
+          quantity: 1,
+        }],
+        metadata: {
+          type: 'penalty',
+          penalty_credit_id: penaltyCreditId,
+        },
+        success_url: `${origin}/profile?penalty_paid=true`,
+        cancel_url: `${origin}/profile`,
+      });
+      
+      return new Response(JSON.stringify({ 
+        checkout_url: session.url,
+        session_id: session.id,
+        success: false,
+        message: "Automatic charge failed, checkout session created",
+        error: error.message
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } catch (fallbackError) {
+      return new Response(JSON.stringify({ 
+        error: `Automatic charge failed: ${error.message}. Fallback also failed: ${fallbackError.message}`
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
   }
 }
 
