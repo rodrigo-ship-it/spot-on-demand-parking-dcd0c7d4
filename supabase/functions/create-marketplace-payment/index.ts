@@ -348,20 +348,28 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
       throw new Error("No saved payment method found for automatic charging");
     }
     
-    const paymentMethodId = paymentMethods.data[0].id;
+    const paymentMethod = paymentMethods.data[0];
+    const paymentMethodId = paymentMethod.id;
     
-    // Create payment intent for automatic charge
+    // Validate payment method supports off-session usage
+    console.log("💳 Payment method type:", paymentMethod.type, "Status:", paymentMethod.card?.brand);
+    
+    // Check if payment method is properly attached to customer
+    if (paymentMethod.customer !== customerId) {
+      console.log("🔗 Attaching payment method to customer...");
+      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    }
+    
+    // Create payment intent for automatic charge (off-session)
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmountCents,
       currency: 'usd',
       customer: customerId,
       payment_method: paymentMethodId,
+      confirmation_method: 'automatic',
       confirm: true,
+      off_session: true,  // This is key for automatic charging
       description: description,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never'  // Only allow direct charges, no redirects
-      },
       metadata: {
         type: 'penalty',
         penalty_credit_id: penaltyCreditId,
