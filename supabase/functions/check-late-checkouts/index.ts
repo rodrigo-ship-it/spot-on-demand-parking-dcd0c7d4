@@ -169,23 +169,30 @@ serve(async (req) => {
               totalAmount: penaltyAmount + additionalCharges
             });
             
-            // Use the charge-penalty function with the correct parameters
-            const { data: paymentResult, error: paymentError } = await supabaseService.functions.invoke('charge-penalty', {
-              body: {
+            // Use the charge-penalty function with service role authorization
+            const chargeResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/charge-penalty`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
+              },
+              body: JSON.stringify({
                 bookingId: booking.id,
-                amount: penaltyAmount + additionalCharges, // Total amount to charge
+                amount: penaltyAmount + additionalCharges,
                 description: `Auto-close: $${penaltyAmount} penalty + $${additionalCharges} for 3hr overstay`,
-                penaltyCreditId: creditData.id // Use the penalty credit ID we just created
-              }
+                penaltyCreditId: creditData.id
+              })
             });
 
-            if (paymentError) {
-              logStep("Penalty charge failed", { error: paymentError, bookingId: booking.id });
+            const paymentResult = await chargeResponse.json();
+
+            if (!chargeResponse.ok || !paymentResult.success) {
+              logStep("Penalty charge failed", { error: paymentResult.error, bookingId: booking.id });
             } else {
               logStep("Penalty charge succeeded", { bookingId: booking.id, result: paymentResult });
             }
           } catch (paymentError) {
-            logStep("Penalty charge error", { error: paymentError, bookingId: booking.id });
+            logStep("Penalty charge error", { error: paymentError.message || paymentError, bookingId: booking.id });
           }
 
           results.push({

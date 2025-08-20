@@ -1094,13 +1094,14 @@ Check browser console for detailed ID analysis.
 
         {/* Comprehensive Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="spots">Spots</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
             <TabsTrigger value="penalty-test">Penalty Test</TabsTrigger>
             <TabsTrigger value="penalties">Penalties</TabsTrigger>
+            <TabsTrigger value="manual-charge">Manual Charge</TabsTrigger>
             <TabsTrigger value="support">Support</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
@@ -1559,6 +1560,17 @@ Check browser console for detailed ID analysis.
               </CardHeader>
               <CardContent>
                 <LateChargeTestSystem />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="manual-charge">
+            <Card>
+              <CardHeader>
+                <CardTitle>Manual Penalty Charge</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ManualPenaltyCharge />
               </CardContent>
             </Card>
           </TabsContent>
