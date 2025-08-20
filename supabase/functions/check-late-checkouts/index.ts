@@ -31,9 +31,9 @@ serve(async (req) => {
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
-    // Find all active/confirmed bookings that have passed their end time by more than 30 minutes (grace period)
-    // and haven't been marked as completed yet
-    const thirtyMinutesAgo = new Date(now.getTime() - (30 * 60 * 1000));
+    // Find all active/confirmed bookings that have passed their end time by more than 3 hours
+    // These will be auto-closed with maximum penalties
+    const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
       .from('bookings')
@@ -43,10 +43,11 @@ serve(async (req) => {
         end_time, 
         status,
         total_amount,
-        parking_spots!inner(title, address, price_per_hour)
+        payment_intent_id,
+        parking_spots!inner(title, address, price_per_hour, owner_id)
       `)
       .in('status', ['confirmed', 'active'])
-      .lt('end_time', thirtyMinutesAgo.toISOString())
+      .lt('end_time', threeHoursAgo.toISOString())
       .order('end_time', { ascending: true });
 
     if (bookingsError) {
@@ -101,22 +102,33 @@ serve(async (req) => {
 
         const isFirstOffense = !profile || profile.failed_checkouts === 0;
 
-        // Calculate penalty amount using the same logic as the penalty system
-        let penaltyAmount = 0;
-        if (minutesLate > 30) {
-          if (minutesLate <= 60) penaltyAmount = 8;
-          else if (minutesLate <= 120) penaltyAmount = 12;
-          else penaltyAmount = 20;
+        // Calculate maximum penalty amount for 3-hour auto-close
+        // Apply the highest penalty tier ($20) plus additional hourly charges
+        const hoursLate = Math.floor(minutesLate / 60);
+        const basePenalty = 20; // Maximum penalty tier
+        
+        // First offense leniency (20% reduction on base penalty only)
+        let penaltyAmount = isFirstOffense ? basePenalty * 0.8 : basePenalty;
+        penaltyAmount = Math.round(penaltyAmount * 100) / 100;
+        
+        // Calculate additional hourly charges for the 3 hours late
+        const hourlyRate = booking.parking_spots?.price_per_hour || 0;
+        const additionalHours = Math.min(hoursLate, 3); // Cap at 3 hours for auto-close
+        const additionalCharges = additionalHours * hourlyRate;
+        
+        logStep("Penalty calculation", { 
+          minutesLate, 
+          hoursLate, 
+          basePenalty, 
+          penaltyAmount, 
+          additionalCharges,
+          isFirstOffense 
+        });
 
-          // First offense leniency (20% reduction)
-          if (isFirstOffense) penaltyAmount *= 0.8;
-          penaltyAmount = Math.round(penaltyAmount * 100) / 100;
-        }
-
+        // Create penalty credit for base penalty
         if (penaltyAmount > 0) {
           logStep("Creating penalty credit", { bookingId: booking.id, amount: penaltyAmount, minutesLate });
 
-          // Create penalty credit
           const { data: creditData, error: creditError } = await supabaseService
             .from('penalty_credits')
             .insert({
@@ -124,7 +136,7 @@ serve(async (req) => {
               booking_id: booking.id,
               amount: penaltyAmount,
               credit_type: 'late_checkout',
-              description: `Automatic late checkout penalty - ${minutesLate} minutes late`,
+              description: `Auto-close penalty - abandoned booking 3+ hours late`,
               status: 'active'
             })
             .select()
@@ -149,29 +161,57 @@ serve(async (req) => {
             logStep("Error updating profile", { error: profileError, userId: booking.renter_id });
           }
 
-          // Attempt automatic charging if amount is significant
-          if (penaltyAmount >= 5) {
+          // Charge the combined penalty and additional hours using marketplace payment
+          if (additionalCharges > 0) {
             try {
-              logStep("Attempting automatic penalty charge", { bookingId: booking.id, amount: penaltyAmount });
+              logStep("Charging penalty + additional time via marketplace", { 
+                bookingId: booking.id, 
+                penaltyAmount, 
+                additionalCharges,
+                totalAmount: penaltyAmount + additionalCharges
+              });
+              
+              const { data: paymentResult, error: paymentError } = await supabaseService.functions.invoke('create-marketplace-payment', {
+                body: {
+                  bookingId: booking.id,
+                  penaltyAmount: penaltyAmount,
+                  additionalAmount: additionalCharges,
+                  splitPayment: true,
+                  description: `Auto-close: 3hr late penalty + ${additionalHours}hr parking charges`,
+                  ownerId: booking.parking_spots?.owner_id,
+                  isAutoClose: true
+                }
+              });
+
+              if (paymentError) {
+                logStep("Marketplace payment failed", { error: paymentError, bookingId: booking.id });
+              } else {
+                logStep("Marketplace payment succeeded", { bookingId: booking.id, result: paymentResult });
+              }
+            } catch (paymentError) {
+              logStep("Marketplace payment error", { error: paymentError, bookingId: booking.id });
+            }
+          } else {
+            // Just charge the penalty if no additional time
+            try {
+              logStep("Charging penalty only", { bookingId: booking.id, amount: penaltyAmount });
               
               const { data: chargeResult, error: chargeError } = await supabaseService.functions.invoke('charge-penalty', {
                 body: {
                   bookingId: booking.id,
                   amount: penaltyAmount,
-                  description: `Automatic late checkout penalty - ${minutesLate} minutes late`,
+                  description: `Auto-close penalty - abandoned booking 3+ hours late`,
                   penaltyCreditId: creditData.id
                 }
               });
 
               if (chargeError) {
-                logStep("Auto-charge failed", { error: chargeError, bookingId: booking.id });
-              } else if (chargeResult?.success) {
-                logStep("Auto-charge succeeded", { bookingId: booking.id, amount: penaltyAmount });
+                logStep("Penalty charge failed", { error: chargeError, bookingId: booking.id });
               } else {
-                logStep("Auto-charge requires action", { bookingId: booking.id, result: chargeResult });
+                logStep("Penalty charge succeeded", { bookingId: booking.id, result: chargeResult });
               }
-            } catch (autoChargeError) {
-              logStep("Auto-charge error", { error: autoChargeError, bookingId: booking.id });
+            } catch (chargeError) {
+              logStep("Penalty charge error", { error: chargeError, bookingId: booking.id });
             }
           }
 
@@ -179,7 +219,15 @@ serve(async (req) => {
             bookingId: booking.id,
             minutesLate,
             penaltyAmount,
-            status: 'penalty_created'
+            additionalCharges,
+            totalCharged: penaltyAmount + additionalCharges,
+            status: 'auto_closed_with_penalty'
+          });
+        } else {
+          results.push({
+            bookingId: booking.id,
+            minutesLate,
+            status: 'auto_closed_no_penalty'
           });
         }
 
