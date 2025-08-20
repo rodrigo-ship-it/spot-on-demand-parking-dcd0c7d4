@@ -162,36 +162,30 @@ serve(async (req) => {
 
           // Always use two-charge approach for auto-close: penalty + additional hours
           try {
-            logStep("Charging penalty + additional time via marketplace (two-charge approach)", { 
+            logStep("Charging penalty + additional time via charge-penalty function", { 
               bookingId: booking.id, 
               penaltyAmount, 
               additionalCharges,
               totalAmount: penaltyAmount + additionalCharges
             });
             
-            const { data: paymentResult, error: paymentError } = await supabaseService.functions.invoke('create-marketplace-payment', {
+            // Use the charge-penalty function with the correct parameters
+            const { data: paymentResult, error: paymentError } = await supabaseService.functions.invoke('charge-penalty', {
               body: {
-                type: 'penalty',
                 bookingId: booking.id,
-                amount: penaltyAmount + additionalCharges,
-                description: `Auto-close: $${penaltyAmount} penalty (100% platform) + $${additionalCharges} for 3hr parking (split)`,
-                penaltyBreakdown: {
-                  penaltyAmount: penaltyAmount,
-                  additionalAmount: additionalCharges,
-                  splitPayment: true,
-                  ownerId: booking.parking_spots?.owner_id,
-                  isAutoClose: true
-                }
+                amount: penaltyAmount + additionalCharges, // Total amount to charge
+                description: `Auto-close: $${penaltyAmount} penalty + $${additionalCharges} for 3hr overstay`,
+                penaltyCreditId: creditData.id // Use the penalty credit ID we just created
               }
             });
 
             if (paymentError) {
-              logStep("Marketplace payment failed", { error: paymentError, bookingId: booking.id });
+              logStep("Penalty charge failed", { error: paymentError, bookingId: booking.id });
             } else {
-              logStep("Marketplace payment succeeded", { bookingId: booking.id, result: paymentResult });
+              logStep("Penalty charge succeeded", { bookingId: booking.id, result: paymentResult });
             }
           } catch (paymentError) {
-            logStep("Marketplace payment error", { error: paymentError, bookingId: booking.id });
+            logStep("Penalty charge error", { error: paymentError, bookingId: booking.id });
           }
 
           results.push({
