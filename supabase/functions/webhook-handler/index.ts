@@ -158,12 +158,21 @@ serve(async (req) => {
           qr_code_used: isQRBooking,
           platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
           owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
-          display_date: new Date(bookingDetails.date).toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          }),
+          display_date: (() => {
+            // Use the exact date components to avoid timezone conversion
+            const bookingDate = new Date(bookingDetails.date);
+            const year = bookingDate.getFullYear();
+            const month = bookingDate.getMonth();
+            const day = bookingDate.getDate();
+            // Create a new date with explicit local components to avoid timezone issues
+            const localDate = new Date(year, month, day);
+            return localDate.toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            });
+          })(),
           display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
           display_end_time: isPricingDaily 
             ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime

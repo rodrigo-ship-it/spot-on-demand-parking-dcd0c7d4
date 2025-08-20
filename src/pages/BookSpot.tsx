@@ -234,6 +234,15 @@ const BookSpot = () => {
     if (date) {
       // Ensure we use the date as-is without any time component conversion
       const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      console.log('🗓️ [DATE_CHANGE] Selected date:', {
+        originalDate: date,
+        originalToString: date.toString(),
+        localDate: localDate,
+        localToString: localDate.toString(),
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        day: date.getDate()
+      });
       setBookingDetails(prev => ({ ...prev, date: localDate }));
     }
   };
