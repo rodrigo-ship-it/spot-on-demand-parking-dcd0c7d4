@@ -161,6 +161,12 @@ export const usePenaltySystem = (userId: string) => {
             toast.success(`$${amount} penalty charged automatically. Penalty fee to platform, hourly charges split with spot owner.`);
           } else if (chargeResult?.requires_action) {
             toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
+          } else if (chargeResult?.checkout_url) {
+            // Auto-charge failed, redirect to checkout for manual payment
+            toast.info(`Automatic charge failed. Redirecting to checkout for $${amount} penalty payment...`);
+            setTimeout(() => {
+              window.location.href = chargeResult.checkout_url;
+            }, 2000);
           } else {
             toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Please update your payment method.'}`);
           }
