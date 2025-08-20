@@ -126,14 +126,14 @@ export const usePenaltySystem = (userId: string) => {
       // Attempt automatic charging if enabled and amount is significant
       if (autoCharge && amount >= 5 && creditData) {
         try {
-          const functionName = splitPayment ? 'create-marketplace-payment' : 'charge-penalty';
-          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke(functionName, {
+          const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('charge-penalty', {
             body: {
               bookingId,
               amount,
               description,
               penaltyCreditId: creditData.id,
-              type: 'penalty',
+              autoCharge: true,
+              splitPayment,
               penaltyBreakdown: splitPayment ? {
                 penaltyFee: parseFloat(description.match(/\$([0-9.]+) fine/)?.[1] || "0"),
                 hourlyCharge: parseFloat(description.match(/\$([0-9.]+) for/)?.[1] || "0"),
@@ -146,7 +146,11 @@ export const usePenaltySystem = (userId: string) => {
             console.error('Auto-charge failed:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
           } else if (chargeResult?.success) {
-            toast.success(`$${amount} penalty charged successfully to your payment method.`);
+            toast.success(`$${amount} penalty charged automatically to your original payment method.`);
+          } else if (chargeResult?.redirectUrl) {
+            // Auto-charge failed, redirect to Stripe for manual payment
+            toast.info(`Auto-charge failed. Redirecting to secure payment...`);
+            window.open(chargeResult.redirectUrl, '_blank');
           } else {
             toast.info(`$${amount} penalty added. ${chargeResult?.message || 'Payment requires authentication.'}`);
           }
