@@ -26,7 +26,7 @@ export const LateCheckoutTrigger = () => {
           if (processed > 0) {
             toast.success(`Auto-closed ${processed} abandoned booking(s) with maximum penalties`);
           } else {
-            toast.info("No bookings found that are exactly 3 hours late");
+            toast.info("No bookings found that are 3+ hours late");
           }
         } else {
           toast.error(result?.error || 'Failed to process auto-close');
@@ -55,7 +55,7 @@ export const LateCheckoutTrigger = () => {
             <div>
               <h4 className="font-medium text-amber-800">How it works:</h4>
               <ul className="text-sm text-amber-700 mt-2 space-y-1">
-                <li>• Finds bookings exactly 3 hours past their end time</li>
+                <li>• Finds bookings 3+ hours past their end time</li>
                 <li>• Auto-closes with maximum penalties: $20 + 3 hours parking charges</li>
                 <li>• Two separate charges: penalty (100% platform), parking (split with owner)</li>
                 <li>• Only processes each booking once at the 3-hour mark</li>

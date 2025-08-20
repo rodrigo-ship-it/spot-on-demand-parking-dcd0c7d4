@@ -31,10 +31,9 @@ serve(async (req) => {
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
-    // Find all active/confirmed bookings that are exactly 3 hours past their end time
-    // These will be auto-closed with maximum penalties only once at the 3-hour mark
+    // Find all active/confirmed bookings that are 3+ hours past their end time
+    // and haven't been processed yet (no existing penalty credits)
     const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-    const threeHoursAndFiveMinutesAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000) - (5 * 60 * 1000));
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
       .from('bookings')
@@ -49,7 +48,6 @@ serve(async (req) => {
       `)
       .in('status', ['confirmed', 'active'])
       .lte('end_time', threeHoursAgo.toISOString())
-      .gte('end_time', threeHoursAndFiveMinutesAgo.toISOString())
       .order('end_time', { ascending: true });
 
     if (bookingsError) {
