@@ -402,7 +402,7 @@ const BookSpot = () => {
                            >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {bookingDetails.date ? (
-                                format(new Date(bookingDetails.date), "MMM d, yyyy")
+                                format(new Date(bookingDetails.date + 'T12:00:00'), "MMM d, yyyy")
                              ) : (
                                <span>Pick a date</span>
                              )}
@@ -411,7 +411,7 @@ const BookSpot = () => {
                          <PopoverContent className="w-auto p-0" align="start">
                            <CalendarComponent
                              mode="single"
-                              selected={new Date(bookingDetails.date)}
+                              selected={new Date(bookingDetails.date + 'T12:00:00')}
                              onSelect={handleDateChange}
                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                              initialFocus
@@ -469,7 +469,7 @@ const BookSpot = () => {
                            >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {bookingDetails.date ? (
-                               format(new Date(bookingDetails.date), "MMM d, yyyy")
+                               format(new Date(bookingDetails.date + 'T12:00:00'), "MMM d, yyyy")
                              ) : (
                                <span>Pick a date</span>
                              )}
@@ -478,7 +478,7 @@ const BookSpot = () => {
                          <PopoverContent className="w-auto p-0" align="start">
                            <CalendarComponent
                              mode="single"
-                             selected={new Date(bookingDetails.date)}
+                             selected={new Date(bookingDetails.date + 'T12:00:00')}
                              onSelect={handleDateChange}
                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                              initialFocus
