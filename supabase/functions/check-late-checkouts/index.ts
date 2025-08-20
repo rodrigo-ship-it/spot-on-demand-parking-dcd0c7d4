@@ -171,13 +171,17 @@ serve(async (req) => {
             
             const { data: paymentResult, error: paymentError } = await supabaseService.functions.invoke('create-marketplace-payment', {
               body: {
+                type: 'penalty',
                 bookingId: booking.id,
-                penaltyAmount: penaltyAmount,
-                additionalAmount: additionalCharges,
-                splitPayment: true,
+                amount: penaltyAmount + additionalCharges,
                 description: `Auto-close: $${penaltyAmount} penalty (100% platform) + $${additionalCharges} for 3hr parking (split)`,
-                ownerId: booking.parking_spots?.owner_id,
-                isAutoClose: true
+                penaltyBreakdown: {
+                  penaltyAmount: penaltyAmount,
+                  additionalAmount: additionalCharges,
+                  splitPayment: true,
+                  ownerId: booking.parking_spots?.owner_id,
+                  isAutoClose: true
+                }
               }
             });
 
