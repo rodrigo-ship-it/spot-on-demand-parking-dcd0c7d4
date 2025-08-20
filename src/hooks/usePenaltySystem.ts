@@ -157,10 +157,16 @@ export const usePenaltySystem = (userId: string) => {
           if (chargeError) {
             console.error('Auto-charge failed:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
+          } else if (chargeResult?.success && chargeResult?.url) {
+            // Redirect to Stripe checkout for payment
+            toast.info(`Redirecting to payment for $${amount} penalty...`);
+            setTimeout(() => {
+              window.open(chargeResult.url, '_blank');
+            }, 1000);
           } else if (chargeResult?.success) {
             toast.success(`$${amount} penalty processed successfully.`);
           } else {
-            toast.info(`$${amount} penalty added. ${chargeResult?.message || 'Payment requires authentication.'}`);
+            toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Payment session failed to create.'}`);
           }
         } catch (autoChargeError) {
           console.error('Auto-charge error:', autoChargeError);
