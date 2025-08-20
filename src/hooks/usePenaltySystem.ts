@@ -72,13 +72,28 @@ export const usePenaltySystem = (userId: string) => {
     if (spotPricePerHour && spotPricePerHour > 0) {
       const hoursLate = minutesLate / 60;
       hourlyCharge = hoursLate * spotPricePerHour;
+      
+      // Cap hourly charges to prevent excessive fees
+      // Maximum of 3 hours worth of charges, regardless of how late they are
+      const maxHourlyCharge = 3 * spotPricePerHour;
+      hourlyCharge = Math.min(hourlyCharge, maxHourlyCharge);
     }
 
     const penaltyFee = Math.round(basePenalty * 100) / 100;
     hourlyCharge = Math.round(hourlyCharge * 100) / 100;
-    const totalAmount = penaltyFee + hourlyCharge;
+    
+    // Total cap: penalty fee + max $50 in hourly charges
+    const cappedHourlyCharge = Math.min(hourlyCharge, 50);
+    const totalAmount = penaltyFee + cappedHourlyCharge;
+    
+    // Absolute maximum penalty of $70 total
+    const finalAmount = Math.min(totalAmount, 70);
 
-    return { penaltyFee, hourlyCharge, totalAmount };
+    return { 
+      penaltyFee, 
+      hourlyCharge: cappedHourlyCharge, 
+      totalAmount: finalAmount 
+    };
   };
 
   const addPenaltyCredit = async (
@@ -143,7 +158,7 @@ export const usePenaltySystem = (userId: string) => {
             console.error('Auto-charge failed:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - you can pay manually in your billing.`);
           } else if (chargeResult?.success) {
-            toast.success(`$${amount} penalty charged successfully to your payment method.`);
+            toast.success(`$${amount} penalty processed successfully.`);
           } else {
             toast.info(`$${amount} penalty added. ${chargeResult?.message || 'Payment requires authentication.'}`);
           }
