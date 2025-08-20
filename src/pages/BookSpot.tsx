@@ -56,7 +56,7 @@ const BookSpot = () => {
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
-    date: new Date(),
+    date: format(new Date(), "yyyy-MM-dd"), // Initialize as YYYY-MM-DD string
     startTime: "09:00",
     endTime: "09:00", // Will be updated based on pricing type
     duration: 8,
@@ -232,7 +232,7 @@ const BookSpot = () => {
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      setBookingDetails(prev => ({ ...prev, date }));
+      setBookingDetails(prev => ({ ...prev, date: format(date, "yyyy-MM-dd") }));
     }
   };
 
@@ -402,7 +402,7 @@ const BookSpot = () => {
                            >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {bookingDetails.date ? (
-                               format(bookingDetails.date, "MMM d, yyyy")
+                                format(new Date(bookingDetails.date), "MMM d, yyyy")
                              ) : (
                                <span>Pick a date</span>
                              )}
@@ -411,7 +411,7 @@ const BookSpot = () => {
                          <PopoverContent className="w-auto p-0" align="start">
                            <CalendarComponent
                              mode="single"
-                             selected={bookingDetails.date}
+                              selected={new Date(bookingDetails.date)}
                              onSelect={handleDateChange}
                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                              initialFocus
@@ -469,7 +469,7 @@ const BookSpot = () => {
                            >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {bookingDetails.date ? (
-                               format(bookingDetails.date, "MMM d, yyyy")
+                               format(new Date(bookingDetails.date), "MMM d, yyyy")
                              ) : (
                                <span>Pick a date</span>
                              )}
@@ -478,7 +478,7 @@ const BookSpot = () => {
                          <PopoverContent className="w-auto p-0" align="start">
                            <CalendarComponent
                              mode="single"
-                             selected={bookingDetails.date}
+                             selected={new Date(bookingDetails.date)}
                              onSelect={handleDateChange}
                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                              initialFocus
