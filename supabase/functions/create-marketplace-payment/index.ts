@@ -358,6 +358,10 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
       payment_method: paymentMethodId,
       confirm: true,
       description: description,
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never'  // Only allow direct charges, no redirects
+      },
       metadata: {
         type: 'penalty',
         penalty_credit_id: penaltyCreditId,
