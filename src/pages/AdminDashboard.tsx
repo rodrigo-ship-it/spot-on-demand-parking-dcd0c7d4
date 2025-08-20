@@ -43,6 +43,7 @@ import AdminRefundManager from "@/components/AdminRefundManager";
 import { PenaltySystemTest } from "@/components/PenaltySystemTest";
 import { PenaltyTestHelper } from "@/components/PenaltyTestHelper";
 import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
+import { LateCheckoutTrigger } from "@/components/LateCheckoutTrigger";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -1543,6 +1544,7 @@ Check browser console for detailed ID analysis.
             <div className="space-y-6">
               <PenaltySystemTest />
               <PenaltyTestHelper />
+              <LateCheckoutTrigger />
             </div>
           </TabsContent>
 
