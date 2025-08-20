@@ -521,7 +521,7 @@ const Bookings = () => {
                                 Manage Time
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                               <DialogHeader>
                                 <DialogTitle>Time Management - {reservation.id}</DialogTitle>
                               </DialogHeader>
