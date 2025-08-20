@@ -42,6 +42,7 @@ import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
 import { PenaltySystemTest } from "@/components/PenaltySystemTest";
 import { PenaltyTestHelper } from "@/components/PenaltyTestHelper";
+import { PenaltyTestReal } from "@/components/PenaltyTestReal";
 import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
 import { LateCheckoutTrigger } from "@/components/LateCheckoutTrigger";
 import { format } from "date-fns";
@@ -1544,6 +1545,7 @@ Check browser console for detailed ID analysis.
             <div className="space-y-6">
               <PenaltySystemTest />
               <PenaltyTestHelper />
+              <PenaltyTestReal />
               <LateCheckoutTrigger />
             </div>
           </TabsContent>
