@@ -32,7 +32,8 @@ export const ExtensionSystem = ({
       }
       
       const now = new Date();
-      const end = new Date(endTime);
+      // Parse end time correctly to avoid timezone issues
+      const end = new Date(endTime + (endTime.includes('Z') ? '' : 'Z'));
       
       // Validate the parsed date
       if (isNaN(end.getTime())) {

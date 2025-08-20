@@ -188,7 +188,8 @@ export const EnhancedCheckOutSystem = ({
         
         // Add verification watermark
         const now = new Date();
-        const serverTimestamp = new Date().toISOString(); // Server-verified timestamp
+        // Use a consistent UTC timestamp for server verification
+        const serverTimestamp = now.toISOString();
         
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.fillRect(10, canvas.height - 120, 500, 110);
@@ -279,7 +280,8 @@ export const EnhancedCheckOutSystem = ({
     }
 
     const now = new Date();
-    const end = new Date(endTime);
+    // Parse end time correctly to avoid timezone issues
+    const end = new Date(endTime + (endTime.includes('Z') ? '' : 'Z'));
     
     // Validate the end date
     if (isNaN(end.getTime())) {

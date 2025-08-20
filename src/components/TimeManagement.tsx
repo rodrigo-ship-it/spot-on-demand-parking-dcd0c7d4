@@ -80,8 +80,10 @@ export const TimeManagement = ({
         return;
       }
 
-      const startTime = new Date(bookingData.start_time);
-      const endTime = new Date(bookingData.end_time);
+      // Parse timestamps correctly - booking times are stored as timestamp without timezone
+      // so we need to treat them as UTC to avoid timezone conversion issues
+      const startTime = new Date(bookingData.start_time + (bookingData.start_time.includes('Z') ? '' : 'Z'));
+      const endTime = new Date(bookingData.end_time + (bookingData.end_time.includes('Z') ? '' : 'Z'));
       const checkOutTime = new Date(verificationData.timestamp);
       
       // Validate that all dates are valid
