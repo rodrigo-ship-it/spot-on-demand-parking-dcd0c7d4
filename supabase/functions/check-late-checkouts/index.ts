@@ -183,9 +183,34 @@ serve(async (req) => {
           });
         }
 
-        // Do NOT automatically mark booking as completed - let user manually check out
-        // This prevents duplicate penalty processing while preserving user control
-        logStep("Penalty processed, booking remains active for manual checkout", { bookingId: booking.id });
+        // Auto-complete booking if 3+ hours (180 minutes) past end time
+        const shouldAutoComplete = minutesLate >= 180;
+        
+        if (shouldAutoComplete) {
+          logStep("Auto-completing booking after 3+ hours", { bookingId: booking.id, minutesLate });
+          
+          // Mark booking as completed
+          const { error: updateError } = await supabaseService
+            .from('bookings')
+            .update({
+              status: 'completed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', booking.id);
+
+          if (updateError) {
+            logStep("Error auto-completing booking", { error: updateError, bookingId: booking.id });
+          } else {
+            logStep("Booking auto-completed", { bookingId: booking.id });
+            results.push({
+              bookingId: booking.id,
+              minutesLate,
+              status: 'auto_completed'
+            });
+          }
+        } else {
+          logStep("Booking remains active for manual checkout", { bookingId: booking.id, minutesLate });
+        }
 
         processedCount++;
 
