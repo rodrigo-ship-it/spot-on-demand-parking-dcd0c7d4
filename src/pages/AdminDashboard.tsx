@@ -45,6 +45,7 @@ import { PenaltyTestHelper } from "@/components/PenaltyTestHelper";
 import { PenaltyTestReal } from "@/components/PenaltyTestReal";
 import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
 import { LateCheckoutTrigger } from "@/components/LateCheckoutTrigger";
+import { ManualPenaltyCharge } from "@/components/ManualPenaltyCharge";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -1547,6 +1548,7 @@ Check browser console for detailed ID analysis.
               <PenaltyTestHelper />
               <PenaltyTestReal />
               <LateCheckoutTrigger />
+              <ManualPenaltyCharge />
             </div>
           </TabsContent>
 

@@ -1047,6 +1047,10 @@ export type Database = {
         Args: { p_event_data?: Json; p_event_type: string; p_user_id?: string }
         Returns: string
       }
+      manual_charge_penalty: {
+        Args: { penalty_credit_id_param: string }
+        Returns: Json
+      }
       manual_check_late_checkouts: {
         Args: Record<PropertyKey, never>
         Returns: Json
