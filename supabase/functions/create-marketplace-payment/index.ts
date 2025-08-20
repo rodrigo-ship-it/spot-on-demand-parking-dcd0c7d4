@@ -111,7 +111,7 @@ serve(async (req) => {
       console.log("📝 Payout settings:", { payoutSettings, payoutError });
 
       // Process penalty with payment split
-      return processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, payoutSettings?.stripe_connect_account_id || null, req.headers.get("origin"), penaltyBreakdown);
+      return await processPenaltyPayment(stripe, user, amount, description, penaltyCreditId, payoutSettings?.stripe_connect_account_id || null, req.headers.get("origin"), penaltyBreakdown);
     }
     
     console.log("📝 User authenticated:", user.email);
@@ -396,9 +396,22 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     const finalAmountCents = Math.round(totalAmountCents * (1 + taxRate));
     
     try {
+      // Find or create customer for fallback
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      let customerId;
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+      } else {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { user_id: user.id }
+        });
+        customerId = customer.id;
+      }
+      
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
-        customer: customerId, // Link to existing customer
+        customer: customerId,
         payment_method_types: ["card"],
         line_items: [{
           price_data: {
