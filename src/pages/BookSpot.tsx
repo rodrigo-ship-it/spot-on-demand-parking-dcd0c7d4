@@ -56,7 +56,7 @@ const BookSpot = () => {
 
   // Booking state
   const [bookingDetails, setBookingDetails] = useState({
-    date: new Date(),
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()),
     startTime: "09:00",
     endTime: "09:00", // Will be updated based on pricing type
     duration: 8,
@@ -232,7 +232,9 @@ const BookSpot = () => {
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      setBookingDetails(prev => ({ ...prev, date }));
+      // Create date without timezone conversion
+      const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      setBookingDetails(prev => ({ ...prev, date: localDate }));
     }
   };
 
@@ -413,7 +415,7 @@ const BookSpot = () => {
                              mode="single"
                              selected={bookingDetails.date}
                              onSelect={handleDateChange}
-                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                              disabled={(date) => date < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())}
                              initialFocus
                              className={cn("p-3 pointer-events-auto")}
                            />
@@ -480,7 +482,7 @@ const BookSpot = () => {
                              mode="single"
                              selected={bookingDetails.date}
                              onSelect={handleDateChange}
-                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                             disabled={(date) => date < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())}
                              initialFocus
                              className={cn("p-3 pointer-events-auto")}
                            />
