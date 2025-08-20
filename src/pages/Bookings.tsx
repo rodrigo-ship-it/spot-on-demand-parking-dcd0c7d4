@@ -150,11 +150,16 @@ const Bookings = () => {
             } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
               console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
-            } else if (nowTime > endTime) {
-              status = 'Completed';
-              console.log('🔴 [STATUS] Setting as Completed - current time is past end time');
-            } else {
+            } else if (nowTime > endTime && (booking.status === 'confirmed' || booking.status === 'active')) {
+              // Booking is past end time but still not checked out - keep as Active until 3-hour limit or manual checkout
+              status = 'Active';
+              console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period');
+            } else if (nowTime < startTime) {
+              status = 'Upcoming';
               console.log('🟡 [STATUS] Setting as Upcoming - current time is before start time');
+            } else {
+              status = 'Completed';
+              console.log('🔴 [STATUS] Setting as Completed - fallback status');
             }
 
             // Get owner profile separately
