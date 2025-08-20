@@ -113,23 +113,37 @@ serve(async (req) => {
         try {
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
           
-          const bookingDate = new Date(bookingDetails.date);
-          if (isNaN(bookingDate.getTime())) {
-            throw new Error(`Invalid booking date: ${bookingDetails.date}`);
+          // Parse the date string directly without timezone conversion
+          // If the date comes as an ISO string, extract just the date part
+          let dateStr;
+          if (typeof bookingDetails.date === 'string' && bookingDetails.date.includes('T')) {
+            // Extract date part from ISO string (YYYY-MM-DDTHH:mm:ss.sssZ -> YYYY-MM-DD)
+            dateStr = bookingDetails.date.split('T')[0];
+          } else if (typeof bookingDetails.date === 'string' && bookingDetails.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Already in YYYY-MM-DD format
+            dateStr = bookingDetails.date;
+          } else {
+            // Try to parse the date but prevent timezone conversion
+            const bookingDate = new Date(bookingDetails.date);
+            if (isNaN(bookingDate.getTime())) {
+              throw new Error(`Invalid booking date: ${bookingDetails.date}`);
+            }
+            
+            // Use getFullYear, getMonth, getDate to avoid timezone issues
+            const year = bookingDate.getFullYear();
+            const month = String(bookingDate.getMonth() + 1).padStart(2, '0');
+            const day = String(bookingDate.getDate()).padStart(2, '0');
+            dateStr = `${year}-${month}-${day}`;
           }
-          
-          // Format date as YYYY-MM-DD using local timezone
-          const year = bookingDate.getFullYear();
-          const month = String(bookingDate.getMonth() + 1).padStart(2, '0');
-          const day = String(bookingDate.getDate()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day}`;
           
           // Create local datetime strings without any timezone conversion
           startTimeStr = `${dateStr}T${bookingDetails.startTime}:00`;
           
           // For daily bookings, add days to the end time string
           if (isPricingDaily) {
-            const endDate = new Date(bookingDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+            // Parse the dateStr to create a proper date for calculation
+            const startDate = new Date(dateStr + 'T00:00:00');
+            const endDate = new Date(startDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
             const endYear = endDate.getFullYear();
             const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
             const endDay = String(endDate.getDate()).padStart(2, '0');
