@@ -158,20 +158,28 @@ export const usePenaltySystem = (userId: string) => {
             console.error('Auto-charge failed:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - please update your payment method.`);
           } else {
-            console.log('Charge result:', chargeResult);
+            console.log('📍 Charge result received:', JSON.stringify(chargeResult));
             
             if (chargeResult?.success) {
+              console.log('✅ Penalty charged successfully');
               toast.success(`$${amount} penalty charged automatically. Penalty fee to platform, hourly charges split with spot owner.`);
             } else if (chargeResult?.requires_action) {
+              console.log('⚠️ Payment requires additional authentication');
               toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
             } else if (chargeResult?.checkout_url) {
-              // Auto-charge failed, redirect to checkout for manual payment immediately
-              console.log('Redirecting to checkout:', chargeResult.checkout_url);
+              console.log('🔄 Redirecting to checkout URL:', chargeResult.checkout_url);
               toast.info(`$${amount} penalty added to your account. Redirecting to checkout...`);
-              // Immediate redirect - don't make users wait
-              window.location.href = chargeResult.checkout_url;
+              
+              // Verify the URL is valid before redirecting
+              if (chargeResult.checkout_url && chargeResult.checkout_url.startsWith('https://')) {
+                console.log('🚀 Attempting redirect to:', chargeResult.checkout_url);
+                window.location.href = chargeResult.checkout_url;
+              } else {
+                console.error('❌ Invalid checkout URL:', chargeResult.checkout_url);
+                toast.error('Invalid checkout URL received. Please contact support.');
+              }
             } else {
-              console.error('Unexpected charge result:', chargeResult);
+              console.error('❌ Unexpected charge result:', chargeResult);
               toast.error(`$${amount} penalty added to your account. ${chargeResult?.message || 'Please update your payment method.'}`);
             }
           }

@@ -220,7 +220,7 @@ serve(async (req) => {
           destination: payoutSettings.stripe_connect_account_id,
           amount: listerAmount,
         },
-        setup_future_usage: "off_session", // Also save at payment intent level
+        setup_future_usage: "off_session", // Save the payment method for future use
       },
       success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/book-spot/${spot_id}`,
@@ -266,30 +266,62 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     const totalAmountCents = penaltyFeeCents + hourlyChargeCents;
     
     // Find customer and their payment method
+    console.log("🔍 Searching for customer:", user.email);
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    console.log("👤 Customer search result:", customers.data.length > 0 ? customers.data[0].id : "No customer found");
+    
     if (customers.data.length === 0) {
       throw new Error("No Stripe customer found for automatic charging");
     }
     
     const customerId = customers.data[0].id;
+    console.log("💾 Customer ID:", customerId);
     
     // Get their saved payment methods (try multiple approaches)
+    console.log("🔍 Searching for payment methods...");
     let paymentMethods = await stripe.paymentMethods.list({
       customer: customerId,
       type: 'card',
       limit: 10
     });
+    console.log("💳 Direct payment methods found:", paymentMethods.data.length);
     
     // If no attached payment methods, check if customer has a default payment method
     if (paymentMethods.data.length === 0) {
+      console.log("🔍 No direct payment methods, checking customer defaults...");
       const customer = await stripe.customers.retrieve(customerId);
+      console.log("👤 Customer default payment method:", customer.invoice_settings?.default_payment_method);
+      
       if (customer.invoice_settings?.default_payment_method) {
         const defaultPM = await stripe.paymentMethods.retrieve(customer.invoice_settings.default_payment_method);
         paymentMethods = { data: [defaultPM] };
+        console.log("✅ Found default payment method:", defaultPM.id);
       }
     }
     
+    // Also try to find payment methods from recent successful payments
     if (paymentMethods.data.length === 0) {
+      console.log("🔍 No payment methods found, checking recent payments...");
+      const paymentIntents = await stripe.paymentIntents.list({
+        customer: customerId,
+        limit: 10
+      });
+      console.log("📝 Recent payments found:", paymentIntents.data.length);
+      
+      for (const pi of paymentIntents.data) {
+        if (pi.status === 'succeeded' && pi.payment_method) {
+          console.log("✅ Found payment method from successful payment:", pi.payment_method);
+          const pm = await stripe.paymentMethods.retrieve(pi.payment_method);
+          paymentMethods = { data: [pm] };
+          break;
+        }
+      }
+    }
+    
+    console.log("📊 Final payment methods count:", paymentMethods.data.length);
+    
+    if (paymentMethods.data.length === 0) {
+      console.log("❌ No payment methods available for automatic charging");
       throw new Error("No saved payment method found for automatic charging");
     }
     
