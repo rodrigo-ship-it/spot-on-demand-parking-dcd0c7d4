@@ -86,24 +86,37 @@ const BookSpot = () => {
       try {
         // Load parking spot data
         console.log('BookSpot - Attempting to load spot with ID:', id);
+        console.log('BookSpot - Auth status:', { 
+          user: !!user, 
+          userId: user?.id, 
+          isQRCodeBooking 
+        });
+        
         const { data: spot, error: spotError } = await supabase
           .from('parking_spots')
           .select('*')
           .eq('id', id)
-          .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
+          .eq('is_active', true) // Explicitly filter for active spots
+          .maybeSingle();
 
         console.log('BookSpot - Supabase response:', { spot, spotError });
 
         if (spotError) {
           console.error('BookSpot - Error loading spot:', spotError);
-          toast.error("Failed to load parking spot");
+          console.error('BookSpot - Error details:', {
+            message: spotError.message,
+            details: spotError.details,
+            hint: spotError.hint,
+            code: spotError.code
+          });
+          toast.error(`Failed to load spot details: ${spotError.message}`);
           navigate('/');
           return;
         }
 
         if (!spot) {
           console.error('BookSpot - No spot found with ID:', id);
-          toast.error("Parking spot not found");
+          toast.error("Parking spot not found or not active");
           navigate('/');
           return;
         }
