@@ -43,7 +43,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.charge-penalty]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-booking-confirmation]
 verify_jwt = true

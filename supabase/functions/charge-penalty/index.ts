@@ -41,10 +41,10 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get booking data with user information
+    // Get booking data with user information using service role client
     const { data: booking, error: bookingError } = await supabaseService
       .from('bookings')
-      .select('*, profiles!inner(email, full_name)')
+      .select('*, renter_id')
       .eq('id', bookingId)
       .single();
 
@@ -52,10 +52,21 @@ serve(async (req) => {
       throw new Error(`Booking not found: ${bookingError?.message}`);
     }
 
-    logStep("Booking found", { bookingId, userEmail: booking.profiles.email });
+    // Get user profile separately to avoid RLS issues
+    const { data: profile, error: profileError } = await supabaseService
+      .from('profiles')
+      .select('email, full_name')
+      .eq('user_id', booking.renter_id)
+      .single();
 
-    const userEmail = booking.profiles.email;
-    const userName = booking.profiles.full_name;
+    if (profileError || !profile) {
+      throw new Error(`User profile not found: ${profileError?.message}`);
+    }
+
+    logStep("Booking and profile found", { bookingId, userEmail: profile.email });
+
+    const userEmail = profile.email;
+    const userName = profile.full_name;
 
     // Find Stripe customer
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
