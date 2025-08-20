@@ -141,13 +141,18 @@ serve(async (req) => {
           
           // For daily bookings, add days to the end time string
           if (isPricingDaily) {
-            // Parse the dateStr to create a proper date for calculation
-            const startDate = new Date(dateStr + 'T00:00:00');
-            const endDate = new Date(startDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
-            const endYear = endDate.getFullYear();
-            const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-            const endDay = String(endDate.getDate()).padStart(2, '0');
-            endTimeStr = `${endYear}-${endMonth}-${endDay}T${bookingDetails.startTime}:00`;
+            // Calculate end date by parsing YYYY-MM-DD and adding days without timezone conversion
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const endYear = year;
+            const endMonth = month;
+            const endDay = day + bookingDetails.numberOfDays;
+            
+            // Handle month/year overflow correctly
+            const endDate = new Date(endYear, endMonth - 1, endDay); // month is 0-indexed in Date constructor
+            const finalYear = endDate.getFullYear();
+            const finalMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+            const finalDay = String(endDate.getDate()).padStart(2, '0');
+            endTimeStr = `${finalYear}-${finalMonth}-${finalDay}T${bookingDetails.startTime}:00`;
           } else {
             endTimeStr = `${dateStr}T${bookingDetails.endTime}:00`;
           }
@@ -172,7 +177,7 @@ serve(async (req) => {
           qr_code_used: isQRBooking,
           platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
           owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
-          display_date: new Date(bookingDetails.date).toLocaleDateString('en-US', { 
+          display_date: new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
