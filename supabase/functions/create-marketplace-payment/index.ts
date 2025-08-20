@@ -168,9 +168,30 @@ serve(async (req) => {
     const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
 
     console.log("📝 Creating Stripe checkout session...");
+    
+    // Check if customer exists, create if not
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    } else {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { user_id: user.id }
+      });
+      customerId = customer.id;
+    }
+    
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      customer: customerId,
       payment_method_types: ["card"],
+      payment_method_collection: "if_required",
+      payment_method_options: {
+        card: {
+          setup_future_usage: "off_session", // Save for future automatic payments
+        },
+      },
       line_items: [{
         price_data: {
           currency: "usd",
@@ -197,6 +218,7 @@ serve(async (req) => {
           destination: payoutSettings.stripe_connect_account_id,
           amount: listerAmount,
         },
+        setup_future_usage: "off_session", // Also save at payment intent level
       },
       success_url: `${req.headers.get("origin")}/booking-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/book-spot/${spot_id}`,
