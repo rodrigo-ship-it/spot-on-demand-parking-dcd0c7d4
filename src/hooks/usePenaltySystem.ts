@@ -139,6 +139,7 @@ export const usePenaltySystem = (userId: string) => {
       if (autoCharge && amount >= 5 && creditData) {
         try {
           // Use marketplace payment for proper splitting between platform and spot owner
+          console.log('🔄 Invoking create-marketplace-payment function...');
           const { data: chargeResult, error: chargeError } = await supabase.functions.invoke('create-marketplace-payment', {
             body: {
               bookingId,
@@ -154,8 +155,10 @@ export const usePenaltySystem = (userId: string) => {
             }
           });
 
+          console.log('📨 Function response received:', { chargeResult, chargeError });
+
           if (chargeError) {
-            console.error('Auto-charge failed:', chargeError);
+            console.error('❌ Function invocation error:', chargeError);
             toast.error(`$${amount} penalty added to your account. Auto-charge failed - please update your payment method.`);
           } else {
             console.log('📍 Charge result received:', JSON.stringify(chargeResult));
@@ -173,7 +176,10 @@ export const usePenaltySystem = (userId: string) => {
               // Verify the URL is valid before redirecting
               if (chargeResult.checkout_url && chargeResult.checkout_url.startsWith('https://')) {
                 console.log('🚀 Attempting redirect to:', chargeResult.checkout_url);
-                window.location.href = chargeResult.checkout_url;
+                // Use a more reliable redirect method
+                setTimeout(() => {
+                  window.location.href = chargeResult.checkout_url;
+                }, 500); // Small delay to ensure toast shows
               } else {
                 console.error('❌ Invalid checkout URL:', chargeResult.checkout_url);
                 toast.error('Invalid checkout URL received. Please contact support.');
