@@ -183,43 +183,44 @@ serve(async (req) => {
             logStep("Error updating profile", { error: profileError, userId: booking.renter_id });
           }
 
-          // Charge the TOTAL amount with proper fee breakdown
+          // Use the SAME payment system as manual checkout (create-marketplace-payment)
           try {
-            logStep("Charging penalty + additional time via charge-penalty function", { 
+            logStep("Charging penalty using marketplace payment system", { 
               bookingId: booking.id, 
-              penaltyAmount: basePenalty, 
-              additionalCharges: hourlyOverage,
-              totalAmount: totalChargeAmount
+              totalAmount: totalChargeAmount,
+              penaltyBreakdown: {
+                penaltyFee: basePenalty,
+                hourlyCharge: hourlyOverage,
+                totalAmount: totalChargeAmount
+              }
             });
             
-            // Use the charge-penalty function with service role authorization
-            const chargeResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/charge-penalty`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
-              },
-              body: JSON.stringify({
+            // Create Supabase client for function invocation
+            const supabaseClient = createClient(
+              Deno.env.get("SUPABASE_URL") ?? "",
+              Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+            );
+            
+            // Use the same create-marketplace-payment function as manual checkout
+            const { data: chargeResult, error: chargeError } = await supabaseClient.functions.invoke('create-marketplace-payment', {
+              body: {
                 bookingId: booking.id,
-                amount: totalChargeAmount, // Pass the TOTAL amount including all fees
+                amount: totalChargeAmount,
                 description: penaltyDescription,
                 penaltyCreditId: creditData.id,
-                penaltyAmount: basePenalty,
-                hourlyCharges: hourlyOverage,
-                totalOverageWithFees: totalOverageWithFees,
-                ownerPayoutAmount: ownerPayoutAmount,
-                platformFee: platformFeeFromOverage,
-                processingFee: stripeProcessingFee,
-                taxRate: taxRate
-              })
+                type: 'penalty',
+                penaltyBreakdown: {
+                  penaltyFee: basePenalty,
+                  hourlyCharge: hourlyOverage,
+                  totalAmount: totalChargeAmount
+                }
+              }
             });
 
-            const paymentResult = await chargeResponse.json();
-
-            if (!chargeResponse.ok || !paymentResult.success) {
-              logStep("Penalty charge failed", { error: paymentResult.error, bookingId: booking.id });
+            if (chargeError) {
+              logStep("Penalty charge failed", { error: chargeError, bookingId: booking.id });
             } else {
-              logStep("Penalty charge succeeded", { bookingId: booking.id, result: paymentResult });
+              logStep("Penalty charge succeeded", { bookingId: booking.id, result: chargeResult });
             }
           } catch (paymentError) {
             logStep("Penalty charge error", { error: paymentError.message || paymentError, bookingId: booking.id });
