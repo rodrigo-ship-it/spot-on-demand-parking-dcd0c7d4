@@ -1136,6 +1136,10 @@ export type Database = {
         }
         Returns: string
       }
+      log_data_access: {
+        Args: { operation: string; record_count?: number; table_name: string }
+        Returns: undefined
+      }
       log_security_event: {
         Args: { p_event_data?: Json; p_event_type: string; p_user_id?: string }
         Returns: string
@@ -1169,6 +1173,10 @@ export type Database = {
         Args: { message_id: string }
         Returns: undefined
       }
+      mask_license_plate: {
+        Args: { plate_text: string }
+        Returns: string
+      }
       refresh_analytics_views: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1179,6 +1187,10 @@ export type Database = {
       }
       user_owns_spot: {
         Args: { spot_id_param: string }
+        Returns: boolean
+      }
+      validate_sensitive_data_access: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }
