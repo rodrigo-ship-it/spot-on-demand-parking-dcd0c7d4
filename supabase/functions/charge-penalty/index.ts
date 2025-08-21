@@ -142,6 +142,58 @@ serve(async (req) => {
       status: paymentIntent.status 
     });
 
+    // If payment succeeded, handle the payout distribution
+    if (paymentIntent.status === 'succeeded') {
+      logStep("Payment succeeded, processing payout distribution");
+      
+      // Get spot details for payout calculation
+      const { data: spot, error: spotError } = await supabaseService
+        .from('parking_spots')
+        .select('owner_id, price_per_hour')
+        .eq('id', booking.spot_id)
+        .single();
+
+      if (!spotError && spot) {
+        // Get spot owner's Stripe Connect account
+        const { data: payout_settings } = await supabaseService
+          .from('payout_settings')
+          .select('stripe_connect_account_id')
+          .eq('user_id', spot.owner_id)
+          .single();
+
+        if (payout_settings?.stripe_connect_account_id) {
+          // Calculate platform fee (12%) and owner payout (88%)
+          const platformFeeAmount = Math.round(amountCents * 0.12);
+          const ownerPayoutAmount = amountCents - platformFeeAmount;
+          
+          try {
+            // Create transfer to spot owner
+            const transfer = await stripe.transfers.create({
+              amount: ownerPayoutAmount,
+              currency: 'usd',
+              destination: payout_settings.stripe_connect_account_id,
+              description: `Late checkout charges for booking ${bookingId}`,
+              metadata: {
+                booking_id: bookingId,
+                penalty_credit_id: penaltyCreditId,
+                type: 'late_checkout_payout'
+              }
+            });
+
+            logStep("Transfer created for spot owner", { 
+              transferId: transfer.id, 
+              amount: ownerPayoutAmount,
+              spotOwnerId: spot.owner_id
+            });
+          } catch (transferError) {
+            logStep("Transfer failed", { error: transferError.message });
+          }
+        } else {
+          logStep("No Stripe Connect account found for spot owner", { spotOwnerId: spot.owner_id });
+        }
+      }
+    }
+
     // Update the penalty credit with payment information
     const { error: updateError } = await supabaseService
       .from('penalty_credits')
