@@ -303,18 +303,81 @@ serve(async (req) => {
             });
             
             try {
-              // Create transfer to spot owner (only for hourly overstay charges)
+              // Validate Connect account can receive transfers
+              const connectAccount = await stripe.accounts.retrieve(payout_settings.stripe_connect_account_id);
+              logStep("Connect account status", {
+                accountId: connectAccount.id,
+                payoutsEnabled: connectAccount.payouts_enabled,
+                transfersEnabled: connectAccount.capabilities?.transfers,
+                chargesEnabled: connectAccount.charges_enabled
+              });
+
+              if (!connectAccount.payouts_enabled) {
+                throw new Error(`Connect account ${connectAccount.id} does not have payouts enabled`);
+              }
+
+              // Check platform account balance
+              const balance = await stripe.balance.retrieve();
+              const availableUSD = balance.available.find(b => b.currency === 'usd')?.amount || 0;
+              const pendingUSD = balance.pending.find(b => b.currency === 'usd')?.amount || 0;
+              
+              logStep("Platform balance check", {
+                availableUSD,
+                pendingUSD,
+                requiredAmount: ownerPayoutCents,
+                hasSufficientFunds: availableUSD >= ownerPayoutCents
+              });
+
+              if (availableUSD < ownerPayoutCents) {
+                // Create a pending transfer record for later processing
+                const { error: transferQueueError } = await supabaseService
+                  .from('pending_transfers')
+                  .insert({
+                    booking_id: bookingId,
+                    penalty_credit_id: penaltyCreditId,
+                    destination_account: payout_settings.stripe_connect_account_id,
+                    amount_cents: ownerPayoutCents,
+                    currency: 'usd',
+                    description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount} = $${actualOwnerPayout.toFixed(2)})`,
+                    payment_intent_id: paymentIntent.id,
+                    status: 'pending_funds',
+                    metadata: {
+                      booking_id: bookingId,
+                      penalty_credit_id: penaltyCreditId,
+                      type: 'late_checkout_hourly_payout',
+                      hourly_charges: hourlyChargesAmount,
+                      owner_share_percentage: 93,
+                      spot_owner_id: spot.owner_id
+                    }
+                  });
+
+                if (transferQueueError) {
+                  logStep("Failed to queue transfer", { error: transferQueueError });
+                } else {
+                  logStep("Transfer queued for later processing due to insufficient funds", {
+                    availableBalance: availableUSD,
+                    requiredAmount: ownerPayoutCents,
+                    shortfall: ownerPayoutCents - availableUSD
+                  });
+                }
+                
+                throw new Error(`Insufficient platform balance. Available: $${(availableUSD/100).toFixed(2)}, Required: $${(ownerPayoutCents/100).toFixed(2)}`);
+              }
+
+              // Create transfer with source_transaction for better fund tracking
               const transfer = await stripe.transfers.create({
                 amount: ownerPayoutCents,
                 currency: 'usd',
                 destination: payout_settings.stripe_connect_account_id,
+                source_transaction: paymentIntent.latest_charge as string,
                 description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount} = $${actualOwnerPayout.toFixed(2)})`,
                 metadata: {
                   booking_id: bookingId,
                   penalty_credit_id: penaltyCreditId,
                   type: 'late_checkout_hourly_payout',
                   hourly_charges: hourlyChargesAmount,
-                  owner_share_percentage: 93
+                  owner_share_percentage: 93,
+                  spot_owner_id: spot.owner_id
                 }
               });
 
@@ -322,8 +385,28 @@ serve(async (req) => {
                 transferId: transfer.id, 
                 amount: transfer.amount,
                 destination: transfer.destination,
-                spotOwnerId: spot.owner_id
+                spotOwnerId: spot.owner_id,
+                sourceTransaction: transfer.source_transaction
               });
+
+              // Record successful transfer
+              const { error: transferRecordError } = await supabaseService
+                .from('completed_transfers')
+                .insert({
+                  booking_id: bookingId,
+                  penalty_credit_id: penaltyCreditId,
+                  stripe_transfer_id: transfer.id,
+                  destination_account: transfer.destination,
+                  amount_cents: transfer.amount,
+                  currency: transfer.currency,
+                  status: 'completed',
+                  completed_at: new Date().toISOString()
+                });
+
+              if (transferRecordError) {
+                logStep("Failed to record transfer completion", { error: transferRecordError });
+              }
+
             } catch (transferError) {
               logStep("Transfer failed", { 
                 error: transferError.message, 
@@ -333,6 +416,34 @@ serve(async (req) => {
                 ownerPayoutCents,
                 connectAccountId: payout_settings.stripe_connect_account_id
               });
+
+              // Create failed transfer record for admin review
+              const { error: failedTransferError } = await supabaseService
+                .from('failed_transfers')
+                .insert({
+                  booking_id: bookingId,
+                  penalty_credit_id: penaltyCreditId,
+                  destination_account: payout_settings.stripe_connect_account_id,
+                  amount_cents: ownerPayoutCents,
+                  currency: 'usd',
+                  error_message: transferError.message,
+                  error_type: transferError.constructor.name,
+                  payment_intent_id: paymentIntent.id,
+                  status: 'failed',
+                  metadata: {
+                    booking_id: bookingId,
+                    penalty_credit_id: penaltyCreditId,
+                    type: 'late_checkout_hourly_payout',
+                    hourly_charges: hourlyChargesAmount,
+                    owner_share_percentage: 93,
+                    spot_owner_id: spot.owner_id,
+                    original_error: transferError.message
+                  }
+                });
+
+              if (failedTransferError) {
+                logStep("Failed to record transfer failure", { error: failedTransferError });
+              }
             }
           } else {
             logStep("No Stripe Connect account found for spot owner", { 
