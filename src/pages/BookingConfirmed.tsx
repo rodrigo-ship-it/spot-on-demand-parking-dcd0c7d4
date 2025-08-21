@@ -455,7 +455,6 @@ const BookingConfirmed = () => {
                     <li><strong>31-60 minutes late:</strong> $8 penalty + hourly overage charges</li>
                     <li><strong>61-120 minutes late:</strong> $12 penalty + hourly overage charges</li>
                     <li><strong>120+ minutes late:</strong> $20 penalty + hourly overage charges</li>
-                    <li><strong>3+ hours without checkout:</strong> Auto-close with $20 penalty + hourly overage charges (max $70 total)</li>
                   </ul>
                   <div className="mt-3 p-3 bg-red-100 rounded-md">
                     <p className="font-semibold text-red-800">
