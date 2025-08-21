@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { validatePassword } from '@/lib/security';
+import { SecurityEnhancedForm } from '@/components/SecurityEnhancedForm';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -22,6 +24,10 @@ const Auth = () => {
     fullName: '',
     confirmPassword: ''
   });
+  const [passwordValidation, setPasswordValidation] = useState({
+    isValid: false,
+    errors: [] as string[]
+  });
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -31,10 +37,17 @@ const Auth = () => {
   }, [user, loading, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+    
+    // Validate password in real-time for signup
+    if (name === 'password' && activeTab === 'signup') {
+      const validation = validatePassword(value);
+      setPasswordValidation(validation);
+    }
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -83,24 +96,30 @@ const Auth = () => {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignUp = async (formData: FormData, csrfToken: string) => {
     setIsLoading(true);
 
-    if (formData.password !== formData.confirmPassword) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    const fullName = formData.get('fullName') as string;
+
+    if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       setIsLoading(false);
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+    // Enhanced password validation
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      toast.error(`Password requirements not met: ${validation.errors.join(', ')}`);
       setIsLoading(false);
       return;
     }
 
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.fullName);
+      const { error } = await signUp(email, password, fullName);
       
       if (error) {
         if (error.message.includes('User already registered')) {
@@ -202,7 +221,7 @@ const Auth = () => {
                       Back to Sign In
                     </Button>
                   </form>
-                ) : (
+                 ) : (
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
@@ -261,7 +280,7 @@ const Auth = () => {
               </TabsContent>
               
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
+                <SecurityEnhancedForm onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
                     <Input
@@ -312,6 +331,30 @@ const Auth = () => {
                         )}
                       </Button>
                     </div>
+                    {/* Password strength indicator */}
+                    {formData.password && (
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-muted-foreground">Password Requirements:</div>
+                        <div className="space-y-1">
+                          {[
+                            { check: formData.password.length >= 8, text: 'At least 8 characters' },
+                            { check: /[A-Z]/.test(formData.password), text: 'One uppercase letter' },
+                            { check: /[a-z]/.test(formData.password), text: 'One lowercase letter' },
+                            { check: /\d/.test(formData.password), text: 'One number' },
+                            { check: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password), text: 'One special character' }
+                          ].map((req, index) => (
+                            <div key={index} className="flex items-center space-x-2 text-sm">
+                              {req.check ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500" />
+                              )}
+                              <span className={req.check ? 'text-green-700' : 'text-red-700'}>{req.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirm Password</Label>
@@ -325,10 +368,14 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Creating account...' : 'Create Account'}
-                  </Button>
-                </form>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading || !passwordValidation.isValid || formData.password !== formData.confirmPassword}
+                    >
+                      {isLoading ? 'Creating account...' : 'Create Account'}
+                    </Button>
+                  </SecurityEnhancedForm>
               </TabsContent>
             </Tabs>
           </CardContent>
