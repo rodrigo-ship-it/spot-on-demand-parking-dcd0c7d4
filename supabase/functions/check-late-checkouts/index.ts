@@ -104,7 +104,7 @@ serve(async (req) => {
 
         // Calculate penalty using the SAME logic as the trigger
         const hoursLate = Math.floor(minutesLate / 60);
-        let basePenalty = isFirstOffense ? 20.00 : 50.00;
+        let basePenalty = 20.00; // Always $20 base penalty (changed from variable amount)
         
         // Calculate hourly overage charges (for hours past 3-hour grace period)
         const hourlyRate = booking.parking_spots?.price_per_hour || 6.00;

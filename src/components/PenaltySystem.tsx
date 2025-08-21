@@ -46,12 +46,10 @@ export const PenaltySystem = ({ violations, accountStatus, totalPenalties }: Pen
 
   const getPenaltySchedule = () => {
     return [
-      { offense: "Grace Period (0-30 min)", penalty: "$0", action: "No penalty" },
-      { offense: "Late Check-out (31-60 min)", penalty: "$8", action: "Convenience fee" },
-      { offense: "Extended Late (61-120 min)", penalty: "$12", action: "Moderate fee" },
-      { offense: "Excessive Late (120+ min)", penalty: "$20", action: "Overtime fee + rating impact" },
-      { offense: "Next Person Arrives & Spot Occupied", penalty: "$30", action: "Penalty applied" },
-      { offense: "Damage/Dispute", penalty: "$100+", action: "Case-by-case review" }
+      { offense: "Grace Period (0-3 hours)", penalty: "$0", action: "No penalty" },
+      { offense: "Auto-close after 3+ hours", penalty: "$20", action: "Base penalty + hourly overage charges" },
+      { offense: "Damage/Dispute", penalty: "$100+", action: "Case-by-case review" },
+      { offense: "Maximum Total Penalty", penalty: "$70", action: "Capped amount including all fees" }
     ];
   };
 
