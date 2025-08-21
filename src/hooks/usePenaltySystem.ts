@@ -149,7 +149,7 @@ export const usePenaltySystem = (userId: string) => {
               type: 'penalty',
               penaltyBreakdown: {
                 penaltyFee: parseFloat(description.match(/\$([0-9.]+) fine/)?.[1] || "0"),
-                hourlyCharge: parseFloat(description.match(/\$([0-9.]+) for/)?.[1] || "0"),
+                hourlyCharge: parseFloat(description.match(/\+ \$([0-9.]+) for/)?.[1] || "0"),
                 totalAmount: amount
               }
             }

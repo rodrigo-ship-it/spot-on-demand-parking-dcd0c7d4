@@ -264,6 +264,15 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     const hourlyChargeCents = Math.round((penaltyBreakdown.hourlyCharge || 0) * 100);
     const totalAmountCents = penaltyFeeCents + hourlyChargeCents;
     
+    console.log("💰 Penalty breakdown:", { 
+      penaltyFee: penaltyBreakdown.penaltyFee, 
+      hourlyCharge: penaltyBreakdown.hourlyCharge, 
+      penaltyFeeCents, 
+      hourlyChargeCents, 
+      totalAmountCents,
+      connectAccountId 
+    });
+    
     // Find customer and their payment method
     console.log("🔍 Searching for customer:", user.email);
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
