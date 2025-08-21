@@ -62,17 +62,36 @@ serve(async (req) => {
     
     const token = authHeader.replace("Bearer ", "");
     console.log("📝 Token length:", token.length);
-    const { data, error: authError } = await supabaseClient.auth.getUser(token);
-    console.log("📝 Auth result:", { user: data.user?.email, authError });
-    if (authError || !data.user?.email) {
-      console.log("❌ Authentication failed:", authError);
-      return new Response(JSON.stringify({ error: "Authentication failed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
-    }
     
-    const user = data.user;
+    // Check if this is a service role call (for automatic system operations)
+    const isServiceRole = token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    let user = null;
+    
+    if (isServiceRole) {
+      console.log("🔧 Service role access detected for system operation");
+      // For penalty payments from system, we don't need user auth
+      if (type !== 'penalty') {
+        return new Response(
+          JSON.stringify({ error: "Service role access only allowed for penalty payments" }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 403,
+          });
+      }
+    } else {
+      // Regular user authentication
+      const { data, error: authError } = await supabaseClient.auth.getUser(token);
+      console.log("📝 Auth result:", { user: data.user?.email, authError });
+      if (authError || !data.user?.email) {
+        console.log("❌ Authentication failed:", authError);
+        return new Response(JSON.stringify({ error: "Authentication failed" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        });
+      }
+      
+      user = data.user;
+    }
     
     // Initialize Stripe early for penalty payments
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {

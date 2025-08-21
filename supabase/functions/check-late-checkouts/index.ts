@@ -195,15 +195,14 @@ serve(async (req) => {
               }
             });
             
-            // Create Supabase client for function invocation
-            const supabaseClient = createClient(
-              Deno.env.get("SUPABASE_URL") ?? "",
-              Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-            );
-            
-            // Use the same create-marketplace-payment function as manual checkout
-            const { data: chargeResult, error: chargeError } = await supabaseClient.functions.invoke('create-marketplace-payment', {
-              body: {
+            // Use direct function call with service role token (same domain)
+            const chargeResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/create-marketplace-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
+              },
+              body: JSON.stringify({
                 bookingId: booking.id,
                 amount: totalChargeAmount,
                 description: penaltyDescription,
@@ -214,11 +213,13 @@ serve(async (req) => {
                   hourlyCharge: hourlyOverage,
                   totalAmount: totalChargeAmount
                 }
-              }
+              })
             });
 
-            if (chargeError) {
-              logStep("Penalty charge failed", { error: chargeError, bookingId: booking.id });
+            const chargeResult = await chargeResponse.json();
+
+            if (!chargeResponse.ok || !chargeResult.success) {
+              logStep("Penalty charge failed", { error: chargeResult.error, bookingId: booking.id });
             } else {
               logStep("Penalty charge succeeded", { bookingId: booking.id, result: chargeResult });
             }
