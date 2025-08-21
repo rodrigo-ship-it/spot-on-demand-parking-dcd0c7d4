@@ -546,7 +546,7 @@ const BookingConfirmed = () => {
               <div className="flex items-start">
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-3 mt-1 flex-shrink-0"></div>
                 <div>
-                  <p className="text-sm"><strong>Less than 3 hours before:</strong> No refund available, but you can still cancel the booking</p>
+                  <p className="text-sm"><strong>Less than 3 hours before:</strong> No refund available</p>
                 </div>
               </div>
             </div>
