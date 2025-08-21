@@ -20,6 +20,7 @@ export type Database = {
           checkout_photo_verified: boolean | null
           checkout_timestamp_verified: boolean | null
           checkout_verification_method: string | null
+          completed_by_system: boolean | null
           created_at: string
           display_date: string | null
           display_duration_text: string | null
@@ -45,6 +46,7 @@ export type Database = {
           checkout_photo_verified?: boolean | null
           checkout_timestamp_verified?: boolean | null
           checkout_verification_method?: string | null
+          completed_by_system?: boolean | null
           created_at?: string
           display_date?: string | null
           display_duration_text?: string | null
@@ -70,6 +72,7 @@ export type Database = {
           checkout_photo_verified?: boolean | null
           checkout_timestamp_verified?: boolean | null
           checkout_verification_method?: string | null
+          completed_by_system?: boolean | null
           created_at?: string
           display_date?: string | null
           display_duration_text?: string | null
