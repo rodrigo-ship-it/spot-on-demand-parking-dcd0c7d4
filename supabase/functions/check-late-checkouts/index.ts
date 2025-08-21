@@ -123,7 +123,13 @@ serve(async (req) => {
         const ownerPayoutAmount = Math.round(hourlyOverage * 0.93 * 100) / 100;
         
         // Calculate TOTAL amount to charge user (penalty + overage + all fees)
-        const totalChargeAmount = basePenalty + totalOverageWithFees;
+        let totalChargeAmount = basePenalty + totalOverageWithFees;
+        
+        // Apply $70 cap to total charge amount
+        const maxChargeAmount = 70.00;
+        if (totalChargeAmount > maxChargeAmount) {
+          totalChargeAmount = maxChargeAmount;
+        }
         
         logStep("Penalty calculation", { 
           minutesLate, 
