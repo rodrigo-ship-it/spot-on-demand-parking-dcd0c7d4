@@ -213,11 +213,12 @@ serve(async (req) => {
           });
         }
 
-        // Mark booking as completed to prevent future processing
+        // Mark booking as completed by system to trigger penalty
         const { error: updateError } = await supabaseService
           .from('bookings')
           .update({
             status: 'completed',
+            completed_by_system: true,
             updated_at: new Date().toISOString()
           })
           .eq('id', booking.id);
