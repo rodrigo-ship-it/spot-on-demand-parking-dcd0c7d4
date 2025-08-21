@@ -102,40 +102,56 @@ serve(async (req) => {
 
         const isFirstOffense = !profile || profile.failed_checkouts === 0;
 
-        // Calculate maximum penalty for 3-hour auto-close with two-charge approach
+        // Calculate penalty using the SAME logic as the trigger
         const hoursLate = Math.floor(minutesLate / 60);
-        const basePenalty = 20; // Maximum penalty tier
+        let basePenalty = isFirstOffense ? 20.00 : 50.00;
         
-        // First offense leniency (20% reduction on base penalty only)
-        let penaltyAmount = isFirstOffense ? basePenalty * 0.8 : basePenalty;
-        penaltyAmount = Math.round(penaltyAmount * 100) / 100;
-        
-        // Calculate additional hourly charges for the FULL 3 hours late (separate charge)
-        const hourlyRate = booking.parking_spots?.price_per_hour || 0;
+        // Calculate hourly overage charges (for hours past 3-hour grace period)
+        const hourlyRate = booking.parking_spots?.price_per_hour || 6.00;
         const additionalHours = 3; // Always charge for full 3 hours when auto-closing
-        const additionalCharges = additionalHours * hourlyRate;
+        const hourlyOverage = additionalHours * hourlyRate;
+        
+        // Apply fee structure to overage (same as regular bookings)
+        const platformFeeFromOverage = Math.round(hourlyOverage * 0.07 * 100) / 100; // 7% platform fee
+        const stripeProcessingFee = Math.round(((hourlyOverage + basePenalty) * 0.029 + 0.30) * 100) / 100; // 2.9% + $0.30
+        
+        // Calculate total with taxes
+        const taxRate = 0.085; // 8.5% tax
+        const totalOverageWithFees = Math.round((hourlyOverage + platformFeeFromOverage + stripeProcessingFee) * (1 + taxRate) * 100) / 100;
+        
+        // Owner gets 93% of base overage amount
+        const ownerPayoutAmount = Math.round(hourlyOverage * 0.93 * 100) / 100;
+        
+        // Calculate TOTAL amount to charge user (penalty + overage + all fees)
+        const totalChargeAmount = basePenalty + totalOverageWithFees;
         
         logStep("Penalty calculation", { 
           minutesLate, 
           hoursLate, 
           basePenalty, 
-          penaltyAmount, 
-          additionalCharges,
+          hourlyOverage,
+          platformFeeFromOverage,
+          stripeProcessingFee,
+          totalOverageWithFees,
+          ownerPayoutAmount,
+          totalChargeAmount,
           isFirstOffense 
         });
 
-        // Create penalty credit for base penalty
-        if (penaltyAmount > 0) {
-          logStep("Creating penalty credit", { bookingId: booking.id, amount: penaltyAmount, minutesLate });
+        // Create penalty credit for TOTAL amount (including all fees)
+        if (totalChargeAmount > 0) {
+          logStep("Creating penalty credit", { bookingId: booking.id, amount: totalChargeAmount, minutesLate });
+
+          const penaltyDescription = `Auto-close: $${basePenalty} penalty + $${hourlyOverage} overage + fees/taxes (Total: $${totalChargeAmount})`;
 
           const { data: creditData, error: creditError } = await supabaseService
             .from('penalty_credits')
             .insert({
               user_id: booking.renter_id,
               booking_id: booking.id,
-              amount: penaltyAmount,
+              amount: totalChargeAmount, // Use the total amount including all fees
               credit_type: 'late_checkout',
-              description: `Auto-close penalty - abandoned booking exactly at 3 hours late`,
+              description: penaltyDescription,
               status: 'active'
             })
             .select()
@@ -146,12 +162,13 @@ serve(async (req) => {
             continue;
           }
 
-          // Update user profile
+          // Update user profile with total amount
           const newFailedCheckouts = (profile?.failed_checkouts || 0) + 1;
           const { error: profileError } = await supabaseService
             .from('profiles')
             .update({
               failed_checkouts: newFailedCheckouts,
+              total_penalty_credits: (profile?.total_penalty_credits || 0) + totalChargeAmount,
               last_violation_at: new Date().toISOString()
             })
             .eq('user_id', booking.renter_id);
@@ -160,13 +177,13 @@ serve(async (req) => {
             logStep("Error updating profile", { error: profileError, userId: booking.renter_id });
           }
 
-          // Always use two-charge approach for auto-close: penalty + additional hours
+          // Charge the TOTAL amount with proper fee breakdown
           try {
             logStep("Charging penalty + additional time via charge-penalty function", { 
               bookingId: booking.id, 
-              penaltyAmount, 
-              additionalCharges,
-              totalAmount: penaltyAmount + additionalCharges
+              penaltyAmount: basePenalty, 
+              additionalCharges: hourlyOverage,
+              totalAmount: totalChargeAmount
             });
             
             // Use the charge-penalty function with service role authorization
@@ -178,11 +195,16 @@ serve(async (req) => {
               },
               body: JSON.stringify({
                 bookingId: booking.id,
-                amount: penaltyAmount + additionalCharges,
-                description: `Auto-close: $${penaltyAmount} penalty + $${additionalCharges} for 3hr overstay`,
+                amount: totalChargeAmount, // Pass the TOTAL amount including all fees
+                description: penaltyDescription,
                 penaltyCreditId: creditData.id,
-                penaltyAmount: penaltyAmount,
-                hourlyCharges: additionalCharges
+                penaltyAmount: basePenalty,
+                hourlyCharges: hourlyOverage,
+                totalOverageWithFees: totalOverageWithFees,
+                ownerPayoutAmount: ownerPayoutAmount,
+                platformFee: platformFeeFromOverage,
+                processingFee: stripeProcessingFee,
+                taxRate: taxRate
               })
             });
 
@@ -200,9 +222,9 @@ serve(async (req) => {
           results.push({
             bookingId: booking.id,
             minutesLate,
-            penaltyAmount,
-            additionalCharges,
-            totalCharged: penaltyAmount + additionalCharges,
+            basePenalty: basePenalty,
+            hourlyOverage: hourlyOverage,
+            totalChargeAmount: totalChargeAmount,
             status: 'auto_closed_with_penalty'
           });
         } else {
