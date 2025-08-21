@@ -22,13 +22,37 @@ serve(async (req) => {
     logStep("Function started");
 
     const requestBody = await req.json();
-    const { bookingId, amount, description, penaltyCreditId, penaltyAmount, hourlyCharges } = requestBody;
+    const { 
+      bookingId, 
+      amount, 
+      description, 
+      penaltyCreditId, 
+      penaltyAmount, 
+      hourlyCharges,
+      totalOverageWithFees,
+      ownerPayoutAmount,
+      platformFee,
+      processingFee,
+      taxRate
+    } = requestBody;
 
     if (!bookingId || !amount || !penaltyCreditId) {
       throw new Error("Missing required fields: bookingId, amount, and penaltyCreditId");
     }
 
-    logStep("Request data received", { bookingId, amount, description, penaltyCreditId, penaltyAmount, hourlyCharges });
+    logStep("Request data received", { 
+      bookingId, 
+      amount, 
+      description, 
+      penaltyCreditId, 
+      penaltyAmount, 
+      hourlyCharges,
+      totalOverageWithFees,
+      ownerPayoutAmount,
+      platformFee,
+      processingFee,
+      taxRate 
+    });
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -172,22 +196,23 @@ serve(async (req) => {
           logStep("Payout settings lookup", { payout_settings, payoutError, spotOwnerId: spot.owner_id });
 
           if (payout_settings?.stripe_connect_account_id) {
-            // Calculate owner payout: 93% of ONLY the hourly charges (not the penalty)
-            const ownerPayoutAmount = Math.round(hourlyChargesAmount * 100 * 0.93); // Convert to cents and take 93%
+            // Use the calculated owner payout amount from the trigger (already includes 93% calculation)
+            const ownerPayoutCents = Math.round((ownerPayoutAmount || hourlyChargesAmount * 0.93) * 100); // Convert to cents
             
             logStep("Creating transfer", { 
               hourlyChargesAmount, 
-              ownerPayoutAmount, 
+              ownerPayoutAmount: ownerPayoutAmount || hourlyChargesAmount * 0.93,
+              ownerPayoutCents,
               connectAccountId: payout_settings.stripe_connect_account_id 
             });
             
             try {
               // Create transfer to spot owner (only for hourly overstay charges)
               const transfer = await stripe.transfers.create({
-                amount: ownerPayoutAmount,
+                amount: ownerPayoutCents,
                 currency: 'usd',
                 destination: payout_settings.stripe_connect_account_id,
-                description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount})`,
+                description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount} = $${(ownerPayoutAmount || hourlyChargesAmount * 0.93).toFixed(2)})`,
                 metadata: {
                   booking_id: bookingId,
                   penalty_credit_id: penaltyCreditId,
@@ -208,7 +233,8 @@ serve(async (req) => {
                 error: transferError.message, 
                 errorType: transferError.constructor.name,
                 hourlyChargesAmount,
-                ownerPayoutAmount,
+                ownerPayoutAmount: ownerPayoutAmount || hourlyChargesAmount * 0.93,
+                ownerPayoutCents,
                 connectAccountId: payout_settings.stripe_connect_account_id
               });
             }
