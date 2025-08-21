@@ -307,14 +307,14 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     
     const penaltyFeeCents = Math.round((penaltyBreakdown.penaltyFee || 0) * 100);
     const hourlyChargeCents = Math.round((penaltyBreakdown.hourlyCharge || 0) * 100);
-    const totalAmountCents = penaltyFeeCents + hourlyChargeCents;
+    // Use the actual amount parameter which includes all fees and taxes, not the breakdown sum
     
     console.log("💰 Penalty breakdown:", { 
       penaltyFee: penaltyBreakdown.penaltyFee, 
       hourlyCharge: penaltyBreakdown.hourlyCharge, 
       penaltyFeeCents, 
       hourlyChargeCents, 
-      totalAmountCents,
+      actualAmountToCharge: amount, // The full amount including fees/taxes
       connectAccountId 
     });
     
