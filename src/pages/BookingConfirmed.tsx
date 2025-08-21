@@ -451,10 +451,9 @@ const BookingConfirmed = () => {
                     Failure to check out upon leaving your parking spot will result in automatic penalty charges:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
-                    <li><strong>0-30 minutes late:</strong> No penalty (grace period)</li>
-                    <li><strong>31-60 minutes late:</strong> $8 penalty</li>
-                    <li><strong>61-120 minutes late:</strong> $12 penalty</li>
-                    <li><strong>120+ minutes late:</strong> $20 penalty</li>
+                    <li><strong>0-3 hours late:</strong> No penalty (grace period)</li>
+                    <li><strong>3+ hours late:</strong> Automatic booking closure with $20 penalty + hourly overage charges</li>
+                    <li><strong>Maximum total penalty:</strong> $70 (including all fees and taxes)</li>
                   </ul>
                   <div className="mt-3 p-3 bg-red-100 rounded-md">
                     <p className="font-semibold text-red-800">
