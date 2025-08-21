@@ -448,27 +448,18 @@ const BookingConfirmed = () => {
                 </h3>
                 <div className="space-y-2 text-red-700">
                   <p className="font-medium">
-                    Failure to check out upon leaving your parking spot will result in penalty charges:
+                    Failure to check out upon leaving your parking spot will result in late fee charges:
                   </p>
-                  <div className="bg-red-100 p-3 rounded-md mb-3">
-                    <p className="font-semibold text-red-800 mb-2">Manual Checkout Penalties (if you check out late):</p>
-                    <ul className="list-disc pl-5 space-y-1 text-sm">
-                      <li><strong>0-30 minutes late:</strong> No penalty (grace period)</li>
-                      <li><strong>31-60 minutes late:</strong> $8 penalty</li>
-                      <li><strong>61-120 minutes late:</strong> $12 penalty</li>
-                      <li><strong>120+ minutes late:</strong> $20 penalty</li>
-                    </ul>
-                  </div>
-                  <div className="bg-red-200 p-3 rounded-md">
-                    <p className="font-semibold text-red-800 mb-2">Auto-Close System (if you don't check out):</p>
-                    <ul className="list-disc pl-5 space-y-1 text-sm">
-                      <li><strong>After 3+ hours:</strong> $20 penalty + hourly overage charges (max $70 total)</li>
-                      <li><strong>Avoid this:</strong> Always check out manually, even if late!</li>
-                    </ul>
-                  </div>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li><strong>0-30 minutes late:</strong> No penalty (grace period)</li>
+                    <li><strong>31-60 minutes late:</strong> $8 penalty + hourly overage charges</li>
+                    <li><strong>61-120 minutes late:</strong> $12 penalty + hourly overage charges</li>
+                    <li><strong>120+ minutes late:</strong> $20 penalty + hourly overage charges</li>
+                    <li><strong>3+ hours without checkout:</strong> Auto-close with $20 penalty + hourly overage charges (max $70 total)</li>
+                  </ul>
                   <div className="mt-3 p-3 bg-red-100 rounded-md">
                     <p className="font-semibold text-red-800">
-                      💳 All penalties are automatically charged to your payment method on file.
+                      💳 Late fees are automatically charged to your payment method on file.
                     </p>
                   </div>
                 </div>
