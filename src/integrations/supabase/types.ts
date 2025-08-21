@@ -1097,6 +1097,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      check_booking_overlap: {
+        Args: {
+          p_end_time: string
+          p_exclude_booking_id?: string
+          p_spot_id: string
+          p_start_time: string
+        }
+        Returns: boolean
+      }
       current_user_has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
