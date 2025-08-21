@@ -180,7 +180,9 @@ serve(async (req) => {
                 bookingId: booking.id,
                 amount: penaltyAmount + additionalCharges,
                 description: `Auto-close: $${penaltyAmount} penalty + $${additionalCharges} for 3hr overstay`,
-                penaltyCreditId: creditData.id
+                penaltyCreditId: creditData.id,
+                penaltyAmount: penaltyAmount,
+                hourlyCharges: additionalCharges
               })
             });
 

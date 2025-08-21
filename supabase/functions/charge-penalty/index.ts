@@ -21,13 +21,13 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { bookingId, amount, description, penaltyCreditId } = await req.json();
+    const { bookingId, amount, description, penaltyCreditId, penaltyAmount, hourlyCharges } = await req.json();
 
     if (!bookingId || !amount || !penaltyCreditId) {
       throw new Error("Missing required fields: bookingId, amount, and penaltyCreditId");
     }
 
-    logStep("Request data received", { bookingId, amount, description, penaltyCreditId });
+    logStep("Request data received", { bookingId, amount, description, penaltyCreditId, penaltyAmount, hourlyCharges });
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -146,51 +146,60 @@ serve(async (req) => {
     if (paymentIntent.status === 'succeeded') {
       logStep("Payment succeeded, processing payout distribution");
       
-      // Get spot details for payout calculation
-      const { data: spot, error: spotError } = await supabaseService
-        .from('parking_spots')
-        .select('owner_id, price_per_hour')
-        .eq('id', booking.spot_id)
-        .single();
-
-      if (!spotError && spot) {
-        // Get spot owner's Stripe Connect account
-        const { data: payout_settings } = await supabaseService
-          .from('payout_settings')
-          .select('stripe_connect_account_id')
-          .eq('user_id', spot.owner_id)
+      // Only transfer spot owner's share of hourly charges (93%), penalty stays with company
+      const hourlyChargesAmount = hourlyCharges || 0;
+      
+      if (hourlyChargesAmount > 0) {
+        // Get spot details for payout calculation
+        const { data: spot, error: spotError } = await supabaseService
+          .from('parking_spots')
+          .select('owner_id, price_per_hour')
+          .eq('id', booking.spot_id)
           .single();
 
-        if (payout_settings?.stripe_connect_account_id) {
-          // Calculate platform fee (12%) and owner payout (88%)
-          const platformFeeAmount = Math.round(amountCents * 0.12);
-          const ownerPayoutAmount = amountCents - platformFeeAmount;
-          
-          try {
-            // Create transfer to spot owner
-            const transfer = await stripe.transfers.create({
-              amount: ownerPayoutAmount,
-              currency: 'usd',
-              destination: payout_settings.stripe_connect_account_id,
-              description: `Late checkout charges for booking ${bookingId}`,
-              metadata: {
-                booking_id: bookingId,
-                penalty_credit_id: penaltyCreditId,
-                type: 'late_checkout_payout'
-              }
-            });
+        if (!spotError && spot) {
+          // Get spot owner's Stripe Connect account
+          const { data: payout_settings } = await supabaseService
+            .from('payout_settings')
+            .select('stripe_connect_account_id')
+            .eq('user_id', spot.owner_id)
+            .single();
 
-            logStep("Transfer created for spot owner", { 
-              transferId: transfer.id, 
-              amount: ownerPayoutAmount,
-              spotOwnerId: spot.owner_id
-            });
-          } catch (transferError) {
-            logStep("Transfer failed", { error: transferError.message });
+          if (payout_settings?.stripe_connect_account_id) {
+            // Calculate owner payout: 93% of ONLY the hourly charges (not the penalty)
+            const ownerPayoutAmount = Math.round(hourlyChargesAmount * 100 * 0.93); // Convert to cents and take 93%
+            
+            try {
+              // Create transfer to spot owner (only for hourly overstay charges)
+              const transfer = await stripe.transfers.create({
+                amount: ownerPayoutAmount,
+                currency: 'usd',
+                destination: payout_settings.stripe_connect_account_id,
+                description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount})`,
+                metadata: {
+                  booking_id: bookingId,
+                  penalty_credit_id: penaltyCreditId,
+                  type: 'late_checkout_hourly_payout',
+                  hourly_charges: hourlyChargesAmount,
+                  owner_share_percentage: 93
+                }
+              });
+
+              logStep("Transfer created for spot owner", { 
+                transferId: transfer.id, 
+                hourlyCharges: hourlyChargesAmount,
+                ownerPayoutAmount: ownerPayoutAmount / 100, // Convert back to dollars for logging
+                spotOwnerId: spot.owner_id
+              });
+            } catch (transferError) {
+              logStep("Transfer failed", { error: transferError.message });
+            }
+          } else {
+            logStep("No Stripe Connect account found for spot owner", { spotOwnerId: spot.owner_id });
           }
-        } else {
-          logStep("No Stripe Connect account found for spot owner", { spotOwnerId: spot.owner_id });
         }
+      } else {
+        logStep("No hourly charges to transfer, penalty only");
       }
     }
 
