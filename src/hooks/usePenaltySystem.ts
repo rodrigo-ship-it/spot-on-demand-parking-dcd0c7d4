@@ -59,8 +59,13 @@ export const usePenaltySystem = (userId: string) => {
   const calculatePenalty = (minutesLate: number, isFirstOffense: boolean, spotPricePerHour?: number): { penaltyFee: number; hourlyCharge: number; totalAmount: number } => {
     if (minutesLate <= 30) return { penaltyFee: 0, hourlyCharge: 0, totalAmount: 0 }; // Grace period
 
-    // Always use $20 base penalty to match database function
-    let basePenalty = 20;
+    let basePenalty = 0;
+    if (minutesLate <= 60) basePenalty = 8;
+    else if (minutesLate <= 120) basePenalty = 12;
+    else basePenalty = 20;
+
+    // First offense leniency (20% reduction)
+    if (isFirstOffense) basePenalty *= 0.8;
 
     // Calculate hourly charge for extra time (if it's an hourly spot)
     let hourlyCharge = 0;
