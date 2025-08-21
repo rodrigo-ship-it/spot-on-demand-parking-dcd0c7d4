@@ -102,12 +102,14 @@ serve(async (req) => {
     if (type === 'penalty') {
       console.log("💳 Processing penalty payment");
       
-      // Get booking details to find the spot and owner
+      // Get booking details to find the spot, owner, and renter
       const { data: bookingData, error: bookingError } = await supabaseService
         .from('bookings')
         .select(`
           spot_id,
-          parking_spots!inner(owner_id, title, address)
+          renter_id,
+          parking_spots!inner(owner_id, title, address),
+          profiles!inner(email, full_name)
         `)
         .eq('id', bookingId)
         .single();
@@ -118,6 +120,16 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 404,
         });
+      }
+      
+      // For service role calls, create a user object from booking data
+      if (isServiceRole && !user) {
+        user = {
+          id: bookingData.renter_id,
+          email: bookingData.profiles.email,
+          user_metadata: {}
+        };
+        console.log("🔧 Created user object from booking data:", user.email);
       }
       
       // Get payout settings for spot owner
@@ -414,6 +426,22 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     });
     
     console.log(`💰 Penalty charged automatically: $${amount} - Status: ${paymentIntent.status}`);
+    
+    // Update penalty credit status to completed if payment succeeded
+    if (paymentIntent.status === 'succeeded') {
+      const supabaseService = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        { auth: { persistSession: false } }
+      );
+      
+      await supabaseService
+        .from('penalty_credits')
+        .update({ status: 'completed' })
+        .eq('id', penaltyCreditId);
+        
+      console.log("✅ Penalty credit status updated to completed");
+    }
     
     return new Response(JSON.stringify({ 
       success: true,
