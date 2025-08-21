@@ -28,7 +28,7 @@ serve(async (req) => {
   }
 
   try {
-    // Enhanced admin authorization check
+    // Enhanced authorization check (admin user or service role)
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       console.error('[CHARGE-PENALTY] Missing authorization header')
@@ -38,60 +38,67 @@ serve(async (req) => {
       })
     }
 
+    const token = authHeader.replace('Bearer ', '')
+    const isServiceRole = token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
     // Create admin client to verify role
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get user from token
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
-    
-    if (userError || !user) {
-      console.error('[CHARGE-PENALTY] Invalid user token:', userError)
-      return new Response('Unauthorized', { 
-        status: 401, 
-        headers: corsHeaders 
-      })
-    }
-
-    // Check if user has admin role
-    const { data: userRoles } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single()
-
-    if (!userRoles) {
-      console.error('[CHARGE-PENALTY] User does not have admin role:', user.id)
-      // Log security event
-      await supabaseAdmin.rpc('log_security_event_enhanced', {
-        p_event_type: 'unauthorized_admin_access_attempt',
-        p_event_data: {
-          function: 'charge-penalty',
-          user_id: user.id,
-          attempted_action: 'manual_penalty_charge'
-        },
-        p_user_id: user.id,
-        p_severity: 'critical'
-      })
+    if (isServiceRole) {
+      // Service role authorization for system operations (auto-close)
+      console.log('[CHARGE-PENALTY] Service role authorization verified')
+    } else {
+      // User token authorization for manual admin operations
+      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
       
-      return new Response('Forbidden: Admin access required', { 
-        status: 403, 
-        headers: corsHeaders 
+      if (userError || !user) {
+        console.error('[CHARGE-PENALTY] Invalid user token:', userError)
+        return new Response('Unauthorized', { 
+          status: 401, 
+          headers: corsHeaders 
+        })
+      }
+
+      // Check if user has admin role
+      const { data: userRoles } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single()
+
+      if (!userRoles) {
+        console.error('[CHARGE-PENALTY] User does not have admin role:', user.id)
+        // Log security event
+        await supabaseAdmin.rpc('log_security_event_enhanced', {
+          p_event_type: 'unauthorized_admin_access_attempt',
+          p_event_data: {
+            function: 'charge-penalty',
+            user_id: user.id,
+            attempted_action: 'manual_penalty_charge'
+          },
+          p_user_id: user.id,
+          p_severity: 'critical'
+        })
+        
+        return new Response('Forbidden: Admin access required', { 
+          status: 403, 
+          headers: corsHeaders 
+        })
+      }
+
+      // Log admin action
+      await supabaseAdmin.rpc('log_admin_action', {
+        p_action: 'charge_penalty_edge_function',
+        p_target_resource: 'penalty_credits',
+        p_details: { source: 'edge_function' }
       })
+
+      console.log('[CHARGE-PENALTY] Admin authorization verified for user:', user.id)
     }
-
-    // Log admin action
-    await supabaseAdmin.rpc('log_admin_action', {
-      p_action: 'charge_penalty_edge_function',
-      p_target_resource: 'penalty_credits',
-      p_details: { source: 'edge_function' }
-    })
-
-    console.log('[CHARGE-PENALTY] Admin authorization verified for user:', user.id)
     logStep("Function started");
 
     const requestBody = await req.json();
