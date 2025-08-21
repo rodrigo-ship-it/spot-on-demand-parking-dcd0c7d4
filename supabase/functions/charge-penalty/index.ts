@@ -196,12 +196,13 @@ serve(async (req) => {
           logStep("Payout settings lookup", { payout_settings, payoutError, spotOwnerId: spot.owner_id });
 
           if (payout_settings?.stripe_connect_account_id) {
-            // Use the calculated owner payout amount from the trigger (already includes 93% calculation)
-            const ownerPayoutCents = Math.round((ownerPayoutAmount || hourlyChargesAmount * 0.93) * 100); // Convert to cents
+            // Use the calculated owner payout amount from the trigger if provided, otherwise fallback to 93% calculation
+            const actualOwnerPayout = ownerPayoutAmount || (hourlyChargesAmount * 0.93);
+            const ownerPayoutCents = Math.round(actualOwnerPayout * 100);
             
             logStep("Creating transfer", { 
               hourlyChargesAmount, 
-              ownerPayoutAmount: ownerPayoutAmount || hourlyChargesAmount * 0.93,
+              ownerPayoutAmount: actualOwnerPayout,
               ownerPayoutCents,
               connectAccountId: payout_settings.stripe_connect_account_id 
             });
@@ -212,7 +213,7 @@ serve(async (req) => {
                 amount: ownerPayoutCents,
                 currency: 'usd',
                 destination: payout_settings.stripe_connect_account_id,
-                description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount} = $${(ownerPayoutAmount || hourlyChargesAmount * 0.93).toFixed(2)})`,
+                description: `Late checkout hourly charges for booking ${bookingId} (93% of $${hourlyChargesAmount} = $${actualOwnerPayout.toFixed(2)})`,
                 metadata: {
                   booking_id: bookingId,
                   penalty_credit_id: penaltyCreditId,
@@ -233,7 +234,7 @@ serve(async (req) => {
                 error: transferError.message, 
                 errorType: transferError.constructor.name,
                 hourlyChargesAmount,
-                ownerPayoutAmount: ownerPayoutAmount || hourlyChargesAmount * 0.93,
+                ownerPayoutAmount: actualOwnerPayout,
                 ownerPayoutCents,
                 connectAccountId: payout_settings.stripe_connect_account_id
               });
