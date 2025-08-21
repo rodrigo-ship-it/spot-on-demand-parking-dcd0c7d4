@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          target_resource: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_resource?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_resource?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           checkout_location_verified: boolean | null
@@ -916,6 +952,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           color: string | null
@@ -1031,6 +1097,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      current_user_has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
       get_safe_profile_info: {
         Args: { profile_user_id: string }
         Returns: {
@@ -1042,19 +1112,56 @@ export type Database = {
         Args: { booking_id_param: string }
         Returns: number
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_admin_v2: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      log_admin_action: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_target_resource?: string
+          p_target_user_id?: string
+        }
+        Returns: string
+      }
       log_security_event: {
         Args: { p_event_data?: Json; p_event_type: string; p_user_id?: string }
+        Returns: string
+      }
+      log_security_event_enhanced: {
+        Args: {
+          p_event_data?: Json
+          p_event_type: string
+          p_severity?: string
+          p_user_id?: string
+        }
         Returns: string
       }
       manual_charge_penalty: {
         Args: { penalty_credit_id_param: string }
         Returns: Json
       }
+      manual_charge_penalty_v2: {
+        Args: { penalty_credit_id_param: string }
+        Returns: Json
+      }
       manual_check_late_checkouts: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      manual_check_late_checkouts_v2: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -1076,7 +1183,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1203,6 +1310,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

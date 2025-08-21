@@ -3,8 +3,10 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': 'https://arrivparking.com',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-csrf-token',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 const logStep = (step: string, details?: any) => {
@@ -18,7 +20,78 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { 
+      status: 405, 
+      headers: corsHeaders 
+    })
+  }
+
   try {
+    // Enhanced admin authorization check
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      console.error('[CHARGE-PENALTY] Missing authorization header')
+      return new Response('Unauthorized', { 
+        status: 401, 
+        headers: corsHeaders 
+      })
+    }
+
+    // Create admin client to verify role
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Get user from token
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
+    
+    if (userError || !user) {
+      console.error('[CHARGE-PENALTY] Invalid user token:', userError)
+      return new Response('Unauthorized', { 
+        status: 401, 
+        headers: corsHeaders 
+      })
+    }
+
+    // Check if user has admin role
+    const { data: userRoles } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single()
+
+    if (!userRoles) {
+      console.error('[CHARGE-PENALTY] User does not have admin role:', user.id)
+      // Log security event
+      await supabaseAdmin.rpc('log_security_event_enhanced', {
+        p_event_type: 'unauthorized_admin_access_attempt',
+        p_event_data: {
+          function: 'charge-penalty',
+          user_id: user.id,
+          attempted_action: 'manual_penalty_charge'
+        },
+        p_user_id: user.id,
+        p_severity: 'critical'
+      })
+      
+      return new Response('Forbidden: Admin access required', { 
+        status: 403, 
+        headers: corsHeaders 
+      })
+    }
+
+    // Log admin action
+    await supabaseAdmin.rpc('log_admin_action', {
+      p_action: 'charge_penalty_edge_function',
+      p_target_resource: 'penalty_credits',
+      p_details: { source: 'edge_function' }
+    })
+
+    console.log('[CHARGE-PENALTY] Admin authorization verified for user:', user.id)
     logStep("Function started");
 
     const requestBody = await req.json();

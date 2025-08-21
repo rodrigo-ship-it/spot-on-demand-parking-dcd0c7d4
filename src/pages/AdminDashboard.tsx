@@ -1104,8 +1104,10 @@ Check browser console for detailed ID analysis.
             <TabsTrigger value="manual-charge">Manual Charge</TabsTrigger>
             <TabsTrigger value="support">Support</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-          </TabsList>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="roles">User Roles</TabsTrigger>
+          <TabsTrigger value="monitoring">Security Monitoring</TabsTrigger>
+        </TabsList>
 
           <TabsContent value="users">
             <Card>
