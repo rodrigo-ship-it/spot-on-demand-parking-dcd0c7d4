@@ -148,6 +148,7 @@ serve(async (req) => {
       
       // Only transfer spot owner's share of hourly charges (93%), penalty stays with company
       const hourlyChargesAmount = hourlyCharges || 0;
+      logStep("Checking hourly charges amount", { hourlyChargesAmount, penaltyAmount });
       
       if (hourlyChargesAmount > 0) {
         // Get spot details for payout calculation
@@ -157,17 +158,27 @@ serve(async (req) => {
           .eq('id', booking.spot_id)
           .single();
 
+        logStep("Spot lookup result", { spot, spotError });
+
         if (!spotError && spot) {
           // Get spot owner's Stripe Connect account
-          const { data: payout_settings } = await supabaseService
+          const { data: payout_settings, error: payoutError } = await supabaseService
             .from('payout_settings')
             .select('stripe_connect_account_id')
             .eq('user_id', spot.owner_id)
             .single();
 
+          logStep("Payout settings lookup", { payout_settings, payoutError, spotOwnerId: spot.owner_id });
+
           if (payout_settings?.stripe_connect_account_id) {
             // Calculate owner payout: 93% of ONLY the hourly charges (not the penalty)
             const ownerPayoutAmount = Math.round(hourlyChargesAmount * 100 * 0.93); // Convert to cents and take 93%
+            
+            logStep("Creating transfer", { 
+              hourlyChargesAmount, 
+              ownerPayoutAmount, 
+              connectAccountId: payout_settings.stripe_connect_account_id 
+            });
             
             try {
               // Create transfer to spot owner (only for hourly overstay charges)
@@ -185,18 +196,29 @@ serve(async (req) => {
                 }
               });
 
-              logStep("Transfer created for spot owner", { 
+              logStep("Transfer created successfully", { 
                 transferId: transfer.id, 
-                hourlyCharges: hourlyChargesAmount,
-                ownerPayoutAmount: ownerPayoutAmount / 100, // Convert back to dollars for logging
+                amount: transfer.amount,
+                destination: transfer.destination,
                 spotOwnerId: spot.owner_id
               });
             } catch (transferError) {
-              logStep("Transfer failed", { error: transferError.message });
+              logStep("Transfer failed", { 
+                error: transferError.message, 
+                errorType: transferError.constructor.name,
+                hourlyChargesAmount,
+                ownerPayoutAmount,
+                connectAccountId: payout_settings.stripe_connect_account_id
+              });
             }
           } else {
-            logStep("No Stripe Connect account found for spot owner", { spotOwnerId: spot.owner_id });
+            logStep("No Stripe Connect account found for spot owner", { 
+              spotOwnerId: spot.owner_id,
+              payoutSettings: payout_settings
+            });
           }
+        } else {
+          logStep("Error getting spot details", { spotError, bookingSpotId: booking.spot_id });
         }
       } else {
         logStep("No hourly charges to transfer, penalty only");
