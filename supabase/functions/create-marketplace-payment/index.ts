@@ -108,11 +108,10 @@ serve(async (req) => {
         .select(`
           spot_id,
           renter_id,
-          parking_spots!inner(owner_id, title, address),
-          profiles!inner(email, full_name)
+          parking_spots!inner(owner_id, title, address)
         `)
         .eq('id', bookingId)
-        .single();
+        .maybeSingle();
         
       if (bookingError || !bookingData) {
         console.log("❌ Booking not found for penalty:", bookingError);
@@ -122,11 +121,26 @@ serve(async (req) => {
         });
       }
       
+      // Get the renter's profile data separately to avoid join issues
+      const { data: renterProfile, error: profileError } = await supabaseService
+        .from('profiles')
+        .select('email, full_name')
+        .eq('user_id', bookingData.renter_id)
+        .maybeSingle();
+      
+      if (profileError || !renterProfile?.email) {
+        console.log("❌ Renter profile not found for penalty:", profileError);
+        return new Response(JSON.stringify({ error: "Renter profile not found" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 404,
+        });
+      }
+      
       // For service role calls, create a user object from booking data
       if (isServiceRole && !user) {
         user = {
           id: bookingData.renter_id,
-          email: bookingData.profiles.email,
+          email: renterProfile.email,
           user_metadata: {}
         };
         console.log("🔧 Created user object from booking data:", user.email);

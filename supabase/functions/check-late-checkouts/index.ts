@@ -98,7 +98,7 @@ serve(async (req) => {
           .from('profiles')
           .select('failed_checkouts')
           .eq('user_id', booking.renter_id)
-          .single();
+          .maybeSingle();
 
         const isFirstOffense = !profile || profile.failed_checkouts === 0;
 
@@ -161,9 +161,9 @@ serve(async (req) => {
               status: 'active'
             })
             .select()
-            .single();
+            .maybeSingle();
 
-          if (creditError) {
+          if (creditError || !creditData) {
             logStep("Error creating penalty credit", { error: creditError, bookingId: booking.id });
             continue;
           }
