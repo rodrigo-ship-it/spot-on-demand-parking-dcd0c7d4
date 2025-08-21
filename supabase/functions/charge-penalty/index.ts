@@ -21,7 +21,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { bookingId, amount, description, penaltyCreditId, penaltyAmount, hourlyCharges } = await req.json();
+    const requestBody = await req.json();
+    const { bookingId, amount, description, penaltyCreditId, penaltyAmount, hourlyCharges } = requestBody;
 
     if (!bookingId || !amount || !penaltyCreditId) {
       throw new Error("Missing required fields: bookingId, amount, and penaltyCreditId");
