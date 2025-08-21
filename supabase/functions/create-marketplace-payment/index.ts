@@ -416,7 +416,7 @@ async function processPenaltyPayment(stripe: any, user: any, amount: number, des
     
     // Create payment intent for automatic charge (off-session)
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalAmountCents,
+      amount: Math.round(amount * 100), // Use the penalty amount passed in, not totalAmountCents
       currency: 'usd',
       customer: customerId,
       payment_method: paymentMethodId,
