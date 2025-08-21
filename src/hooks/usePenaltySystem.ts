@@ -165,7 +165,7 @@ export const usePenaltySystem = (userId: string) => {
             
             if (chargeResult?.success) {
               console.log('✅ Penalty charged successfully');
-              toast.success(`$${amount} penalty charged automatically. Penalty fee to platform, hourly charges split with spot owner.`);
+              toast.success(`$${amount} late fee charged automatically.`);
             } else if (chargeResult?.requires_action) {
               console.log('⚠️ Payment requires additional authentication');
               toast.info(`$${amount} penalty requires payment authentication. Please check your email or banking app.`);
