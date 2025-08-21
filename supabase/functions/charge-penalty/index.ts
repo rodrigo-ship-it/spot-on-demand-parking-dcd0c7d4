@@ -120,13 +120,14 @@ serve(async (req) => {
     logStep("Charging penalty", { amountCents, description });
 
     // Create the payment intent
+    const origin = req.headers.get("origin") || "https://qwqgywmjwkuhwfnjoqgv.supabase.co";
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
       customer: customerId,
       payment_method: paymentMethodId,
       confirm: true,
-      return_url: `${req.headers.get("origin")}/bookings`,
+      return_url: `${origin}/bookings`,
       description: `Parking Penalty: ${description}`,
       metadata: {
         booking_id: bookingId,
