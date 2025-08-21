@@ -102,6 +102,8 @@ serve(async (req) => {
     logStep("Function started");
 
     const requestBody = await req.json();
+    logStep("Raw request body received", requestBody);
+    
     const { 
       bookingId, 
       amount, 
@@ -115,6 +117,14 @@ serve(async (req) => {
       processingFee,
       taxRate
     } = requestBody;
+    
+    // Ensure hourlyCharges is properly parsed as a number
+    const parsedHourlyCharges = Number(hourlyCharges) || 0;
+    logStep("Parsed hourlyCharges", { 
+      original: hourlyCharges, 
+      parsed: parsedHourlyCharges,
+      type: typeof hourlyCharges 
+    });
 
     if (!bookingId || !amount || !penaltyCreditId) {
       throw new Error("Missing required fields: bookingId, amount, and penaltyCreditId");
@@ -252,8 +262,13 @@ serve(async (req) => {
       logStep("Payment succeeded, processing payout distribution");
       
       // Only transfer spot owner's share of hourly charges (93%), penalty stays with company
-      const hourlyChargesAmount = hourlyCharges || 0;
-      logStep("Checking hourly charges amount", { hourlyChargesAmount, penaltyAmount });
+      const hourlyChargesAmount = parsedHourlyCharges;
+      logStep("Checking hourly charges amount", { 
+        hourlyChargesAmount, 
+        penaltyAmount,
+        originalHourlyCharges: hourlyCharges,
+        parsedHourlyCharges: parsedHourlyCharges
+      });
       
       if (hourlyChargesAmount > 0) {
         // Get spot details for payout calculation
