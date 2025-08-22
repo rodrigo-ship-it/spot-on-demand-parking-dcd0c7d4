@@ -342,6 +342,13 @@ const BookSpot = () => {
   };
 
   const timeOptions = generateTimeOptions();
+  
+  console.log('🔧 [COMPONENT] timeOptions after generation:', {
+    timeOptionsLength: timeOptions.length,
+    timeOptions: timeOptions.slice(0, 3), // First 3 options
+    bookingDate: bookingDetails.date,
+    dateString: bookingDetails.date.toString()
+  });
 
   // Get available time slots
   const selectedDateString = format(bookingDetails.date, 'yyyy-MM-dd');
