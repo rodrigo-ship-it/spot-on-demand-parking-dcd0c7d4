@@ -452,7 +452,7 @@ const BookSpot = () => {
                           </SelectTrigger>
                           <SelectContent className="max-h-[200px]">
                             {slotsLoading ? (
-                              <SelectItem value="" disabled>Loading available times...</SelectItem>
+                              <SelectItem value="loading" disabled>Loading available times...</SelectItem>
                             ) : slotsError ? (
                               timeOptions.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
@@ -569,7 +569,7 @@ const BookSpot = () => {
                           </SelectTrigger>
                           <SelectContent className="max-h-[200px]">
                             {slotsLoading ? (
-                              <SelectItem value="" disabled>Loading available times...</SelectItem>
+                              <SelectItem value="loading" disabled>Loading available times...</SelectItem>
                             ) : slotsError ? (
                               timeOptions.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
