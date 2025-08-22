@@ -538,32 +538,51 @@ const BookSpot = () => {
                             </div>
                           </SelectTrigger>
                            <SelectContent className="max-h-[200px]">
-                             {slotsLoading ? (
-                               <SelectItem value="loading" disabled>Loading available times...</SelectItem>
-                             ) : timeOptions.length === 0 ? (
-                               <SelectItem value="no-times" disabled>
-                                 {(() => {
-                                   const now = new Date();
-                                   const selectedDate = new Date(bookingDetails.date);
-                                   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                                   const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-                                   const isPastDate = bookingDate.getTime() < today.getTime();
-                                   
-                                   return isPastDate 
-                                     ? "No times available for past dates. Please select today or a future date."
-                                     : "No times available for this date";
-                                 })()}
-                               </SelectItem>
-                             ) : slotsError || timeSlots.length === 0 ? (
-                               // Show basic time options when API fails or no slots available
-                               timeOptions.map((option) => (
-                                 <SelectItem key={option.value} value={option.value}>
-                                   {option.label}
-                                 </SelectItem>
-                               ))
-                             ) : (
-                               // Show availability-aware time slots when API succeeds
-                               timeSlots.map((slot) => {
+                             {(() => {
+                               console.log('🎛️ [DROPDOWN] Rendering logic check:', {
+                                 slotsLoading,
+                                 slotsError,
+                                 timeOptionsLength: timeOptions.length,
+                                 timeSlotsLength: timeSlots.length,
+                                 timeSlots: timeSlots
+                               });
+                               
+                               if (slotsLoading) {
+                                 console.log('🎛️ [DROPDOWN] Showing loading...');
+                                 return <SelectItem value="loading" disabled>Loading available times...</SelectItem>;
+                               }
+                               
+                               if (timeOptions.length === 0) {
+                                 console.log('🎛️ [DROPDOWN] No time options available...');
+                                 const now = new Date();
+                                 const selectedDate = new Date(bookingDetails.date);
+                                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                 const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                 const isPastDate = bookingDate.getTime() < today.getTime();
+                                 
+                                 return (
+                                   <SelectItem value="no-times" disabled>
+                                     {isPastDate 
+                                       ? "No times available for past dates. Please select today or a future date."
+                                       : "No times available for this date"}
+                                   </SelectItem>
+                                 );
+                               }
+                               
+                               if (slotsError || timeSlots.length === 0) {
+                                 console.log('🎛️ [DROPDOWN] Showing basic timeOptions fallback...', { 
+                                   reason: slotsError ? 'API Error' : 'No slots available',
+                                   timeOptionsCount: timeOptions.length 
+                                 });
+                                 return timeOptions.map((option) => (
+                                   <SelectItem key={option.value} value={option.value}>
+                                     {option.label}
+                                   </SelectItem>
+                                 ));
+                               }
+                               
+                               console.log('🎛️ [DROPDOWN] Showing availability-aware timeSlots...', { timeSlotsCount: timeSlots.length });
+                               return timeSlots.map((slot) => {
                                  const timeOption = timeOptions.find(opt => opt.value === slot.time);
                                  if (!timeOption) return null;
                                  
@@ -591,8 +610,8 @@ const BookSpot = () => {
                                      </div>
                                    </SelectItem>
                                  );
-                               })
-                             )}
+                               });
+                               })()}
                            </SelectContent>
                          </Select>
                          {/* Show next available slot suggestion */}
