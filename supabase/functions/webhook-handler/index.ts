@@ -144,6 +144,41 @@ serve(async (req) => {
           break;
         }
 
+        // Check for overlapping bookings before creating new one
+        console.log(`🔍 [OVERLAP_CHECK] Checking for overlapping bookings for spot: ${metadata.spot_id}`);
+        
+        const { data: hasOverlap, error: overlapError } = await supabaseService
+          .rpc('check_booking_overlap', {
+            p_spot_id: metadata.spot_id,
+            p_start_time: startTimeStr,
+            p_end_time: endTimeStr
+          });
+          
+        if (overlapError) {
+          console.error("❌ [OVERLAP_ERROR] Error checking for overlapping bookings:", overlapError);
+          return new Response(JSON.stringify({ 
+            error: "Failed to validate booking availability",
+            details: overlapError,
+            received: true 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200, // Return 200 to prevent retries
+          });
+        }
+        
+        if (hasOverlap) {
+          console.log(`❌ [BOOKING_CONFLICT] Overlapping booking detected for spot: ${metadata.spot_id}`);
+          return new Response(JSON.stringify({ 
+            error: "This time slot is no longer available. Another booking overlaps with your selected time.",
+            received: true 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200, // Return 200 to prevent retries
+          });
+        }
+        
+        console.log(`✅ [OVERLAP_CHECK_PASSED] No overlapping bookings found`);
+
         // Create booking
         console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);
         
