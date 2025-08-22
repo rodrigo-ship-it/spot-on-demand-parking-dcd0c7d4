@@ -244,15 +244,48 @@ const BookSpot = () => {
         month: date.getMonth(),
         day: date.getDate()
       });
-      setBookingDetails(prev => ({ ...prev, date: localDate }));
+      
+      setBookingDetails(prev => {
+        const newDetails = { ...prev, date: localDate };
+        
+        // If selecting today and current start time has passed, reset to first available time
+        const now = new Date();
+        const isToday = localDate.toDateString() === now.toDateString();
+        if (isToday) {
+          const [hours, minutes] = prev.startTime.split(':').map(Number);
+          if (hours < now.getHours() || (hours === now.getHours() && minutes <= now.getMinutes())) {
+            // Find next available time
+            const nextHour = now.getHours() + (now.getMinutes() >= 30 ? 1 : 0);
+            const nextMinute = now.getMinutes() >= 30 ? 0 : 30;
+            if (nextHour < 24) {
+              const nextTime = `${nextHour.toString().padStart(2, '0')}:${nextMinute.toString().padStart(2, '0')}`;
+              newDetails.startTime = nextTime;
+            }
+          }
+        }
+        
+        return newDetails;
+      });
     }
   };
 
   // Generate time options for the time picker
   const generateTimeOptions = () => {
+    const now = new Date();
+    const isToday = bookingDetails.date.toDateString() === now.toDateString();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
+        // Skip past times if booking for today
+        if (isToday) {
+          if (hour < currentHour || (hour === currentHour && minute <= currentMinute)) {
+            continue;
+          }
+        }
+        
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], { 
           hour: 'numeric', 
@@ -279,6 +312,17 @@ const BookSpot = () => {
   const handleBooking = async () => {
     if (!spotData) {
       toast.error("Missing required data");
+      return;
+    }
+
+    // Validate that the selected time hasn't passed
+    const now = new Date();
+    const selectedDateTime = new Date(bookingDetails.date);
+    const [hours, minutes] = bookingDetails.startTime.split(':').map(Number);
+    selectedDateTime.setHours(hours, minutes, 0, 0);
+
+    if (selectedDateTime <= now) {
+      toast.error("Cannot book a time that has already passed. Please select a future time.");
       return;
     }
 
