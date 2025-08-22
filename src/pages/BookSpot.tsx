@@ -507,37 +507,67 @@ const BookSpot = () => {
                               <SelectValue placeholder="Select time" />
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="max-h-[200px]">
-                            {slotsLoading ? (
-                              <SelectItem value="loading" disabled>Loading available times...</SelectItem>
-                            ) : slotsError ? (
-                              timeOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              timeSlots.map((slot) => {
-                                const timeOption = timeOptions.find(opt => opt.value === slot.time);
-                                if (!timeOption) return null;
-                                
-                                return (
-                                  <SelectItem 
-                                    key={slot.time} 
-                                    value={slot.time}
-                                    disabled={!slot.isAvailable}
-                                    className={cn(
-                                      slot.isAvailable 
-                                        ? "text-green-700" 
-                                        : "text-red-500 opacity-50"
-                                    )}
-                                  >
-                                    <div className="flex items-center justify-between w-full">
-                                      <span>{timeOption.label}</span>
-                                      {!slot.isAvailable && (
-                                        <span className="text-xs ml-2">(Full)</span>
-                                      )}
-                                      {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
+                           <SelectContent className="max-h-[200px]">
+                             {slotsLoading ? (
+                               <SelectItem value="loading" disabled>Loading available times...</SelectItem>
+                             ) : slotsError ? (
+                               timeOptions.length === 0 ? (
+                                 <SelectItem value="no-times" disabled>
+                                   {(() => {
+                                     const now = new Date();
+                                     const selectedDate = new Date(bookingDetails.date);
+                                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                     const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                     const isPastDate = bookingDate.getTime() < today.getTime();
+                                     
+                                     return isPastDate 
+                                       ? "No times available for past dates. Please select today or a future date."
+                                       : "No times available for this date";
+                                   })()}
+                                 </SelectItem>
+                               ) : (
+                                 timeOptions.map((option) => (
+                                   <SelectItem key={option.value} value={option.value}>
+                                     {option.label}
+                                   </SelectItem>
+                                 ))
+                               )
+                             ) : timeSlots.length === 0 ? (
+                               <SelectItem value="no-slots" disabled>
+                                 {(() => {
+                                   const now = new Date();
+                                   const selectedDate = new Date(bookingDetails.date);
+                                   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                   const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                   const isPastDate = bookingDate.getTime() < today.getTime();
+                                   
+                                   return isPastDate 
+                                     ? "No times available for past dates. Please select today or a future date."
+                                     : "No available time slots for this date";
+                                 })()}
+                               </SelectItem>
+                             ) : (
+                               timeSlots.map((slot) => {
+                                 const timeOption = timeOptions.find(opt => opt.value === slot.time);
+                                 if (!timeOption) return null;
+                                 
+                                 return (
+                                   <SelectItem 
+                                     key={slot.time} 
+                                     value={slot.time}
+                                     disabled={!slot.isAvailable}
+                                     className={cn(
+                                       slot.isAvailable 
+                                         ? "text-green-700" 
+                                         : "text-red-500 opacity-50"
+                                     )}
+                                   >
+                                     <div className="flex items-center justify-between w-full">
+                                       <span>{timeOption.label}</span>
+                                       {!slot.isAvailable && (
+                                         <span className="text-xs ml-2">(Full)</span>
+                                       )}
+                                       {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
                                         <span className="text-xs ml-2 text-orange-600">
                                           ({slot.available} left)
                                         </span>
@@ -624,46 +654,76 @@ const BookSpot = () => {
                               <SelectValue placeholder="Select time" />
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="max-h-[200px]">
-                            {slotsLoading ? (
-                              <SelectItem value="loading" disabled>Loading available times...</SelectItem>
-                            ) : slotsError ? (
-                              timeOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              timeSlots.map((slot) => {
-                                const timeOption = timeOptions.find(opt => opt.value === slot.time);
-                                if (!timeOption) return null;
-                                
-                                return (
-                                  <SelectItem 
-                                    key={slot.time} 
-                                    value={slot.time}
-                                    disabled={!slot.isAvailable}
-                                    className={cn(
-                                      slot.isAvailable 
-                                        ? "text-green-700" 
-                                        : "text-red-500 opacity-50"
-                                    )}
-                                  >
-                                    <div className="flex items-center justify-between w-full">
-                                      <span>{timeOption.label}</span>
-                                      {!slot.isAvailable && (
-                                        <span className="text-xs ml-2">(Full)</span>
-                                      )}
-                                      {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
-                                        <span className="text-xs ml-2 text-orange-600">
-                                          ({slot.available} left)
-                                        </span>
-                                      )}
-                                    </div>
-                                  </SelectItem>
-                                );
-                              })
-                            )}
+                           <SelectContent className="max-h-[200px]">
+                             {slotsLoading ? (
+                               <SelectItem value="loading" disabled>Loading available times...</SelectItem>
+                             ) : slotsError ? (
+                               timeOptions.length === 0 ? (
+                                 <SelectItem value="no-times" disabled>
+                                   {(() => {
+                                     const now = new Date();
+                                     const selectedDate = new Date(bookingDetails.date);
+                                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                     const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                     const isPastDate = bookingDate.getTime() < today.getTime();
+                                     
+                                     return isPastDate 
+                                       ? "No times available for past dates. Please select today or a future date."
+                                       : "No times available for this date";
+                                   })()}
+                                 </SelectItem>
+                               ) : (
+                                 timeOptions.map((option) => (
+                                   <SelectItem key={option.value} value={option.value}>
+                                     {option.label}
+                                   </SelectItem>
+                                 ))
+                               )
+                             ) : timeSlots.length === 0 ? (
+                               <SelectItem value="no-slots" disabled>
+                                 {(() => {
+                                   const now = new Date();
+                                   const selectedDate = new Date(bookingDetails.date);
+                                   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                   const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                   const isPastDate = bookingDate.getTime() < today.getTime();
+                                   
+                                   return isPastDate 
+                                     ? "No times available for past dates. Please select today or a future date."
+                                     : "No available time slots for this date";
+                                 })()}
+                               </SelectItem>
+                             ) : (
+                               timeSlots.map((slot) => {
+                                 const timeOption = timeOptions.find(opt => opt.value === slot.time);
+                                 if (!timeOption) return null;
+                                 
+                                 return (
+                                   <SelectItem 
+                                     key={slot.time} 
+                                     value={slot.time}
+                                     disabled={!slot.isAvailable}
+                                     className={cn(
+                                       slot.isAvailable 
+                                         ? "text-green-700" 
+                                         : "text-red-500 opacity-50"
+                                     )}
+                                   >
+                                     <div className="flex items-center justify-between w-full">
+                                       <span>{timeOption.label}</span>
+                                       {!slot.isAvailable && (
+                                         <span className="text-xs ml-2">(Full)</span>
+                                       )}
+                                       {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
+                                         <span className="text-xs ml-2 text-orange-600">
+                                           ({slot.available} left)
+                                         </span>
+                                       )}
+                                     </div>
+                                   </SelectItem>
+                                 );
+                               })
+                             )}
                           </SelectContent>
                         </Select>
                         {/* Show next available slot suggestion */}
