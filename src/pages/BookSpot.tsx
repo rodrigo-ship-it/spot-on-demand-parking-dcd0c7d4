@@ -535,30 +535,8 @@ const BookSpot = () => {
                            <SelectContent className="max-h-[200px]">
                              {slotsLoading ? (
                                <SelectItem value="loading" disabled>Loading available times...</SelectItem>
-                             ) : slotsError ? (
-                               timeOptions.length === 0 ? (
-                                 <SelectItem value="no-times" disabled>
-                                   {(() => {
-                                     const now = new Date();
-                                     const selectedDate = new Date(bookingDetails.date);
-                                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                                     const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-                                     const isPastDate = bookingDate.getTime() < today.getTime();
-                                     
-                                     return isPastDate 
-                                       ? "No times available for past dates. Please select today or a future date."
-                                       : "No times available for this date";
-                                   })()}
-                                 </SelectItem>
-                               ) : (
-                                 timeOptions.map((option) => (
-                                   <SelectItem key={option.value} value={option.value}>
-                                     {option.label}
-                                   </SelectItem>
-                                 ))
-                               )
-                             ) : timeSlots.length === 0 ? (
-                               <SelectItem value="no-slots" disabled>
+                             ) : timeOptions.length === 0 ? (
+                               <SelectItem value="no-times" disabled>
                                  {(() => {
                                    const now = new Date();
                                    const selectedDate = new Date(bookingDetails.date);
@@ -568,10 +546,18 @@ const BookSpot = () => {
                                    
                                    return isPastDate 
                                      ? "No times available for past dates. Please select today or a future date."
-                                     : "No available time slots for this date";
+                                     : "No times available for this date";
                                  })()}
                                </SelectItem>
+                             ) : slotsError || timeSlots.length === 0 ? (
+                               // Show basic time options when API fails or no slots available
+                               timeOptions.map((option) => (
+                                 <SelectItem key={option.value} value={option.value}>
+                                   {option.label}
+                                 </SelectItem>
+                               ))
                              ) : (
+                               // Show availability-aware time slots when API succeeds
                                timeSlots.map((slot) => {
                                  const timeOption = timeOptions.find(opt => opt.value === slot.time);
                                  if (!timeOption) return null;
@@ -593,34 +579,34 @@ const BookSpot = () => {
                                          <span className="text-xs ml-2">(Full)</span>
                                        )}
                                        {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
-                                        <span className="text-xs ml-2 text-orange-600">
-                                          ({slot.available} left)
-                                        </span>
-                                      )}
-                                    </div>
-                                  </SelectItem>
-                                );
-                              })
-                            )}
-                          </SelectContent>
-                        </Select>
-                        {/* Show next available slot suggestion */}
-                        {!slotsLoading && !slotsError && timeSlots.length > 0 && (
-                          (() => {
-                            const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.startTime);
-                            const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.startTime);
-                            if (!selectedSlot?.isAvailable && nextAvailable) {
-                              const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
-                              return (
-                                <p className="text-xs text-orange-600 mt-1">
-                                  Next available: {nextOption?.label}
-                                </p>
-                              );
-                            }
-                            return null;
-                          })()
-                        )}
-                      </div>
+                                         <span className="text-xs ml-2 text-orange-600">
+                                           ({slot.available} left)
+                                         </span>
+                                       )}
+                                     </div>
+                                   </SelectItem>
+                                 );
+                               })
+                             )}
+                           </SelectContent>
+                         </Select>
+                         {/* Show next available slot suggestion */}
+                         {!slotsLoading && !slotsError && timeSlots.length > 0 && (
+                           (() => {
+                             const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.startTime);
+                             const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.startTime);
+                             if (!selectedSlot?.isAvailable && nextAvailable) {
+                               const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
+                               return (
+                                 <p className="text-xs text-orange-600 mt-1">
+                                   Next available: {nextOption?.label}
+                                 </p>
+                               );
+                             }
+                             return null;
+                           })()
+                         )}
+                       </div>
                      <div>
                        <Label>Number of Days</Label>
                        <Input
