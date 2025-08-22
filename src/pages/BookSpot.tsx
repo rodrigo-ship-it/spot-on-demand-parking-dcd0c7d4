@@ -271,28 +271,30 @@ const BookSpot = () => {
 
   // Generate time options for the time picker
   const generateTimeOptions = () => {
+    // Use local time throughout, not UTC
     const now = new Date();
     const selectedDate = new Date(bookingDetails.date);
     
-    // Reset time to start of day for comparison
+    // Compare dates using local time only (ignore time components)
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
     
     const isToday = bookingDate.getTime() === today.getTime();
     const isPastDate = bookingDate.getTime() < today.getTime();
     
-    // Don't show any times for past dates
+    // Don't show any times for past dates (in local timezone)
     if (isPastDate) {
       return [];
     }
     
+    // Use local time for current hour/minute comparison
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        // Skip past times if booking for today
+        // Skip past times if booking for today (using local time)
         if (isToday) {
           if (hour < currentHour || (hour === currentHour && minute <= currentMinute)) {
             continue;
