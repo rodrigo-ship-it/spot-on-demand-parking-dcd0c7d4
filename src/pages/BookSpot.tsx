@@ -275,6 +275,15 @@ const BookSpot = () => {
     const now = new Date();
     const selectedDate = new Date(bookingDetails.date);
     
+    // Debug logging
+    console.log('🕐 [TIME_OPTIONS] Debug info:', {
+      now: now.toString(),
+      nowLocal: now.toLocaleDateString(),
+      selectedDate: selectedDate.toString(),
+      selectedDateLocal: selectedDate.toLocaleDateString(),
+      bookingDetailsDate: bookingDetails.date
+    });
+    
     // Compare dates using local time only (ignore time components)
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
@@ -282,14 +291,26 @@ const BookSpot = () => {
     const isToday = bookingDate.getTime() === today.getTime();
     const isPastDate = bookingDate.getTime() < today.getTime();
     
+    console.log('🕐 [TIME_OPTIONS] Date comparison:', {
+      today: today.toString(),
+      bookingDate: bookingDate.toString(),
+      isToday,
+      isPastDate,
+      todayTime: today.getTime(),
+      bookingDateTime: bookingDate.getTime()
+    });
+    
     // Don't show any times for past dates (in local timezone)
     if (isPastDate) {
+      console.log('🕐 [TIME_OPTIONS] Returning empty array - past date detected');
       return [];
     }
     
     // Use local time for current hour/minute comparison
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
+    
+    console.log('🕐 [TIME_OPTIONS] Current time:', { currentHour, currentMinute });
     
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -310,6 +331,8 @@ const BookSpot = () => {
         options.push({ value: timeString, label: displayTime });
       }
     }
+    
+    console.log('🕐 [TIME_OPTIONS] Generated options count:', options.length);
     return options;
   };
 
