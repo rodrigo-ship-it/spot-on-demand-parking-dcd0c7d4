@@ -272,7 +272,20 @@ const BookSpot = () => {
   // Generate time options for the time picker
   const generateTimeOptions = () => {
     const now = new Date();
-    const isToday = bookingDetails.date.toDateString() === now.toDateString();
+    const selectedDate = new Date(bookingDetails.date);
+    
+    // Reset time to start of day for comparison
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+    
+    const isToday = bookingDate.getTime() === today.getTime();
+    const isPastDate = bookingDate.getTime() < today.getTime();
+    
+    // Don't show any times for past dates
+    if (isPastDate) {
+      return [];
+    }
+    
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
