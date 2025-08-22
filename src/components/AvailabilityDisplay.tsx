@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Car, Users } from "lucide-react";
+import { Car } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AvailabilityDisplayProps {
   spotType: string;
@@ -12,18 +13,51 @@ interface AvailabilityDisplayProps {
 export const AvailabilityDisplay = ({ spotType, totalSpots = 1, spotId }: AvailabilityDisplayProps) => {
   const [availableSpots, setAvailableSpots] = useState(totalSpots);
 
-  // Simulate real-time availability updates
+  // Get real-time availability from current bookings
   useEffect(() => {
-    if (spotType === "entire-garage" || spotType === "entire-lot") {
-      // Simulate random occupancy for demo
-      const interval = setInterval(() => {
-        const randomOccupied = Math.floor(Math.random() * (totalSpots + 1));
-        setAvailableSpots(totalSpots - randomOccupied);
-      }, 10000); // Update every 10 seconds for demo
+    const fetchCurrentAvailability = async () => {
+      try {
+        const { data: activeBookings, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('spot_id', spotId)
+          .in('status', ['confirmed', 'active'])
+          .lte('start_time', new Date().toISOString())
+          .gte('end_time', new Date().toISOString());
 
-      return () => clearInterval(interval);
-    }
-  }, [spotType, totalSpots]);
+        if (error) throw error;
+
+        const occupiedSpots = activeBookings?.length || 0;
+        setAvailableSpots(Math.max(0, totalSpots - occupiedSpots));
+      } catch (error) {
+        console.error('Error fetching availability:', error);
+        setAvailableSpots(totalSpots); // Default to available if error
+      }
+    };
+
+    fetchCurrentAvailability();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel(`availability-${spotId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: `spot_id=eq.${spotId}`
+        },
+        () => {
+          fetchCurrentAvailability();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [spotId, totalSpots]);
 
   if (spotType === "entire-garage" || spotType === "entire-lot") {
     const isFullyOccupied = availableSpots === 0;

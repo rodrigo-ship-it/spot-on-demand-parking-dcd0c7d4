@@ -22,6 +22,7 @@ import { VehicleManagementDialog } from "@/components/VehicleManagementDialog";
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 
 const BookSpot = () => {
   console.log('🔥 BookSpot component is loading!');
@@ -266,6 +267,15 @@ const BookSpot = () => {
 
   const timeOptions = generateTimeOptions();
 
+  // Get available time slots
+  const selectedDateString = format(bookingDetails.date, 'yyyy-MM-dd');
+  const currentDuration = isPricingDaily ? bookingDetails.numberOfDays * 24 : bookingDetails.duration;
+  const { timeSlots, loading: slotsLoading, error: slotsError } = useAvailableTimeSlots(
+    id || '', 
+    selectedDateString, 
+    Math.ceil(currentDuration)
+  );
+
   const handleBooking = async () => {
     if (!spotData) {
       toast.error("Missing required data");
@@ -431,24 +441,74 @@ const BookSpot = () => {
                          </PopoverContent>
                        </Popover>
                      </div>
-                     <div>
-                       <Label>Start Time</Label>
-                       <Select value={bookingDetails.startTime} onValueChange={(value) => setBookingDetails(prev => ({ ...prev, startTime: value }))}>
-                         <SelectTrigger className="w-full">
-                           <div className="flex items-center">
-                             <ClockIcon className="mr-2 h-4 w-4" />
-                             <SelectValue placeholder="Select time" />
-                           </div>
-                         </SelectTrigger>
-                         <SelectContent className="max-h-[200px]">
-                           {timeOptions.map((option) => (
-                             <SelectItem key={option.value} value={option.value}>
-                               {option.label}
-                             </SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
+                      <div>
+                        <Label>Start Time</Label>
+                        <Select value={bookingDetails.startTime} onValueChange={(value) => setBookingDetails(prev => ({ ...prev, startTime: value }))}>
+                          <SelectTrigger className="w-full">
+                            <div className="flex items-center">
+                              <ClockIcon className="mr-2 h-4 w-4" />
+                              <SelectValue placeholder="Select time" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {slotsLoading ? (
+                              <SelectItem value="" disabled>Loading available times...</SelectItem>
+                            ) : slotsError ? (
+                              timeOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              timeSlots.map((slot) => {
+                                const timeOption = timeOptions.find(opt => opt.value === slot.time);
+                                if (!timeOption) return null;
+                                
+                                return (
+                                  <SelectItem 
+                                    key={slot.time} 
+                                    value={slot.time}
+                                    disabled={!slot.isAvailable}
+                                    className={cn(
+                                      slot.isAvailable 
+                                        ? "text-green-700" 
+                                        : "text-red-500 opacity-50"
+                                    )}
+                                  >
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{timeOption.label}</span>
+                                      {!slot.isAvailable && (
+                                        <span className="text-xs ml-2">(Full)</span>
+                                      )}
+                                      {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
+                                        <span className="text-xs ml-2 text-orange-600">
+                                          ({slot.available} left)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {/* Show next available slot suggestion */}
+                        {!slotsLoading && !slotsError && timeSlots.length > 0 && (
+                          (() => {
+                            const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.startTime);
+                            const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.startTime);
+                            if (!selectedSlot?.isAvailable && nextAvailable) {
+                              const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
+                              return (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  Next available: {nextOption?.label}
+                                </p>
+                              );
+                            }
+                            return null;
+                          })()
+                        )}
+                      </div>
                      <div>
                        <Label>Number of Days</Label>
                        <Input
@@ -498,24 +558,74 @@ const BookSpot = () => {
                          </PopoverContent>
                        </Popover>
                      </div>
-                     <div>
-                       <Label>Start Time</Label>
-                       <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
-                         <SelectTrigger className="w-full">
-                           <div className="flex items-center">
-                             <ClockIcon className="mr-2 h-4 w-4" />
-                             <SelectValue placeholder="Select time" />
-                           </div>
-                         </SelectTrigger>
-                         <SelectContent className="max-h-[200px]">
-                           {timeOptions.map((option) => (
-                             <SelectItem key={option.value} value={option.value}>
-                               {option.label}
-                             </SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
+                      <div>
+                        <Label>Start Time</Label>
+                        <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
+                          <SelectTrigger className="w-full">
+                            <div className="flex items-center">
+                              <ClockIcon className="mr-2 h-4 w-4" />
+                              <SelectValue placeholder="Select time" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {slotsLoading ? (
+                              <SelectItem value="" disabled>Loading available times...</SelectItem>
+                            ) : slotsError ? (
+                              timeOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              timeSlots.map((slot) => {
+                                const timeOption = timeOptions.find(opt => opt.value === slot.time);
+                                if (!timeOption) return null;
+                                
+                                return (
+                                  <SelectItem 
+                                    key={slot.time} 
+                                    value={slot.time}
+                                    disabled={!slot.isAvailable}
+                                    className={cn(
+                                      slot.isAvailable 
+                                        ? "text-green-700" 
+                                        : "text-red-500 opacity-50"
+                                    )}
+                                  >
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{timeOption.label}</span>
+                                      {!slot.isAvailable && (
+                                        <span className="text-xs ml-2">(Full)</span>
+                                      )}
+                                      {slot.isAvailable && slot.available < (spotData?.total_spots || 1) && (
+                                        <span className="text-xs ml-2 text-orange-600">
+                                          ({slot.available} left)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {/* Show next available slot suggestion */}
+                        {!slotsLoading && !slotsError && timeSlots.length > 0 && (
+                          (() => {
+                            const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.startTime);
+                            const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.startTime);
+                            if (!selectedSlot?.isAvailable && nextAvailable) {
+                              const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
+                              return (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  Next available: {nextOption?.label}
+                                </p>
+                              );
+                            }
+                            return null;
+                          })()
+                        )}
+                      </div>
                      <div>
                        <Label>End Time</Label>
                        <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>

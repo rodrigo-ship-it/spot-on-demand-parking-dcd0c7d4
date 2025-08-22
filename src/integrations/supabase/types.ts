@@ -1110,6 +1110,10 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      get_available_time_slots: {
+        Args: { p_date: string; p_duration_hours?: number; p_spot_id: string }
+        Returns: string
+      }
       get_safe_profile_info: {
         Args: { profile_user_id: string }
         Returns: {
