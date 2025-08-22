@@ -279,9 +279,14 @@ const BookSpot = () => {
     console.log('🕐 [TIME_OPTIONS] Debug info:', {
       now: now.toString(),
       nowLocal: now.toLocaleDateString(),
+      nowLocalTime: now.toLocaleString(),
       selectedDate: selectedDate.toString(),
       selectedDateLocal: selectedDate.toLocaleDateString(),
-      bookingDetailsDate: bookingDetails.date
+      selectedDateLocalTime: selectedDate.toLocaleString(),
+      bookingDetailsDate: bookingDetails.date,
+      bookingDetailsDateType: typeof bookingDetails.date,
+      bookingDetailsDateToString: bookingDetails.date.toString(),
+      userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
     
     // Compare dates using local time only (ignore time components)
