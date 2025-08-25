@@ -60,11 +60,16 @@ serve(async (req) => {
       .from("payout_settings")
       .select("stripe_connect_account_id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     console.log('💳 Payout settings result:', { payoutSettings, dbError });
 
-    if (dbError || !payoutSettings?.stripe_connect_account_id) {
+    if (dbError) {
+      console.error('Database error:', dbError);
+      throw new Error(`Database error: ${dbError.message}`);
+    }
+
+    if (!payoutSettings?.stripe_connect_account_id) {
       throw new Error("No Stripe Connect account found. Please set up payouts first.");
     }
 
