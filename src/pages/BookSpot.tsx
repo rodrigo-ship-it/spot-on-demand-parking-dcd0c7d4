@@ -674,7 +674,7 @@ const BookSpot = () => {
                               <SelectValue placeholder="Select time" />
                             </div>
                           </SelectTrigger>
-                           <SelectContent className="max-h-[200px]">
+                           <SelectContent className="max-h-[300px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                              {slotsLoading ? (
                                <SelectItem value="loading" disabled>Loading available times...</SelectItem>
                              ) : slotsError ? (
