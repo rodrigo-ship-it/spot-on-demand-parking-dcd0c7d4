@@ -113,7 +113,7 @@ export const StripeConnectOnboarding = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Payout Setup
-          {status.payouts_enabled ? (
+          {status.connected && status.payouts_enabled ? (
             <Badge variant="default" className="bg-green-100 text-green-800">
               <CheckCircle className="w-3 h-3 mr-1" />
               Active
@@ -121,19 +121,21 @@ export const StripeConnectOnboarding = () => {
           ) : (
             <Badge variant="destructive">
               <AlertCircle className="w-3 h-3 mr-1" />
-              Setup Required
+              {!status.connected ? "Account Required" : "Setup Required"}
             </Badge>
           )}
         </CardTitle>
         <CardDescription>
-          Set up your payout account to receive instant payments when your parking spots are booked.
-          We take a small percentage of the payment as our platform fee.
+          {!status.connected 
+            ? "Create a Stripe Connect account to receive instant payments when your parking spots are booked."
+            : "Complete your payout setup to receive instant payments when your parking spots are booked."
+          } We take a small percentage of the payment as our platform fee.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span>Account Created</span>
+            <span>Stripe Account Created</span>
             {status.connected ? (
               <CheckCircle className="w-5 h-5 text-green-500" />
             ) : (
@@ -142,7 +144,7 @@ export const StripeConnectOnboarding = () => {
           </div>
           <div className="flex items-center justify-between">
             <span>Onboarding Completed</span>
-            {status.onboarding_completed ? (
+            {status.connected && status.onboarding_completed ? (
               <CheckCircle className="w-5 h-5 text-green-500" />
             ) : (
               <AlertCircle className="w-5 h-5 text-yellow-500" />
@@ -150,7 +152,7 @@ export const StripeConnectOnboarding = () => {
           </div>
           <div className="flex items-center justify-between">
             <span>Payouts Enabled</span>
-            {status.payouts_enabled ? (
+            {status.connected && status.payouts_enabled ? (
               <CheckCircle className="w-5 h-5 text-green-500" />
             ) : (
               <AlertCircle className="w-5 h-5 text-yellow-500" />
@@ -160,28 +162,36 @@ export const StripeConnectOnboarding = () => {
 
         <div className="pt-4 space-y-2">
           {!status.connected ? (
-            <Button onClick={createConnectAccount} disabled={loading} className="w-full">
-              {loading ? 'Creating Account...' : 'Set Up Payouts'}
-              <ExternalLink className="w-4 h-4 ml-2" />
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={createConnectAccount} disabled={loading} className="w-full">
+                {loading ? 'Creating Account...' : 'Create Stripe Account'}
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                You need to create a Stripe Connect account first to receive payments
+              </p>
+            </div>
           ) : !status.payouts_enabled ? (
             <div className="space-y-2">
               <Button onClick={createConnectAccount} disabled={loading} className="w-full">
-                Complete Onboarding
+                {loading ? 'Opening...' : 'Complete Account Setup'}
                 <ExternalLink className="w-4 h-4 ml-2" />
               </Button>
               <Button onClick={checkStatus} variant="outline" className="w-full" disabled={checking}>
                 {checking ? 'Checking...' : 'Refresh Status'}
               </Button>
               <p className="text-sm text-muted-foreground text-center">
-                Complete your Stripe onboarding to start receiving payments
+                {status.onboarding_completed 
+                  ? "Account setup complete - waiting for Stripe verification"
+                  : "Complete your Stripe onboarding to start receiving payments"
+                }
               </p>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Button onClick={openConnectPortal} disabled={loading} className="flex-1">
-                  {loading ? 'Opening...' : 'Edit Payout Settings'}
+                  {loading ? 'Opening...' : 'Manage Payout Settings'}
                   <Settings className="w-4 h-4 ml-2" />
                 </Button>
                 <Button onClick={checkStatus} variant="outline" disabled={checking}>
@@ -189,10 +199,10 @@ export const StripeConnectOnboarding = () => {
                 </Button>
               </div>
               <p className="text-sm text-green-600 text-center font-medium">
-                ✅ You're all set! You'll receive instant payouts for bookings.
+                ✅ Ready to receive payouts! Payments will be automatically transferred to your account.
               </p>
               <p className="text-xs text-muted-foreground text-center">
-                Click "Edit Payout Settings" to update your bank account, tax info, or payout schedule.
+                Use "Manage Payout Settings" to update your bank account, tax info, or payout schedule.
               </p>
             </div>
           )}
