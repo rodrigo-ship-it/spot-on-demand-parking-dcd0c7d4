@@ -173,7 +173,7 @@ export const StripeConnectOnboarding = () => {
             </div>
           ) : !status.payouts_enabled ? (
             <div className="space-y-2">
-              <Button onClick={createConnectAccount} disabled={loading} className="w-full">
+              <Button onClick={openConnectPortal} disabled={loading} className="w-full">
                 {loading ? 'Opening...' : 'Complete Account Setup'}
                 <ExternalLink className="w-4 h-4 ml-2" />
               </Button>

@@ -82,14 +82,19 @@ serve(async (req) => {
     } catch (updateError) {
       console.log('⚠️ Account update failed, trying onboarding link:', updateError.message);
       
-      // Fallback to account_onboarding if account_update fails
-      accountLink = await stripe.accountLinks.create({
-        account: payoutSettings.stripe_connect_account_id,
-        refresh_url: `${origin}/profile`,
-        return_url: `${origin}/profile?updated=true`,
-        type: "account_onboarding",
-      });
-      console.log('✅ Account onboarding link created successfully');
+      try {
+        // Fallback to account_onboarding if account_update fails
+        accountLink = await stripe.accountLinks.create({
+          account: payoutSettings.stripe_connect_account_id,
+          refresh_url: `${origin}/profile`,
+          return_url: `${origin}/profile?updated=true`,
+          type: "account_onboarding",
+        });
+        console.log('✅ Account onboarding link created successfully');
+      } catch (onboardingError) {
+        console.error('❌ Both account_update and account_onboarding failed:', onboardingError);
+        throw new Error(`Unable to create Stripe portal link. Please contact support. Error: ${onboardingError.message}`);
+      }
     }
 
     return new Response(JSON.stringify({ 
