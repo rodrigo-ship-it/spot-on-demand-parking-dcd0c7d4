@@ -17,6 +17,7 @@ import { PasswordChangeDialog } from "@/components/PasswordChangeDialog";
 
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
+import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
 import { NotificationSettings } from "@/components/NotificationSettings";
@@ -394,6 +395,11 @@ const Profile = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Stripe Connect Onboarding */}
+              <StripeConnectOnboarding />
+              
+              <Separator />
+              
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
