@@ -58,13 +58,21 @@ export const StripeConnectOnboarding = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-connect-portal');
-      if (error) throw error;
+      if (error) {
+        console.error('Connect portal error:', error);
+        throw new Error(error.message || 'Failed to create portal link');
+      }
+      
+      if (!data?.url) {
+        throw new Error('No portal URL received from server');
+      }
       
       window.open(data.url, '_blank');
       toast.success('Opening payout settings...');
     } catch (error) {
       console.error('Error opening Connect portal:', error);
-      toast.error(`Failed to open payout settings: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to open payout settings: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
