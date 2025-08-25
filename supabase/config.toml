@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.create-connect-account]
 verify_jwt = true
 
+[functions.create-connect-portal]
+verify_jwt = true
+
 [functions.create-marketplace-payment]
 verify_jwt = true
 
