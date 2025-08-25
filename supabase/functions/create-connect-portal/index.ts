@@ -68,16 +68,28 @@ serve(async (req) => {
     
     const origin = req.headers.get("origin") || "https://lovable.dev";
     
-    // For this specific account, Stripe only allows account_onboarding links
-    // Let's directly create the onboarding link instead of trying account_update first
-    console.log('🔗 Creating account onboarding link...');
-    const accountLink = await stripe.accountLinks.create({
-      account: payoutSettings.stripe_connect_account_id,
-      refresh_url: `${origin}/profile`,
-      return_url: `${origin}/profile?updated=true`,
-      type: "account_onboarding",
-    });
-    console.log('✅ Account onboarding link created successfully');
+    // Try account_update first, fallback to account_onboarding
+    let accountLink;
+    try {
+      console.log('🔗 Attempting to create account_update link...');
+      accountLink = await stripe.accountLinks.create({
+        account: payoutSettings.stripe_connect_account_id,
+        refresh_url: `${origin}/profile`,
+        return_url: `${origin}/profile?updated=true`,
+        type: "account_update",
+      });
+      console.log('✅ Account update link created successfully');
+    } catch (updateError) {
+      console.log('⚠️ Account update failed, trying onboarding link:', updateError.message);
+      
+      accountLink = await stripe.accountLinks.create({
+        account: payoutSettings.stripe_connect_account_id,
+        refresh_url: `${origin}/profile`,
+        return_url: `${origin}/profile?updated=true`,
+        type: "account_onboarding",
+      });
+      console.log('✅ Account onboarding link created successfully');
+    }
 
     return new Response(JSON.stringify({ 
       url: accountLink.url 
