@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, AlertCircle, ExternalLink, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -54,15 +54,37 @@ export const StripeConnectOnboarding = () => {
     }
   };
 
+  const openConnectPortal = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-connect-portal');
+      if (error) throw error;
+      
+      // Redirect to Stripe Connect portal
+      window.open(data.url, '_blank');
+      toast.success('Opening payout settings...');
+    } catch (error) {
+      console.error('Error opening Connect portal:', error);
+      toast.error('Failed to open payout settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkStatus();
     
-    // Check for onboarding completion on page load
+    // Check for onboarding completion or updates on page load
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('onboarding') === 'complete') {
       setTimeout(() => {
         checkStatus();
         toast.success('Payout setup completed! You can now receive payments.');
+      }, 1000);
+    } else if (urlParams.get('updated') === 'true') {
+      setTimeout(() => {
+        checkStatus();
+        toast.success('Payout settings updated successfully!');
       }, 1000);
     }
   }, []);
@@ -150,11 +172,20 @@ export const StripeConnectOnboarding = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              <Button onClick={checkStatus} variant="outline" className="w-full">
-                Refresh Status
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={openConnectPortal} disabled={loading} className="flex-1">
+                  {loading ? 'Opening...' : 'Edit Payout Settings'}
+                  <Settings className="w-4 h-4 ml-2" />
+                </Button>
+                <Button onClick={checkStatus} variant="outline" disabled={checking}>
+                  {checking ? 'Checking...' : 'Refresh'}
+                </Button>
+              </div>
               <p className="text-sm text-green-600 text-center font-medium">
                 ✅ You're all set! You'll receive instant payouts for bookings.
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Click "Edit Payout Settings" to update your bank account, tax info, or payout schedule.
               </p>
             </div>
           )}
