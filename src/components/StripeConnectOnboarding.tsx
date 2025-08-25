@@ -57,22 +57,14 @@ export const StripeConnectOnboarding = () => {
   const openConnectPortal = async () => {
     setLoading(true);
     try {
-      // Try the connect portal first, fallback to customer portal
       const { data, error } = await supabase.functions.invoke('create-connect-portal');
-      if (error) {
-        console.log('Connect portal failed, trying customer portal...');
-        // Fallback to customer portal
-        const { data: portalData, error: portalError } = await supabase.functions.invoke('customer-portal');
-        if (portalError) throw portalError;
-        window.open(portalData.url, '_blank');
-        toast.success('Opening payment settings...');
-      } else {
-        window.open(data.url, '_blank');
-        toast.success('Opening payout settings...');
-      }
+      if (error) throw error;
+      
+      window.open(data.url, '_blank');
+      toast.success('Opening payout settings...');
     } catch (error) {
-      console.error('Error opening portal:', error);
-      toast.error('Unable to open settings. Please try refreshing the page.');
+      console.error('Error opening Connect portal:', error);
+      toast.error(`Failed to open payout settings: ${error.message}`);
     } finally {
       setLoading(false);
     }

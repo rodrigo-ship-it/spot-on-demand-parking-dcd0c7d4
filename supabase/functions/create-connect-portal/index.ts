@@ -15,24 +15,10 @@ serve(async (req) => {
   try {
     console.log('🚀 Starting create-connect-portal function');
     
-    // Check environment variables
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY"); 
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-
-    console.log('🔑 Environment check:', {
-      hasSupabaseUrl: !!supabaseUrl,
-      hasAnonKey: !!supabaseAnonKey,
-      hasServiceKey: !!supabaseServiceKey,
-      hasStripeKey: !!stripeKey
-    });
-
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey || !stripeKey) {
-      throw new Error("Missing required environment variables");
-    }
-
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -40,8 +26,6 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    console.log('🔐 Authenticating user...');
-    
     const { data, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError) throw authError;
     
@@ -50,10 +34,12 @@ serve(async (req) => {
     
     console.log('✅ User authenticated:', user.id);
 
-    // Use service role to get payout settings
-    const supabaseService = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false }
-    });
+    // Get payout settings using service role
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
     console.log('🔍 Fetching payout settings...');
     const { data: payoutSettings, error: dbError } = await supabaseService
@@ -70,16 +56,16 @@ serve(async (req) => {
     }
 
     if (!payoutSettings?.stripe_connect_account_id) {
-      throw new Error("No Stripe Connect account found. Please set up payouts first.");
+      throw new Error("No Stripe Connect account found. Please set up payouts first using the 'Set Up Payouts' button above.");
     }
 
     console.log('⚡ Initializing Stripe...');
-    const stripe = new Stripe(stripeKey, {
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    console.log('🔗 Creating account link...');
-    const origin = req.headers.get("origin") || "https://801a0f2c-c78b-4fa0-9871-10f04e2f55b7.sandbox.lovable.dev";
+    console.log('🔗 Creating account link for account:', payoutSettings.stripe_connect_account_id);
+    const origin = req.headers.get("origin") || "https://lovable.dev";
     
     const accountLink = await stripe.accountLinks.create({
       account: payoutSettings.stripe_connect_account_id,
@@ -101,8 +87,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     
     return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: "Check function logs for more information"
+      error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
