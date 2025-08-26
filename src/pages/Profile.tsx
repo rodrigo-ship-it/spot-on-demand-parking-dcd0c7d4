@@ -399,20 +399,6 @@ const Profile = () => {
               <StripeConnectOnboarding />
               
               <Separator />
-              
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Bank Account</p>
-                    <p className="text-sm text-gray-600">****1234 - Chase Bank</p>
-                  </div>
-                  <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </PaymentMethodDialog>
-                </div>
-              </div>
 
               <div className="flex space-x-2">
                 <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
