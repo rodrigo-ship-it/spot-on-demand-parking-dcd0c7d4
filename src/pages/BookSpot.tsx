@@ -350,18 +350,8 @@ const BookSpot = () => {
     dateString: bookingDetails.date.toString()
   });
 
-  // Get available time slots - DEBUG TIMEZONE ISSUES
+  // Get available time slots
   const selectedDateString = format(bookingDetails.date, 'yyyy-MM-dd');
-  console.log('🐛 [TIMEZONE_DEBUG] Date formatting:', {
-    originalDate: bookingDetails.date,
-    originalDateString: bookingDetails.date.toString(),
-    originalDateISO: bookingDetails.date.toISOString(),
-    originalDateLocalDate: bookingDetails.date.toLocaleDateString(),
-    formatResult: selectedDateString,
-    userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    timezoneOffset: bookingDetails.date.getTimezoneOffset()
-  });
-  
   const currentDuration = isPricingDaily ? bookingDetails.numberOfDays * 24 : bookingDetails.duration;
   const { timeSlots, loading: slotsLoading, error: slotsError } = useAvailableTimeSlots(
     id || '', 
