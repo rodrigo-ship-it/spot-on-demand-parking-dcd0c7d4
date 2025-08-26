@@ -397,22 +397,6 @@ const Profile = () => {
             <CardContent className="space-y-4">
               {/* Stripe Connect Onboarding */}
               <StripeConnectOnboarding />
-              
-              <Separator />
-
-              <div className="flex space-x-2">
-                <PaymentMethodDialog onPaymentMethodSelect={() => {}} selectedMethod={null}>
-                  <Button variant="outline" className="flex-1">
-                    Manage Payment Methods
-                  </Button>
-                </PaymentMethodDialog>
-                
-                <PayoutSettingsDialog>
-                  <Button variant="outline" className="flex-1">
-                    Payout Settings
-                  </Button>
-                </PayoutSettingsDialog>
-              </div>
             </CardContent>
           </Card>
         </div>
