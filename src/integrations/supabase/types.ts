@@ -1117,14 +1117,12 @@ export type Database = {
         Returns: boolean
       }
       get_available_time_slots: {
-        Args:
-          | { p_date: string; p_duration_hours?: number; p_spot_id: string }
-          | {
-              p_date: string
-              p_duration_hours?: number
-              p_spot_id: string
-              p_timezone?: string
-            }
+        Args: {
+          p_date: string
+          p_duration_hours?: number
+          p_spot_id: string
+          p_timezone?: string
+        }
         Returns: string
       }
       get_safe_profile_info: {
