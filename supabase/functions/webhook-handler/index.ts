@@ -179,6 +179,22 @@ serve(async (req) => {
         
         console.log(`✅ [OVERLAP_CHECK_PASSED] No overlapping bookings found`);
 
+        // Create timezone-aware UTC timestamps
+        // The startTimeStr and endTimeStr are in local time (EDT), we need to convert to UTC
+        const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
+        const [endHour, endMinute] = (isPricingDaily ? bookingDetails.startTime : bookingDetails.endTime).split(':').map(Number);
+        
+        const startDate = new Date(startTimeStr.split('T')[0] + 'T00:00:00');
+        const endDate = new Date(endTimeStr.split('T')[0] + 'T00:00:00');
+        
+        startDate.setHours(startHour, startMinute, 0, 0);
+        endDate.setHours(endHour, endMinute, 0, 0);
+        
+        // Convert to UTC properly - add EDT offset (EDT is UTC-4, so add 4 hours)
+        const edtOffsetMs = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+        const startTimeUTC = new Date(startDate.getTime() + edtOffsetMs).toISOString();
+        const endTimeUTC = new Date(endDate.getTime() + edtOffsetMs).toISOString();
+
         // Create booking
         console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);
         
@@ -187,8 +203,8 @@ serve(async (req) => {
           renter_id: metadata.user_id || null,
           start_time: startTimeStr,
           end_time: endTimeStr,
-          start_time_utc: `${startTimeStr}+00:00`,
-          end_time_utc: `${endTimeStr}+00:00`,
+          start_time_utc: startTimeUTC,
+          end_time_utc: endTimeUTC,
           total_amount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'confirmed',
           payment_intent_id: session.payment_intent?.toString(),
