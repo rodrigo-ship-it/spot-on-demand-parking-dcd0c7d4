@@ -1205,6 +1205,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      test_slot_availability: {
+        Args: { p_date: string; p_slot_time: string; p_spot_id: string }
+        Returns: Json
+      }
       user_involved_in_booking: {
         Args: { booking_id_param: string }
         Returns: boolean
