@@ -691,39 +691,37 @@ const BookSpot = () => {
                                      : "No times available for this date";
                                  })()}
                                </SelectItem>
-                             ) : (
-                               timeOptions.map((option) => {
-                                 // Find corresponding slot data if available
-                                 const slotData = timeSlots.find(slot => slot.time === option.value);
-                                 const isAvailable = slotData ? slotData.isAvailable : true; // Default to available if no slot data
-                                 const availableCount = slotData?.available;
-                                 
-                                 return (
-                                   <SelectItem 
-                                     key={option.value} 
-                                     value={option.value}
-                                     disabled={!isAvailable}
-                                     className={cn(
-                                       isAvailable 
-                                         ? "text-green-700" 
-                                         : "text-red-500 opacity-50"
-                                     )}
-                                   >
-                                     <div className="flex items-center justify-between w-full">
-                                       <span>{option.label}</span>
-                                       {!isAvailable && (
-                                         <span className="text-xs ml-2">(Full)</span>
-                                       )}
-                                       {isAvailable && slotData && availableCount && availableCount < (spotData?.total_spots || 1) && (
-                                         <span className="text-xs ml-2 text-orange-600">
-                                           ({availableCount} left)
-                                         </span>
-                                       )}
-                                     </div>
-                                   </SelectItem>
-                                 );
-                               })
-                             )}
+                              ) : (
+                                timeOptions
+                                  .filter((option) => {
+                                    // Find corresponding slot data if available
+                                    const slotData = timeSlots.find(slot => slot.time === option.value);
+                                    // Only show available slots - filter out unavailable ones
+                                    return slotData ? slotData.isAvailable : true; // Default to available if no slot data
+                                  })
+                                  .map((option) => {
+                                    // Find corresponding slot data if available
+                                    const slotData = timeSlots.find(slot => slot.time === option.value);
+                                    const availableCount = slotData?.available;
+                                    
+                                    return (
+                                      <SelectItem 
+                                        key={option.value} 
+                                        value={option.value}
+                                        className="text-green-700"
+                                      >
+                                        <div className="flex items-center justify-between w-full">
+                                          <span>{option.label}</span>
+                                          {slotData && availableCount && availableCount < (spotData?.total_spots || 1) && (
+                                            <span className="text-xs ml-2 text-orange-600">
+                                              ({availableCount} left)
+                                            </span>
+                                          )}
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  })
+                              )}
                            </SelectContent>
                         </Select>
                         {/* Show next available slot suggestion */}
