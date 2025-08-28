@@ -694,14 +694,26 @@ const BookSpot = () => {
                               ) : (
                                 timeOptions
                                   .filter((option) => {
-                                    // Find corresponding slot data if available
-                                    const slotData = timeSlots.find(slot => slot.time === option.value);
+                                    // Convert timeOption format (17:30) to API format (6:00)
+                                    const [hours, minutes] = option.value.split(':');
+                                    const hour24 = parseInt(hours);
+                                    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                                    const convertedTime = `${hour12}:${minutes}`;
+                                    
+                                    // Find corresponding slot data using converted time format
+                                    const slotData = timeSlots.find(slot => slot.time === convertedTime);
                                     // Only show available slots - filter out unavailable ones
                                     return slotData ? slotData.isAvailable : true; // Default to available if no slot data
                                   })
                                   .map((option) => {
-                                    // Find corresponding slot data if available
-                                    const slotData = timeSlots.find(slot => slot.time === option.value);
+                                    // Convert timeOption format (17:30) to API format (6:00)
+                                    const [hours, minutes] = option.value.split(':');
+                                    const hour24 = parseInt(hours);
+                                    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                                    const convertedTime = `${hour12}:${minutes}`;
+                                    
+                                    // Find corresponding slot data using converted time format
+                                    const slotData = timeSlots.find(slot => slot.time === convertedTime);
                                     const availableCount = slotData?.available;
                                     
                                     return (
