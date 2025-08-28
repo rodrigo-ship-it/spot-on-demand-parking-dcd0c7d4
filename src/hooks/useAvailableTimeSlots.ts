@@ -20,10 +20,14 @@ export const useAvailableTimeSlots = (spotId: string, date: string, duration: nu
       setError(null);
 
       try {
+        // Get user's timezone
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
         const { data, error } = await supabase.rpc('get_available_time_slots', {
           p_spot_id: spotId,
           p_date: date,
-          p_duration_hours: duration
+          p_duration_hours: duration,
+          p_timezone: userTimezone
         });
 
         if (error) throw error;

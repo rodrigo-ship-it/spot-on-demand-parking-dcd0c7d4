@@ -63,6 +63,7 @@ export type Database = {
           display_end_time: string | null
           display_start_time: string | null
           end_time: string
+          end_time_utc: string | null
           id: string
           owner_payout_amount: number | null
           payment_intent_id: string | null
@@ -71,6 +72,7 @@ export type Database = {
           renter_id: string
           spot_id: string
           start_time: string
+          start_time_utc: string | null
           status: string
           stripe_transfer_id: string | null
           total_amount: number
@@ -89,6 +91,7 @@ export type Database = {
           display_end_time?: string | null
           display_start_time?: string | null
           end_time: string
+          end_time_utc?: string | null
           id?: string
           owner_payout_amount?: number | null
           payment_intent_id?: string | null
@@ -97,6 +100,7 @@ export type Database = {
           renter_id: string
           spot_id: string
           start_time: string
+          start_time_utc?: string | null
           status?: string
           stripe_transfer_id?: string | null
           total_amount: number
@@ -115,6 +119,7 @@ export type Database = {
           display_end_time?: string | null
           display_start_time?: string | null
           end_time?: string
+          end_time_utc?: string | null
           id?: string
           owner_payout_amount?: number | null
           payment_intent_id?: string | null
@@ -123,6 +128,7 @@ export type Database = {
           renter_id?: string
           spot_id?: string
           start_time?: string
+          start_time_utc?: string | null
           status?: string
           stripe_transfer_id?: string | null
           total_amount?: number
@@ -1111,7 +1117,14 @@ export type Database = {
         Returns: boolean
       }
       get_available_time_slots: {
-        Args: { p_date: string; p_duration_hours?: number; p_spot_id: string }
+        Args:
+          | { p_date: string; p_duration_hours?: number; p_spot_id: string }
+          | {
+              p_date: string
+              p_duration_hours?: number
+              p_spot_id: string
+              p_timezone?: string
+            }
         Returns: string
       }
       get_safe_profile_info: {
