@@ -54,6 +54,34 @@ export const TimeManagement = ({
     refreshData
   } = usePenaltySystem(user?.id || "");
 
+  // Check booking status on component load
+  useEffect(() => {
+    const checkBookingStatus = async () => {
+      if (!bookingId) return;
+      
+      try {
+        const { data: booking, error } = await supabase
+          .from('bookings')
+          .select('status')
+          .eq('id', bookingId)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching booking status:', error);
+          return;
+        }
+        
+        if (booking?.status === 'completed') {
+          setCheckOutCompleted(true);
+        }
+      } catch (error) {
+        console.error('Error checking booking status:', error);
+      }
+    };
+    
+    checkBookingStatus();
+  }, [bookingId]);
+
   const handleEnhancedCheckOut = async (verificationData: VerificationData) => {
     try {
       // Get booking details and spot information
