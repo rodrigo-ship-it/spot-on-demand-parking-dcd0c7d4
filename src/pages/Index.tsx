@@ -404,7 +404,7 @@ const Index = () => {
             ) : (
               <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
               {transformedSpots.map((spot, index) => (
-                <Card key={spot.id} className="group hover-lift border-0 shadow-card hover:shadow-elegant animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <Card key={spot.id} className="group hover-lift border-0 shadow-card hover:shadow-elegant animate-fade-in flex flex-col h-full" style={{ animationDelay: `${index * 0.1}s` }}>
                   <div className="relative overflow-hidden rounded-t-lg">
                     <img 
                       src={spot.image} 
@@ -439,7 +439,7 @@ const Index = () => {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
+                  <CardContent className="pt-0 flex flex-col flex-grow">
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                       <div className="flex items-center">
                         <Car className="w-4 h-4 mr-1" />
@@ -452,7 +452,7 @@ const Index = () => {
                     </div>
                     
                     {/* Availability Display */}
-                    <div className="mb-4">
+                    <div className="mb-4 min-h-[2rem]">
                       <AvailabilityDisplay 
                         spotType={spot.spotType}
                         totalSpots={spot.totalSpots}
@@ -460,7 +460,7 @@ const Index = () => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-auto">
                       <span className="text-sm text-gray-500 font-medium">{spot.distance} away</span>
                       <Button 
                         variant="premium"
