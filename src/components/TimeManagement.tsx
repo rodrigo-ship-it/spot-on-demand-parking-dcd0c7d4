@@ -160,8 +160,8 @@ export const TimeManagement = ({
   };
 
   const handleExtensionRequested = (hours: number, cost: number) => {
-    console.log("Extension requested:", { bookingId, hours, cost });
-    // Process extension payment and update booking
+    // Extension processing is now handled entirely in ExtensionSystem component
+    console.log("Extension processing initiated:", { bookingId, hours, cost });
   };
 
   const totalPenalties = userViolations.reduce((sum, v) => sum + v.penalty, 0);

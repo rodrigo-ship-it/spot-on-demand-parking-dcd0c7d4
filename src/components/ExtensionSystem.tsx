@@ -62,7 +62,7 @@ export const ExtensionSystem = ({
         .from('bookings')
         .select('end_time_utc, spot_id')
         .eq('id', bookingId)
-        .single();
+        .maybeSingle();
 
       if (bookingError || !booking) {
         throw new Error('Could not fetch booking details');
@@ -134,14 +134,13 @@ export const ExtensionSystem = ({
 
       if (functionError) throw functionError;
 
-      if (data.checkout_url) {
+      if (data?.checkout_url) {
         toast.success(`Redirecting to payment for ${hours} hour extension - $${cost}`);
         window.location.href = data.checkout_url;
       } else {
         throw new Error('No checkout URL received');
       }
 
-      onExtensionRequested(hours, cost);
       setShowExtensionOptions(false);
     } catch (error) {
       console.error('Error requesting extension:', error);
