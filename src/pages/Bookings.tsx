@@ -345,58 +345,6 @@ const Bookings = () => {
     setTimeManagementDialog(prev => ({ ...prev, isOpen: false }));
   };
 
-  const handleExtendBooking = async (bookingId: string) => {
-    const booking = bookings.find(b => b.id === bookingId);
-    if (!booking) return;
-
-    try {
-      // Check if extension is possible by checking spot availability
-      const currentEndTime = new Date(booking.fullBookingData.end_time);
-      const extensionEndTime = new Date(currentEndTime.getTime() + (60 * 60 * 1000)); // +1 hour
-      
-      // Check for ANY booking that would overlap with the extension period
-      // This includes bookings that start before the extension ends AND end after the current booking ends
-      const { data: conflictingBookings, error: checkError } = await supabase
-        .from('bookings')
-        .select('id, start_time, end_time')
-        .eq('spot_id', booking.spotId)
-        .neq('id', bookingId)
-        .in('status', ['confirmed', 'active', 'pending'])
-        .or(`and(start_time.lt.${extensionEndTime.toISOString()},end_time.gt.${currentEndTime.toISOString()})`);
-
-      if (checkError) throw checkError;
-
-      if (conflictingBookings && conflictingBookings.length > 0) {
-        toast.error("Cannot extend - spot is already reserved by another booking");
-        return;
-      }
-
-      // Calculate extension cost (50% premium)
-      const hourlyRate = booking.pricePerHour;
-      const extensionCost = Math.round(hourlyRate * 1.5);
-
-      // Create extension request
-      const { error: extensionError } = await supabase
-        .from('extensions')
-        .insert({
-          booking_id: bookingId,
-          requested_hours: 1,
-          rate_per_hour: hourlyRate * 1.5,
-          total_amount: extensionCost
-        });
-
-      if (extensionError) throw extensionError;
-
-      toast.success(`Extension requested for 1 hour - $${extensionCost} (includes 50% premium)`);
-      
-      // Reload bookings to reflect changes
-      loadBookings();
-    } catch (error) {
-      console.error('Error requesting extension:', error);
-      toast.error("Failed to request extension");
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
@@ -608,17 +556,6 @@ const Bookings = () => {
                               />
                             </DialogContent>
                           </Dialog>
-                        )}
-                        {reservation.status === "Active" && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleExtendBooking(reservation.id)}
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            <Clock className="w-3 h-3 mr-1" />
-                            Extend +1hr
-                          </Button>
                         )}
                         {reservation.status === "Completed" && (
                           <Button 
