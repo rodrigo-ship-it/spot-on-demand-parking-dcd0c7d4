@@ -20,8 +20,10 @@ export const useAvailableTimeSlots = (spotId: string, date: string, duration: nu
       setError(null);
 
       try {
+        console.log('🔍 Fetching available slots:', { spotId, date, duration });
         // Get user's timezone
         const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        console.log('🌍 User timezone:', userTimezone);
         
         const { data, error } = await supabase.rpc('get_available_time_slots', {
           p_spot_id: spotId,
@@ -30,13 +32,19 @@ export const useAvailableTimeSlots = (spotId: string, date: string, duration: nu
           p_timezone: userTimezone
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ RPC error:', error);
+          throw error;
+        }
+
+        console.log('📊 Raw RPC response:', data);
 
         // Parse the JSON string response
         const parsedSlots = JSON.parse(data || '[]') as TimeSlot[];
+        console.log('📅 Parsed time slots:', parsedSlots);
         setTimeSlots(parsedSlots);
       } catch (err) {
-        console.error('Error fetching available time slots:', err);
+        console.error('❌ Error fetching available time slots:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch available times');
         setTimeSlots([]);
       } finally {

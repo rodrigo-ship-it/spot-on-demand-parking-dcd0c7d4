@@ -57,6 +57,7 @@ export const ExtensionSystem = ({
 
   const checkAvailability = async (hours: number): Promise<boolean> => {
     try {
+      console.log('🔍 Checking availability:', { bookingId, hours });
       // Get current booking details
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
@@ -65,17 +66,22 @@ export const ExtensionSystem = ({
         .maybeSingle();
 
       if (bookingError || !booking) {
+        console.error('❌ Booking fetch error:', bookingError);
         throw new Error('Could not fetch booking details');
       }
+
+      console.log('📅 Current booking:', booking);
 
       // Calculate new end time
       const newEndTime = new Date(booking.end_time_utc);
       newEndTime.setHours(newEndTime.getHours() + hours);
 
+      console.log('📅 New end time would be:', newEndTime.toISOString());
+
       // Check for conflicts
       const { data: conflicts, error: conflictError } = await supabase
         .from('bookings')
-        .select('id')
+        .select('id, start_time_utc, end_time_utc')
         .eq('spot_id', booking.spot_id)
         .in('status', ['confirmed', 'active'])
         .neq('id', bookingId)
@@ -83,33 +89,44 @@ export const ExtensionSystem = ({
         .lt('start_time_utc', newEndTime.toISOString());
 
       if (conflictError) {
+        console.error('❌ Conflict check error:', conflictError);
         throw new Error('Could not check availability');
       }
 
-      return !conflicts || conflicts.length === 0;
+      console.log('🔍 Conflicts found:', conflicts);
+
+      const isAvailable = !conflicts || conflicts.length === 0;
+      console.log('✅ Availability result:', isAvailable);
+      
+      return isAvailable;
     } catch (error) {
-      console.error('Availability check error:', error);
+      console.error('❌ Availability check error:', error);
       setAvailabilityError(error.message);
       return false;
     }
   };
 
   const handleExtension = async (hours: number) => {
+    console.log('🔄 Extension button clicked:', { hours, bookingId });
     setCheckingAvailability(true);
     setAvailabilityError(null);
     
     // First check availability
+    console.log('🔍 Checking availability for extension...');
     const isAvailable = await checkAvailability(hours);
     setCheckingAvailability(false);
     
     if (!isAvailable) {
+      console.log('❌ Extension unavailable due to conflicts');
       toast.error("Extension unavailable - another booking conflicts with this time");
       return;
     }
 
+    console.log('✅ Extension availability confirmed');
     const cost = Math.round(pricePerHour * hours * 1.5); // 50% premium for extensions
     
     try {
+      console.log('💾 Storing extension request in database...');
       // Store extension request in database
       const { error } = await supabase
         .from('extensions')
@@ -121,8 +138,12 @@ export const ExtensionSystem = ({
           status: 'pending'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database insert error:', error);
+        throw error;
+      }
 
+      console.log('💳 Calling process-extension function...');
       // Process extension payment
       const { data, error: functionError } = await supabase.functions.invoke('process-extension', {
         body: {
@@ -132,18 +153,25 @@ export const ExtensionSystem = ({
         }
       });
 
-      if (functionError) throw functionError;
+      console.log('📊 Function response:', { data, functionError });
+
+      if (functionError) {
+        console.error('❌ Function error:', functionError);
+        throw functionError;
+      }
 
       if (data?.checkout_url) {
+        console.log('🚀 Redirecting to payment:', data.checkout_url);
         toast.success(`Redirecting to payment for ${hours} hour extension - $${cost}`);
         window.location.href = data.checkout_url;
       } else {
+        console.error('❌ No checkout URL received:', data);
         throw new Error('No checkout URL received');
       }
 
       setShowExtensionOptions(false);
     } catch (error) {
-      console.error('Error requesting extension:', error);
+      console.error('❌ Extension error:', error);
       toast.error("Failed to request extension: " + (error.message || 'Unknown error'));
     }
   };
