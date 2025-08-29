@@ -60,7 +60,7 @@ const BookSpot = () => {
     date: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()),
     startTime: "09:00",
     endTime: "09:00", // Will be updated based on pricing type
-    duration: 8,
+    duration: 1, // Changed from 8 to 1 hour default
     numberOfDays: 1,
     autoExtend: true,
     maxExtension: 2 // hours
