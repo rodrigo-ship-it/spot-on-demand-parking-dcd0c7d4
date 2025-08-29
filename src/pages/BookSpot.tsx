@@ -711,7 +711,7 @@ const BookSpot = () => {
                                       
                                       // Find corresponding slot data using 24-hour format that matches database
                                       const slotData = timeSlots.find(slot => slot.time === convertedTime);
-                                     const isAvailable = slotData ? slotData.isAvailable : true;
+                                      const isAvailable = slotData ? slotData.isAvailable : false; // Default to unavailable if not found
                                      const availableCount = slotData?.available;
                                      
                                      return (
