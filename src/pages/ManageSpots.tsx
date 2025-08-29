@@ -140,6 +140,10 @@ const ManageSpots = () => {
 
       const spotIds = spots.map(spot => spot.id);
 
+      // Get current time minus 3 hours to include active reservations
+      const now = new Date();
+      const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+
       const { data, error } = await supabase
         .from('bookings')
         .select(`
@@ -155,122 +159,68 @@ const ManageSpots = () => {
         `)
         .in('spot_id', spotIds)
         .in('status', ['confirmed', 'active', 'pending'])
-        .order('start_time', { ascending: true });
+        .gte('end_time', threeHoursAgo.toISOString())
+        .order('start_time', { ascending: true })
+        .limit(20);
 
       if (error) {
         console.error('Error fetching reservations:', error);
         return;
       }
 
-      const processedReservations = await Promise.all(data?.map(async booking => {
+      const processedReservations = data?.map(booking => {
+        // Safely parse dates with validation
+        let startTime, endTime, durationHours = 0;
+        
         try {
-          // Parse dates as local times (same logic as My Bookings page)
-          const startDate = booking.start_time ? new Date(booking.start_time + (booking.start_time.includes('T') && !booking.start_time.includes('Z') ? '' : '')) : null;
-          const endDate = booking.end_time ? new Date(booking.end_time + (booking.end_time.includes('T') && !booking.end_time.includes('Z') ? '' : '')) : null;
-          
-          // Check if dates are valid
-          const isStartDateValid = startDate && !isNaN(startDate.getTime());
-          const isEndDateValid = endDate && !isNaN(endDate.getTime());
-          
-          if (!isStartDateValid || !isEndDateValid) {
-            console.error('Invalid date in booking:', booking.id, {
-              start_time: booking.start_time,
-              end_time: booking.end_time,
-              startDateValid: isStartDateValid,
-              endDateValid: isEndDateValid
-            });
-            return null; // Skip this booking
-          }
-          
-          const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
-          
-          // Determine status based on times and current booking status (same logic as My Bookings)
-          let status = 'Upcoming';
-          const now = new Date();
-          const nowTime = now.getTime();
-          const startTime = startDate.getTime();
-          const endTime = endDate.getTime();
-          
-          if (booking.status === 'cancelled') {
-            status = 'Cancelled';
-          } else if (booking.status === 'completed') {
-            status = 'Completed';
-          } else if (nowTime >= startTime && nowTime <= endTime) {
-            status = 'Active';
-          } else if (nowTime > endTime && (booking.status === 'confirmed' || booking.status === 'active')) {
-            // Booking is past end time but still not checked out - keep as Active until 3-hour limit
-            status = 'Active';
-          } else if (nowTime < startTime) {
-            status = 'Upcoming';
+          if (!booking.start_time || !booking.end_time) {
+            console.error("Missing start_time or end_time in booking:", booking.id);
+            startTime = new Date();
+            endTime = new Date();
           } else {
-            status = 'Completed';
-          }
-
-          // Only show upcoming, active, or recently active bookings
-          if (status === 'Completed' && nowTime > endTime + (3 * 60 * 60 * 1000)) {
-            return null; // Skip completed bookings older than 3 hours
-          }
-
-          // Get renter profile
-          let renterName = 'Guest User';
-          let renterPhone = 'No phone';
-          let renterEmail = 'No email';
-          if (booking.renter_id) {
-            const { data: renterProfile } = await supabase
-              .from('profiles')
-              .select('full_name, phone, email')
-              .eq('user_id', booking.renter_id)
-              .single();
+            startTime = new Date(booking.start_time);
+            endTime = new Date(booking.end_time);
             
-            if (renterProfile) {
-              renterName = renterProfile.full_name || 'Guest User';
-              renterPhone = renterProfile.phone || 'No phone';
-              renterEmail = renterProfile.email || 'No email';
+            if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+              console.error("Invalid dates in booking:", booking.id, {
+                start_time: booking.start_time,
+                end_time: booking.end_time
+              });
+              startTime = new Date();
+              endTime = new Date();
+            } else {
+              durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
             }
           }
-          
-          return {
-            id: booking.id,
-            spotTitle: booking.parking_spots?.title || 'Unknown Spot',
-            customer: renterName,
-            email: renterEmail,
-            phone: renterPhone,
-            date: booking.display_date || (() => {
-              const year = startDate.getFullYear();
-              const month = String(startDate.getMonth() + 1).padStart(2, '0');
-              const day = String(startDate.getDate()).padStart(2, '0');
-              return `${month}/${day}/${year}`;
-            })(),
-            startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              timeZone: 'America/Chicago'
-            }),
-            endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              timeZone: 'America/Chicago'
-            }),
-            duration: `${duration} hour${duration !== 1 ? 's' : ''}`,
-            pricePerHour: booking.parking_spots?.pricing_type === 'hourly' 
-              ? Number(booking.parking_spots?.price_per_hour) || 0
-              : 0,
-            oneTimePrice: booking.parking_spots?.pricing_type === 'one_time'
-              ? Number(booking.parking_spots?.one_time_price) || 0
-              : 0,
-            totalEarnings: Number(booking.total_amount) || 0,
-            status,
-            originalBooking: booking
-          };
         } catch (error) {
-          console.error('Error processing booking:', booking.id, error);
-          return null; // Skip this booking if there's an error
+          console.error("Error parsing dates for booking:", booking.id, error);
+          startTime = new Date();
+          endTime = new Date();
         }
-      }) || []);
+        
+        return {
+          id: booking.id,
+          spotTitle: booking.parking_spots?.title || 'Unknown Spot',
+          customer: 'Guest User', // We'll fetch user details separately if needed
+          email: 'Not provided',
+          phone: 'Not provided',
+          date: startTime.toLocaleDateString(),
+          startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          duration: `${durationHours} hour${durationHours !== 1 ? 's' : ''}`,
+          pricePerHour: booking.parking_spots?.pricing_type === 'hourly' 
+            ? Number(booking.parking_spots?.price_per_hour) || 0
+            : 0,
+          oneTimePrice: booking.parking_spots?.pricing_type === 'one_time'
+            ? Number(booking.parking_spots?.one_time_price) || 0
+            : 0,
+          totalEarnings: Number(booking.total_amount) || 0,
+          status: booking.status.charAt(0).toUpperCase() + booking.status.slice(1),
+          originalBooking: booking
+        };
+      }) || [];
 
-      // Filter out null entries (invalid bookings)
-      const validReservations = processedReservations.filter(reservation => reservation !== null);
-      setUpcomingReservations(validReservations);
+      setUpcomingReservations(processedReservations);
     } catch (error) {
       console.error('Error:', error);
     }
