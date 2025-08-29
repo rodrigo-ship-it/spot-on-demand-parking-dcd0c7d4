@@ -154,10 +154,12 @@ export const ExtensionSystem = ({
       });
 
       console.log('📊 Function response:', { data, functionError });
+      console.log('📊 Full response object:', JSON.stringify({ data, functionError }, null, 2));
 
       if (functionError) {
         console.error('❌ Function error:', functionError);
-        throw functionError;
+        console.error('❌ Function error details:', JSON.stringify(functionError, null, 2));
+        throw new Error(`Extension function failed: ${functionError.message || JSON.stringify(functionError)}`);
       }
 
       if (data?.checkout_url) {
