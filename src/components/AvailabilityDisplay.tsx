@@ -88,9 +88,16 @@ export const AvailabilityDisplay = ({ spotType, totalSpots = 1, spotId }: Availa
   }
 
   return (
-    <Badge variant="default" className="bg-green-100 text-green-800">
-      <Car className="w-3 h-3 mr-1" />
-      Available
-    </Badge>
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        <Car className="w-4 h-4 text-gray-600" />
+        <span className="text-sm font-medium">
+          Available
+        </span>
+      </div>
+      <Badge variant="default" className="bg-green-100 text-green-800">
+        Available
+      </Badge>
+    </div>
   );
 };
