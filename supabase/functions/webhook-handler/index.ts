@@ -61,6 +61,53 @@ serve(async (req) => {
         console.log(`📋 [SESSION_METADATA] Metadata:`, session.metadata);
 
         const metadata = session.metadata;
+        
+        // Handle extension payments
+        if (metadata?.type === "extension") {
+          console.log(`🔄 [EXTENSION] Processing extension payment for booking: ${metadata.booking_id}`);
+          
+          const bookingId = metadata.booking_id;
+          const extensionHours = parseInt(metadata.extension_hours);
+          const newEndTime = metadata.new_end_time;
+
+          console.log("🔄 Processing extension:", { bookingId, extensionHours, newEndTime });
+
+          // Update booking with new end time
+          const { error: bookingError } = await supabaseService
+            .from('bookings')
+            .update({
+              end_time: new Date(newEndTime).toISOString().slice(0, -1), // Remove Z for timestamp without timezone
+              end_time_utc: newEndTime,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', bookingId);
+
+          if (bookingError) {
+            console.error("❌ [EXTENSION_ERROR] Failed to update booking:", bookingError);
+            break;
+          }
+
+          // Update extension status
+          const { error: extensionError } = await supabaseService
+            .from('extensions')
+            .update({
+              status: 'approved',
+              approved_at: new Date().toISOString(),
+              stripe_payment_intent_id: session.payment_intent as string
+            })
+            .eq('booking_id', bookingId)
+            .eq('status', 'payment_pending');
+
+          if (extensionError) {
+            console.error("❌ [EXTENSION_ERROR] Failed to update extension:", extensionError);
+            break;
+          }
+
+          console.log("✅ [EXTENSION_SUCCESS] Extension processed successfully");
+          break;
+        }
+        
+        // Handle regular booking payments
         if (!metadata?.spot_id) {
           console.error("❌ [CHECKOUT_ERROR] No spot_id in session metadata");
           break;

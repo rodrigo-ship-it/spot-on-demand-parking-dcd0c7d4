@@ -257,32 +257,44 @@ export type Database = {
       }
       extensions: {
         Row: {
+          approved_at: string | null
           booking_id: string
           created_at: string
           id: string
+          new_end_time: string | null
           rate_per_hour: number
           requested_hours: number
           status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           total_amount: number
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
           booking_id: string
           created_at?: string
           id?: string
+          new_end_time?: string | null
           rate_per_hour: number
           requested_hours: number
           status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           total_amount: number
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
           booking_id?: string
           created_at?: string
           id?: string
+          new_end_time?: string | null
           rate_per_hour?: number
           requested_hours?: number
           status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           total_amount?: number
           updated_at?: string
         }
