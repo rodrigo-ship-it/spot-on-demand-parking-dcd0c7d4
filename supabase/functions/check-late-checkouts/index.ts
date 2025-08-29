@@ -31,8 +31,8 @@ serve(async (req) => {
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
-    // Find all active/confirmed bookings that are 3+ hours past their END TIME IN UTC
-    // This ensures we're comparing UTC to UTC, avoiding timezone confusion
+    // Find all active/confirmed bookings that are 3+ hours past their LOCAL end time
+    // Compare current time with local end_time (not UTC) for proper timezone handling
     const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
@@ -48,8 +48,8 @@ serve(async (req) => {
         parking_spots!inner(title, address, price_per_hour, owner_id)
       `)
       .in('status', ['confirmed', 'active'])
-      .lte('end_time_utc', threeHoursAgo.toISOString())
-      .order('end_time_utc', { ascending: true });
+      .lte('end_time', threeHoursAgo.toISOString().slice(0, -1)) // Remove Z to treat as local time
+      .order('end_time', { ascending: true });
 
     if (bookingsError) {
       throw new Error(`Error fetching late bookings: ${bookingsError.message}`);
@@ -76,9 +76,10 @@ serve(async (req) => {
       try {
         logStep("Processing late booking", { bookingId: booking.id, endTime: booking.end_time, endTimeUtc: booking.end_time_utc });
 
-        // Use UTC end time for accurate comparison with current UTC time
-        const endTimeUtc = new Date(booking.end_time_utc);
-        const minutesLate = Math.floor((now.getTime() - endTimeUtc.getTime()) / (1000 * 60));
+        // Use local end time for comparison with current local time
+        const endTimeLocal = new Date(booking.end_time);
+        const currentTimeLocal = new Date(); // Current local time
+        const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeLocal.getTime()) / (1000 * 60));
         
         logStep("Calculated lateness", { minutesLate, bookingId: booking.id });
 
