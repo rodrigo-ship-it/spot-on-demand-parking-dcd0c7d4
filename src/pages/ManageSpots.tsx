@@ -170,6 +170,15 @@ const ManageSpots = () => {
           const startDate = booking.start_time ? new Date(booking.start_time + (booking.start_time.includes('T') && !booking.start_time.includes('Z') ? '' : '')) : null;
           const endDate = booking.end_time ? new Date(booking.end_time + (booking.end_time.includes('T') && !booking.end_time.includes('Z') ? '' : '')) : null;
           
+          console.log('📅 [MY_SPOTS_BOOKING_DEBUG]', {
+            id: booking.id.substring(0, 8),
+            start_time_raw: booking.start_time,
+            end_time_raw: booking.end_time,
+            startDate: startDate?.toString(),
+            endDate: endDate?.toString(),
+            currentTime: new Date().toString()
+          });
+          
           // Check if dates are valid
           const isStartDateValid = startDate && !isNaN(startDate.getTime());
           const isEndDateValid = endDate && !isNaN(endDate.getTime());
@@ -193,19 +202,36 @@ const ManageSpots = () => {
           const startTime = startDate.getTime();
           const endTime = endDate.getTime();
           
+          console.log('🕐 [MY_SPOTS_STATUS_DEBUG]', {
+            bookingId: booking.id.substring(0, 8),
+            now: now.toLocaleString(),
+            startDate: startDate.toLocaleString(),
+            endDate: endDate.toLocaleString(),
+            nowTime,
+            startTime,
+            endTime,
+            dbStatus: booking.status,
+            currentHour: now.getHours(),
+            currentMinute: now.getMinutes()
+          });
+          
           if (booking.status === 'cancelled') {
             status = 'Cancelled';
           } else if (booking.status === 'completed') {
             status = 'Completed';
           } else if (nowTime >= startTime && nowTime <= endTime) {
             status = 'Active';
+            console.log('🟢 [MY_SPOTS_STATUS] Setting as Active - current time is between start and end');
           } else if (nowTime > endTime && (booking.status === 'confirmed' || booking.status === 'active')) {
             // Booking is past end time but still not checked out - keep as Active until 3-hour limit or manual checkout
             status = 'Active';
+            console.log('🟡 [MY_SPOTS_STATUS] Setting as Active - past end time but within 3-hour grace period');
           } else if (nowTime < startTime) {
             status = 'Upcoming';
+            console.log('🟡 [MY_SPOTS_STATUS] Setting as Upcoming - current time is before start time');
           } else {
             status = 'Completed';
+            console.log('🔴 [MY_SPOTS_STATUS] Setting as Completed - fallback status');
           }
           
           return {
