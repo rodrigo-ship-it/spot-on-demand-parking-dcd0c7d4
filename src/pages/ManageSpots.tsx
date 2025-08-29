@@ -169,56 +169,88 @@ const ManageSpots = () => {
       }
 
       const processedReservations = data?.map(booking => {
-        // Safely parse dates with validation
-        let startTime, endTime, durationHours = 0;
-        
         try {
-          if (!booking.start_time || !booking.end_time) {
-            console.error("Missing start_time or end_time in booking:", booking.id);
-            startTime = new Date();
-            endTime = new Date();
-          } else {
-            startTime = new Date(booking.start_time);
-            endTime = new Date(booking.end_time);
-            
-            if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-              console.error("Invalid dates in booking:", booking.id, {
-                start_time: booking.start_time,
-                end_time: booking.end_time
-              });
-              startTime = new Date();
-              endTime = new Date();
-            } else {
-              durationHours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
-            }
+          // Parse dates as local times (same logic as Bookings page)
+          const startDate = booking.start_time ? new Date(booking.start_time + (booking.start_time.includes('T') && !booking.start_time.includes('Z') ? '' : '')) : null;
+          const endDate = booking.end_time ? new Date(booking.end_time + (booking.end_time.includes('T') && !booking.end_time.includes('Z') ? '' : '')) : null;
+          
+          // Check if dates are valid
+          const isStartDateValid = startDate && !isNaN(startDate.getTime());
+          const isEndDateValid = endDate && !isNaN(endDate.getTime());
+          
+          if (!isStartDateValid || !isEndDateValid) {
+            console.error('Invalid date in booking:', booking.id, {
+              start_time: booking.start_time,
+              end_time: booking.end_time,
+              startDateValid: isStartDateValid,
+              endDateValid: isEndDateValid
+            });
+            return null; // Skip this booking
           }
+          
+          const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
+          
+          // Determine status based on times and current booking status (same logic as Bookings page)
+          let status = 'Upcoming';
+          const now = new Date();
+          const nowTime = now.getTime();
+          const startTime = startDate.getTime();
+          const endTime = endDate.getTime();
+          
+          if (booking.status === 'cancelled') {
+            status = 'Cancelled';
+          } else if (booking.status === 'completed') {
+            status = 'Completed';
+          } else if (nowTime >= startTime && nowTime <= endTime) {
+            status = 'Active';
+          } else if (nowTime > endTime && (booking.status === 'confirmed' || booking.status === 'active')) {
+            // Booking is past end time but still not checked out - keep as Active until 3-hour limit or manual checkout
+            status = 'Active';
+          } else if (nowTime < startTime) {
+            status = 'Upcoming';
+          } else {
+            status = 'Completed';
+          }
+          
+          return {
+            id: booking.id,
+            spotTitle: booking.parking_spots?.title || 'Unknown Spot',
+            customer: 'Guest User', // We'll fetch user details separately if needed
+            email: 'Not provided',
+            phone: 'Not provided',
+            date: booking.display_date || (() => {
+              // Use the raw date components without timezone conversion
+              const year = startDate.getFullYear();
+              const month = String(startDate.getMonth() + 1).padStart(2, '0');
+              const day = String(startDate.getDate()).padStart(2, '0');
+              return `${month}/${day}/${year}`;
+            })(),
+            startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'America/Chicago'
+            }),
+            endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'America/Chicago'
+            }),
+            duration: `${duration} hour${duration !== 1 ? 's' : ''}`,
+            pricePerHour: booking.parking_spots?.pricing_type === 'hourly' 
+              ? Number(booking.parking_spots?.price_per_hour) || 0
+              : 0,
+            oneTimePrice: booking.parking_spots?.pricing_type === 'one_time'
+              ? Number(booking.parking_spots?.one_time_price) || 0
+              : 0,
+            totalEarnings: Number(booking.total_amount) || 0,
+            status,
+            originalBooking: booking
+          };
         } catch (error) {
-          console.error("Error parsing dates for booking:", booking.id, error);
-          startTime = new Date();
-          endTime = new Date();
+          console.error('Error processing booking:', booking.id, error);
+          return null; // Skip this booking if there's an error
         }
-        
-        return {
-          id: booking.id,
-          spotTitle: booking.parking_spots?.title || 'Unknown Spot',
-          customer: 'Guest User', // We'll fetch user details separately if needed
-          email: 'Not provided',
-          phone: 'Not provided',
-          date: startTime.toLocaleDateString(),
-          startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          duration: `${durationHours} hour${durationHours !== 1 ? 's' : ''}`,
-          pricePerHour: booking.parking_spots?.pricing_type === 'hourly' 
-            ? Number(booking.parking_spots?.price_per_hour) || 0
-            : 0,
-          oneTimePrice: booking.parking_spots?.pricing_type === 'one_time'
-            ? Number(booking.parking_spots?.one_time_price) || 0
-            : 0,
-          totalEarnings: Number(booking.total_amount) || 0,
-          status: booking.status.charAt(0).toUpperCase() + booking.status.slice(1),
-          originalBooking: booking
-        };
-      }) || [];
+      }).filter(booking => booking !== null) || [];
 
       setUpcomingReservations(processedReservations);
     } catch (error) {
