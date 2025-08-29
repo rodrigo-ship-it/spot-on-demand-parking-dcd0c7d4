@@ -422,7 +422,7 @@ const ManageSpots = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Monthly Earnings</CardDescription>
-              <CardTitle className="text-2xl text-primary">${totalEarnings}</CardTitle>
+              <CardTitle className="text-2xl text-primary">${totalEarnings.toFixed(2)}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">{earningsChangeText}</p>
