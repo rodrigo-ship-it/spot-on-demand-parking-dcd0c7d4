@@ -23,6 +23,8 @@ export const ExtensionSystem = ({
 }: ExtensionSystemProps) => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [showExtensionOptions, setShowExtensionOptions] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,7 +55,58 @@ export const ExtensionSystem = ({
     return () => clearInterval(timer);
   }, [endTime, isSpotAvailableAfter]);
 
+  const checkAvailability = async (hours: number): Promise<boolean> => {
+    try {
+      // Get current booking details
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .select('end_time_utc, spot_id')
+        .eq('id', bookingId)
+        .single();
+
+      if (bookingError || !booking) {
+        throw new Error('Could not fetch booking details');
+      }
+
+      // Calculate new end time
+      const newEndTime = new Date(booking.end_time_utc);
+      newEndTime.setHours(newEndTime.getHours() + hours);
+
+      // Check for conflicts
+      const { data: conflicts, error: conflictError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('spot_id', booking.spot_id)
+        .in('status', ['confirmed', 'active'])
+        .neq('id', bookingId)
+        .gte('start_time_utc', booking.end_time_utc)
+        .lt('start_time_utc', newEndTime.toISOString());
+
+      if (conflictError) {
+        throw new Error('Could not check availability');
+      }
+
+      return !conflicts || conflicts.length === 0;
+    } catch (error) {
+      console.error('Availability check error:', error);
+      setAvailabilityError(error.message);
+      return false;
+    }
+  };
+
   const handleExtension = async (hours: number) => {
+    setCheckingAvailability(true);
+    setAvailabilityError(null);
+    
+    // First check availability
+    const isAvailable = await checkAvailability(hours);
+    setCheckingAvailability(false);
+    
+    if (!isAvailable) {
+      toast.error("Extension unavailable - another booking conflicts with this time");
+      return;
+    }
+
     const cost = Math.round(pricePerHour * hours * 1.5); // 50% premium for extensions
     
     try {
@@ -64,17 +117,35 @@ export const ExtensionSystem = ({
           booking_id: bookingId,
           requested_hours: hours,
           rate_per_hour: pricePerHour * 1.5,
-          total_amount: cost
+          total_amount: cost,
+          status: 'pending'
         });
 
       if (error) throw error;
 
+      // Process extension payment
+      const { data, error: functionError } = await supabase.functions.invoke('process-extension', {
+        body: {
+          bookingId,
+          extensionHours: hours,
+          totalAmount: cost
+        }
+      });
+
+      if (functionError) throw functionError;
+
+      if (data.checkout_url) {
+        toast.success(`Redirecting to payment for ${hours} hour extension - $${cost}`);
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+
       onExtensionRequested(hours, cost);
       setShowExtensionOptions(false);
-      toast.success(`Extension requested for ${hours} hour(s) - $${cost}`);
     } catch (error) {
       console.error('Error requesting extension:', error);
-      toast.error("Failed to request extension");
+      toast.error("Failed to request extension: " + (error.message || 'Unknown error'));
     }
   };
 
@@ -102,10 +173,16 @@ export const ExtensionSystem = ({
         ) : (
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Available extensions (50% premium):</p>
+            {availabilityError && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {availabilityError}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 onClick={() => handleExtension(1)}
+                disabled={checkingAvailability}
                 className="flex flex-col h-auto p-3"
               >
                 <span className="font-medium">+1 Hour</span>
@@ -117,6 +194,7 @@ export const ExtensionSystem = ({
               <Button
                 variant="outline"
                 onClick={() => handleExtension(2)}
+                disabled={checkingAvailability}
                 className="flex flex-col h-auto p-3"
               >
                 <span className="font-medium">+2 Hours</span>
@@ -126,6 +204,9 @@ export const ExtensionSystem = ({
                 </span>
               </Button>
             </div>
+            {checkingAvailability && (
+              <p className="text-sm text-gray-500">Checking availability...</p>
+            )}
           </div>
         )}
       </CardContent>
