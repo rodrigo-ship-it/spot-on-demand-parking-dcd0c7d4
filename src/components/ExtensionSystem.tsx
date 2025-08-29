@@ -27,7 +27,7 @@ export const ExtensionSystem = ({
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const updateTimeStatus = () => {
       // Validate endTime before processing
       if (!endTime) {
         return { message: "No end time set", color: "text-gray-600" };
@@ -46,11 +46,19 @@ export const ExtensionSystem = ({
       
       setTimeLeft(minutesLeft);
       
-      // Show extension options 30 minutes before end time
-      if (minutesLeft <= 30 && minutesLeft > 0 && isSpotAvailableAfter) {
-        setShowExtensionOptions(true);
+      // Show extension options 30 minutes before end time OR if booking has ended (up to 2 hours past)
+      if ((minutesLeft <= 30 && minutesLeft > 0) || (minutesLeft <= 0 && minutesLeft >= -120)) {
+        if (isSpotAvailableAfter) {
+          setShowExtensionOptions(true);
+        }
       }
-    }, 60000); // Update every minute
+    };
+
+    // Run immediately
+    updateTimeStatus();
+    
+    // Then run every minute
+    const timer = setInterval(updateTimeStatus, 60000);
 
     return () => clearInterval(timer);
   }, [endTime, isSpotAvailableAfter]);
@@ -178,9 +186,13 @@ export const ExtensionSystem = ({
     }
   };
 
-  if (!showExtensionOptions || timeLeft <= 0) {
+  if (!showExtensionOptions) {
     return null;
   }
+
+  const timeStatus = timeLeft > 0 
+    ? `${timeLeft} minutes remaining. Extend now to avoid overtime fees.`
+    : `${Math.abs(timeLeft)} minutes overtime. Extend to avoid additional penalties.`;
 
   return (
     <Card className="border-orange-200 bg-orange-50">
@@ -190,7 +202,7 @@ export const ExtensionSystem = ({
           <span>Extend Your Parking</span>
         </CardTitle>
         <p className="text-sm text-orange-600">
-          {timeLeft} minutes remaining. Extend now to avoid overtime fees.
+          {timeStatus}
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
