@@ -199,7 +199,7 @@ const ManageSpots = () => {
           
           const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
           
-          // Determine status based on times and current booking status (same logic as Bookings page)
+          // Determine status based on times first, then booking status (same logic as Bookings page)
           let status = 'Upcoming';
           const now = new Date();
           const nowTime = now.getTime();
@@ -219,10 +219,9 @@ const ManageSpots = () => {
             currentMinute: now.getMinutes()
           });
           
+          // Time-based status takes priority over database status (except for cancelled)
           if (booking.status === 'cancelled') {
             status = 'Cancelled';
-          } else if (booking.status === 'completed') {
-            status = 'Completed';
           } else if (nowTime >= startTime && nowTime <= endTime) {
             status = 'Active';
             console.log('🟢 [MY_SPOTS_STATUS] Setting as Active - current time is between start and end');

@@ -122,7 +122,7 @@ const Bookings = () => {
             
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             
-            // Determine status based on times and current booking status
+            // Determine status based on times first, then booking status
             let status = 'Upcoming';
             const now = new Date();
             const nowTime = now.getTime();
@@ -143,10 +143,9 @@ const Bookings = () => {
               endTimeStr: booking.end_time
             });
             
+            // Time-based status takes priority over database status (except for cancelled)
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
-            } else if (booking.status === 'completed') {
-              status = 'Completed';
             } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
               console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
