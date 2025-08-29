@@ -1,0 +1,1 @@
+UPDATE bookings SET status = 'completed', updated_at = now() WHERE id = '5863fb7d-7712-4c66-bf37-c4e8d0ba974e';
