@@ -253,7 +253,7 @@ const Bookings = () => {
     const matchesSearch = reservation.spotTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.spotAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || reservation.status.toLowerCase() === statusFilter;
+    const matchesStatus = statusFilter === "all" || reservation.status.toLowerCase() === statusFilter.toLowerCase();
     
     // Advanced filters
     if (advancedFilters.dateRange) {
