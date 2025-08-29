@@ -761,24 +761,58 @@ const BookSpot = () => {
                           })()
                         )}
                       </div>
-                     <div>
-                       <Label>End Time</Label>
-                       <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
-                         <SelectTrigger className="w-full">
-                           <div className="flex items-center">
-                             <ClockIcon className="mr-2 h-4 w-4" />
-                             <SelectValue placeholder="Select time" />
-                           </div>
-                         </SelectTrigger>
-                         <SelectContent className="max-h-[200px]">
-                           {timeOptions.map((option) => (
-                             <SelectItem key={option.value} value={option.value}>
-                               {option.label}
-                             </SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
+                      <div>
+                        <Label>End Time</Label>
+                        <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
+                          <SelectTrigger className="w-full">
+                            <div className="flex items-center">
+                              <ClockIcon className="mr-2 h-4 w-4" />
+                              <SelectValue placeholder="Select time" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {timeOptions.map((option) => {
+                              // Check availability for end time
+                              const isAvailable = timeSlots.find(slot => slot.time === option.value)?.isAvailable !== false;
+                              const availableCount = timeSlots.find(slot => slot.time === option.value)?.available || 0;
+                              
+                              return (
+                                <SelectItem 
+                                  key={option.value} 
+                                  value={option.value}
+                                  disabled={!isAvailable}
+                                  className={!isAvailable ? "text-gray-400 line-through" : ""}
+                                >
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{option.label}</span>
+                                    {!isAvailable ? (
+                                      <span className="text-xs text-red-500 ml-2">Unavailable</span>
+                                    ) : availableCount < (spotData?.total_spots || 1) ? (
+                                      <span className="text-xs text-orange-500 ml-2">{availableCount} left</span>
+                                    ) : null}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        {/* Availability indicator for selected end time */}
+                        {(
+                          (() => {
+                            const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.endTime);
+                            const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.endTime);
+                            if (!selectedSlot?.isAvailable && nextAvailable) {
+                              const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
+                              return (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  Next available: {nextOption?.label}
+                                </p>
+                              );
+                            }
+                            return null;
+                          })()
+                        )}
+                      </div>
                    </div>
                  )}
                  
