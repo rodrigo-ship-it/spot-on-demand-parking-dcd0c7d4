@@ -140,10 +140,7 @@ const ManageSpots = () => {
 
       const spotIds = spots.map(spot => spot.id);
 
-      // Get current time minus 3 hours to include active reservations
-      const now = new Date();
-      const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-
+      // Get all reservations for owner's spots (upcoming, active, and recent past)
       const { data, error } = await supabase
         .from('bookings')
         .select(`
@@ -158,10 +155,9 @@ const ManageSpots = () => {
           )
         `)
         .in('spot_id', spotIds)
-        .in('status', ['confirmed', 'active', 'pending'])
-        .gte('end_time', threeHoursAgo.toISOString())
-        .order('start_time', { ascending: true })
-        .limit(20);
+        .in('status', ['confirmed', 'active', 'pending', 'completed'])
+        .order('start_time', { ascending: false })
+        .limit(50);
 
       if (error) {
         console.error('Error fetching reservations:', error);
