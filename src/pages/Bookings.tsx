@@ -143,9 +143,13 @@ const Bookings = () => {
               endTimeStr: booking.end_time
             });
             
-            // Time-based status takes priority over database status (except for cancelled)
+            // Time-based status takes priority over database status (except for cancelled and completed)
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
+            } else if (booking.status === 'completed') {
+              // If booking is marked as completed in database, respect that regardless of time
+              status = 'Completed';
+              console.log('✅ [STATUS] Setting as Completed - booking was properly checked out');
             } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
               console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
