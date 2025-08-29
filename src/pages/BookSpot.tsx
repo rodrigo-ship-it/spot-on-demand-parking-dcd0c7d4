@@ -700,47 +700,40 @@ const BookSpot = () => {
                                  })()}
                                </SelectItem>
                                ) : (
-                                 timeOptions.map((option) => {
-                                     // Convert timeOption format (24-hour: 17:30) to API format (12-hour: 5:30)
-                                     const [hours, minutes] = option.value.split(':');
-                                     const hour24 = parseInt(hours);
-                                     let hour12 = hour24;
-                                     
-                                      // Use 24-hour format to match database response
-                                      const convertedTime = `${hour24}:${minutes}`;
+                                timeOptions.map((option) => {
+                                      // Convert timeOption format (24-hour: 17:30) to API format (12-hour: 5:30)
+                                      const [hours, minutes] = option.value.split(':');
+                                      const hour24 = parseInt(hours);
                                       
-                                      // Find corresponding slot data using 24-hour format that matches database
-                                      const slotData = timeSlots.find(slot => slot.time === convertedTime);
-                                     const isAvailable = slotData ? slotData.isAvailable : true;
-                                     const availableCount = slotData?.available;
-                                     
-                                     return (
-                                       <SelectItem 
-                                         key={option.value} 
-                                         value={option.value}
-                                         disabled={!isAvailable}
-                                         className={
-                                           isAvailable 
-                                             ? "text-green-700" 
-                                             : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
-                                         }
-                                       >
-                                         <div className="flex items-center justify-between w-full">
-                                           <span>{option.label}</span>
-                                           {!isAvailable && (
-                                             <span className="text-xs ml-2 text-red-600 font-semibold">
-                                               Unavailable
-                                             </span>
-                                           )}
-                                           {isAvailable && slotData && availableCount && availableCount < (spotData?.total_spots || 1) && (
-                                             <span className="text-xs ml-2 text-orange-600">
-                                               ({availableCount} left)
-                                             </span>
-                                           )}
-                                         </div>
-                                       </SelectItem>
-                                     );
-                                   })
+                                       // Use 24-hour format to match database response
+                                       const convertedTime = `${hour24}:${minutes}`;
+                                       
+                                       // Find corresponding slot data using 24-hour format that matches database
+                                       const slotData = timeSlots.find(slot => slot.time === convertedTime);
+                                      const isAvailable = slotData ? slotData.isAvailable : true;
+                                      
+                                      return (
+                                        <SelectItem 
+                                          key={option.value} 
+                                          value={option.value}
+                                          disabled={!isAvailable}
+                                          className={
+                                            isAvailable 
+                                              ? "text-green-700" 
+                                              : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
+                                          }
+                                        >
+                                          <div className="flex items-center justify-between w-full">
+                                            <span>{option.label}</span>
+                                            {!isAvailable && (
+                                              <span className="text-xs ml-2 text-red-600 font-semibold">
+                                                Unavailable
+                                              </span>
+                                            )}
+                                          </div>
+                                        </SelectItem>
+                                      );
+                                    })
                               )}
                            </SelectContent>
                         </Select>
@@ -772,28 +765,37 @@ const BookSpot = () => {
                           </SelectTrigger>
                           <SelectContent className="max-h-[200px]">
                             {timeOptions.map((option) => {
-                              // Check availability for end time
-                              const isAvailable = timeSlots.find(slot => slot.time === option.value)?.isAvailable !== false;
-                              const availableCount = timeSlots.find(slot => slot.time === option.value)?.available || 0;
-                              
-                              return (
-                                <SelectItem 
-                                  key={option.value} 
-                                  value={option.value}
-                                  disabled={!isAvailable}
-                                  className={!isAvailable ? "text-gray-400 line-through" : ""}
-                                >
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>{option.label}</span>
-                                    {!isAvailable ? (
-                                      <span className="text-xs text-red-500 ml-2">Unavailable</span>
-                                    ) : availableCount < (spotData?.total_spots || 1) ? (
-                                      <span className="text-xs text-orange-500 ml-2">{availableCount} left</span>
-                                    ) : null}
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
+                               // Convert timeOption format to match database response
+                               const [hours, minutes] = option.value.split(':');
+                               const hour24 = parseInt(hours);
+                               const convertedTime = `${hour24}:${minutes}`;
+                               
+                               // Find corresponding slot data using 24-hour format that matches database
+                               const slotData = timeSlots.find(slot => slot.time === convertedTime);
+                               const isAvailable = slotData ? slotData.isAvailable : true;
+                               
+                               return (
+                                 <SelectItem 
+                                   key={option.value} 
+                                   value={option.value}
+                                   disabled={!isAvailable}
+                                   className={
+                                     isAvailable 
+                                       ? "text-green-700" 
+                                       : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
+                                   }
+                                 >
+                                   <div className="flex items-center justify-between w-full">
+                                     <span>{option.label}</span>
+                                     {!isAvailable && (
+                                       <span className="text-xs ml-2 text-red-600 font-semibold">
+                                         Unavailable
+                                       </span>
+                                     )}
+                                   </div>
+                                 </SelectItem>
+                               );
+                             })}
                           </SelectContent>
                         </Select>
                         {/* Availability indicator for selected end time */}
