@@ -55,11 +55,18 @@ export const MarketplacePaymentIntegration = ({
       const responseTime = Date.now() - startTime;
       console.log(`⏱️ [PAYMENT_RESPONSE_TIME] Edge function took ${responseTime}ms`);
       console.log("📝 [PAYMENT_RESPONSE] Function response:", { data, error });
+      console.log("🔍 [RESPONSE_INSPECTION] Response keys:", data ? Object.keys(data) : 'no data');
+      console.log("🔍 [CHECKOUT_URL_CHECK] Has checkout_url?", !!data?.checkout_url, "Value:", data?.checkout_url);
 
       if (error) {
         console.error("❌ [PAYMENT_ERROR] Function error:", error);
         console.error("🔍 [ERROR_DETAILS] Error details:", JSON.stringify(error, null, 2));
         throw error;
+      }
+
+      if (!data) {
+        console.error("❌ [NO_DATA] Edge function returned no data");
+        throw new Error("No data returned from payment function");
       }
 
       // Redirect to Stripe Checkout
@@ -86,6 +93,7 @@ export const MarketplacePaymentIntegration = ({
         return;
       }
 
+      console.error("❌ [NO_CHECKOUT_URL] Response data:", JSON.stringify(data, null, 2));
       throw new Error("No checkout URL received from payment function");
       
     } catch (error: any) {
