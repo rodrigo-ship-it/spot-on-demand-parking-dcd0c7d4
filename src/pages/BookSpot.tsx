@@ -699,42 +699,8 @@ const BookSpot = () => {
                                      : "No times available for this date";
                                  })()}
                                </SelectItem>
-                              ) : (
-                                 timeOptions
-                                   .filter((option) => {
-                                     // Convert timeOption format (24-hour: 17:30) to API format (12-hour: 5:30)
-                                     const [hours, minutes] = option.value.split(':');
-                                     const hour24 = parseInt(hours);
-                                     let hour12 = hour24;
-                                     
-                                     // Convert 24-hour to 12-hour format to match API
-                                     if (hour24 === 0) {
-                                       hour12 = 12; // 00:30 -> 12:30
-                                     } else if (hour24 > 12) {
-                                       hour12 = hour24 - 12; // 17:30 -> 5:30
-                                     }
-                                     // hour24 1-12 stay the same (1:30 -> 1:30)
-                                     
-                                     const convertedTime = `${hour12}:${minutes}`;
-                                     
-                                     // Debug logging for the conversion
-                                     if (option.value === "16:30" || option.value === "17:00" || option.value === "17:30") {
-                                       console.log('🔍 Time conversion:', {
-                                         originalTime: option.value,
-                                         hour24,
-                                         hour12,
-                                         convertedTime,
-                                         slotExists: !!timeSlots.find(slot => slot.time === convertedTime),
-                                         allSlotTimes: timeSlots.map(s => s.time).slice(0, 10)
-                                       });
-                                     }
-                                     
-                                     // Find corresponding slot data using converted time format
-                                     const slotData = timeSlots.find(slot => slot.time === convertedTime);
-                                     // Only show available slots - filter out unavailable ones
-                                     return slotData ? slotData.isAvailable : true; // Default to available if no slot data
-                                   })
-                                   .map((option) => {
+                               ) : (
+                                 timeOptions.map((option) => {
                                      // Convert timeOption format (24-hour: 17:30) to API format (12-hour: 5:30)
                                      const [hours, minutes] = option.value.split(':');
                                      const hour24 = parseInt(hours);
@@ -752,17 +718,28 @@ const BookSpot = () => {
                                      
                                      // Find corresponding slot data using converted time format
                                      const slotData = timeSlots.find(slot => slot.time === convertedTime);
+                                     const isAvailable = slotData ? slotData.isAvailable : true;
                                      const availableCount = slotData?.available;
                                      
                                      return (
                                        <SelectItem 
                                          key={option.value} 
                                          value={option.value}
-                                         className="text-green-700"
+                                         disabled={!isAvailable}
+                                         className={
+                                           isAvailable 
+                                             ? "text-green-700" 
+                                             : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
+                                         }
                                        >
                                          <div className="flex items-center justify-between w-full">
                                            <span>{option.label}</span>
-                                           {slotData && availableCount && availableCount < (spotData?.total_spots || 1) && (
+                                           {!isAvailable && (
+                                             <span className="text-xs ml-2 text-red-600 font-semibold">
+                                               Unavailable
+                                             </span>
+                                           )}
+                                           {isAvailable && slotData && availableCount && availableCount < (spotData?.total_spots || 1) && (
                                              <span className="text-xs ml-2 text-orange-600">
                                                ({availableCount} left)
                                              </span>
