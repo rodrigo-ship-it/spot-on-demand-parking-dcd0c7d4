@@ -31,8 +31,8 @@ serve(async (req) => {
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
-    // Find all active/confirmed bookings that are 3+ hours past their end time
-    // and haven't been processed yet (no existing penalty credits)
+    // Find all active/confirmed bookings that are 3+ hours past their END TIME IN UTC
+    // This ensures we're comparing UTC to UTC, avoiding timezone confusion
     const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
@@ -40,15 +40,16 @@ serve(async (req) => {
       .select(`
         id, 
         renter_id, 
-        end_time, 
+        end_time,
+        end_time_utc, 
         status,
         total_amount,
         payment_intent_id,
         parking_spots!inner(title, address, price_per_hour, owner_id)
       `)
       .in('status', ['confirmed', 'active'])
-      .lte('end_time', threeHoursAgo.toISOString())
-      .order('end_time', { ascending: true });
+      .lte('end_time_utc', threeHoursAgo.toISOString())
+      .order('end_time_utc', { ascending: true });
 
     if (bookingsError) {
       throw new Error(`Error fetching late bookings: ${bookingsError.message}`);
@@ -73,10 +74,11 @@ serve(async (req) => {
 
     for (const booking of lateBookings) {
       try {
-        logStep("Processing late booking", { bookingId: booking.id, endTime: booking.end_time });
+        logStep("Processing late booking", { bookingId: booking.id, endTime: booking.end_time, endTimeUtc: booking.end_time_utc });
 
-        const endTime = new Date(booking.end_time);
-        const minutesLate = Math.floor((now.getTime() - endTime.getTime()) / (1000 * 60));
+        // Use UTC end time for accurate comparison with current UTC time
+        const endTimeUtc = new Date(booking.end_time_utc);
+        const minutesLate = Math.floor((now.getTime() - endTimeUtc.getTime()) / (1000 * 60));
         
         logStep("Calculated lateness", { minutesLate, bookingId: booking.id });
 
