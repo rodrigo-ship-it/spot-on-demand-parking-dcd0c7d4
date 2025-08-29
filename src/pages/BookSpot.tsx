@@ -706,18 +706,11 @@ const BookSpot = () => {
                                      const hour24 = parseInt(hours);
                                      let hour12 = hour24;
                                      
-                                     // Convert 24-hour to 12-hour format to match API
-                                     if (hour24 === 0) {
-                                       hour12 = 12; // 00:30 -> 12:30
-                                     } else if (hour24 > 12) {
-                                       hour12 = hour24 - 12; // 17:30 -> 5:30
-                                     }
-                                     // hour24 1-12 stay the same (1:30 -> 1:30)
-                                     
-                                     const convertedTime = `${hour12}:${minutes}`;
-                                     
-                                     // Find corresponding slot data using converted time format
-                                     const slotData = timeSlots.find(slot => slot.time === convertedTime);
+                                      // Use 24-hour format to match database response
+                                      const convertedTime = `${hour24}:${minutes}`;
+                                      
+                                      // Find corresponding slot data using 24-hour format that matches database
+                                      const slotData = timeSlots.find(slot => slot.time === convertedTime);
                                      const isAvailable = slotData ? slotData.isAvailable : true;
                                      const availableCount = slotData?.available;
                                      
