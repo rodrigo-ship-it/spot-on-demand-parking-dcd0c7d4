@@ -13,7 +13,19 @@ export const useAvailableTimeSlots = (spotId: string, date: string, duration: nu
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!spotId || !date) return;
+    console.log('🔧 useAvailableTimeSlots effect triggered:', { spotId, date, duration });
+    
+    if (!spotId) {
+      console.log('❌ No spotId provided');
+      return;
+    }
+    
+    if (!date) {
+      console.log('❌ No date provided');
+      return;
+    }
+    
+    console.log('✅ All parameters valid, fetching slots...');
 
     const fetchAvailableSlots = async () => {
       setLoading(true);
@@ -25,6 +37,7 @@ export const useAvailableTimeSlots = (spotId: string, date: string, duration: nu
         const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         console.log('🌍 User timezone:', userTimezone);
         
+        console.log('🚀 Calling RPC get_available_time_slots...');
         const { data, error } = await supabase.rpc('get_available_time_slots', {
           p_spot_id: spotId,
           p_date: date,
