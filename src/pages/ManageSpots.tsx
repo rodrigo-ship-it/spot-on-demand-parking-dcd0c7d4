@@ -627,20 +627,14 @@ const ManageSpots = () => {
                         >
                           View
                         </Button>
-                        <div className="relative">
-                          <ContactButtons
-                            bookingId={reservation.id}
-                            recipientId={reservation.renterId}
-                            recipientName={reservation.renterName || reservation.email}
-                            showCallButton={true}
-                            showChatButton={true}
-                          />
-                          {getUnreadCount(reservation.id) > 0 && (
-                            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                              {getUnreadCount(reservation.id)}
-                            </div>
-                          )}
-                        </div>
+                        <ContactButtons
+                          bookingId={reservation.id}
+                          recipientId={reservation.renterId}
+                          recipientName={reservation.renterName || reservation.email}
+                          showCallButton={true}
+                          showChatButton={true}
+                          unreadCount={getUnreadCount(reservation.id)}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

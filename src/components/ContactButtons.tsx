@@ -13,6 +13,7 @@ interface ContactButtonsProps {
   recipientName: string;
   showCallButton?: boolean;
   showChatButton?: boolean;
+  unreadCount?: number;
 }
 
 export const ContactButtons: React.FC<ContactButtonsProps> = ({
@@ -20,7 +21,8 @@ export const ContactButtons: React.FC<ContactButtonsProps> = ({
   recipientId,
   recipientName,
   showCallButton = true,
-  showChatButton = true
+  showChatButton = true,
+  unreadCount = 0
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -65,22 +67,29 @@ export const ContactButtons: React.FC<ContactButtonsProps> = ({
   return (
     <div className="flex gap-2">
       {showChatButton && (
-        <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Message
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl p-0">
-            <ChatInterface
-              bookingId={bookingId}
-              recipientId={recipientId}
-              recipientName={recipientName}
-              onClose={() => setIsChatOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="relative">
+          <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Message
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl p-0">
+              <ChatInterface
+                bookingId={bookingId}
+                recipientId={recipientId}
+                recipientName={recipientName}
+                onClose={() => setIsChatOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+          {unreadCount > 0 && (
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadCount}
+            </div>
+          )}
+        </div>
       )}
 
       {showCallButton && (
