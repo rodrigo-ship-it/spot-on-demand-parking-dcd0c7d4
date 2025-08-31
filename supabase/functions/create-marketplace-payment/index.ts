@@ -210,11 +210,10 @@ serve(async (req) => {
       baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
     }
     
-    const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07);
-    const platformFeeFromLister = Math.round(baseSpotPrice * 0.07);
-    const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
-    const stripeProcessingFee = Math.round(baseSpotPrice * 0.029) + 30;
-    const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
+    // All fees are paid by the renter, owner gets full base price
+    const platformFee = Math.round(baseSpotPrice * 0.07); // 7% platform fee paid by renter
+    const stripeProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30; // Stripe fee on base + platform fee
+    const listerAmount = baseSpotPrice; // Owner gets full base price
 
     console.log("📝 Creating Stripe checkout session...");
     
@@ -254,7 +253,7 @@ serve(async (req) => {
       metadata: {
         spot_id: spot_id,
         owner_id: parkingSpot.owner_id,
-        platform_fee: totalPlatformFee.toString(),
+        platform_fee: platformFee.toString(),
         lister_amount: listerAmount.toString(),
         user_id: user_id || "",
         is_qr_booking: is_qr_booking ? "true" : "false",
@@ -277,7 +276,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       checkout_url: session.url,
       session_id: session.id,
-      platform_fee: totalPlatformFee / 100,
+      platform_fee: platformFee / 100,
       lister_amount: listerAmount / 100,
       stripe_processing_fee: stripeProcessingFee / 100,
       base_spot_price: baseSpotPrice / 100,
