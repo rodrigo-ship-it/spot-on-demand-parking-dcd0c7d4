@@ -142,23 +142,26 @@ const Bookings = () => {
               endTimeStr: booking.end_time
             });
             
-            // Time-based status takes priority over database status (except for cancelled and completed)
+            // Time-based status takes PRIORITY over database status
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
-            } else if (booking.status === 'completed') {
-              // If booking is marked as completed in database, respect that regardless of time
-              status = 'Completed';
-              console.log('✅ [STATUS] Setting as Completed - booking was properly checked out');
+              console.log('❌ [STATUS] Setting as Cancelled - booking was cancelled');
             } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
-              console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
-            } else if (nowTime > endTime && (booking.status === 'confirmed' || booking.status === 'active')) {
-              // Booking is past end time but still not checked out - keep as Active until 3-hour limit or manual checkout
-              status = 'Active';
-              console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period');
+              console.log('🟢 [STATUS] Setting as Active - current time is between start and end (overriding DB status)', booking.status);
             } else if (nowTime < startTime) {
               status = 'Upcoming';
               console.log('🟡 [STATUS] Setting as Upcoming - current time is before start time');
+            } else if (nowTime > endTime) {
+              // Past end time - check if it's truly completed or still in grace period
+              if (booking.status === 'completed') {
+                status = 'Completed';
+                console.log('✅ [STATUS] Setting as Completed - booking was properly checked out and time has passed');
+              } else {
+                // Not marked as completed but past end time - keep as Active for grace period
+                status = 'Active';
+                console.log('🟡 [STATUS] Setting as Active - past end time but within grace period (not checked out)');
+              }
             } else {
               status = 'Completed';
               console.log('🔴 [STATUS] Setting as Completed - fallback status');
