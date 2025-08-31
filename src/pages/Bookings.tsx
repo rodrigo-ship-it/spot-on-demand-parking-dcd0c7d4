@@ -92,10 +92,9 @@ const Bookings = () => {
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
           try {
-            // Parse dates as local times (no timezone conversion)
-            // Since we're storing without 'Z', we need to ensure they're treated as local
-            const startDate = booking.start_time ? new Date(booking.start_time + (booking.start_time.includes('T') && !booking.start_time.includes('Z') ? '' : '')) : null;
-            const endDate = booking.end_time ? new Date(booking.end_time + (booking.end_time.includes('T') && !booking.end_time.includes('Z') ? '' : '')) : null;
+            // Parse dates as local times - ensure consistent local time interpretation
+            const startDate = booking.start_time ? new Date(booking.start_time) : null;
+            const endDate = booking.end_time ? new Date(booking.end_time) : null;
             
             console.log('📅 [RAW_BOOKING_DATA]', {
               id: booking.id.substring(0, 8),
@@ -201,13 +200,11 @@ const Bookings = () => {
               })(),
               startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
-                minute: '2-digit',
-                timeZone: 'America/Chicago'
+                minute: '2-digit'
               }),
               endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
-                minute: '2-digit',
-                timeZone: 'America/Chicago'
+                minute: '2-digit'
               }),
               duration: `${duration} hours`,
               pricePerHour: booking.parking_spots?.price_per_hour || 0,
