@@ -72,12 +72,19 @@ serve(async (req) => {
 
           console.log("🔄 Processing extension:", { bookingId, extensionHours, newEndTime });
 
-          // Update booking with new end time
+          // Update booking with new end time and display fields
+          const newEndTimeLocal = new Date(newEndTime);
+          const displayEndTime = newEndTimeLocal.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+          });
+          
           const { error: bookingError } = await supabaseService
             .from('bookings')
             .update({
               end_time: new Date(newEndTime).toISOString().slice(0, -1), // Remove Z for timestamp without timezone
               end_time_utc: newEndTime,
+              display_end_time: displayEndTime, // Update the display field too
               updated_at: new Date().toISOString()
             })
             .eq('id', bookingId);

@@ -98,9 +98,17 @@ serve(async (req) => {
       });
     }
 
-    // Check availability for extension period
-    const newEndTime = new Date(booking.end_time_utc);
-    newEndTime.setHours(newEndTime.getHours() + extensionHours);
+    // Check availability for extension period - calculate from LOCAL time, not UTC
+    // The booking.end_time is in local time (without timezone), which is what we want
+    const currentEndTime = new Date(booking.end_time);
+    const newEndTime = new Date(currentEndTime.getTime() + (extensionHours * 60 * 60 * 1000));
+    
+    console.log('📅 Extension time calculation:', {
+      originalEndTime: booking.end_time,
+      extensionHours,
+      newEndTime: newEndTime.toISOString(),
+      newEndTimeLocal: newEndTime.toLocaleString()
+    });
 
     const { data: conflicts } = await supabaseService
       .from('bookings')
