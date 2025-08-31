@@ -98,26 +98,36 @@ serve(async (req) => {
       });
     }
 
-    // Check availability for extension period - calculate from LOCAL time, not UTC
-    // The booking.end_time is in local time (without timezone), which is what we want
+    // Check availability for extension period - calculate consistently with frontend
     const currentEndTime = new Date(booking.end_time);
     const newEndTime = new Date(currentEndTime.getTime() + (extensionHours * 60 * 60 * 1000));
     
+    // Convert to UTC for database comparison (EDT is UTC-4, so add 4 hours)
+    const newEndTimeUTC = new Date(newEndTime.getTime() + (4 * 60 * 60 * 1000));
+    
     console.log('📅 Extension time calculation:', {
       originalEndTime: booking.end_time,
+      originalEndTimeUTC: booking.end_time_utc,
       extensionHours,
-      newEndTime: newEndTime.toISOString(),
-      newEndTimeLocal: newEndTime.toLocaleString()
+      newEndTimeLocal: newEndTime.toISOString().slice(0, -1),
+      newEndTimeUTC: newEndTimeUTC.toISOString()
     });
 
     const { data: conflicts } = await supabaseService
       .from('bookings')
-      .select('id')
+      .select('id, start_time_utc, end_time_utc')
       .eq('spot_id', booking.spot_id)
       .in('status', ['confirmed', 'active'])
       .neq('id', bookingId)
       .gte('start_time_utc', booking.end_time_utc)
-      .lt('start_time_utc', newEndTime.toISOString());
+      .lt('start_time_utc', newEndTimeUTC.toISOString());
+
+    console.log('🔍 Backend conflict check:', {
+      spotId: booking.spot_id,
+      currentEndUTC: booking.end_time_utc,
+      newEndUTC: newEndTimeUTC.toISOString(),
+      conflictingBookings: conflicts
+    });
 
     if (conflicts && conflicts.length > 0) {
       return new Response(JSON.stringify({ 

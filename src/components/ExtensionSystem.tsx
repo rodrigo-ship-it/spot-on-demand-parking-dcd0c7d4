@@ -80,7 +80,7 @@ export const ExtensionSystem = ({
       // Get current booking details
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
-        .select('end_time_utc, spot_id')
+        .select('end_time, end_time_utc, spot_id')
         .eq('id', bookingId)
         .maybeSingle();
 
@@ -91,13 +91,21 @@ export const ExtensionSystem = ({
 
       console.log('📅 Current booking:', booking);
 
-      // Calculate new end time
-      const newEndTime = new Date(booking.end_time_utc);
-      newEndTime.setHours(newEndTime.getHours() + hours);
+      // Calculate new end time from LOCAL time (consistent with backend logic)
+      const currentEndTime = new Date(booking.end_time);
+      const newEndTime = new Date(currentEndTime.getTime() + (hours * 60 * 60 * 1000));
+      
+      // Convert to UTC for database comparison
+      const newEndTimeUTC = new Date(newEndTime.getTime() + (4 * 60 * 60 * 1000)); // Add 4 hours for EDT->UTC
 
-      console.log('📅 New end time would be:', newEndTime.toISOString());
+      console.log('📅 Extension calculation:', {
+        currentEndLocal: booking.end_time,
+        newEndLocal: newEndTime.toISOString().slice(0, -1),
+        newEndUTC: newEndTimeUTC.toISOString(),
+        extensionHours: hours
+      });
 
-      // Check for conflicts
+      // Check for conflicts using UTC times
       const { data: conflicts, error: conflictError } = await supabase
         .from('bookings')
         .select('id, start_time_utc, end_time_utc')
@@ -105,7 +113,7 @@ export const ExtensionSystem = ({
         .in('status', ['confirmed', 'active'])
         .neq('id', bookingId)
         .gte('start_time_utc', booking.end_time_utc)
-        .lt('start_time_utc', newEndTime.toISOString());
+        .lt('start_time_utc', newEndTimeUTC.toISOString());
 
       if (conflictError) {
         console.error('❌ Conflict check error:', conflictError);
@@ -113,6 +121,12 @@ export const ExtensionSystem = ({
       }
 
       console.log('🔍 Conflicts found:', conflicts);
+      console.log('🔍 Conflict check details:', {
+        spotId: booking.spot_id,
+        currentEndUTC: booking.end_time_utc,
+        newEndUTC: newEndTimeUTC.toISOString(),
+        conflictingBookings: conflicts
+      });
 
       const isAvailable = !conflicts || conflicts.length === 0;
       console.log('✅ Availability result:', isAvailable);
