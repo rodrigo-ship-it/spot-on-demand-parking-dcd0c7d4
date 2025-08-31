@@ -473,6 +473,7 @@ export type Database = {
           is_active: boolean
           latitude: number | null
           longitude: number | null
+          monthly_price: number | null
           one_time_price: number | null
           owner_id: string
           price_per_hour: number | null
@@ -499,6 +500,7 @@ export type Database = {
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
+          monthly_price?: number | null
           one_time_price?: number | null
           owner_id: string
           price_per_hour?: number | null
@@ -525,6 +527,7 @@ export type Database = {
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
+          monthly_price?: number | null
           one_time_price?: number | null
           owner_id?: string
           price_per_hour?: number | null
