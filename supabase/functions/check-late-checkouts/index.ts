@@ -31,8 +31,8 @@ serve(async (req) => {
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
-    // Find all active/confirmed bookings that are 3+ hours past their LOCAL end time
-    // Compare current time with local end_time (not UTC) for proper timezone handling
+    // Find all active/confirmed bookings that are 3+ hours past their UTC end time
+    // Use UTC times consistently throughout
     const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
@@ -48,8 +48,8 @@ serve(async (req) => {
         parking_spots!inner(title, address, price_per_hour, owner_id)
       `)
       .in('status', ['confirmed', 'active'])
-      .lte('end_time', threeHoursAgo.toISOString().slice(0, -1)) // Remove Z to treat as local time
-      .order('end_time', { ascending: true });
+      .lte('end_time_utc', threeHoursAgo.toISOString()) // Compare UTC times
+      .order('end_time_utc', { ascending: true });
 
     if (bookingsError) {
       throw new Error(`Error fetching late bookings: ${bookingsError.message}`);
@@ -74,12 +74,12 @@ serve(async (req) => {
 
     for (const booking of lateBookings) {
       try {
-        logStep("Processing late booking", { bookingId: booking.id, endTime: booking.end_time, endTimeUtc: booking.end_time_utc });
+        logStep("Processing late booking", { bookingId: booking.id, endTimeLocal: booking.end_time, endTimeUtc: booking.end_time_utc });
 
-        // Use local end time for comparison with current local time
-        const endTimeLocal = new Date(booking.end_time);
-        const currentTimeLocal = new Date(); // Current local time
-        const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeLocal.getTime()) / (1000 * 60));
+        // Use UTC times consistently for comparison
+        const endTimeUtc = new Date(booking.end_time_utc);
+        const currentTimeUtc = new Date(); // Current UTC time
+        const minutesLate = Math.floor((currentTimeUtc.getTime() - endTimeUtc.getTime()) / (1000 * 60));
         
         logStep("Calculated lateness", { minutesLate, bookingId: booking.id });
 
