@@ -80,7 +80,6 @@ const BookingConfirmed = () => {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           const isMonthly = spot.pricing_type === 'monthly';
-          const numberOfMonths = isMonthly ? Math.ceil(durationInHours / (24 * 30)) : 0;
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
@@ -88,7 +87,9 @@ const BookingConfirmed = () => {
             endTime: booking.display_end_time || "Your selected end time",
             startDate: isMonthly ? new Date(booking.start_time).toLocaleDateString() : null,
             endDate: isMonthly ? new Date(booking.end_time).toLocaleDateString() : null,
-            duration: isMonthly ? numberOfMonths : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
+            duration: isMonthly 
+              ? (booking.display_duration_text || "1 month").replace(/^\d+/, (match) => match) // Use database duration
+              : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
@@ -96,7 +97,9 @@ const BookingConfirmed = () => {
             isDaily: isDaily,
             isMonthly: isMonthly,
             numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
-            numberOfMonths: numberOfMonths,
+            numberOfMonths: isMonthly 
+              ? parseInt((booking.display_duration_text || "1 month").match(/\d+/)?.[0] || "1")
+              : 0,
             spotData: {
               title: spot.title,
               address: spot.address,
@@ -145,7 +148,6 @@ const BookingConfirmed = () => {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           const isMonthly = spot.pricing_type === 'monthly';
-          const numberOfMonths = isMonthly ? Math.ceil(durationInHours / (24 * 30)) : 0;
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
@@ -153,7 +155,9 @@ const BookingConfirmed = () => {
             endTime: booking.display_end_time || "Your selected end time",
             startDate: isMonthly ? new Date(booking.start_time).toLocaleDateString() : null,
             endDate: isMonthly ? new Date(booking.end_time).toLocaleDateString() : null,
-            duration: isMonthly ? numberOfMonths : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
+            duration: isMonthly 
+              ? (booking.display_duration_text || "1 month").replace(/^\d+/, (match) => match) // Use database duration
+              : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
@@ -161,7 +165,9 @@ const BookingConfirmed = () => {
             isDaily: isDaily,
             isMonthly: isMonthly,
             numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
-            numberOfMonths: numberOfMonths,
+            numberOfMonths: isMonthly 
+              ? parseInt((booking.display_duration_text || "1 month").match(/\d+/)?.[0] || "1")
+              : 0,
             spotData: {
               title: spot.title,
               address: spot.address,
@@ -202,7 +208,6 @@ const BookingConfirmed = () => {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
           const isMonthly = spot.pricing_type === 'monthly';
-          const numberOfMonths = isMonthly ? Math.ceil(durationInHours / (24 * 30)) : 0;
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
@@ -210,7 +215,9 @@ const BookingConfirmed = () => {
             endTime: booking.display_end_time || "Your selected end time",
             startDate: isMonthly ? new Date(booking.start_time).toLocaleDateString() : null,
             endDate: isMonthly ? new Date(booking.end_time).toLocaleDateString() : null,
-            duration: isMonthly ? numberOfMonths : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
+            duration: isMonthly 
+              ? (booking.display_duration_text || "1 month").replace(/^\d+/, (match) => match) // Use database duration
+              : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
@@ -218,7 +225,9 @@ const BookingConfirmed = () => {
             isDaily: isDaily,
             isMonthly: isMonthly,
             numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
-            numberOfMonths: numberOfMonths,
+            numberOfMonths: isMonthly 
+              ? parseInt((booking.display_duration_text || "1 month").match(/\d+/)?.[0] || "1")
+              : 0,
             spotData: {
               title: spot.title,
               address: spot.address,

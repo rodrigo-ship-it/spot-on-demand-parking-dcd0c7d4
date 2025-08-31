@@ -126,7 +126,6 @@ const Bookings = () => {
             
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
-            const numberOfMonths = isMonthly ? Math.ceil(duration / (24 * 30)) : 0;
             
             // Determine status based on times first, then booking status
             let status = 'Upcoming';
@@ -224,7 +223,9 @@ const Bookings = () => {
               })),
               startDate: isMonthly ? startDate.toLocaleDateString() : null,
               endDate: isMonthly ? endDate.toLocaleDateString() : null,
-              duration: isMonthly ? `${numberOfMonths} month${numberOfMonths > 1 ? 's' : ''}` : `${duration} hours`,
+              duration: isMonthly 
+                ? (booking.display_duration_text || "1 month") // Use stored duration for monthly
+                : `${duration} hours`,
               isMonthly: isMonthly,
               pricePerHour: booking.parking_spots?.price_per_hour || 0,
               totalCost: Number(booking.total_amount) || 0,
