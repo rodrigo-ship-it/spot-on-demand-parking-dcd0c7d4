@@ -144,8 +144,9 @@ export const ExtensionSystem = ({
     // Estimate Stripe processing fee (2.9% + $0.30)
     const estimatedProcessingFee = Math.round((basePrice + platformFeeFromRenter) * 0.029 * 100) / 100 + 0.30;
     
-    // Total amount user pays (same structure as regular bookings)
-    const totalAmount = basePrice + platformFeeFromRenter + estimatedProcessingFee;
+    // Add tax (8.75% like original bookings)
+    const taxRate = 0.0875; // 8.75% tax
+    const totalAmount = Math.round((basePrice + platformFeeFromRenter + estimatedProcessingFee) * (1 + taxRate) * 100) / 100;
     
     console.log('💰 Extension pricing breakdown:', {
       basePrice,
@@ -254,7 +255,8 @@ export const ExtensionSystem = ({
                 const basePrice = pricePerHour * hour;
                 const platformFee = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
                 const processingFee = Math.round((basePrice + platformFee) * 0.029 * 100) / 100 + 0.30;
-                const totalCost = basePrice + platformFee + processingFee;
+                const taxRate = 0.0875; // 8.75% tax
+                const totalCost = Math.round((basePrice + platformFee + processingFee) * (1 + taxRate) * 100) / 100;
                 
                 return (
                   <Button
