@@ -12,12 +12,15 @@ import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
 import { FilterDialog } from "@/components/FilterDialog";
 import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
+import { ContactButtons } from "@/components/ContactButtons";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const ManageSpots = () => {
   const { user } = useAuth();
+  const { getUnreadCount } = useUnreadMessages();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpotForQR, setSelectedSpotForQR] = useState<string | null>(null);
@@ -144,7 +147,7 @@ const ManageSpots = () => {
       const now = new Date();
       const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
 
-      const { data, error } = await supabase
+        const { data, error } = await supabase
         .from('bookings')
         .select(`
           *,
@@ -239,6 +242,7 @@ const ManageSpots = () => {
           
           return {
             id: booking.id,
+            renterId: booking.renter_id,
             spotTitle: booking.parking_spots?.title || 'Unknown Spot',
             customer: 'Guest User', // We'll fetch user details separately if needed
             email: 'Not provided',
@@ -623,13 +627,20 @@ const ManageSpots = () => {
                         >
                           View
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`mailto:${reservation.email}`, '_self')}
-                        >
-                          Contact
-                        </Button>
+                        <div className="relative">
+                          <ContactButtons
+                            bookingId={reservation.id}
+                            recipientId={reservation.renterId}
+                            recipientName={reservation.renterName || reservation.email}
+                            showCallButton={true}
+                            showChatButton={true}
+                          />
+                          {getUnreadCount(reservation.id) > 0 && (
+                            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                              {getUnreadCount(reservation.id)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                   </TableRow>
