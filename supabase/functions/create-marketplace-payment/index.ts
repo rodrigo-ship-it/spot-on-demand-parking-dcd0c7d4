@@ -204,6 +204,8 @@ serve(async (req) => {
       baseSpotPrice = Math.round(parseFloat(parkingSpot.price_per_hour.toString()) * booking_details.duration * 100);
     } else if (parkingSpot.pricing_type === 'daily') {
       baseSpotPrice = Math.round(parseFloat(parkingSpot.daily_price.toString()) * booking_details.numberOfDays * 100);
+    } else if (parkingSpot.pricing_type === 'monthly') {
+      baseSpotPrice = Math.round(parseFloat(parkingSpot.monthly_price.toString()) * booking_details.numberOfMonths * 100);
     } else {
       baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
     }
