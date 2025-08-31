@@ -14,7 +14,7 @@ import { toast } from "sonner";
 interface TimeManagementProps {
   bookingId: string;
   spotId: string;
-  endTime: string;
+  endTime: string; // This will be used as initial end time, component will fetch fresh data
   pricePerHour: number;
   userViolations: any[];
   accountStatus: "good" | "warning" | "suspended";
@@ -34,7 +34,7 @@ interface VerificationData {
 export const TimeManagement = ({ 
   bookingId, 
   spotId,
-  endTime, 
+  endTime: initialEndTime, 
   pricePerHour, 
   userViolations, 
   accountStatus,
@@ -43,7 +43,58 @@ export const TimeManagement = ({
   const { user } = useAuth();
   const [isSpotAvailableAfter, setIsSpotAvailableAfter] = useState(true);
   const [checkOutCompleted, setCheckOutCompleted] = useState(false);
+  const [currentEndTime, setCurrentEndTime] = useState(initialEndTime);
+  const [currentBookingData, setCurrentBookingData] = useState<any>(null);
   
+  console.log('🔄 TimeManagement rendered with:', {
+    bookingId: bookingId.substring(0, 8),
+    initialEndTime,
+    currentEndTime
+  });
+
+  // Fetch fresh booking data to get the most current end time
+  const fetchBookingData = async () => {
+    if (!bookingId) return;
+    
+    try {
+      console.log('📡 [FETCH_BOOKING] Fetching fresh booking data for:', bookingId.substring(0, 8));
+      const { data: booking, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+        
+      if (error) {
+        console.error('❌ [FETCH_ERROR] Error fetching booking:', error);
+        return;
+      }
+      
+      if (booking) {
+        console.log('✅ [BOOKING_DATA] Fresh booking data:', {
+          id: booking.id.substring(0, 8),
+          end_time: booking.end_time,
+          display_end_time: booking.display_end_time,
+          status: booking.status
+        });
+        
+        setCurrentBookingData(booking);
+        // Use the actual end_time from database, not the display field
+        setCurrentEndTime(booking.end_time);
+        
+        if (booking.status === 'completed') {
+          setCheckOutCompleted(true);
+        }
+      }
+    } catch (error) {
+      console.error('❌ [FETCH_EXCEPTION] Error fetching booking data:', error);
+    }
+  };
+
+  // Fetch booking data on mount and when bookingId changes
+  useEffect(() => {
+    fetchBookingData();
+  }, [bookingId]);
+
   const {
     userProfile: penaltyProfile,
     penaltyCredits,
@@ -54,33 +105,7 @@ export const TimeManagement = ({
     refreshData
   } = usePenaltySystem(user?.id || "");
 
-  // Check booking status on component load
-  useEffect(() => {
-    const checkBookingStatus = async () => {
-      if (!bookingId) return;
-      
-      try {
-        const { data: booking, error } = await supabase
-          .from('bookings')
-          .select('status')
-          .eq('id', bookingId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching booking status:', error);
-          return;
-        }
-        
-        if (booking?.status === 'completed') {
-          setCheckOutCompleted(true);
-        }
-      } catch (error) {
-        console.error('Error checking booking status:', error);
-      }
-    };
-    
-    checkBookingStatus();
-  }, [bookingId]);
+  // Check booking status on component load - removed since we now fetch in fetchBookingData
 
   const handleEnhancedCheckOut = async (verificationData: VerificationData) => {
     try {
@@ -190,6 +215,12 @@ export const TimeManagement = ({
   const handleExtensionRequested = (hours: number, cost: number) => {
     // Extension processing is now handled entirely in ExtensionSystem component
     console.log("Extension processing initiated:", { bookingId, hours, cost });
+    
+    // Refresh booking data after extension to get the updated end time
+    setTimeout(() => {
+      console.log('🔄 [EXTENSION_REFRESH] Refreshing booking data after extension...');
+      fetchBookingData();
+    }, 2000); // Wait 2 seconds for the extension to be processed
   };
 
   const totalPenalties = userViolations.reduce((sum, v) => sum + v.penalty, 0);
@@ -217,7 +248,7 @@ export const TimeManagement = ({
             <>
               <ExtensionSystem
                 bookingId={bookingId}
-                endTime={endTime}
+                endTime={currentEndTime} // Use the current end time from database
                 pricePerHour={pricePerHour}
                 isSpotAvailableAfter={isSpotAvailableAfter}
                 onExtensionRequested={handleExtensionRequested}
@@ -226,7 +257,7 @@ export const TimeManagement = ({
               <EnhancedCheckOutSystem
                 bookingId={bookingId}
                 spotId={spotId}
-                endTime={endTime}
+                endTime={currentEndTime} // Use the current end time from database
                 onCheckOut={handleEnhancedCheckOut}
                 isOvertime={false} // Will be calculated dynamically based on start time + duration
               />
