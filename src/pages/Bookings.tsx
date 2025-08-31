@@ -142,25 +142,31 @@ const Bookings = () => {
               endTimeStr: booking.end_time
             });
             
-            // Time-based status takes PRIORITY over database status
+            // Determine status with consistent timezone handling
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
               console.log('❌ [STATUS] Setting as Cancelled - booking was cancelled');
+            } else if (booking.status === 'completed') {
+              // Trust database completion status - backend may have processed this with different timezone
+              status = 'Completed';
+              console.log('✅ [STATUS] Setting as Completed - database shows completed (backend processed)');
             } else if (nowTime >= startTime && nowTime <= endTime) {
               status = 'Active';
-              console.log('🟢 [STATUS] Setting as Active - current time is between start and end (overriding DB status)', booking.status);
+              console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
             } else if (nowTime < startTime) {
               status = 'Upcoming';
               console.log('🟡 [STATUS] Setting as Upcoming - current time is before start time');
             } else if (nowTime > endTime) {
-              // Past end time - check if it's truly completed or still in grace period
-              if (booking.status === 'completed') {
-                status = 'Completed';
-                console.log('✅ [STATUS] Setting as Completed - booking was properly checked out and time has passed');
-              } else {
-                // Not marked as completed but past end time - keep as Active for grace period
+              // Past end time but not marked completed - still in grace period
+              const gracePeriodHours = 3;
+              const gracePeriodEndTime = endTime + (gracePeriodHours * 60 * 60 * 1000);
+              
+              if (nowTime <= gracePeriodEndTime) {
                 status = 'Active';
-                console.log('🟡 [STATUS] Setting as Active - past end time but within grace period (not checked out)');
+                console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period');
+              } else {
+                status = 'Completed';
+                console.log('🔴 [STATUS] Setting as Completed - past grace period, should be auto-completed soon');
               }
             } else {
               status = 'Completed';
