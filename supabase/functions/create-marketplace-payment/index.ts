@@ -210,10 +210,10 @@ serve(async (req) => {
       baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
     }
     
-    // All fees are paid by the renter, owner gets full base price
-    const platformFee = Math.round(baseSpotPrice * 0.07); // 7% platform fee paid by renter
-    const stripeProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30; // Stripe fee on base + platform fee
-    const listerAmount = baseSpotPrice; // Owner gets full base price
+    // Owner gets 93% of base price, platform gets 7%, renter pays all processing fees
+    const platformFee = Math.round(baseSpotPrice * 0.07); // 7% platform fee 
+    const stripeProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30; // Stripe fee on base + platform fee, paid by renter
+    const listerAmount = Math.round(baseSpotPrice * 0.93); // Owner gets 93% of base price
 
     console.log("📝 Creating Stripe checkout session...");
     
