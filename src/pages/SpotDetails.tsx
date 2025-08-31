@@ -219,7 +219,9 @@ const SpotDetails = () => {
           price: spotData.pricing_type === 'hourly' 
             ? Number(spotData.price_per_hour)
             : spotData.pricing_type === 'daily'
-            ? Number(spotData.daily_price)
+            ? Number(spotData.daily_price) 
+            : spotData.pricing_type === 'monthly'
+            ? Number(spotData.monthly_price)
             : Number(spotData.one_time_price),
           address: spotData.address,
           type: spotData.spot_type,
@@ -693,17 +695,22 @@ const SpotDetails = () => {
                 <CardContent className="space-y-4">
                   {/* Base Price Display */}
                   <div className="text-center space-y-2">
-                    <div className="text-3xl font-bold text-gray-900">
-                      ${spotData.pricing_type === 'hourly' 
-                        ? Number(spotData.price_per_hour).toFixed(2)
-                        : spotData.pricing_type === 'daily'
-                        ? Number(spotData.daily_price).toFixed(2)
-                        : Number(spotData.one_time_price).toFixed(2)
-                      }
+                     <div className="text-3xl font-bold text-gray-900">
+                       ${spotData.pricing_type === 'hourly' 
+                         ? Number(spotData.price_per_hour).toFixed(2)
+                         : spotData.pricing_type === 'daily'
+                         ? Number(spotData.daily_price).toFixed(2)
+                         : spotData.pricing_type === 'monthly'
+                         ? Number(spotData.monthly_price).toFixed(2)
+                         : Number(spotData.one_time_price).toFixed(2)
+                       }
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {spotData.pricing_type === 'hourly' ? 'per hour' : spotData.pricing_type === 'daily' ? 'per day' : 'one-time fee'}
-                    </div>
+                       <div className="text-sm text-gray-600">
+                         {spotData.pricing_type === 'hourly' ? 'per hour' : 
+                          spotData.pricing_type === 'daily' ? 'per day' : 
+                          spotData.pricing_type === 'monthly' ? 'per month' :
+                          'one-time fee'}
+                       </div>
                   </div>
 
                   {/* Pricing Breakdown */}
@@ -712,13 +719,16 @@ const SpotDetails = () => {
                     {(() => {
                       const isPricingHourly = spotData.pricing_type === 'hourly';
                       const isPricingDaily = spotData.pricing_type === 'daily';
-                      const basePrice = spotData.pricing_type === 'hourly' 
-                        ? Number(spotData.price_per_hour) 
-                        : spotData.pricing_type === 'daily'
-                        ? Number(spotData.daily_price)
-                        : Number(spotData.one_time_price);
-                      const estimatedDuration = isPricingHourly ? 4 : isPricingDaily ? 2 : 1; // Estimate 4 hours for hourly, 2 days for daily
-                      const subtotal = (isPricingHourly || isPricingDaily) ? basePrice * estimatedDuration : basePrice;
+                       const isPricingMonthly = spotData.pricing_type === 'monthly';
+                       const basePrice = spotData.pricing_type === 'hourly' 
+                         ? Number(spotData.price_per_hour) 
+                         : spotData.pricing_type === 'daily'
+                         ? Number(spotData.daily_price)
+                         : spotData.pricing_type === 'monthly'
+                         ? Number(spotData.monthly_price)
+                         : Number(spotData.one_time_price);
+                       const estimatedDuration = isPricingHourly ? 4 : isPricingDaily ? 2 : isPricingMonthly ? 1 : 1;
+                      const subtotal = (isPricingHourly || isPricingDaily || isPricingMonthly) ? basePrice * estimatedDuration : basePrice;
                       const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
                       const renterTotal = subtotal + platformFee;
                       const tax = Math.round(renterTotal * 0.0875 * 100) / 100; // 8.75% tax
@@ -726,10 +736,10 @@ const SpotDetails = () => {
 
                       return (
                         <>
-                          <div className="flex justify-between text-sm">
-                            <span>Base price {isPricingHourly ? `(${estimatedDuration}h)` : isPricingDaily ? `(${estimatedDuration} days)` : ''}</span>
-                            <span>${subtotal.toFixed(2)}</span>
-                          </div>
+                           <div className="flex justify-between text-sm">
+                             <span>Base price {isPricingHourly ? `(${estimatedDuration}h)` : isPricingDaily ? `(${estimatedDuration} days)` : isPricingMonthly ? `(${estimatedDuration} month)` : ''}</span>
+                             <span>${subtotal.toFixed(2)}</span>
+                           </div>
                           <div className="flex justify-between text-sm">
                             <span>Platform fee</span>
                             <span>${platformFee.toFixed(2)}</span>

@@ -37,6 +37,8 @@ const Index = () => {
       ? Number(spot.price_per_hour)
       : spot.pricing_type === 'daily'
       ? Number(spot.daily_price)
+      : spot.pricing_type === 'monthly'
+      ? Number(spot.monthly_price)
       : Number(spot.one_time_price),
     pricingType: spot.pricing_type,
     rating: Number(spot.rating) || 0,
@@ -435,7 +437,10 @@ const Index = () => {
                       <div className="text-right">
                         <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
                         <div className="text-sm text-gray-500">
-                          {spot.pricingType === 'hourly' ? 'per hour' : spot.pricingType === 'daily' ? 'per day' : spot.pricingType === 'one_time' ? 'one-time' : 'one-time'}
+                          {spot.pricingType === 'hourly' ? 'per hour' : 
+                           spot.pricingType === 'daily' ? 'per day' : 
+                           spot.pricingType === 'monthly' ? 'per month' :
+                           'one-time'}
                         </div>
                       </div>
                     </div>

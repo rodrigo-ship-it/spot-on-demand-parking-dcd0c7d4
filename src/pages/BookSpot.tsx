@@ -62,6 +62,7 @@ const BookSpot = () => {
     endTime: "09:00", // Will be updated based on pricing type
     duration: 1, // Changed from 8 to 1 hour default
     numberOfDays: 1,
+    numberOfMonths: 1,
     autoExtend: true,
     maxExtension: 2 // hours
   });
@@ -187,6 +188,7 @@ const BookSpot = () => {
   // Pricing calculation - 7% upcharge for renters, 7% deduction for listers
   const isPricingHourly = spotData?.pricing_type === 'hourly';
   const isPricingDaily = spotData?.pricing_type === 'daily';
+  const isPricingMonthly = spotData?.pricing_type === 'monthly';
 
   // Update end time to match start time for daily spots
   useEffect(() => {
@@ -202,6 +204,8 @@ const BookSpot = () => {
     ? (spotData?.price_per_hour || 8)
     : isPricingDaily
     ? (spotData?.daily_price || 25)
+    : isPricingMonthly
+    ? (spotData?.monthly_price || 300)
     : (spotData?.one_time_price || 25);
   const duration = isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration;
   const subtotal = (isPricingHourly || isPricingDaily) ? basePrice * duration : basePrice;
@@ -639,6 +643,55 @@ const BookSpot = () => {
                        />
                      </div>
                    </div>
+                 ) : isPricingMonthly ? (
+                   // Monthly pricing interface
+                   <div className="grid grid-cols-2 gap-3">
+                     <div>
+                       <Label>Start Date</Label>
+                       <Popover>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             className={cn(
+                               "w-full justify-center text-center font-normal",
+                               !bookingDetails.date && "text-muted-foreground"
+                             )}
+                           >
+                             <CalendarIcon className="mr-2 h-4 w-4" />
+                             {bookingDetails.date ? (
+                               format(bookingDetails.date, "MMM d, yyyy")
+                             ) : (
+                               <span>Pick a date</span>
+                             )}
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                           <CalendarComponent
+                             mode="single"
+                             selected={bookingDetails.date}
+                             onSelect={handleDateChange}
+                             disabled={(date) => date < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())}
+                             initialFocus
+                             className={cn("p-3 pointer-events-auto")}
+                           />
+                         </PopoverContent>
+                       </Popover>
+                     </div>
+                     <div>
+                       <Label>Number of Months</Label>
+                       <Input
+                         type="number"
+                         min="1"
+                         max="12"
+                         value={bookingDetails.numberOfMonths || 1}
+                         onChange={(e) => setBookingDetails(prev => ({ 
+                           ...prev, 
+                           numberOfMonths: Math.max(1, parseInt(e.target.value) || 1)
+                         }))}
+                         className="w-full"
+                       />
+                     </div>
+                   </div>
                  ) : (
                    // Hourly pricing interface
                    <div className="grid grid-cols-3 gap-3">
@@ -821,6 +874,8 @@ const BookSpot = () => {
                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
                    {isPricingDaily 
                      ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''} (starts at ${new Date(`2000-01-01T${bookingDetails.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })})`
+                     : isPricingMonthly
+                     ? `Duration: ${bookingDetails.numberOfMonths || 1} month${(bookingDetails.numberOfMonths || 1) !== 1 ? 's' : ''} (starts on ${format(bookingDetails.date, "MMM d, yyyy")})`
                      : `Duration: ${bookingDetails.duration} hours`
                    }
                  </div>
@@ -924,12 +979,14 @@ const BookSpot = () => {
                 </CardTitle>
               </CardHeader>
                 <CardContent className="space-y-3">
-                   <div className="flex justify-between">
+                    <div className="flex justify-between">
                      <span>
                        {isPricingHourly 
                          ? `$${basePrice}/hr × ${duration} hours`
                          : isPricingDaily
                          ? `$${basePrice}/day × ${duration} day${duration !== 1 ? 's' : ''}`
+                         : isPricingMonthly
+                         ? `$${basePrice}/month × ${duration} month${duration !== 1 ? 's' : ''}`
                          : `$${basePrice} (flat rate)`
                        }
                      </span>

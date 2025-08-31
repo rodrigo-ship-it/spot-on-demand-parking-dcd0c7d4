@@ -46,6 +46,7 @@ const ListSpot = () => {
     pricePerHour: "",
     oneTimePrice: "", // New field for one-time pricing
     dailyPrice: "", // New field for daily pricing
+    monthlyPrice: "", // New field for monthly pricing
     availabilityType: "always",
     customSchedule: {
       monday: { enabled: false, startTime: "09:00", endTime: "17:00" },
@@ -124,6 +125,7 @@ const ListSpot = () => {
           pricingType: data.pricing_type || 'hourly',
           pricePerHour: data.pricing_type === 'hourly' ? data.price_per_hour?.toString() || '' : '',
           dailyPrice: data.pricing_type === 'daily' ? data.daily_price?.toString() || '' : '',
+          monthlyPrice: data.pricing_type === 'monthly' ? data.monthly_price?.toString() || '' : '',
           oneTimePrice: data.one_time_price?.toString() || '',
           availabilityType: data.availability_schedule ? 'custom' : 'always',
           customSchedule: (data.availability_schedule as any) || {
@@ -230,6 +232,11 @@ const ListSpot = () => {
       return;
     }
     
+    if (formData.pricingType === 'monthly' && !formData.monthlyPrice) {
+      toast.error("Please enter a monthly rate");
+      return;
+    }
+    
     if (formData.pricingType === 'one_time' && !formData.oneTimePrice) {
       toast.error("Please enter a one-time price");
       return;
@@ -277,6 +284,7 @@ const ListSpot = () => {
         price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 
                         formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         daily_price: formData.pricingType === 'daily' ? parseFloat(formData.dailyPrice) : null,
+        monthly_price: formData.pricingType === 'monthly' ? parseFloat(formData.monthlyPrice) : null,
         one_time_price: formData.pricingType === 'one_time' ? parseFloat(formData.oneTimePrice) : null,
         total_spots: totalSpots,
         available_spots: totalSpots, // Initially all spots are available
@@ -440,6 +448,7 @@ const ListSpot = () => {
                 <SelectContent>
                   <SelectItem value="hourly">Hourly Rate</SelectItem>
                   <SelectItem value="daily">Daily Rate</SelectItem>
+                  <SelectItem value="monthly">Monthly Rate</SelectItem>
                   <SelectItem value="one_time">One-Time Charge</SelectItem>
                 </SelectContent>
               </Select>
@@ -448,6 +457,8 @@ const ListSpot = () => {
                   ? "Charge renters based on the number of hours they park"
                   : formData.pricingType === 'daily'
                   ? "Charge renters based on the number of days they park"
+                  : formData.pricingType === 'monthly'
+                  ? "Charge renters a fixed monthly rate regardless of usage"
                   : "Charge a flat fee regardless of parking duration"
                 }
               </p>
@@ -486,13 +497,25 @@ const ListSpot = () => {
                   required
                 />
                 <p className="text-sm text-gray-600 mt-1">
-                  Renters will pay this amount per day they park (24-hour periods).
+                  Set a competitive daily rate for your parking spot
                 </p>
-                {(formData.type === "entire-garage" || formData.type === "entire-lot") && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    This is the price per spot per day. Total revenue will be multiplied by occupied spots.
-                  </p>
-                )}
+              </div>
+            ) : formData.pricingType === 'monthly' ? (
+              <div>
+                <Label htmlFor="monthlyPrice">Price per Month ($) *</Label>
+                <Input
+                  id="monthlyPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="300.00"
+                  value={formData.monthlyPrice}
+                  onChange={(e) => setFormData({...formData, monthlyPrice: e.target.value})}
+                  required
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Set a monthly rate for long-term parking arrangements
+                </p>
               </div>
             ) : (
               <div>
@@ -590,7 +613,7 @@ const ListSpot = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="minBooking">
-                  Minimum Booking ({formData.pricingType === 'daily' ? 'days' : 'hours'})
+                  Minimum Booking ({formData.pricingType === 'daily' ? 'days' : formData.pricingType === 'monthly' ? 'months' : 'hours'})
                 </Label>
                 <Input
                   id="minBooking"
@@ -601,7 +624,7 @@ const ListSpot = () => {
               </div>
               <div>
                 <Label htmlFor="maxBooking">
-                  Maximum Booking ({formData.pricingType === 'daily' ? 'days' : 'hours'})
+                  Maximum Booking ({formData.pricingType === 'daily' ? 'days' : formData.pricingType === 'monthly' ? 'months' : 'hours'})
                 </Label>
                 <Input
                   id="maxBooking"

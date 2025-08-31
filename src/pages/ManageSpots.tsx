@@ -95,6 +95,7 @@ const ManageSpots = () => {
           type: spot.spot_type || 'Standard',
           price: spot.pricing_type === 'hourly' ? Number(spot.price_per_hour) :
                  spot.pricing_type === 'daily' ? Number(spot.daily_price) :
+                 spot.pricing_type === 'monthly' ? Number(spot.monthly_price) :
                  Number(spot.one_time_price),
           pricingType: spot.pricing_type,
           status: spot.is_active ? "Active" : "Paused",
@@ -156,6 +157,7 @@ const ManageSpots = () => {
             address,
             price_per_hour,
             daily_price,
+            monthly_price,
             one_time_price,
             pricing_type
           )
@@ -266,11 +268,13 @@ const ManageSpots = () => {
             }),
             duration: `${duration} hour${duration !== 1 ? 's' : ''}`,
             pricePerHour: booking.parking_spots?.pricing_type === 'hourly' 
-              ? Number(booking.parking_spots?.price_per_hour) || 0
-              : 0,
+              ? Number(booking.parking_spots.price_per_hour) : 0,
+            dailyPrice: booking.parking_spots?.pricing_type === 'daily' 
+              ? Number(booking.parking_spots.daily_price) : 0,
+            monthlyPrice: booking.parking_spots?.pricing_type === 'monthly' 
+              ? Number(booking.parking_spots.monthly_price) : 0,
             oneTimePrice: booking.parking_spots?.pricing_type === 'one_time'
-              ? Number(booking.parking_spots?.one_time_price) || 0
-              : 0,
+              ? Number(booking.parking_spots.one_time_price) : 0,
             totalEarnings: Number(booking.total_amount) || 0,
             status,
             originalBooking: booking
@@ -506,9 +510,11 @@ const ManageSpots = () => {
                         >
                           {spot.status}
                         </Badge>
-                        <p className="text-sm text-gray-600">
-                          ${spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ' flat'} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
-                        </p>
+                         <p className="text-sm text-gray-600">
+                           ${spot.price}{spot.pricingType === 'hourly' ? '/hr' : 
+                                        spot.pricingType === 'daily' ? '/day' : 
+                                        spot.pricingType === 'monthly' ? '/month' : ' flat'} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
+                         </p>
                       </div>
                       <Button
                         onClick={() => setSelectedSpotForQR(selectedSpotForQR === spot.id ? null : spot.id)}
@@ -608,10 +614,12 @@ const ManageSpots = () => {
                         <DollarSign className="w-4 h-4" />
                         {reservation.totalEarnings}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {reservation.pricePerHour > 0 ? `$${reservation.pricePerHour}/hr` : 
-                         reservation.oneTimePrice > 0 ? `$${reservation.oneTimePrice} flat` : 'N/A'}
-                      </div>
+                       <div className="text-sm text-gray-600">
+                         {reservation.pricePerHour > 0 ? `$${reservation.pricePerHour}/hr` : 
+                          reservation.dailyPrice > 0 ? `$${reservation.dailyPrice}/day` :
+                          reservation.monthlyPrice > 0 ? `$${reservation.monthlyPrice}/month` :
+                          reservation.oneTimePrice > 0 ? `$${reservation.oneTimePrice} flat` : 'N/A'}
+                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={getReservationStatusColor(reservation.status)}>
@@ -708,11 +716,12 @@ const ManageSpots = () => {
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 text-green-600" />
                         <span className="mr-2">{spot.price}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {spot.pricingType === 'hourly' ? 'Hourly' : 
-                           spot.pricingType === 'daily' ? 'Daily' : 
-                           'Once'}
-                        </Badge>
+                         <Badge variant="outline" className="text-xs">
+                           {spot.pricingType === 'hourly' ? 'Hourly' : 
+                            spot.pricingType === 'daily' ? 'Daily' : 
+                            spot.pricingType === 'monthly' ? 'Monthly' :
+                            'Once'}
+                         </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
