@@ -207,8 +207,8 @@ const BookSpot = () => {
     : isPricingMonthly
     ? (spotData?.monthly_price || 300)
     : (spotData?.one_time_price || 25);
-  const duration = isPricingDaily ? bookingDetails.numberOfDays : bookingDetails.duration;
-  const subtotal = (isPricingHourly || isPricingDaily) ? basePrice * duration : basePrice;
+  const duration = isPricingDaily ? bookingDetails.numberOfDays : isPricingMonthly ? bookingDetails.numberOfMonths : bookingDetails.duration;
+  const subtotal = (isPricingHourly || isPricingDaily || isPricingMonthly) ? basePrice * duration : basePrice;
   const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
   const renterTotal = Math.round((subtotal + platformFee) * 100) / 100; // Renter pays 7% more
   const ownerPayout = Math.round((subtotal - platformFee) * 100) / 100; // Owner gets 7% less
