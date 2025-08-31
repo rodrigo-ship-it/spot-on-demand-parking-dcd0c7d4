@@ -213,7 +213,7 @@ serve(async (req) => {
     const platformFeeFromRenter = Math.round(baseSpotPrice * 0.07);
     const platformFeeFromLister = Math.round(baseSpotPrice * 0.07);
     const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
-    const stripeProcessingFee = Math.round(totalAmountCents * 0.029) + 30;
+    const stripeProcessingFee = Math.round(baseSpotPrice * 0.029) + 30;
     const listerAmount = baseSpotPrice - platformFeeFromLister - stripeProcessingFee;
 
     console.log("📝 Creating Stripe checkout session...");
