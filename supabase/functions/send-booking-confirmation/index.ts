@@ -16,10 +16,13 @@ interface BookingConfirmationRequest {
     total_amount: number;
     confirmation_number: string;
     display_date: string;
-    display_start_time: string;
-    display_end_time: string;
+    display_start_time?: string;
+    display_end_time?: string;
+    end_date?: string;
     number_of_days: number;
+    number_of_months?: number;
     is_daily: boolean;
+    is_monthly?: boolean;
   };
   spot: {
     title: string;
@@ -27,6 +30,7 @@ interface BookingConfirmationRequest {
     price_per_hour?: number;
     one_time_price?: number;
     daily_price?: number;
+    monthly_price?: number;
     pricing_type: string;
   };
   renter: {
@@ -85,13 +89,22 @@ const handler = async (req: Request): Promise<Response> => {
     const startTime = booking.display_start_time || 'Time not available';
     const endTime = booking.display_end_time || 'Time not available';
     const numberOfDays = booking.number_of_days || 1;
+    const numberOfMonths = booking.number_of_months || 0;
     const isDaily = booking.is_daily || false;
+    const isMonthly = booking.is_monthly || false;
 
     // Create pricing display based on booking type
-    const price = isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour;
-    const pricingDisplay = isDaily 
-      ? `${numberOfDays} day${numberOfDays > 1 ? 's' : ''} × $${price}/day`
-      : `Duration × $${price}/hour`;
+    const price = isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour);
+    const pricingDisplay = isMonthly
+      ? `${numberOfMonths} month${numberOfMonths > 1 ? 's' : ''} × $${price}/month`
+      : (isDaily 
+        ? `${numberOfDays} day${numberOfDays > 1 ? 's' : ''} × $${price}/day`
+        : `Duration × $${price}/hour`);
+    
+    // Create date/time display for email
+    const dateTimeDisplay = isMonthly 
+      ? { label: 'Period', value: `${startDate} - ${booking.end_date || 'End date not available'}` }
+      : { label: 'Date & Time', value: `${startDate}<br>${startTime} - ${endTime}` };
 
     const emailResponse = await resend.emails.send({
       from: "Arriv Parking <service@arrivparking.com>",
@@ -136,12 +149,8 @@ const handler = async (req: Request): Promise<Response> => {
                         
                         <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                           <div style="flex: 1;">
-                            <p style="margin: 0 0 4px; color: #666; font-size: 14px; font-weight: 500;">Date</p>
-                            <p style="margin: 0; color: #333; font-size: 14px;">${startDate}</p>
-                          </div>
-                          <div style="flex: 1;">
-                            <p style="margin: 0 0 4px; color: #666; font-size: 14px; font-weight: 500;">Time</p>
-                            <p style="margin: 0; color: #333; font-size: 14px;">${startTime} - ${endTime}</p>
+                            <p style="margin: 0 0 4px; color: #666; font-size: 14px; font-weight: 500;">${dateTimeDisplay.label}</p>
+                            <p style="margin: 0; color: #333; font-size: 14px;">${dateTimeDisplay.value}</p>
                           </div>
                         </div>
                         

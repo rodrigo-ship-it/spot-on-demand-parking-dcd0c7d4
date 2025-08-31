@@ -160,6 +160,7 @@ serve(async (req) => {
         }
 
         const isPricingDaily = spot.pricing_type === 'daily';
+        const isPricingMonthly = spot.pricing_type === 'monthly';
         
         // Calculate dates and times with better error handling
         let startTimeStr, endTimeStr;
@@ -181,18 +182,30 @@ serve(async (req) => {
           // Create local datetime strings without any timezone conversion
           startTimeStr = `${dateStr}T${bookingDetails.startTime}:00`;
           
-          // For daily bookings, add days to the end time string
-          if (isPricingDaily) {
+          // Handle different pricing types
+          if (isPricingMonthly) {
+            // For monthly bookings, add months to the end date
+            const numberOfMonths = bookingDetails.numberOfMonths || 1;
+            const endDate = new Date(bookingDate);
+            endDate.setMonth(endDate.getMonth() + numberOfMonths);
+            
+            const endYear = endDate.getFullYear();
+            const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+            const endDay = String(endDate.getDate()).padStart(2, '0');
+            endTimeStr = `${endYear}-${endMonth}-${endDay}T${bookingDetails.startTime}:00`;
+          } else if (isPricingDaily) {
+            // For daily bookings, add days to the end time string
             const endDate = new Date(bookingDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
             const endYear = endDate.getFullYear();
             const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
             const endDay = String(endDate.getDate()).padStart(2, '0');
             endTimeStr = `${endYear}-${endMonth}-${endDay}T${bookingDetails.startTime}:00`;
           } else {
+            // For hourly bookings, use the provided end time
             endTimeStr = `${dateStr}T${bookingDetails.endTime}:00`;
           }
           
-          console.log(`📅 [DATE_SUCCESS] Start: ${startTimeStr}, End: ${endTimeStr}`);
+          console.log(`📅 [DATE_SUCCESS] Start: ${startTimeStr}, End: ${endTimeStr}, Pricing: ${spot.pricing_type}`);
         } catch (error) {
           console.error("❌ [DATE_ERROR] Error parsing dates:", error);
           break;
@@ -236,7 +249,7 @@ serve(async (req) => {
         // Create timezone-aware UTC timestamps
         // The startTimeStr and endTimeStr are in local time (EDT), we need to convert to UTC
         const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
-        const [endHour, endMinute] = (isPricingDaily ? bookingDetails.startTime : bookingDetails.endTime).split(':').map(Number);
+        const [endHour, endMinute] = (isPricingDaily || isPricingMonthly ? bookingDetails.startTime : bookingDetails.endTime).split(':').map(Number);
         
         const startDate = new Date(startTimeStr.split('T')[0] + 'T00:00:00');
         const endDate = new Date(endTimeStr.split('T')[0] + 'T00:00:00');
@@ -280,13 +293,19 @@ serve(async (req) => {
               day: 'numeric' 
             });
           })(),
-          display_start_time: timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-          display_end_time: isPricingDaily 
-            ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
-            : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime,
-          display_duration_text: isPricingDaily 
-            ? `${bookingDetails.numberOfDays || 1} day${(bookingDetails.numberOfDays || 1) !== 1 ? 's' : ''}`
-            : `${bookingDetails.duration || 1} hour${(bookingDetails.duration || 1) !== 1 ? 's' : ''}`
+          display_start_time: isPricingMonthly 
+            ? null  // Don't show start time for monthly bookings
+            : timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
+          display_end_time: isPricingMonthly 
+            ? null  // Don't show end time for monthly bookings
+            : (isPricingDaily 
+              ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
+              : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime),
+          display_duration_text: isPricingMonthly
+            ? `${bookingDetails.numberOfMonths || 1} month${(bookingDetails.numberOfMonths || 1) !== 1 ? 's' : ''}`
+            : (isPricingDaily 
+              ? `${bookingDetails.numberOfDays || 1} day${(bookingDetails.numberOfDays || 1) !== 1 ? 's' : ''}`
+              : `${bookingDetails.duration || 1} hour${(bookingDetails.duration || 1) !== 1 ? 's' : ''}`)
         };
         
         console.log(`💾 [BOOKING_DATA] Inserting booking data:`, bookingData);
@@ -343,7 +362,9 @@ serve(async (req) => {
                   display_start_time: booking.display_start_time,
                   display_end_time: booking.display_end_time,
                   number_of_days: bookingDetails.numberOfDays || 1,
-                  is_daily: isPricingDaily
+                  number_of_months: bookingDetails.numberOfMonths || 0,
+                  is_daily: isPricingDaily,
+                  is_monthly: isPricingMonthly
                 },
                 spot: {
                   title: spot.title,
