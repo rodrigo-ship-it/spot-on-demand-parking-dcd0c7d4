@@ -77,27 +77,33 @@ const BookingConfirmed = () => {
                   .single();
 
                 if (!spotError && spot) {
-                  const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
-                  const isDaily = durationInHours >= 24;
-                  
-                  const formattedData = {
-                    date: booking.display_date || "Your selected date",
-                    startTime: booking.display_start_time || "Your selected start time", 
-                    endTime: booking.display_end_time || "Your selected end time",
-                    duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
-                    total: booking.total_amount,
-                    confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
-                    bookingId: booking.id,
-                    autoExtend: false,
-                    isDaily: isDaily,
-                    numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
-                    spotData: {
-                      title: spot.title,
-                      address: spot.address,
-                      price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
-                      pricing_type: spot.pricing_type
-                    }
-                  };
+          const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
+          const isDaily = durationInHours >= 24;
+          const isMonthly = spot.pricing_type === 'monthly';
+          const numberOfMonths = isMonthly ? Math.ceil(durationInHours / (24 * 30)) : 0;
+          
+          const formattedData = {
+            date: booking.display_date || "Your selected date",
+            startTime: booking.display_start_time || "Your selected start time", 
+            endTime: booking.display_end_time || "Your selected end time",
+            startDate: isMonthly ? new Date(booking.start_time).toLocaleDateString() : null,
+            endDate: isMonthly ? new Date(booking.end_time).toLocaleDateString() : null,
+            duration: isMonthly ? numberOfMonths : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
+            total: booking.total_amount,
+            confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
+            bookingId: booking.id,
+            autoExtend: false,
+            isDaily: isDaily,
+            isMonthly: isMonthly,
+            numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
+            numberOfMonths: numberOfMonths,
+            spotData: {
+              title: spot.title,
+              address: spot.address,
+              price: isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour),
+              pricing_type: spot.pricing_type
+            }
+          };
 
                   setBookingData(formattedData);
                   return;
@@ -138,22 +144,28 @@ const BookingConfirmed = () => {
           // Use the stored display values - exactly what the user originally saw
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
+          const isMonthly = spot.pricing_type === 'monthly';
+          const numberOfMonths = isMonthly ? Math.ceil(durationInHours / (24 * 30)) : 0;
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
             startTime: booking.display_start_time || "Your selected start time", 
             endTime: booking.display_end_time || "Your selected end time",
-            duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
+            startDate: isMonthly ? new Date(booking.start_time).toLocaleDateString() : null,
+            endDate: isMonthly ? new Date(booking.end_time).toLocaleDateString() : null,
+            duration: isMonthly ? numberOfMonths : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
             autoExtend: false,
             isDaily: isDaily,
+            isMonthly: isMonthly,
             numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
+            numberOfMonths: numberOfMonths,
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
+              price: isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour),
               pricing_type: spot.pricing_type
             }
           };
@@ -189,22 +201,28 @@ const BookingConfirmed = () => {
 
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
+          const isMonthly = spot.pricing_type === 'monthly';
+          const numberOfMonths = isMonthly ? Math.ceil(durationInHours / (24 * 30)) : 0;
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
             startTime: booking.display_start_time || "Your selected start time", 
             endTime: booking.display_end_time || "Your selected end time",
-            duration: isDaily ? Math.ceil(durationInHours / 24) : durationInHours,
+            startDate: isMonthly ? new Date(booking.start_time).toLocaleDateString() : null,
+            endDate: isMonthly ? new Date(booking.end_time).toLocaleDateString() : null,
+            duration: isMonthly ? numberOfMonths : (isDaily ? Math.ceil(durationInHours / 24) : durationInHours),
             total: booking.total_amount,
             confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
             bookingId: booking.id,
             autoExtend: false,
             isDaily: isDaily,
+            isMonthly: isMonthly,
             numberOfDays: isDaily ? Math.ceil(durationInHours / 24) : 1,
+            numberOfMonths: numberOfMonths,
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour,
+              price: isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour),
               pricing_type: spot.pricing_type
             }
           };
@@ -383,28 +401,49 @@ const BookingConfirmed = () => {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">
-                  ${bookingData.spotData?.price}/{bookingData.isDaily ? 'day' : 'hr'}
+                  ${bookingData.spotData?.price}/{bookingData.isMonthly ? 'month' : (bookingData.isDaily ? 'day' : 'hr')}
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 mr-3 text-gray-400" />
-                <div>
-                  <p className="font-medium">Date</p>
-                  <p className="text-gray-600">{bookingData.date}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 mr-3 text-gray-400" />
-                <div>
-                  <p className="font-medium">Time</p>
-                   <p className="text-gray-600">
-                     {bookingData.startTime} - {bookingData.endTime}
-                   </p>
-                </div>
-              </div>
+              {bookingData.isMonthly ? (
+                <>
+                  <div className="flex items-center">
+                    <Calendar className="w-5 h-5 mr-3 text-gray-400" />
+                    <div>
+                      <p className="font-medium">Start Date</p>
+                      <p className="text-gray-600">{bookingData.startDate}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-5 h-5 mr-3 text-gray-400" />
+                    <div>
+                      <p className="font-medium">End Date</p>
+                      <p className="text-gray-600">{bookingData.endDate}</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center">
+                    <Calendar className="w-5 h-5 mr-3 text-gray-400" />
+                    <div>
+                      <p className="font-medium">Date</p>
+                      <p className="text-gray-600">{bookingData.date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-5 h-5 mr-3 text-gray-400" />
+                    <div>
+                      <p className="font-medium">Time</p>
+                       <p className="text-gray-600">
+                         {bookingData.startTime} - {bookingData.endTime}
+                       </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {bookingData.autoExtend && (
@@ -424,9 +463,11 @@ const BookingConfirmed = () => {
                 </span>
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {bookingData.isDaily 
-                  ? `${Math.ceil(bookingData.duration / 24)} day${Math.ceil(bookingData.duration / 24) > 1 ? 's' : ''} × $${bookingData.spotData?.price}/day (includes fees & tax)`
-                  : `${bookingData.duration} hours × $${bookingData.spotData?.price}/hour (includes fees & tax)`
+                {bookingData.isMonthly 
+                  ? `${bookingData.numberOfMonths} month${bookingData.numberOfMonths > 1 ? 's' : ''} × $${bookingData.spotData?.price}/month (includes fees & tax)`
+                  : bookingData.isDaily 
+                    ? `${Math.ceil(bookingData.duration / 24)} day${Math.ceil(bookingData.duration / 24) > 1 ? 's' : ''} × $${bookingData.spotData?.price}/day (includes fees & tax)`
+                    : `${bookingData.duration} hours × $${bookingData.spotData?.price}/hour (includes fees & tax)`
                 }
               </p>
             </div>

@@ -94,12 +94,18 @@ export const BookingDetailsDialog = ({ booking, isOpen, onClose }: BookingDetail
             <div className="space-y-2">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                <span className="text-sm">{booking.date}</span>
+                {booking.isMonthly ? (
+                  <span className="text-sm">{booking.startDate} - {booking.endDate}</span>
+                ) : (
+                  <span className="text-sm">{booking.date}</span>
+                )}
               </div>
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                <span className="text-sm">{booking.startTime} - {booking.endTime}</span>
-              </div>
+              {!booking.isMonthly && (
+                <div className="flex items-center">
+                  <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                  <span className="text-sm">{booking.startTime} - {booking.endTime}</span>
+                </div>
+              )}
               <div className="flex items-center">
                 <Clock className="w-4 h-4 mr-2 text-gray-400" />
                 <span className="text-sm">Duration: {booking.duration}</span>

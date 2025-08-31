@@ -81,6 +81,9 @@ const Bookings = () => {
               title,
               address,
               price_per_hour,
+              daily_price,
+              monthly_price,
+              pricing_type,
               owner_id
             )
           `)
@@ -122,6 +125,8 @@ const Bookings = () => {
             }
             
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
+            const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
+            const numberOfMonths = isMonthly ? Math.ceil(duration / (24 * 30)) : 0;
             
             // Determine status based on times first, then booking status
             let status = 'Upcoming';
@@ -209,15 +214,18 @@ const Bookings = () => {
                 const day = String(startDate.getDate()).padStart(2, '0');
                 return `${month}/${day}/${year}`;
               })(),
-              startTime: booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
+              startTime: isMonthly ? null : (booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit'
-              }),
-              endTime: booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
+              })),
+              endTime: isMonthly ? null : (booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit'
-              }),
-              duration: `${duration} hours`,
+              })),
+              startDate: isMonthly ? startDate.toLocaleDateString() : null,
+              endDate: isMonthly ? endDate.toLocaleDateString() : null,
+              duration: isMonthly ? `${numberOfMonths} month${numberOfMonths > 1 ? 's' : ''}` : `${duration} hours`,
+              isMonthly: isMonthly,
               pricePerHour: booking.parking_spots?.price_per_hour || 0,
               totalCost: Number(booking.total_amount) || 0,
               status,
@@ -647,27 +655,35 @@ const Bookings = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          {reservation.date}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {reservation.startTime} - {reservation.endTime}
-                        </div>
-                      </div>
-                    </TableCell>
+                     <TableCell>
+                       <div>
+                         <div className="flex items-center">
+                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                           {reservation.isMonthly ? (
+                             <>
+                               <span>{reservation.startDate} - {reservation.endDate}</span>
+                             </>
+                           ) : (
+                             <span>{reservation.date}</span>
+                           )}
+                         </div>
+                         {!reservation.isMonthly && (
+                           <div className="flex items-center text-sm text-gray-600">
+                             <Clock className="w-3 h-3 mr-1" />
+                             {reservation.startTime} - {reservation.endTime}
+                           </div>
+                         )}
+                       </div>
+                     </TableCell>
                     <TableCell>{reservation.duration}</TableCell>
                     <TableCell>
                       <div className="flex items-center font-medium text-blue-600">
                         <DollarSign className="w-4 h-4" />
                         {reservation.totalCost}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        ${reservation.pricePerHour}/hr
-                      </div>
+                       <div className="text-sm text-gray-600">
+                         {reservation.isMonthly ? 'Monthly Rate' : `$${reservation.pricePerHour}/hr`}
+                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(reservation.status)}>
