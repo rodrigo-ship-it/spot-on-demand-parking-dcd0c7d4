@@ -192,7 +192,8 @@ serve(async (req) => {
             const endYear = endDate.getFullYear();
             const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
             const endDay = String(endDate.getDate()).padStart(2, '0');
-            endTimeStr = `${endYear}-${endMonth}-${endDay}T${bookingDetails.startTime}:00`;
+            // For monthly bookings, use same time as start (typically 00:00 for full day access)
+            endTimeStr = `${endYear}-${endMonth}-${endDay}T00:00:00`;
           } else if (isPricingDaily) {
             // For daily bookings, add days to the end time string
             const endDate = new Date(bookingDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
@@ -248,14 +249,21 @@ serve(async (req) => {
 
         // Create timezone-aware UTC timestamps
         // The startTimeStr and endTimeStr are in local time (EDT), we need to convert to UTC
-        const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
-        const [endHour, endMinute] = (isPricingDaily || isPricingMonthly ? bookingDetails.startTime : bookingDetails.endTime).split(':').map(Number);
-        
         const startDate = new Date(startTimeStr.split('T')[0] + 'T00:00:00');
         const endDate = new Date(endTimeStr.split('T')[0] + 'T00:00:00');
         
-        startDate.setHours(startHour, startMinute, 0, 0);
-        endDate.setHours(endHour, endMinute, 0, 0);
+        if (isPricingMonthly) {
+          // For monthly bookings, set to start of day (full day access)
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999); // End of the last day
+        } else {
+          // For hourly/daily bookings, use the specified times
+          const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
+          const [endHour, endMinute] = (isPricingDaily ? bookingDetails.startTime : bookingDetails.endTime).split(':').map(Number);
+          
+          startDate.setHours(startHour, startMinute, 0, 0);
+          endDate.setHours(endHour, endMinute, 0, 0);
+        }
         
         // Convert to UTC properly - add EDT offset (EDT is UTC-4, so add 4 hours)
         const edtOffsetMs = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
