@@ -34,7 +34,18 @@ export const ExtensionSystem = ({
       }
       
       const now = new Date();
-      const end = new Date(endTime);
+      
+      // Handle time parsing more carefully to avoid timezone issues
+      // If endTime contains 'T' or '+', it's already in ISO format
+      // Otherwise, treat it as local time and convert properly
+      let end: Date;
+      if (endTime.includes('T') || endTime.includes('+')) {
+        end = new Date(endTime);
+      } else {
+        // For local time strings like "2025-08-31 15:30:00", we need to parse carefully
+        // Create a date that represents the local time in the user's timezone
+        end = new Date(endTime.replace(' ', 'T'));
+      }
       
       // Validate the parsed date
       if (isNaN(end.getTime())) {
@@ -133,20 +144,20 @@ export const ExtensionSystem = ({
     console.log('✅ Extension availability confirmed');
     
     // Calculate cost using the SAME pricing structure as regular bookings
-    // No upcharge - use the same rate as the original spot listing
+    // Use the exact formula from create-payment: total = (subtotal * 1.07) * 1.0875
     const basePrice = pricePerHour * hours;
+    const totalAmount = Math.round((basePrice * 1.07 * 1.0875) * 100) / 100;
     
-    // Calculate fees exactly like regular bookings
+    // Calculate breakdown for display (matching create-payment logic)
     const platformFeeFromRenter = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
-    const platformFeeFromLister = Math.round(basePrice * 0.07 * 100) / 100; // 7% from lister 
-    const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
+    const subtotalWithPlatformFee = basePrice + platformFeeFromRenter;
+    const taxAmount = Math.round(subtotalWithPlatformFee * 0.0875 * 100) / 100; // 8.75% tax
+    const estimatedProcessingFee = Math.round(totalAmount * 0.029 * 100) / 100 + 0.30; // 2.9% + $0.30
     
-    // Estimate Stripe processing fee (2.9% + $0.30)
-    const estimatedProcessingFee = Math.round((basePrice + platformFeeFromRenter) * 0.029 * 100) / 100 + 0.30;
-    
-    // Add tax (8.75% like original bookings)
-    const taxRate = 0.0875; // 8.75% tax
-    const totalAmount = Math.round((basePrice + platformFeeFromRenter + estimatedProcessingFee) * (1 + taxRate) * 100) / 100;
+    // Calculate platform fees for backend (same structure as create-payment)
+    const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
+    const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% from lister
+    const totalPlatformFee = platformFeeFromRenter + (platformFeeFromLister / 100);
     
     console.log('💰 Extension pricing breakdown:', {
       basePrice,
@@ -252,11 +263,9 @@ export const ExtensionSystem = ({
             )}
             <div className="grid grid-cols-2 gap-2">
               {[1, 2].map(hour => {
+                // Use the exact same calculation as the handleExtension function
                 const basePrice = pricePerHour * hour;
-                const platformFee = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
-                const processingFee = Math.round((basePrice + platformFee) * 0.029 * 100) / 100 + 0.30;
-                const taxRate = 0.0875; // 8.75% tax
-                const totalCost = Math.round((basePrice + platformFee + processingFee) * (1 + taxRate) * 100) / 100;
+                const totalCost = Math.round((basePrice * 1.07 * 1.0875) * 100) / 100;
                 
                 return (
                   <Button
