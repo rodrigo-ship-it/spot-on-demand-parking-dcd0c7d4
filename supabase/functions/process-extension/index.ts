@@ -215,11 +215,10 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/bookings?extension_cancelled=true`,
     });
 
-    // Update extension record with payment session
+    // Update extension record with payment session (keep as 'pending' since 'payment_pending' violates constraint)
     const { error: updateError } = await supabaseService
       .from('extensions')
       .update({ 
-        status: 'payment_pending',
         stripe_session_id: session.id,
         new_end_time: newEndTime.toISOString()
       })

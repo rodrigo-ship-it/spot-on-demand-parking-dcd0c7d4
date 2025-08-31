@@ -87,7 +87,7 @@ serve(async (req) => {
             break;
           }
 
-          // Update extension status
+          // Update extension status (look for 'pending' status since 'payment_pending' violates constraint)
           const { error: extensionError } = await supabaseService
             .from('extensions')
             .update({
@@ -96,7 +96,7 @@ serve(async (req) => {
               stripe_payment_intent_id: session.payment_intent as string
             })
             .eq('booking_id', bookingId)
-            .eq('status', 'payment_pending');
+            .eq('status', 'pending');
 
           if (extensionError) {
             console.error("❌ [EXTENSION_ERROR] Failed to update extension:", extensionError);
