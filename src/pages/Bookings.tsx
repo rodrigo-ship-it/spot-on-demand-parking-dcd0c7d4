@@ -19,9 +19,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import RefundRequestDialog from "@/components/RefundRequestDialog";
 import { CancellationPolicyDialog } from "@/components/CancellationPolicyDialog";
 import { ContactButtons } from "@/components/ContactButtons";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const Bookings = () => {
   const { user } = useAuth();
+  const { getUnreadCount } = useUnreadMessages();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -514,6 +516,7 @@ const Bookings = () => {
                               recipientName={reservation.ownerName}
                               showCallButton={true}
                               showChatButton={true}
+                              unreadCount={getUnreadCount(reservation.id)}
                             />
                           )}
                         </div>

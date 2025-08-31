@@ -17,8 +17,13 @@ export const useUnreadMessages = () => {
 
     setLoading(true);
     try {
-      // Get all bookings where user is the spot owner
-      const { data: ownerBookings, error: bookingsError } = await supabase
+      // Get all bookings where user is involved (either as renter or spot owner)
+      const { data: renterBookings, error: renterError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('renter_id', user.id);
+
+      const { data: ownerBookings, error: ownerError } = await supabase
         .from('bookings')
         .select(`
           id,
@@ -27,20 +32,24 @@ export const useUnreadMessages = () => {
         `)
         .eq('parking_spots.owner_id', user.id);
 
-      if (bookingsError) throw bookingsError;
+      if (renterError) throw renterError;
+      if (ownerError) throw ownerError;
 
-      if (!ownerBookings?.length) {
+      const allBookingIds = [
+        ...(renterBookings?.map(b => b.id) || []),
+        ...(ownerBookings?.map(b => b.id) || [])
+      ];
+
+      if (!allBookingIds.length) {
         setUnreadCounts([]);
         return;
       }
-
-      const bookingIds = ownerBookings.map(b => b.id);
 
       // Get unread message counts for these bookings
       const { data: messages, error: messagesError } = await supabase
         .from('messages')
         .select('booking_id')
-        .in('booking_id', bookingIds)
+        .in('booking_id', allBookingIds)
         .eq('recipient_id', user.id)
         .is('read_at', null);
 
