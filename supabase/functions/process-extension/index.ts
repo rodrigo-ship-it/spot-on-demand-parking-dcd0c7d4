@@ -15,10 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    const { bookingId, extensionHours, totalAmount } = await req.json();
-    console.log("📝 Extension request:", { bookingId, extensionHours, totalAmount });
+    const { bookingId, extensionHours, totalAmount, basePrice, platformFee } = await req.json();
+    console.log("📝 Extension request:", { bookingId, extensionHours, totalAmount, basePrice, platformFee });
 
-    if (!bookingId || !extensionHours || !totalAmount) {
+    if (!bookingId || !extensionHours || !totalAmount || !basePrice) {
       return new Response(JSON.stringify({ error: "Missing required extension data" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -57,19 +57,44 @@ serve(async (req) => {
       });
     }
 
-    // Get booking details
+    // Get booking details with spot and owner information
     const { data: booking, error: bookingError } = await supabaseService
       .from('bookings')
-      .select('*, parking_spots(price_per_hour, owner_id)')
+      .select(`
+        *,
+        parking_spots!inner(
+          price_per_hour,
+          owner_id,
+          title,
+          address
+        )
+      `)
       .eq('id', bookingId)
       .eq('renter_id', authData.user.id)
-      .single();
+      .maybeSingle();
 
     if (bookingError || !booking) {
       console.error("Booking fetch error:", bookingError);
       return new Response(JSON.stringify({ error: "Booking not found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 404,
+      });
+    }
+
+    // Get payout settings for automatic transfers to spot owner
+    console.log("📝 Getting payout settings for owner:", booking.parking_spots.owner_id);
+    const { data: payoutSettings, error: payoutError } = await supabaseService
+      .from("payout_settings")
+      .select("*")
+      .eq("user_id", booking.parking_spots.owner_id)
+      .maybeSingle();
+
+    console.log("📝 Payout settings:", { payoutSettings, payoutError });
+
+    if (payoutError || !payoutSettings?.stripe_connect_account_id || !payoutSettings?.payouts_enabled) {
+      return new Response(JSON.stringify({ error: "Spot owner hasn't completed payout setup for automatic transfers" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
       });
     }
 
@@ -96,12 +121,37 @@ serve(async (req) => {
       });
     }
 
+    // Calculate exact fees like regular bookings
+    const totalAmountCents = Math.round(totalAmount * 100);
+    const basePriceCents = Math.round(basePrice * 100);
+    
+    // Platform fees: 7% from renter + 7% from lister = 14% total
+    const platformFeeFromRenter = Math.round(basePriceCents * 0.07);
+    const platformFeeFromLister = Math.round(basePriceCents * 0.07);
+    const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
+    
+    // Stripe processing fee (2.9% + $0.30)
+    const stripeProcessingFee = Math.round(totalAmountCents * 0.029) + 30;
+    
+    // Amount that goes to spot owner (base price - platform fee - processing fee)
+    const listerAmount = basePriceCents - platformFeeFromLister - stripeProcessingFee;
+    
+    console.log("💰 Extension fee breakdown:", {
+      basePriceCents,
+      platformFeeFromRenter,
+      platformFeeFromLister,
+      stripeProcessingFee,
+      listerAmount,
+      totalAmountCents
+    });
     // Initialize Stripe
+    console.log("💳 Initializing Stripe...");
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
     // Get or create Stripe customer
+    console.log("👤 Getting/creating Stripe customer for:", authData.user.email);
     const customers = await stripe.customers.list({ 
       email: authData.user.email!, 
       limit: 1 
@@ -110,38 +160,59 @@ serve(async (req) => {
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("✅ Found existing customer:", customerId);
     } else {
       const customer = await stripe.customers.create({
         email: authData.user.email!,
+        metadata: { user_id: authData.user.id }
       });
       customerId = customer.id;
+      console.log("✅ Created new customer:", customerId);
     }
 
-    // Create payment session
+    // Create payment session with automatic transfers (same as regular bookings)
+    console.log("🏪 Creating Stripe checkout session with transfers...");
     const session = await stripe.checkout.sessions.create({
+      mode: "payment",
       customer: customerId,
+      payment_method_types: ["card"],
+      payment_method_options: {
+        card: {
+          setup_future_usage: "off_session", // Save for future automatic payments
+        },
+      },
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Parking Extension - ${extensionHours} hour(s)`,
-              description: `Extension for booking ${bookingId}`,
+              name: `Extension: ${booking.parking_spots.title}`,
+              description: `${extensionHours} hour extension - ${booking.parking_spots.address}`,
             },
-            unit_amount: Math.round(totalAmount * 100), // Convert to cents
+            unit_amount: totalAmountCents,
           },
           quantity: 1,
         },
       ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/bookings?extension_success=true`,
-      cancel_url: `${req.headers.get("origin")}/bookings?extension_cancelled=true`,
       metadata: {
         type: "extension",
         booking_id: bookingId,
         extension_hours: extensionHours.toString(),
         new_end_time: newEndTime.toISOString(),
+        owner_id: booking.parking_spots.owner_id,
+        platform_fee: totalPlatformFee.toString(),
+        lister_amount: listerAmount.toString(),
       },
+      payment_intent_data: {
+        // Automatic transfer to spot owner (same as regular bookings)
+        transfer_data: {
+          destination: payoutSettings.stripe_connect_account_id,
+          amount: listerAmount,
+        },
+        setup_future_usage: "off_session", // Save payment method for future use
+      },
+      success_url: `${req.headers.get("origin")}/bookings?extension_success=true`,
+      cancel_url: `${req.headers.get("origin")}/bookings?extension_cancelled=true`,
     });
 
     // Update extension record with payment session
@@ -159,12 +230,17 @@ serve(async (req) => {
       console.error("Extension update error:", updateError);
     }
 
-    console.log("✅ Extension payment session created:", session.id);
+    console.log("✅ Extension payment session created with automatic transfers:", session.id);
 
     return new Response(JSON.stringify({ 
       success: true,
       checkout_url: session.url,
-      session_id: session.id
+      session_id: session.id,
+      // Return fee breakdown for transparency (same as regular bookings)
+      platform_fee: totalPlatformFee / 100,
+      lister_amount: listerAmount / 100,
+      stripe_processing_fee: stripeProcessingFee / 100,
+      base_price: basePriceCents / 100,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

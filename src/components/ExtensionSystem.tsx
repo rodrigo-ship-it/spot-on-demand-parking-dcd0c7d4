@@ -131,7 +131,29 @@ export const ExtensionSystem = ({
     }
 
     console.log('✅ Extension availability confirmed');
-    const cost = Math.round(pricePerHour * hours * 1.5); // 50% premium for extensions
+    
+    // Calculate cost using the SAME pricing structure as regular bookings
+    // No upcharge - use the same rate as the original spot listing
+    const basePrice = pricePerHour * hours;
+    
+    // Calculate fees exactly like regular bookings
+    const platformFeeFromRenter = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
+    const platformFeeFromLister = Math.round(basePrice * 0.07 * 100) / 100; // 7% from lister 
+    const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
+    
+    // Estimate Stripe processing fee (2.9% + $0.30)
+    const estimatedProcessingFee = Math.round((basePrice + platformFeeFromRenter) * 0.029 * 100) / 100 + 0.30;
+    
+    // Total amount user pays (same structure as regular bookings)
+    const totalAmount = basePrice + platformFeeFromRenter + estimatedProcessingFee;
+    
+    console.log('💰 Extension pricing breakdown:', {
+      basePrice,
+      platformFeeFromRenter,
+      estimatedProcessingFee,
+      totalAmount,
+      hours
+    });
     
     try {
       console.log('💾 Storing extension request in database...');
@@ -141,8 +163,8 @@ export const ExtensionSystem = ({
         .insert({
           booking_id: bookingId,
           requested_hours: hours,
-          rate_per_hour: pricePerHour * 1.5,
-          total_amount: cost,
+          rate_per_hour: pricePerHour, // Use original rate, no markup
+          total_amount: totalAmount, // Include all fees like regular bookings
           status: 'pending'
         });
 
@@ -151,34 +173,40 @@ export const ExtensionSystem = ({
         throw error;
       }
 
-      console.log('💳 Calling process-extension function...');
-      // Process extension payment
-      const { data, error: functionError } = await supabase.functions.invoke('process-extension', {
-        body: {
-          bookingId,
-          extensionHours: hours,
-          totalAmount: cost
-        }
-      });
+        console.log('✅ Extension request stored successfully');
+        
+        // Process extension payment using the same system as regular bookings
+        console.log('💳 Processing extension payment...');
+        const { data, error: paymentError } = await supabase.functions.invoke('process-extension', {
+          body: {
+            bookingId,
+            extensionHours: hours,
+            totalAmount,
+            basePrice,
+            platformFee: totalPlatformFee
+          }
+        });
 
-      console.log('📊 Function response:', { data, functionError });
-      console.log('📊 Full response object:', JSON.stringify({ data, functionError }, null, 2));
+      console.log('📊 Function response:', { data, paymentError });
+      console.log('📊 Full response object:', JSON.stringify({ data, paymentError }, null, 2));
 
-      if (functionError) {
-        console.error('❌ Function error:', functionError);
-        console.error('❌ Function error details:', JSON.stringify(functionError, null, 2));
-        throw new Error(`Extension function failed: ${functionError.message || JSON.stringify(functionError)}`);
+      if (paymentError) {
+        console.error('❌ Function error:', paymentError);
+        console.error('❌ Function error details:', JSON.stringify(paymentError, null, 2));
+        throw new Error(`Extension function failed: ${paymentError.message || JSON.stringify(paymentError)}`);
       }
 
       if (data?.checkout_url) {
         console.log('🚀 Redirecting to payment:', data.checkout_url);
-        toast.success(`Redirecting to payment for ${hours} hour extension - $${cost}`);
+        toast.success(`Redirecting to payment for ${hours} hour extension - $${totalAmount.toFixed(2)}`);
         window.location.href = data.checkout_url;
       } else {
         console.error('❌ No checkout URL received:', data);
         throw new Error('No checkout URL received');
       }
 
+      // Callback to parent component
+      onExtensionRequested(hours, totalAmount);
       setShowExtensionOptions(false);
     } catch (error) {
       console.error('❌ Extension error:', error);
@@ -213,37 +241,37 @@ export const ExtensionSystem = ({
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-sm text-gray-600">Available extensions (50% premium):</p>
+            <p className="text-sm text-gray-600 mb-4">
+              Extend your booking at the same rate as your original booking.
+            </p>
             {availabilityError && (
               <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
                 {availabilityError}
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleExtension(1)}
-                disabled={checkingAvailability}
-                className="flex flex-col h-auto p-3"
-              >
-                <span className="font-medium">+1 Hour</span>
-                <span className="text-sm flex items-center">
-                  <DollarSign className="w-3 h-3" />
-                  {Math.round(pricePerHour * 1.5)}
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleExtension(2)}
-                disabled={checkingAvailability}
-                className="flex flex-col h-auto p-3"
-              >
-                <span className="font-medium">+2 Hours</span>
-                <span className="text-sm flex items-center">
-                  <DollarSign className="w-3 h-3" />
-                  {Math.round(pricePerHour * 2 * 1.5)}
-                </span>
-              </Button>
+              {[1, 2].map(hour => {
+                const basePrice = pricePerHour * hour;
+                const platformFee = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
+                const processingFee = Math.round((basePrice + platformFee) * 0.029 * 100) / 100 + 0.30;
+                const totalCost = basePrice + platformFee + processingFee;
+                
+                return (
+                  <Button
+                    key={hour}
+                    variant="outline"
+                    onClick={() => handleExtension(hour)}
+                    disabled={checkingAvailability}
+                    className="flex flex-col h-auto p-3"
+                  >
+                    <span className="font-medium">+{hour} Hour{hour > 1 ? 's' : ''}</span>
+                    <span className="text-sm flex items-center">
+                      <DollarSign className="w-3 h-3" />
+                      {totalCost.toFixed(2)}
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
             {checkingAvailability && (
               <p className="text-sm text-gray-500">Checking availability...</p>
