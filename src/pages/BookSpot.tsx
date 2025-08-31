@@ -377,15 +377,28 @@ const BookSpot = () => {
       return;
     }
 
-    // Validate that the selected time hasn't passed
-    const now = new Date();
-    const selectedDateTime = new Date(bookingDetails.date);
-    const [hours, minutes] = bookingDetails.startTime.split(':').map(Number);
-    selectedDateTime.setHours(hours, minutes, 0, 0);
+    // Validate that the selected time hasn't passed (skip for monthly bookings)
+    if (!isPricingMonthly) {
+      const now = new Date();
+      const selectedDateTime = new Date(bookingDetails.date);
+      const [hours, minutes] = bookingDetails.startTime.split(':').map(Number);
+      selectedDateTime.setHours(hours, minutes, 0, 0);
 
-    if (selectedDateTime <= now) {
-      toast.error("Cannot book a time that has already passed. Please select a future time.");
-      return;
+      if (selectedDateTime <= now) {
+        toast.error("Cannot book a time that has already passed. Please select a future time.");
+        return;
+      }
+    } else {
+      // For monthly bookings, just check if the selected date is in the past
+      const now = new Date();
+      const selectedDate = new Date(bookingDetails.date);
+      selectedDate.setHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < now) {
+        toast.error("Cannot book a date that has already passed. Please select a future date.");
+        return;
+      }
     }
 
     // For QR code bookings, validate guest details
