@@ -268,11 +268,8 @@ const Index = () => {
         </div>
         <div className="relative max-w-7xl mx-auto container-padding">
           <div className="text-center max-w-5xl mx-auto animate-fade-in">
-            <h1 className="heading-xl mb-8 text-gradient leading-none">
-              Find it. Book it.
-              <span className="block text-primary-glow animate-bounce-in" style={{ animationDelay: '0.5s' }}>
-                Arriv
-              </span>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none mb-8 text-gradient">
+              Find it. Book it. <span className="text-primary-glow animate-bounce-in" style={{ animationDelay: '0.5s' }}>Arriv</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed animate-slide-up max-w-3xl mx-auto font-medium" style={{ animationDelay: '0.3s' }}>
               Discover convenient parking spots or earn money by listing your unused space. 
