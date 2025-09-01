@@ -17,6 +17,7 @@ import { SpotReportDialog } from "@/components/SpotReportDialog";
 import { CheckOutSystem } from "@/components/CheckOutSystem";
 import { ExtensionSystem } from "@/components/ExtensionSystem";
 import { PenaltySystem } from "@/components/PenaltySystem";
+import { PremiumBadge } from "@/components/PremiumBadge";
 import { TimeManagement } from "@/components/TimeManagement";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ const SpotDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isOwnerPremium, setIsOwnerPremium] = useState(false);
 
   // Fetch spot data from database with real-time updates
   useEffect(() => {
@@ -82,6 +84,20 @@ const SpotDetails = () => {
         };
 
         setSpotData(spotWithOwner);
+        
+        // Check if owner is premium
+        if (spot.owner_id) {
+          const { data: premiumData } = await supabase
+            .from('premium_subscriptions')
+            .select('user_id')
+            .eq('user_id', spot.owner_id)
+            .eq('status', 'active')
+            .gte('current_period_end', new Date().toISOString())
+            .single();
+            
+          setIsOwnerPremium(!!premiumData);
+        }
+        
         
         // Fetch reviews for this spot - get all bookings for this spot and their reviews
         const { data: bookingsData, error: bookingsError } = await supabase
@@ -367,7 +383,10 @@ const SpotDetails = () => {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-2xl mb-2">{spotData.title}</CardTitle>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CardTitle className="text-2xl">{spotData.title}</CardTitle>
+                      {isOwnerPremium && <PremiumBadge size="md" />}
+                    </div>
                     <div className="flex items-center text-gray-600 mb-2">
                       <MapPin className="w-4 h-4 mr-2" />
                       {spotData.address}

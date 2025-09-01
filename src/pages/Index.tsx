@@ -13,6 +13,7 @@ import { GooglePlacesAutocomplete } from "@/components/GooglePlacesAutocomplete"
 import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { PremiumBadge } from "@/components/PremiumBadge";
 import { NotificationSettings } from "@/components/NotificationSettings";
 
 const Index = () => {
@@ -24,6 +25,7 @@ const Index = () => {
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [transformedSpots, setTransformedSpots] = useState([]);
   const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -59,45 +61,78 @@ const Index = () => {
     return R * c;
   };
 
-  // Transform spots for UI compatibility
-  const transformedSpots = allParkingSpots.map(spot => {
-    // Calculate distance using search coordinates or user location as reference
-    let calculatedDistance = "Unknown distance";
-    const referenceLocation = searchCoordinates || userLocation;
-    
-    if (referenceLocation && spot.latitude && spot.longitude) {
-      const distance = calculateDistance(
-        referenceLocation.latitude,
-        referenceLocation.longitude,
-        Number(spot.latitude),
-        Number(spot.longitude)
-      );
-      calculatedDistance = `${distance.toFixed(1)} miles`;
-    }
+  // Transform spots and fetch premium status when parking spots change
+  useEffect(() => {
+    const transformSpots = async () => {
+      const newTransformedSpots = allParkingSpots.map(spot => {
+        // Calculate distance using search coordinates or user location as reference
+        let calculatedDistance = "Unknown distance";
+        const referenceLocation = searchCoordinates || userLocation;
+        
+        if (referenceLocation && spot.latitude && spot.longitude) {
+          const distance = calculateDistance(
+            referenceLocation.latitude,
+            referenceLocation.longitude,
+            Number(spot.latitude),
+            Number(spot.longitude)
+          );
+          calculatedDistance = `${distance.toFixed(1)} miles`;
+        }
 
-    return {
-      id: spot.id,
-      title: spot.title,
-      address: spot.address,
-      price: spot.pricing_type === 'hourly' 
-        ? Number(spot.price_per_hour)
-        : spot.pricing_type === 'daily'
-        ? Number(spot.daily_price)
-        : spot.pricing_type === 'monthly'
-        ? Number(spot.monthly_price)
-        : Number(spot.one_time_price),
-      pricingType: spot.pricing_type,
-      rating: Number(spot.rating) || 0,
-      distance: calculatedDistance,
-      type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
-      spotType: spot.spot_type,
-      totalSpots: spot.total_spots || 1,
-      available: "24/7", // This would come from availability_schedule
-      image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
-      latitude: Number(spot.latitude) || 40.7589,
-      longitude: Number(spot.longitude) || -73.9851
+        return {
+          id: spot.id,
+          title: spot.title,
+          address: spot.address,
+          price: spot.pricing_type === 'hourly' 
+            ? Number(spot.price_per_hour)
+            : spot.pricing_type === 'daily'
+            ? Number(spot.daily_price)
+            : spot.pricing_type === 'monthly'
+            ? Number(spot.monthly_price)
+            : Number(spot.one_time_price),
+          pricingType: spot.pricing_type,
+          rating: Number(spot.rating) || 0,
+          distance: calculatedDistance,
+          type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
+          spotType: spot.spot_type,
+          totalSpots: spot.total_spots || 1,
+          available: "24/7", // This would come from availability_schedule
+          image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
+          latitude: Number(spot.latitude) || 40.7589,
+          longitude: Number(spot.longitude) || -73.9851,
+          owner_id: spot.owner_id,
+          isPremiumLister: false // We'll fetch this separately
+        };
+      });
+
+      // Fetch premium status for all spot owners
+      if (newTransformedSpots.length > 0) {
+        const ownerIds = [...new Set(newTransformedSpots.map(spot => spot.owner_id))];
+        
+        try {
+          const { data: premiumStatuses } = await supabase
+            .from('premium_subscriptions')
+            .select('user_id')
+            .in('user_id', ownerIds)
+            .eq('status', 'active')
+            .gte('current_period_end', new Date().toISOString());
+
+          const premiumUserIds = new Set(premiumStatuses?.map(ps => ps.user_id) || []);
+          
+          // Update spots with premium status
+          newTransformedSpots.forEach(spot => {
+            spot.isPremiumLister = premiumUserIds.has(spot.owner_id);
+          });
+        } catch (error) {
+          console.error('Error fetching premium statuses:', error);
+        }
+      }
+
+      setTransformedSpots(newTransformedSpots);
     };
-  });
+
+    transformSpots();
+  }, [allParkingSpots, searchCoordinates, userLocation]);
 
   const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
@@ -512,16 +547,19 @@ const Index = () => {
                     )}
                   </div>
                   <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                          {spot.title}
-                        </CardTitle>
-                        <CardDescription className="flex items-center text-gray-600 mt-1">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {spot.address}
-                        </CardDescription>
-                      </div>
+                     <div className="flex justify-between items-start">
+                       <div className="flex-1">
+                         <div className="flex items-center gap-2 mb-1">
+                           <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                             {spot.title}
+                           </CardTitle>
+                           {spot.isPremiumLister && <PremiumBadge size="sm" />}
+                         </div>
+                         <CardDescription className="flex items-center text-gray-600 mt-1">
+                           <MapPin className="w-4 h-4 mr-1" />
+                           {spot.address}
+                         </CardDescription>
+                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
                         <div className="text-sm text-gray-500">
