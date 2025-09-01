@@ -15,6 +15,7 @@ import ProtectedManageSpots from "./pages/ProtectedManageSpots";
 import SpotDetails from "./pages/SpotDetails";
 import Bookings from "./pages/Bookings";
 import Profile from "./pages/Profile";
+import Premium from "./pages/Premium";
 import BookingConfirmed from "./pages/BookingConfirmed";
 import NotFound from "./pages/NotFound";
 import BookSpot from "./pages/BookSpot";
@@ -72,6 +73,7 @@ const App = () => {
                 <Route path="/bookings" element={<Bookings />} />
                 <Route path="/booking-confirmed" element={<BookingConfirmed />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/premium" element={<Premium />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

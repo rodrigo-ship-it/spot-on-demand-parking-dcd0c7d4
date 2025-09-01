@@ -7,23 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, User, Bell, CreditCard, Shield, Save, Phone, Mail } from "lucide-react";
+import { ArrowLeft, User, Bell, CreditCard, Shield, Save, Phone, Mail, Crown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { PasswordChangeDialog } from "@/components/PasswordChangeDialog";
-
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
-import { NotificationSettings } from "@/components/NotificationSettings";
-import PremiumDashboard from "@/components/PremiumDashboard";
-import PremiumAnalytics from "@/components/PremiumAnalytics";
-import SmartPricingTools from "@/components/SmartPricingTools";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -198,13 +194,21 @@ const Profile = () => {
           <EmailVerification />
 
             {/* Premium Dashboard */}
-            <PremiumDashboard />
-
-            {/* Premium Analytics */}
-            <PremiumAnalytics />
-
-            {/* Smart Pricing Tools */}
-            <SmartPricingTools />
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Premium Features</h3>
+              <p className="text-gray-600">
+                Premium features have been moved to their own dedicated page. 
+                Click the Premium button in the navigation to access advanced analytics, 
+                smart pricing tools, and reduced platform fees.
+              </p>
+              <Button 
+                onClick={() => navigate('/premium')}
+                className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                View Premium Features
+              </Button>
+            </div>
 
           {/* Profile Information */}
           <Card>

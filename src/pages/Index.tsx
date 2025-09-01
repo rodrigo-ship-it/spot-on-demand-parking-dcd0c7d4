@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle, Settings, Filter, Crown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
@@ -279,6 +279,24 @@ const Index = () => {
             <div className="hidden md:flex items-center space-x-4">
               {user ? (
                 <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/manage-spots')}
+                    className="flex items-center"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    My Spots
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => navigate('/premium')}
+                    className="flex items-center bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-none"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Premium
+                  </Button>
                   {user.email === 'rodrigo@arrivparking.com' && (
                     <Link to="/admin">
                       <Button variant="warning" size="sm" className="text-sm">
@@ -344,6 +362,14 @@ const Index = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       My Spots
+                    </Link>
+                    <Link 
+                      to="/premium" 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50 flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Premium
                     </Link>
                     
                     <div className="border-t pt-4 flex flex-col space-y-3">
