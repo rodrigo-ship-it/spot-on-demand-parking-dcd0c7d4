@@ -54,7 +54,7 @@ const PremiumDashboard = () => {
     {
       icon: <DollarSign className="w-5 h-5" />,
       title: "Reduced Fees",
-      description: "Pay 5% platform fees instead of 7% on all bookings",
+      description: "Pay lower platform fees as a spot lister on all bookings",
       status: isPremium ? "active" : "locked"
     },
   ];

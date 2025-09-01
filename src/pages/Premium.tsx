@@ -63,7 +63,7 @@ const Premium = () => {
             <CardDescription className="text-lg text-gray-600 max-w-2xl mx-auto">
               {isPremium 
                 ? 'Access all your premium tools and analytics to maximize your parking spot earnings.'
-                : 'Supercharge your parking spot business with advanced analytics, reduced fees, and smart pricing tools.'
+                : 'Supercharge your parking spot business with advanced analytics, lower fees, and smart pricing tools.'
               }
             </CardDescription>
           </CardHeader>
