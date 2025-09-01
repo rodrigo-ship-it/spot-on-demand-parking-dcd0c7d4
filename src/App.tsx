@@ -14,6 +14,7 @@ import HelpSupport from "./pages/HelpSupport";
 import ProtectedManageSpots from "./pages/ProtectedManageSpots";
 import SpotDetails from "./pages/SpotDetails";
 import Bookings from "./pages/Bookings";
+// Profile and Premium imports
 import Profile from "./pages/Profile";
 import Premium from "./pages/Premium";
 import BookingConfirmed from "./pages/BookingConfirmed";
