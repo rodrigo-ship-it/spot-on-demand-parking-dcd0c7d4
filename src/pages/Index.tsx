@@ -19,6 +19,7 @@ const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchPricingType, setSearchPricingType] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -26,6 +27,28 @@ const Index = () => {
   const { spots: allParkingSpots, loading } = useRealTimeSpots();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  // Get user's current location on component mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log("Could not get user location:", error);
+          // Fallback to a default location (e.g., NYC)
+          setUserLocation({ latitude: 40.7128, longitude: -74.0060 });
+        }
+      );
+    } else {
+      // Fallback if geolocation is not supported
+      setUserLocation({ latitude: 40.7128, longitude: -74.0060 });
+    }
+  }, []);
 
   // Calculate distance between two coordinates using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -42,12 +65,14 @@ const Index = () => {
 
   // Transform spots for UI compatibility
   const transformedSpots = allParkingSpots.map(spot => {
-    // Calculate distance if search coordinates are available
+    // Calculate distance using search coordinates or user location as reference
     let calculatedDistance = "Unknown distance";
-    if (searchCoordinates && spot.latitude && spot.longitude) {
+    const referenceLocation = searchCoordinates || userLocation;
+    
+    if (referenceLocation && spot.latitude && spot.longitude) {
       const distance = calculateDistance(
-        searchCoordinates.latitude,
-        searchCoordinates.longitude,
+        referenceLocation.latitude,
+        referenceLocation.longitude,
         Number(spot.latitude),
         Number(spot.longitude)
       );
