@@ -6,14 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2 } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
 import { FilterDialog } from "@/components/FilterDialog";
 import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { ContactButtons } from "@/components/ContactButtons";
+import { PremiumSubscriptionDialog } from "@/components/PremiumSubscriptionDialog";
+import { PremiumBadge } from "@/components/PremiumBadge";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -21,6 +24,7 @@ import { toast } from "sonner";
 const ManageSpots = () => {
   const { user } = useAuth();
   const { getUnreadCount } = useUnreadMessages();
+  const { isPremium, subscription, loading: premiumLoading, refetch: refetchPremium } = usePremiumStatus();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpotForQR, setSelectedSpotForQR] = useState<string | null>(null);
@@ -35,6 +39,15 @@ const ManageSpots = () => {
     if (user) {
       fetchUserSpots();
       fetchUpcomingReservations();
+    }
+    
+    // Check for premium subscription success
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('premium') === 'success') {
+      toast.success('Premium subscription activated! Your spots now have premium badges.');
+      refetchPremium();
+      // Clean up URL
+      navigate('/manage-spots', { replace: true });
     }
   }, [user]);
 
@@ -496,7 +509,7 @@ const ManageSpots = () => {
                 {parkingSpots.map((spot) => (
                   <Card key={spot.id} className="border-2 hover:border-primary/20 transition-colors">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">{spot.title}</CardTitle>
+                     <CardTitle className="text-lg">{spot.title}</CardTitle>
                       <CardDescription className="text-sm">
                         <MapPin className="w-3 h-3 inline mr-1" />
                         {spot.address}
@@ -504,12 +517,14 @@ const ManageSpots = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="mb-4">
-                        <Badge 
-                          variant={spot.status === "Active" ? "default" : "secondary"}
-                          className="mb-2"
-                        >
-                          {spot.status}
-                        </Badge>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge 
+                            variant={spot.status === "Active" ? "default" : "secondary"}
+                          >
+                            {spot.status}
+                          </Badge>
+                          {isPremium && <PremiumBadge size="sm" />}
+                        </div>
                          <p className="text-sm text-gray-600">
                            ${spot.price}{spot.pricingType === 'hourly' ? '/hr' : 
                                         spot.pricingType === 'daily' ? '/day' : 
@@ -696,9 +711,12 @@ const ManageSpots = () => {
               <TableBody>
                 {filteredSpots.map((spot) => (
                   <TableRow key={spot.id}>
-                    <TableCell>
+                     <TableCell>
                       <div>
-                        <p className="font-medium">{spot.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{spot.title}</p>
+                          {isPremium && <PremiumBadge size="sm" />}
+                        </div>
                         <p className="text-sm text-gray-600 flex items-center">
                           <MapPin className="w-3 h-3 mr-1" />
                           {spot.address}
@@ -838,6 +856,61 @@ const ManageSpots = () => {
                   List New Parking Spot
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Crown className="w-5 h-5 mr-2 text-amber-600" />
+                Premium Lister
+              </CardTitle>
+              <CardDescription>
+                {isPremium 
+                  ? "You're a premium lister! Your spots have priority placement."
+                  : "Stand out with a premium badge and get priority placement for just $5/month"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isPremium ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <PremiumBadge />
+                    <span className="text-sm text-green-600 font-medium">Active</span>
+                  </div>
+                  {subscription && (
+                    <p className="text-sm text-gray-600">
+                      Renews on {new Date(subscription.current_period_end).toLocaleDateString()}
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        const { data, error } = await supabase.functions.invoke('premium-portal');
+                        if (error) throw error;
+                        if (data?.url) {
+                          window.open(data.url, '_blank');
+                        }
+                      } catch (error: any) {
+                        toast.error(error.message || 'Failed to open billing portal');
+                      }
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Manage Subscription
+                  </Button>
+                </div>
+              ) : (
+                <PremiumSubscriptionDialog>
+                  <Button className="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Premium
+                  </Button>
+                </PremiumSubscriptionDialog>
+              )}
             </CardContent>
           </Card>
 

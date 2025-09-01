@@ -166,6 +166,36 @@ serve(async (req) => {
         let startTimeStr, endTimeStr;
         
         try {
+        console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
+          
+          // Handle premium subscription
+          if (session.mode === "subscription" && session.metadata?.subscription_type === "premium_lister") {
+            console.log("💎 [PREMIUM_SUB] Processing premium subscription checkout");
+            
+            const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+            console.log("💎 [PREMIUM_SUB] Subscription details:", subscription);
+            
+            // Create or update premium subscription record
+            const { error: premiumError } = await supabaseService
+              .from("premium_subscriptions")
+              .upsert({
+                user_id: session.metadata.user_id,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: subscription.id,
+                status: subscription.status,
+                current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+                current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                updated_at: new Date().toISOString(),
+              }, { onConflict: "user_id" });
+
+            if (premiumError) {
+              console.error("❌ [PREMIUM_SUB] Error creating premium subscription:", premiumError);
+            } else {
+              console.log("✅ [PREMIUM_SUB] Premium subscription created successfully");
+            }
+            break;
+          }
+          
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
           
           const bookingDate = new Date(bookingDetails.date);
@@ -637,6 +667,50 @@ serve(async (req) => {
         }
         
         console.log(`Connect account updated: ${account.id}, payouts_enabled: ${account.payouts_enabled}`);
+        break;
+      }
+
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log(`💎 [SUBSCRIPTION_UPDATED] Subscription updated: ${subscription.id}, Status: ${subscription.status}`);
+        
+        // Update premium subscription status
+        const { error } = await supabaseService
+          .from("premium_subscriptions")
+          .update({
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stripe_subscription_id", subscription.id);
+
+        if (error) {
+          console.error("❌ [SUBSCRIPTION_UPDATE_ERROR] Error updating premium subscription:", error);
+        } else {
+          console.log(`✅ [SUBSCRIPTION_UPDATED] Premium subscription updated: ${subscription.id}`);
+        }
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log(`💎 [SUBSCRIPTION_DELETED] Subscription cancelled: ${subscription.id}`);
+        
+        // Update premium subscription status to cancelled
+        const { error } = await supabaseService
+          .from("premium_subscriptions")
+          .update({
+            status: "cancelled",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stripe_subscription_id", subscription.id);
+
+        if (error) {
+          console.error("❌ [SUBSCRIPTION_DELETE_ERROR] Error updating premium subscription:", error);
+        } else {
+          console.log(`✅ [SUBSCRIPTION_CANCELLED] Premium subscription cancelled: ${subscription.id}`);
+        }
         break;
       }
 
