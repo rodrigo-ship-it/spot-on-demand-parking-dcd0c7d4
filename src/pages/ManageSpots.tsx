@@ -895,7 +895,21 @@ const ManageSpots = () => {
                           window.open(data.url, '_blank');
                         }
                       } catch (error: any) {
-                        toast.error(error.message || 'Failed to open billing portal');
+                        console.error('Premium portal error:', error);
+                        
+                        // If it's a Stripe portal configuration error, show helpful message
+                        if (error.message?.includes('No configuration provided')) {
+                          toast.error(
+                            'Subscription management is being set up. Please contact support or try again later.',
+                            { duration: 5000 }
+                          );
+                          
+                          // Optionally, you can provide a direct link to contact support
+                          // or show subscription details here
+                          alert(`Premium Subscription Active\n\nSubscription ID: ${subscription?.id || 'N/A'}\nRenews: ${subscription ? new Date(subscription.current_period_end).toLocaleDateString() : 'N/A'}\n\nFor subscription changes, please contact support.`);
+                        } else {
+                          toast.error(error.message || 'Failed to open billing portal');
+                        }
                       }
                     }}
                   >
