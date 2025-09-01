@@ -72,18 +72,6 @@ const PremiumDashboard = () => {
       title: "Data Export",
       description: "Export detailed reports and analytics for tax and accounting purposes",
       status: isPremium ? "available" : "locked"
-    },
-    {
-      icon: <Headphones className="w-5 h-5" />,
-      title: "Priority Support",
-      description: "24/7 premium support with faster response times",
-      status: isPremium ? "active" : "locked"
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "Early Access",
-      description: "Be the first to try new features and improvements",
-      status: isPremium ? "active" : "locked"
     }
   ];
 
