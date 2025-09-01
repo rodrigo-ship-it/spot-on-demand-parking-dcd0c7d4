@@ -19,7 +19,7 @@ const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [searchTime, setSearchTime] = useState("");
+  const [searchPricingType, setSearchPricingType] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -53,28 +53,56 @@ const Index = () => {
 
   const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const handleSearch = () => {
     if (!searchLocation.trim()) {
       toast.error("Please enter a location to search for parking");
       return;
     }
 
-    console.log("Searching for parking:", { location: searchLocation, time: searchTime });
+    console.log("Searching for parking:", { location: searchLocation, pricingType: searchPricingType });
     console.log("Search coordinates:", searchCoordinates);
     console.log("Setting hasSearched to true");
     
-    // Filter spots based on search location and time availability
-    let filtered = transformedSpots.filter(spot => 
-      spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
-      spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
-      spot.type.toLowerCase().includes(searchLocation.toLowerCase())
-    );
+    // Filter spots based on search location and distance (5 mile radius)
+    let filtered = transformedSpots.filter(spot => {
+      // Basic location text matching
+      const locationMatch = spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
+        spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
+        spot.type.toLowerCase().includes(searchLocation.toLowerCase());
+      
+      // Distance filtering if coordinates are available
+      let withinRadius = true;
+      if (searchCoordinates && spot.latitude && spot.longitude) {
+        const distance = calculateDistance(
+          searchCoordinates.latitude,
+          searchCoordinates.longitude,
+          spot.latitude,
+          spot.longitude
+        );
+        withinRadius = distance <= 5; // 5 mile radius
+        console.log(`Spot ${spot.title}: ${distance.toFixed(2)} miles away`);
+      }
+      
+      return locationMatch && withinRadius;
+    });
 
-    // If a time is selected, further filter based on availability
-    if (searchTime) {
-      // For now, we'll show all spots but this is where time-based filtering would go
-      // In a real implementation, you'd check against booking schedules and availability
-      console.log("Filtering by time:", searchTime);
+    // If a pricing type is selected, further filter based on that
+    if (searchPricingType) {
+      filtered = filtered.filter(spot => spot.pricingType === searchPricingType);
+      console.log("Filtering by pricing type:", searchPricingType);
     }
 
     setFilteredSpots(filtered);
@@ -83,9 +111,9 @@ const Index = () => {
     console.log("hasSearched should now be true, filtered spots:", filtered.length);
 
     if (filtered.length === 0) {
-      toast.info(`No parking spots found near "${searchLocation}". Showing map view to explore the area.`);
+      toast.info(`No parking spots found near "${searchLocation}"${searchPricingType ? ` with ${searchPricingType} pricing` : ""}. Showing map view to explore the area.`);
     } else {
-      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchTime ? ` available at ${searchTime}` : ""}`);
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} within 5 miles of "${searchLocation}"${searchPricingType ? ` with ${searchPricingType} pricing` : ""}`);
     }
   };
 
@@ -93,27 +121,47 @@ const Index = () => {
     setSearchLocation(location.name);
     setSearchCoordinates({ latitude: location.latitude, longitude: location.longitude });
     
-    // Automatically trigger search and show map when location is selected
-    const filtered = transformedSpots.filter(spot => 
-      spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
-      spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
-      spot.type.toLowerCase().includes(location.name.toLowerCase())
-    );
+    // Automatically trigger search with distance filtering when location is selected
+    let filtered = transformedSpots.filter(spot => {
+      // Basic location text matching
+      const locationMatch = spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
+        spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
+        spot.type.toLowerCase().includes(location.name.toLowerCase());
+      
+      // Distance filtering - 5 mile radius
+      let withinRadius = true;
+      if (spot.latitude && spot.longitude) {
+        const distance = calculateDistance(
+          location.latitude,
+          location.longitude,
+          spot.latitude,
+          spot.longitude
+        );
+        withinRadius = distance <= 5;
+      }
+      
+      return locationMatch && withinRadius;
+    });
+
+    // Apply pricing type filter if selected
+    if (searchPricingType) {
+      filtered = filtered.filter(spot => spot.pricingType === searchPricingType);
+    }
 
     setFilteredSpots(filtered);
     setHasSearched(true);
 
     if (filtered.length === 0) {
-      toast.info(`No parking spots found near "${location.name}". Showing map view to explore the area.`);
+      toast.info(`No parking spots found within 5 miles of "${location.name}". Showing map view to explore the area.`);
     } else {
-      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${location.name}"`);
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} within 5 miles of "${location.name}"`);
     }
   };
 
   const clearSearch = () => {
     setSearchLocation("");
     setSearchCoordinates(null);
-    setSearchTime("");
+    setSearchPricingType("");
     setFilteredSpots([]);
     setHasSearched(false);
     toast.info("Search cleared - showing all parking spots");
@@ -294,17 +342,15 @@ const Index = () => {
                     className="h-14 form-input text-lg rounded-xl border-2 focus:border-primary/50 bg-white/80 backdrop-blur-sm"
                   />
                 </div>
-                <Select value={searchTime} onValueChange={setSearchTime}>
+                <Select value={searchPricingType} onValueChange={setSearchPricingType}>
                   <SelectTrigger className="h-14 form-input text-lg rounded-xl border-2 bg-white/80 backdrop-blur-sm">
-                    <SelectValue placeholder="Time needed" />
+                    <SelectValue placeholder="Parking type" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
-                    <SelectItem value="now">Right now</SelectItem>
-                    <SelectItem value="morning">Morning (8 AM - 12 PM)</SelectItem>
-                    <SelectItem value="afternoon">Afternoon (12 PM - 5 PM)</SelectItem>
-                    <SelectItem value="evening">Evening (5 PM - 9 PM)</SelectItem>
-                    <SelectItem value="night">Night (9 PM - 12 AM)</SelectItem>
-                    <SelectItem value="overnight">Overnight (12 AM - 8 AM)</SelectItem>
+                    <SelectItem value="hourly">Hourly</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="one_time">One-time payment</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="premium" size="lg" className="h-14 text-lg font-bold" onClick={handleSearch}>
