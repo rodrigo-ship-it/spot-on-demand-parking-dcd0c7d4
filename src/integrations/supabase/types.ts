@@ -1151,6 +1151,29 @@ export type Database = {
           full_name: string
         }[]
       }
+      get_safe_parking_spot_data: {
+        Args: { spot_id_param: string }
+        Returns: {
+          address: string
+          amenities: string[]
+          available_spots: number
+          daily_price: number
+          description: string
+          id: string
+          images: string[]
+          latitude: number
+          longitude: number
+          monthly_price: number
+          one_time_price: number
+          price_per_hour: number
+          pricing_type: string
+          rating: number
+          spot_type: string
+          title: string
+          total_reviews: number
+          total_spots: number
+        }[]
+      }
       get_safe_profile_for_booking: {
         Args: { booking_id_param: string }
         Returns: {
