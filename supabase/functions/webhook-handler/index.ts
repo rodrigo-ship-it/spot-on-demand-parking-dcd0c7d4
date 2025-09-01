@@ -114,6 +114,34 @@ serve(async (req) => {
           break;
         }
         
+        // Handle premium subscription first (before checking for spot_id)
+        if (session.mode === "subscription" && session.metadata?.subscription_type === "premium_lister") {
+          console.log("💎 [PREMIUM_SUB] Processing premium subscription checkout");
+          
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          console.log("💎 [PREMIUM_SUB] Subscription details:", subscription);
+          
+          // Create or update premium subscription record
+          const { error: premiumError } = await supabaseService
+            .from("premium_subscriptions")
+            .upsert({
+              user_id: session.metadata.user_id,
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscription.id,
+              status: subscription.status,
+              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "user_id" });
+
+          if (premiumError) {
+            console.error("❌ [PREMIUM_SUB] Error creating premium subscription:", premiumError);
+          } else {
+            console.log("✅ [PREMIUM_SUB] Premium subscription created successfully");
+          }
+          break;
+        }
+        
         // Handle regular booking payments
         if (!metadata?.spot_id) {
           console.error("❌ [CHECKOUT_ERROR] No spot_id in session metadata");
@@ -168,33 +196,7 @@ serve(async (req) => {
         try {
         console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
           
-          // Handle premium subscription
-          if (session.mode === "subscription" && session.metadata?.subscription_type === "premium_lister") {
-            console.log("💎 [PREMIUM_SUB] Processing premium subscription checkout");
-            
-            const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-            console.log("💎 [PREMIUM_SUB] Subscription details:", subscription);
-            
-            // Create or update premium subscription record
-            const { error: premiumError } = await supabaseService
-              .from("premium_subscriptions")
-              .upsert({
-                user_id: session.metadata.user_id,
-                stripe_customer_id: session.customer as string,
-                stripe_subscription_id: subscription.id,
-                status: subscription.status,
-                current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-                current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-                updated_at: new Date().toISOString(),
-              }, { onConflict: "user_id" });
-
-            if (premiumError) {
-              console.error("❌ [PREMIUM_SUB] Error creating premium subscription:", premiumError);
-            } else {
-              console.log("✅ [PREMIUM_SUB] Premium subscription created successfully");
-            }
-            break;
-          }
+          // Premium subscriptions are handled earlier in the webhook, so this shouldn't be reached
           
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
           
