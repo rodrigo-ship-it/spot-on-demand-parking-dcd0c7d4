@@ -280,15 +280,6 @@ const Index = () => {
               {user ? (
                 <>
                   <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => navigate('/manage-spots')}
-                    className="flex items-center"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    My Spots
-                  </Button>
-                  <Button 
                     variant="default" 
                     size="sm" 
                     onClick={() => navigate('/premium')}
