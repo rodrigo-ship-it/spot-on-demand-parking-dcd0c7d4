@@ -32,10 +32,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   // Memoize spots to prevent unnecessary re-renders when array reference changes
-  const memoizedSpots = useMemo(() => spots, [
-    spots.length, 
-    spots.map(s => `${s.id}-${s.latitude}-${s.longitude}-${s.address}`).join(',')
-  ]);
+  const memoizedSpots = useMemo(() => spots, [spots.length]);
 
   // Memoize centerLocation to prevent unnecessary re-renders  
   const memoizedCenterLocation = useMemo(() => centerLocation, [
@@ -367,9 +364,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     
     console.log('Centering map to:', memoizedCenterLocation);
     map.current.setCenter([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude]);
-  }, [memoizedCenterLocation, isInitialized]);
+  }, [memoizedCenterLocation?.latitude, memoizedCenterLocation?.longitude, isInitialized]);
 
-  // Update markers when spots or centerLocation change
+  // Update markers ONLY when spots change, not when map moves
   useEffect(() => {
     if (!map.current || !isInitialized) return;
 
@@ -581,7 +578,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         }, 100);
       });
     });
-  }, [memoizedSpots, memoizedCenterLocation, isInitialized]);
+  }, [memoizedSpots]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
