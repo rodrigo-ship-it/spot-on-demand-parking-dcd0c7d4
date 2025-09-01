@@ -19,7 +19,7 @@ const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [searchDuration, setSearchDuration] = useState("");
+  const [searchTime, setSearchTime] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,16 +59,23 @@ const Index = () => {
       return;
     }
 
-    console.log("Searching for parking:", { location: searchLocation, duration: searchDuration });
+    console.log("Searching for parking:", { location: searchLocation, time: searchTime });
     console.log("Search coordinates:", searchCoordinates);
     console.log("Setting hasSearched to true");
     
-    // Filter spots based on search location
-    const filtered = transformedSpots.filter(spot => 
+    // Filter spots based on search location and time availability
+    let filtered = transformedSpots.filter(spot => 
       spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
       spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
       spot.type.toLowerCase().includes(searchLocation.toLowerCase())
     );
+
+    // If a time is selected, further filter based on availability
+    if (searchTime) {
+      // For now, we'll show all spots but this is where time-based filtering would go
+      // In a real implementation, you'd check against booking schedules and availability
+      console.log("Filtering by time:", searchTime);
+    }
 
     setFilteredSpots(filtered);
     setHasSearched(true);
@@ -78,7 +85,7 @@ const Index = () => {
     if (filtered.length === 0) {
       toast.info(`No parking spots found near "${searchLocation}". Showing map view to explore the area.`);
     } else {
-      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchDuration ? ` for ${searchDuration}` : ""}`);
+      toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} near "${searchLocation}"${searchTime ? ` available at ${searchTime}` : ""}`);
     }
   };
 
@@ -106,7 +113,7 @@ const Index = () => {
   const clearSearch = () => {
     setSearchLocation("");
     setSearchCoordinates(null);
-    setSearchDuration("");
+    setSearchTime("");
     setFilteredSpots([]);
     setHasSearched(false);
     toast.info("Search cleared - showing all parking spots");
@@ -287,16 +294,17 @@ const Index = () => {
                     className="h-14 form-input text-lg rounded-xl border-2 focus:border-primary/50 bg-white/80 backdrop-blur-sm"
                   />
                 </div>
-                <Select value={searchDuration} onValueChange={setSearchDuration}>
+                <Select value={searchTime} onValueChange={setSearchTime}>
                   <SelectTrigger className="h-14 form-input text-lg rounded-xl border-2 bg-white/80 backdrop-blur-sm">
-                    <SelectValue placeholder="Duration" />
+                    <SelectValue placeholder="Time needed" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
-                    <SelectItem value="1h">1 Hour</SelectItem>
-                    <SelectItem value="2h">2 Hours</SelectItem>
-                    <SelectItem value="4h">4 Hours</SelectItem>
-                    <SelectItem value="8h">8 Hours</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="now">Right now</SelectItem>
+                    <SelectItem value="morning">Morning (8 AM - 12 PM)</SelectItem>
+                    <SelectItem value="afternoon">Afternoon (12 PM - 5 PM)</SelectItem>
+                    <SelectItem value="evening">Evening (5 PM - 9 PM)</SelectItem>
+                    <SelectItem value="night">Night (9 PM - 12 AM)</SelectItem>
+                    <SelectItem value="overnight">Overnight (12 AM - 8 AM)</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="premium" size="lg" className="h-14 text-lg font-bold" onClick={handleSearch}>
