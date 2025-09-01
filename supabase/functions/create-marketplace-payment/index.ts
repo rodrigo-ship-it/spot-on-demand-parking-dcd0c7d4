@@ -211,7 +211,7 @@ serve(async (req) => {
     }
     
     // Fee structure - check if owner has premium subscription
-    const { data: premiumSubscription } = await supabaseService
+    const { data: listerPremiumSubscription } = await supabaseService
       .from('premium_subscriptions')
       .select('id')
       .eq('user_id', parkingSpot.owner_id)
@@ -219,10 +219,38 @@ serve(async (req) => {
       .gt('current_period_end', new Date().toISOString())
       .maybeSingle();
     
-    const platformFeeRate = premiumSubscription ? 0.05 : 0.07; // 5% for premium, 7% for regular users
+    // Check if renter has premium subscription
+    const { data: renterPremiumSubscription } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .gt('current_period_end', new Date().toISOString())
+      .maybeSingle();
+    
+    const isListerPremium = !!listerPremiumSubscription;
+    const isRenterPremium = !!renterPremiumSubscription;
+    
+    console.log("📝 Premium status:", { isListerPremium, isRenterPremium });
+    
+    // Platform fee: 5% for premium lister, 7% for regular lister
+    const platformFeeRate = isListerPremium ? 0.05 : 0.07;
     const platformFee = Math.round(baseSpotPrice * platformFeeRate);
-    const stripeProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30; // Stripe fee on base + platform fee, paid by renter
+    
+    // Stripe processing fee: reduced by 50% for premium renters
+    const baseProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30;
+    const stripeProcessingFee = isRenterPremium ? Math.round(baseProcessingFee * 0.5) : baseProcessingFee;
+    
     const listerAmount = Math.round(baseSpotPrice * 0.93); // Owner gets 93% of base price
+    
+    console.log("📝 Fee breakdown:", { 
+      baseSpotPrice, 
+      platformFee, 
+      baseProcessingFee, 
+      stripeProcessingFee, 
+      listerAmount,
+      savings: isRenterPremium ? baseProcessingFee - stripeProcessingFee : 0
+    });
 
     console.log("📝 Creating Stripe checkout session...");
     
