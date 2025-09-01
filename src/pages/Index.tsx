@@ -110,40 +110,22 @@ const Index = () => {
         console.log('🔍 Fetching premium status for owner IDs:', ownerIds);
         
         try {
-          // First, let's see ALL premium subscriptions for these users
-          const { data: allSubscriptions, error: allError } = await supabase
-            .from('premium_subscriptions')
-            .select('*')
-            .in('user_id', ownerIds);
-
-          console.log('📊 ALL premium subscriptions for owners:', { allSubscriptions, allError });
-          const currentDateISO = new Date().toISOString();
-          console.log('📅 Current date ISO:', currentDateISO);
-          
-          // Let's see what happens with the date comparison
-          if (allSubscriptions && allSubscriptions.length > 0) {
-            allSubscriptions.forEach((sub: any) => {
-              const endDate = sub.current_period_end;
-              const isAfterNow = endDate >= currentDateISO;
-              console.log('📅 Subscription comparison:', {
-                user_id: sub.user_id,
-                current_period_end: endDate,
-                currentDateISO,
-                isAfterNow,
-                status: sub.status
-              });
+          // Use the secure database function to check premium status
+          const { data: premiumStatuses, error } = await supabase
+            .rpc('get_premium_status_for_owners', {
+              owner_ids: ownerIds
             });
+
+          console.log('📊 Premium status result:', { premiumStatuses, error });
+
+          if (error) {
+            console.error('Error fetching premium statuses:', error);
+            return;
           }
 
-          const { data: premiumStatuses, error } = await supabase
-            .from('premium_subscriptions')
-            .select('user_id, current_period_end, status')
-            .in('user_id', ownerIds)
-            .gte('current_period_end', currentDateISO);
-
-          console.log('📊 Premium query result:', { premiumStatuses, error });
-
-          const premiumUserIds = new Set(premiumStatuses?.map(ps => ps.user_id) || []);
+          const premiumUserIds = new Set(
+            premiumStatuses?.filter(ps => ps.is_premium).map(ps => ps.user_id) || []
+          );
           console.log('👑 Premium user IDs:', Array.from(premiumUserIds));
           
           // Update spots with premium status

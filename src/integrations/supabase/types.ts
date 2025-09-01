@@ -1190,6 +1190,13 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: number
       }
+      get_premium_status_for_owners: {
+        Args: { owner_ids: string[] }
+        Returns: {
+          is_premium: boolean
+          user_id: string
+        }[]
+      }
       get_public_parking_spot_info: {
         Args: { spot_id_param: string }
         Returns: {
