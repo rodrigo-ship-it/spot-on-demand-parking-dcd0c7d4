@@ -138,9 +138,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Group spots by location (within ~200 meters)
+            // Group spots by exact address
             const groupedSpots = new Map();
-            const tolerance = 0.002; // ~200 meters (increased significantly)
             
             spots.forEach((spot) => {
               if (!spot.latitude || !spot.longitude) {
@@ -148,42 +147,13 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 return;
               }
               
-              // Check if there's already a group for this location
-              let foundGroup = false;
-              for (const [key, group] of groupedSpots) {
-                const [groupLat, groupLng] = key.split(',').map(Number);
-                // Use proper distance calculation (Haversine formula approximation)
-                const latDiff = (spot.latitude - groupLat) * Math.PI / 180;
-                const lngDiff = (spot.longitude - groupLng) * Math.PI / 180;
-                const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-                
-                if (distance < tolerance) {
-                  group.spots.push(spot);
-                  foundGroup = true;
-                  break;
-                }
-              }
-              
-              if (!foundGroup) {
-                // If spot is very close to search location, offset it slightly
-                let spotLng = spot.longitude;
-                let spotLat = spot.latitude;
-                
-                if (centerLocation) {
-                  const distance = Math.sqrt(
-                    Math.pow(spot.longitude - centerLocation.longitude, 2) + 
-                    Math.pow(spot.latitude - centerLocation.latitude, 2)
-                  );
-                  
-                  if (distance < tolerance) {
-                    spotLng += 0.0002;
-                    spotLat += 0.0001;
-                  }
-                }
-                
-                groupedSpots.set(`${spotLat},${spotLng}`, {
-                  latitude: spotLat,
-                  longitude: spotLng,
+              // Group by exact address
+              if (groupedSpots.has(spot.address)) {
+                groupedSpots.get(spot.address)!.spots.push(spot);
+              } else {
+                groupedSpots.set(spot.address, {
+                  latitude: spot.latitude,
+                  longitude: spot.longitude,
                   spots: [spot]
                 });
               }
@@ -389,9 +359,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         .addTo(map.current!);
     }
     
-    // Group spots by location (within ~200 meters) - same logic as initialization
+    // Group spots by exact address - same logic as initialization
     const groupedSpots = new Map();
-    const tolerance = 0.002;
     
     spots.forEach((spot) => {
       if (!spot.latitude || !spot.longitude) {
@@ -399,42 +368,13 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         return;
       }
       
-      // Check if there's already a group for this location
-      let foundGroup = false;
-      for (const [key, group] of groupedSpots) {
-        const [groupLat, groupLng] = key.split(',').map(Number);
-        // Use proper distance calculation (Haversine formula approximation)
-        const latDiff = (spot.latitude - groupLat) * Math.PI / 180;
-        const lngDiff = (spot.longitude - groupLng) * Math.PI / 180;
-        const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-        
-        if (distance < tolerance) {
-          group.spots.push(spot);
-          foundGroup = true;
-          break;
-        }
-      }
-      
-      if (!foundGroup) {
-        // If spot is very close to search location, offset it slightly
-        let spotLng = spot.longitude;
-        let spotLat = spot.latitude;
-        
-        if (centerLocation) {
-          const distance = Math.sqrt(
-            Math.pow(spot.longitude - centerLocation.longitude, 2) + 
-            Math.pow(spot.latitude - centerLocation.latitude, 2)
-          );
-          
-          if (distance < tolerance) {
-            spotLng += 0.0002;
-            spotLat += 0.0001;
-          }
-        }
-        
-        groupedSpots.set(`${spotLat},${spotLng}`, {
-          latitude: spotLat,
-          longitude: spotLng,
+      // Group by exact address
+      if (groupedSpots.has(spot.address)) {
+        groupedSpots.get(spot.address)!.spots.push(spot);
+      } else {
+        groupedSpots.set(spot.address, {
+          latitude: spot.latitude,
+          longitude: spot.longitude,
           spots: [spot]
         });
       }
