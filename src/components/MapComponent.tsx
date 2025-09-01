@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +30,18 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const [isInitialized, setIsInitialized] = useState(false);
   const onSpotSelectRef = useRef(onSpotSelect);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+
+  // Memoize spots to prevent unnecessary re-renders when array reference changes
+  const memoizedSpots = useMemo(() => spots, [
+    spots.length, 
+    spots.map(s => `${s.id}-${s.latitude}-${s.longitude}-${s.address}`).join(',')
+  ]);
+
+  // Memoize centerLocation to prevent unnecessary re-renders  
+  const memoizedCenterLocation = useMemo(() => centerLocation, [
+    centerLocation?.latitude,
+    centerLocation?.longitude
+  ]);
 
   // Get pin color based on pricing type and spot type
   const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
@@ -95,10 +107,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           // Set the Mapbox access token securely
           mapboxgl.accessToken = tokenData.token;
 
-          const mapCenter: [number, number] = centerLocation 
-            ? [centerLocation.longitude, centerLocation.latitude]
-            : spots.length > 0 
-              ? [spots[0].longitude, spots[0].latitude] 
+          const mapCenter: [number, number] = memoizedCenterLocation 
+            ? [memoizedCenterLocation.longitude, memoizedCenterLocation.latitude]
+            : memoizedSpots.length > 0 
+              ? [memoizedSpots[0].longitude, memoizedSpots[0].latitude] 
               : [-74.006, 40.7128];
 
           console.log('Creating map with center:', mapCenter);
@@ -119,15 +131,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
           // Wait for map to load before adding markers
           map.current.on('load', () => {
-            console.log('Map loaded, adding markers for', spots.length, 'spots');
+            console.log('Map loaded, adding markers for', memoizedSpots.length, 'spots');
             
             // Add search location marker first (so it appears below parking spots)
-            if (centerLocation) {
+            if (memoizedCenterLocation) {
               new mapboxgl.Marker({
                 color: '#ef4444',
                 scale: 0.8, // Make search marker slightly smaller
               })
-                .setLngLat([centerLocation.longitude, centerLocation.latitude])
+                .setLngLat([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude])
                 .setPopup(
                   new mapboxgl.Popup({ offset: 25 }).setHTML(`
                     <div class="p-2">
@@ -146,7 +158,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             // Group spots by exact address
             const groupedSpots = new Map();
             
-            spots.forEach((spot) => {
+            memoizedSpots.forEach((spot) => {
               if (!spot.latitude || !spot.longitude) {
                 console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
                 return;
@@ -349,26 +361,32 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     };
   }, []); // Empty dependency array - only run once
 
+  // Center map when centerLocation changes (separate from marker updates)
+  useEffect(() => {
+    if (!map.current || !isInitialized || !memoizedCenterLocation) return;
+    
+    console.log('Centering map to:', memoizedCenterLocation);
+    map.current.setCenter([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude]);
+  }, [memoizedCenterLocation, isInitialized]);
+
   // Update markers when spots or centerLocation change
   useEffect(() => {
     if (!map.current || !isInitialized) return;
 
-    console.log('Updating markers for', spots.length, 'spots');
+    console.log('Updating markers for', memoizedSpots.length, 'spots');
     
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
     
     // Add search location marker first (if exists)
-    if (centerLocation) {
-      // Update map center
-      map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
-      
+    if (memoizedCenterLocation) {
+      // DON'T update map center here - that's done in separate useEffect
       const searchMarker = new mapboxgl.Marker({
         color: '#ef4444',
         scale: 0.8,
       })
-        .setLngLat([centerLocation.longitude, centerLocation.latitude])
+        .setLngLat([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 }).setHTML(`
             <div class="p-2">
@@ -385,7 +403,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     // Group spots by exact address
     const groupedSpots = new Map();
     
-    spots.forEach((spot) => {
+    memoizedSpots.forEach((spot) => {
       if (!spot.latitude || !spot.longitude) {
         console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
         return;
@@ -563,7 +581,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         }, 100);
       });
     });
-  }, [spots, centerLocation, isInitialized]);
+  }, [memoizedSpots, memoizedCenterLocation, isInitialized]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
