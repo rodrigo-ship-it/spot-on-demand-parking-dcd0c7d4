@@ -240,7 +240,12 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
                 
                 return `
-                  <div class="p-2" style="min-width: 200px;">
+                  <div class="p-2 relative" style="min-width: 200px;">
+                    ${isPremium ? `
+                      <svg class="absolute top-1 right-1 fill-amber-500 text-amber-500" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
+                      </svg>
+                    ` : ''}
                     ${isMultiple ? `
                       <div class="flex justify-between items-center mb-2">
                         <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
@@ -258,16 +263,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                         </div>
                       </div>
                     ` : ''}
-                    <div class="flex items-center gap-2 mb-1">
+                    <div class="mb-1">
                       <h3 class="font-bold text-sm">${spot.title}</h3>
-                       ${isPremium ? `
-                         <span class="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200 hover:from-amber-200 hover:to-yellow-200 transition-colors text-xs px-1.5 py-0.5">
-                           <svg class="mr-1 fill-amber-600 text-amber-600" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                             <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
-                           </svg>
-                           Premium
-                         </span>
-                       ` : ''}
                     </div>
                     <p class="text-xs text-gray-600">${spot.address}</p>
                     <div class="flex justify-between items-center mb-2">
@@ -470,7 +467,12 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
         
         return `
-          <div class="p-2" style="min-width: 200px;">
+          <div class="p-2 relative" style="min-width: 200px;">
+            ${isPremium ? `
+              <svg class="absolute top-1 right-1 fill-amber-500 text-amber-500" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
+              </svg>
+            ` : ''}
             ${isMultiple ? `
               <div class="flex justify-between items-center mb-2">
                 <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
@@ -488,16 +490,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 </div>
               </div>
             ` : ''}
-            <div class="flex items-center gap-2 mb-1">
+            <div class="mb-1">
               <h3 class="font-bold text-sm">${spot.title}</h3>
-                      ${isPremium ? `
-                        <span class="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200 hover:from-amber-200 hover:to-yellow-200 transition-colors text-xs px-1.5 py-0.5">
-                          <svg class="mr-1 fill-amber-600 text-amber-600" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
-                          </svg>
-                          Premium
-                        </span>
-                      ` : ''}
             </div>
             <p class="text-xs text-gray-600">${spot.address}</p>
             <div class="flex justify-between items-center mb-2">
