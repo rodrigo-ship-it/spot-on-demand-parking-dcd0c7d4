@@ -13,17 +13,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 27.9% 16.9%;
 
-    /* Premium Color Palette - Modern Blue with Warmth */
-    --primary: 217 91% 60%;
+    /* Premium Color Palette - Modern Coral & Teal */
+    --primary: 14 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 220 100% 70%;
-    --primary-variant: 215 100% 50%;
+    --primary-glow: 20 100% 70%;
+    --primary-variant: 10 100% 50%;
 
-    --secondary: 45 93% 47%;
-    --secondary-foreground: 26 83% 14%;
-    --secondary-glow: 45 100% 60%;
+    --secondary: 185 84% 44%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 185 100% 60%;
 
-    --tertiary: 330 81% 60%;
+    --tertiary: 280 71% 60%;
     --tertiary-foreground: 0 0% 100%;
 
     --muted: 210 40% 98%;
@@ -50,7 +50,7 @@
     /* Premium Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary-glow)) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(220 100% 70%) 50%, hsl(330 81% 60%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(14 91% 60%) 0%, hsl(20 100% 70%) 50%, hsl(185 84% 44%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
     --gradient-glass: linear-gradient(145deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%);
     --gradient-surface: linear-gradient(145deg, hsl(220 13% 98%) 0%, hsl(220 13% 95%) 100%);
@@ -89,16 +89,16 @@
     --popover-foreground: 210 40% 98%;
 
     /* Dark Mode Premium Colors */
-    --primary: 217 91% 70%;
+    --primary: 14 91% 70%;
     --primary-foreground: 9 9% 11%;
-    --primary-glow: 220 100% 80%;
-    --primary-variant: 215 100% 60%;
+    --primary-glow: 20 100% 80%;
+    --primary-variant: 10 100% 60%;
 
-    --secondary: 45 93% 60%;
+    --secondary: 185 84% 54%;
     --secondary-foreground: 9 9% 11%;
-    --secondary-glow: 45 100% 70%;
+    --secondary-glow: 185 100% 70%;
 
-    --tertiary: 330 81% 70%;
+    --tertiary: 280 71% 70%;
     --tertiary-foreground: 9 9% 11%;
 
     --muted: 0 0% 15%;
@@ -123,7 +123,7 @@
     /* Dark Mode Premium Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary-glow)) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(217 91% 70%) 0%, hsl(220 100% 80%) 50%, hsl(330 81% 70%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(14 91% 70%) 0%, hsl(20 100% 80%) 50%, hsl(185 84% 54%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(9 9% 11%) 0%, hsl(0 0% 15%) 100%);
     --gradient-glass: linear-gradient(145deg, hsl(0 0% 100% / 0.05) 0%, hsl(0 0% 100% / 0.02) 100%);
     --gradient-surface: linear-gradient(145deg, hsl(0 0% 12%) 0%, hsl(0 0% 8%) 100%);
