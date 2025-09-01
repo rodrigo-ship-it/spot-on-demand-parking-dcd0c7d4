@@ -39,14 +39,10 @@ const Index = () => {
           });
         },
         (error) => {
-          console.log("Could not get user location:", error);
-          // Fallback to a default location (e.g., NYC)
-          setUserLocation({ latitude: 40.7128, longitude: -74.0060 });
+          console.log("User denied location access or location unavailable:", error);
+          // Don't set a fallback - wait for user to search
         }
       );
-    } else {
-      // Fallback if geolocation is not supported
-      setUserLocation({ latitude: 40.7128, longitude: -74.0060 });
     }
   }, []);
 
