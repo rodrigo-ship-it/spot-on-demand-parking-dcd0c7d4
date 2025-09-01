@@ -22,6 +22,8 @@ import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import PremiumDashboard from "@/components/PremiumDashboard";
+import PremiumAnalytics from "@/components/PremiumAnalytics";
+import SmartPricingTools from "@/components/SmartPricingTools";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -195,8 +197,14 @@ const Profile = () => {
           {/* Email Verification */}
           <EmailVerification />
 
-          {/* Premium Dashboard */}
-          <PremiumDashboard />
+            {/* Premium Dashboard */}
+            <PremiumDashboard />
+
+            {/* Premium Analytics */}
+            <PremiumAnalytics />
+
+            {/* Smart Pricing Tools */}
+            <SmartPricingTools />
 
           {/* Profile Information */}
           <Card>

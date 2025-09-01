@@ -1186,6 +1186,10 @@ export type Database = {
           display_name: string
         }[]
       }
+      get_platform_fee_rate: {
+        Args: { user_id_param: string }
+        Returns: number
+      }
       get_public_parking_spot_info: {
         Args: { spot_id_param: string }
         Returns: {
@@ -1280,6 +1284,10 @@ export type Database = {
       }
       is_premium_lister: {
         Args: { lister_user_id: string }
+        Returns: boolean
+      }
+      is_spot_owner_premium: {
+        Args: { spot_owner_id: string }
         Returns: boolean
       }
       log_admin_action: {

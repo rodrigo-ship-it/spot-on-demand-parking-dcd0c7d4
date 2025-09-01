@@ -210,8 +210,17 @@ serve(async (req) => {
       baseSpotPrice = Math.round(parseFloat(parkingSpot.one_time_price.toString()) * 100);
     }
     
-    // Owner gets 93% of base price, platform gets 7%, renter pays all processing fees
-    const platformFee = Math.round(baseSpotPrice * 0.07); // 7% platform fee 
+    // Fee structure - check if owner has premium subscription
+    const { data: premiumSubscription } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id')
+      .eq('user_id', parkingSpot.owner_id)
+      .eq('status', 'active')
+      .gt('current_period_end', new Date().toISOString())
+      .maybeSingle();
+    
+    const platformFeeRate = premiumSubscription ? 0.05 : 0.07; // 5% for premium, 7% for regular users
+    const platformFee = Math.round(baseSpotPrice * platformFeeRate);
     const stripeProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30; // Stripe fee on base + platform fee, paid by renter
     const listerAmount = Math.round(baseSpotPrice * 0.93); // Owner gets 93% of base price
 

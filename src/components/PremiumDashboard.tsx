@@ -11,13 +11,9 @@ import {
   Star, 
   Zap, 
   DollarSign, 
-  FileText, 
-  Headphones,
   Settings,
-  Calendar,
   Target,
-  BarChart3,
-  Download
+  BarChart3
 } from "lucide-react";
 
 const PremiumDashboard = () => {
@@ -61,18 +57,6 @@ const PremiumDashboard = () => {
       description: "Pay 5% platform fees instead of 7% on all bookings",
       status: isPremium ? "active" : "locked"
     },
-    {
-      icon: <Calendar className="w-5 h-5" />,
-      title: "Bulk Management",
-      description: "Update pricing, availability, and settings across multiple spots",
-      status: isPremium ? "available" : "locked"
-    },
-    {
-      icon: <Download className="w-5 h-5" />,
-      title: "Data Export",
-      description: "Export detailed reports and analytics for tax and accounting purposes",
-      status: isPremium ? "available" : "locked"
-    }
   ];
 
   return (

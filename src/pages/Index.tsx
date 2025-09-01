@@ -165,6 +165,16 @@ const Index = () => {
         spot.type.toLowerCase().includes(searchLocation.toLowerCase());
     });
 
+    // Sort results to prioritize premium spots first
+    filtered = filtered.sort((a, b) => {
+      // Premium spots get priority
+      if (a.isPremiumLister && !b.isPremiumLister) return -1;
+      if (!a.isPremiumLister && b.isPremiumLister) return 1;
+      
+      // Then sort by rating
+      return (b.rating || 0) - (a.rating || 0);
+    });
+
     // If a pricing type is selected, further filter based on that
     if (searchPricingType) {
       filtered = filtered.filter(spot => spot.pricingType === searchPricingType);
