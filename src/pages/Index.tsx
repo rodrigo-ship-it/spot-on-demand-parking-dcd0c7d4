@@ -274,7 +274,7 @@ const Index = () => {
                 Arriv
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed animate-slide-up max-w-3xl mx-auto font-black" style={{ animationDelay: '0.3s' }}>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed animate-slide-up max-w-3xl mx-auto font-medium" style={{ animationDelay: '0.3s' }}>
               Discover convenient parking spots or earn money by listing your unused space. 
               Join our growing community of drivers and property owners.
             </p>
