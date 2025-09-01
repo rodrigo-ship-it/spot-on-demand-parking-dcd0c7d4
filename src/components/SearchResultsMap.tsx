@@ -5,6 +5,7 @@ import { MapPin, Navigation, DollarSign, Star, Clock, Car, Grid, List } from 'lu
 import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
 import { MapComponent } from '@/components/MapComponent';
 import { MapLegend } from '@/components/MapLegend';
+import { PremiumBadge } from '@/components/PremiumBadge';
 
 interface ParkingSpot {
   id: string | number;
@@ -23,6 +24,7 @@ interface ParkingSpot {
   longitude?: number;
   lat: number;
   lng: number;
+  isPremiumLister?: boolean;
 }
 
 interface SearchResultsMapProps {
@@ -129,6 +131,11 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
 
   const MapView = () => (
     <div className="space-y-6">
+      {/* Map Legend - positioned above the map */}
+      <div className="flex justify-center">
+        <MapLegend />
+      </div>
+      
       <MapComponent 
         spots={allSpotsWithDistance.map(spot => ({
           ...spot,
@@ -154,9 +161,16 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                       <span className="truncate">{spot.address}</span>
                     </div>
                   </div>
-                  <div className="flex items-center text-lg font-bold text-gray-900 ml-2">
-                    <DollarSign className="w-4 h-4" />
-                    {spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center text-lg font-bold text-gray-900">
+                      <DollarSign className="w-4 h-4" />
+                      {spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}
+                    </div>
+                    {spot.isPremiumLister && (
+                      <div className="mt-1">
+                        <PremiumBadge size="sm" />
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -236,23 +250,28 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                 </div>
               </div>
               <div className="flex-1 p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                      {spot.title}
-                    </h3>
-                    <div className="flex items-center text-gray-600 mt-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {spot.address}
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                        {spot.title}
+                      </h3>
+                      <div className="flex items-center text-gray-600 mt-1">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {spot.address}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                      <div className="text-sm text-gray-500">
+                        {spot.pricingType === 'hourly' ? 'per hour' : spot.pricingType === 'daily' ? 'per day' : spot.pricingType === 'one_time' ? 'one-time' : 'one-time'}
+                      </div>
+                      {spot.isPremiumLister && (
+                        <div className="mt-1">
+                          <PremiumBadge size="sm" />
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                    <div className="text-sm text-gray-500">
-                      {spot.pricingType === 'hourly' ? 'per hour' : spot.pricingType === 'daily' ? 'per day' : spot.pricingType === 'one_time' ? 'one-time' : 'one-time'}
-                    </div>
-                  </div>
-                </div>
                 
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                   <div className="flex items-center">
@@ -314,8 +333,8 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
   return (
     <section className="py-16 bg-white/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-start mb-8">
-          <div className="flex-1">
+        <div className="flex justify-between items-center mb-8">
+          <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Parking Near "{searchLocation}"
             </h2>
@@ -323,13 +342,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
               {filteredSpots.length} spot{filteredSpots.length !== 1 ? 's' : ''} found
             </p>
           </div>
-          
-          {/* Map Legend */}
-          <div className="flex-shrink-0 mx-4">
-            <MapLegend />
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-0 sm:space-x-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 sm:space-x-2">
             <Button
               variant={viewMode === "map" ? "default" : "outline"}
               size="sm"

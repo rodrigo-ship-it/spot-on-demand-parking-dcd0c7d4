@@ -1,51 +1,30 @@
 import React from 'react';
-import { MapPin, Square } from 'lucide-react';
 
 export const MapLegend = () => {
   const legendItems = [
-    { color: 'rgb(59, 130, 246)', label: 'Hourly Parking', type: 'pricing' },
-    { color: 'rgb(34, 197, 94)', label: 'Daily Parking', type: 'pricing' },
-    { color: 'rgb(168, 85, 247)', label: 'Monthly Parking', type: 'pricing' },
-    { color: 'rgb(249, 115, 22)', label: 'One-time Payment', type: 'pricing' },
-    { color: 'rgb(239, 68, 68)', label: 'Search Location', type: 'special' },
-  ];
-
-  const sizeItems = [
-    { size: 'small', label: 'Single Spot' },
-    { size: 'large', label: 'Multiple Spots or Garage/Lot' },
+    { color: 'rgb(59, 130, 246)', label: 'Hourly' },
+    { color: 'rgb(34, 197, 94)', label: 'Daily' },
+    { color: 'rgb(168, 85, 247)', label: 'Monthly' },
+    { color: 'rgb(249, 115, 22)', label: 'One-time' },
+    { color: 'rgb(239, 68, 68)', label: 'Search Location' },
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">Map Legend</h3>
-      
-      {/* Color Legend */}
-      <div className="space-y-2 mb-4">
-        <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Payment Types</h4>
-        {legendItems.map((item) => (
+    <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 px-4 py-2 shadow-sm">
+      <div className="flex items-center space-x-6">
+        {legendItems.map((item, index) => (
           <div key={item.label} className="flex items-center space-x-2">
             <div 
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-xs text-gray-700">{item.label}</span>
+            <span className="text-xs text-gray-700 whitespace-nowrap">{item.label}</span>
           </div>
         ))}
-      </div>
-
-      {/* Size Legend */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Pin Sizes</h4>
-        {sizeItems.map((item) => (
-          <div key={item.label} className="flex items-center space-x-2">
-            <div 
-              className={`bg-blue-500 rounded-full flex-shrink-0 ${
-                item.size === 'small' ? 'w-2 h-2' : 'w-4 h-4'
-              }`}
-            />
-            <span className="text-xs text-gray-700">{item.label}</span>
-          </div>
-        ))}
+        <div className="flex items-center space-x-2 text-xs text-gray-600">
+          <span>•</span>
+          <span>Larger pins = Multiple spots or Garages</span>
+        </div>
       </div>
     </div>
   );
