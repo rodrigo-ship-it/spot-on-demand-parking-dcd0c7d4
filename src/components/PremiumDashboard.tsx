@@ -37,7 +37,7 @@ const PremiumDashboard = () => {
       icon: <BarChart3 className="w-5 h-5" />,
       title: "Advanced Analytics",
       description: "Detailed insights into earnings, booking patterns, and peak demand times",
-      status: isPremium ? "available" : "locked"
+      status: isPremium ? "active" : "locked"
     },
     {
       icon: <Star className="w-5 h-5" />,
@@ -49,7 +49,7 @@ const PremiumDashboard = () => {
       icon: <Target className="w-5 h-5" />,
       title: "Smart Pricing Tools",
       description: "AI-powered pricing recommendations based on demand and competition",
-      status: isPremium ? "available" : "locked"
+      status: isPremium ? "active" : "locked"
     },
     {
       icon: <DollarSign className="w-5 h-5" />,
