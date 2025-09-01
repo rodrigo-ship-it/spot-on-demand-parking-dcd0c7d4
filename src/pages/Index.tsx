@@ -545,27 +545,29 @@ const Index = () => {
                   </div>
                   <CardHeader className="pb-3">
                      <div className="flex justify-between items-start">
-                       <div className="flex-1">
-                         <div className="flex items-center gap-2 mb-1">
-                           <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                             {spot.title}
-                           </CardTitle>
-                           {spot.isPremiumLister && <PremiumBadge size="sm" />}
-                         </div>
-                         <CardDescription className="flex items-center text-gray-600 mt-1">
-                           <MapPin className="w-4 h-4 mr-1" />
-                           {spot.address}
-                         </CardDescription>
-                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                        <div className="text-sm text-gray-500">
-                          {spot.pricingType === 'hourly' ? 'per hour' : 
-                           spot.pricingType === 'daily' ? 'per day' : 
-                           spot.pricingType === 'monthly' ? 'per month' :
-                           'one-time'}
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                            {spot.title}
+                          </CardTitle>
+                          <CardDescription className="flex items-center text-gray-600 mt-1">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            {spot.address}
+                          </CardDescription>
                         </div>
-                      </div>
+                       <div className="text-right">
+                         <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
+                         <div className="text-sm text-gray-500">
+                           {spot.pricingType === 'hourly' ? 'per hour' : 
+                            spot.pricingType === 'daily' ? 'per day' : 
+                            spot.pricingType === 'monthly' ? 'per month' :
+                            'one-time'}
+                         </div>
+                         {spot.isPremiumLister && (
+                           <div className="mt-1">
+                             <PremiumBadge size="sm" />
+                           </div>
+                         )}
+                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 flex flex-col flex-grow">
