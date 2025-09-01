@@ -1150,6 +1150,29 @@ export type Database = {
           display_name: string
         }[]
       }
+      get_public_parking_spot_info: {
+        Args: { spot_id_param: string }
+        Returns: {
+          address: string
+          amenities: string[]
+          available_spots: number
+          daily_price: number
+          description: string
+          id: string
+          images: string[]
+          latitude: number
+          longitude: number
+          monthly_price: number
+          one_time_price: number
+          price_per_hour: number
+          pricing_type: string
+          rating: number
+          spot_type: string
+          title: string
+          total_reviews: number
+          total_spots: number
+        }[]
+      }
       get_public_profile_data: {
         Args: { user_id_param: string }
         Returns: {
@@ -1192,6 +1215,12 @@ export type Database = {
         Returns: {
           avatar_url: string
           full_name: string
+        }[]
+      }
+      get_spot_owner_for_booking: {
+        Args: { booking_id_param: string; spot_id_param: string }
+        Returns: {
+          owner_id: string
         }[]
       }
       get_unread_message_count: {
