@@ -107,20 +107,25 @@ const Index = () => {
       // Fetch premium status for all spot owners
       if (newTransformedSpots.length > 0) {
         const ownerIds = [...new Set(newTransformedSpots.map(spot => spot.owner_id))];
+        console.log('🔍 Fetching premium status for owner IDs:', ownerIds);
         
         try {
-          const { data: premiumStatuses } = await supabase
+          const { data: premiumStatuses, error } = await supabase
             .from('premium_subscriptions')
             .select('user_id')
             .in('user_id', ownerIds)
             .eq('status', 'active')
             .gte('current_period_end', new Date().toISOString());
 
+          console.log('📊 Premium query result:', { premiumStatuses, error });
+
           const premiumUserIds = new Set(premiumStatuses?.map(ps => ps.user_id) || []);
+          console.log('👑 Premium user IDs:', Array.from(premiumUserIds));
           
           // Update spots with premium status
           newTransformedSpots.forEach(spot => {
             spot.isPremiumLister = premiumUserIds.has(spot.owner_id);
+            console.log(`🏷️ Spot ${spot.title} (owner: ${spot.owner_id}) premium status:`, spot.isPremiumLister);
           });
         } catch (error) {
           console.error('Error fetching premium statuses:', error);
