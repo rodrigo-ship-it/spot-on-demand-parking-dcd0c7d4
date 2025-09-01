@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, DollarSign, Star, Clock, Car, Grid, List } from 'lucide-react';
 import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
 import { MapComponent } from '@/components/MapComponent';
+import { MapLegend } from '@/components/MapLegend';
 
 interface ParkingSpot {
   id: string | number;
@@ -313,8 +314,8 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
   return (
     <section className="py-16 bg-white/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex-1">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Parking Near "{searchLocation}"
             </h2>
@@ -322,7 +323,13 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
               {filteredSpots.length} spot{filteredSpots.length !== 1 ? 's' : ''} found
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 sm:space-x-2">
+          
+          {/* Map Legend */}
+          <div className="flex-shrink-0 mx-4">
+            <MapLegend />
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-0 sm:space-x-2">
             <Button
               variant={viewMode === "map" ? "default" : "outline"}
               size="sm"

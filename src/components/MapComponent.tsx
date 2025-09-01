@@ -13,6 +13,7 @@ interface ParkingSpot {
   latitude: number;
   longitude: number;
   type: string;
+  spotType?: string;
   available: string;
   distance?: string;
 }
@@ -28,6 +29,37 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const map = useRef<mapboxgl.Map | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const onSpotSelectRef = useRef(onSpotSelect);
+
+  // Get pin color based on pricing type and spot type
+  const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
+    // If it's a clustered location, use a darker shade
+    const opacity = isMultiple ? '1' : '0.9';
+    
+    // Color by pricing type
+    switch (spot.pricingType) {
+      case 'hourly':
+        return `rgba(59, 130, 246, ${opacity})`; // Blue
+      case 'daily':
+        return `rgba(34, 197, 94, ${opacity})`; // Green
+      case 'monthly':
+        return `rgba(168, 85, 247, ${opacity})`; // Purple
+      case 'one_time':
+        return `rgba(249, 115, 22, ${opacity})`; // Orange
+      default:
+        return `rgba(107, 114, 128, ${opacity})`; // Gray
+    }
+  };
+
+  // Get additional styling for entire lots/garages
+  const getPinScale = (spot: ParkingSpot, isMultiple: boolean = false) => {
+    const baseScale = isMultiple ? 1.3 : 1.1;
+    // Make entire garages/lots slightly larger
+    const isEntireSpace = spot.type?.toLowerCase().includes('garage') || 
+                         spot.type?.toLowerCase().includes('lot') ||
+                         spot.spotType?.includes('garage') ||
+                         spot.spotType?.includes('lot');
+    return isEntireSpace ? baseScale + 0.2 : baseScale;
+  };
 
   // Update the ref when onSpotSelect changes
   useEffect(() => {
@@ -160,6 +192,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             // Create markers for each group
             groupedSpots.forEach((group) => {
               const isMultipleSpots = group.spots.length > 1;
+              const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
               
               // Create popup content
               const createPopupContent = (currentIndex = 0) => {
@@ -188,7 +221,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                     <h3 class="font-bold text-sm">${spot.title}</h3>
                     <p class="text-xs text-gray-600">${spot.address}</p>
                     <div class="flex justify-between items-center mb-2">
-                      <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
+                      <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
                       ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
                     </div>
                     <button 
@@ -202,8 +235,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               };
               
               const marker = new mapboxgl.Marker({
-                color: isMultipleSpots ? '#F59E0B' : '#3B82F6', // Orange for multiple spots, blue for single
-                scale: isMultipleSpots ? 1.3 : 1.1,
+                color: getPinColor(primarySpot, isMultipleSpots),
+                scale: getPinScale(primarySpot, isMultipleSpots),
               })
                 .setLngLat([group.longitude, group.latitude])
                 .setPopup(
@@ -378,6 +411,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     // Create markers for each group
     groupedSpots.forEach((group) => {
       const isMultipleSpots = group.spots.length > 1;
+      const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
       
       // Create popup content
       const createPopupContent = (currentIndex = 0) => {
@@ -406,7 +440,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             <h3 class="font-bold text-sm">${spot.title}</h3>
             <p class="text-xs text-gray-600">${spot.address}</p>
             <div class="flex justify-between items-center mb-2">
-              <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}</p>
+              <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
               ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
             </div>
             <button 
@@ -420,8 +454,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       };
       
       const marker = new mapboxgl.Marker({
-        color: isMultipleSpots ? '#F59E0B' : '#3B82F6',
-        scale: isMultipleSpots ? 1.3 : 1.1,
+        color: getPinColor(primarySpot, isMultipleSpots),
+        scale: getPinScale(primarySpot, isMultipleSpots),
       })
         .setLngLat([group.longitude, group.latitude])
         .setPopup(
