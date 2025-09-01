@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { PremiumBadge } from './PremiumBadge';
 
 interface ParkingSpot {
   id: string | number;
@@ -16,6 +17,8 @@ interface ParkingSpot {
   spotType?: string;
   available: string;
   distance?: string;
+  owner_id?: string;
+  isPremiumOwner?: boolean;
 }
 
 interface MapComponentProps {
@@ -29,6 +32,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const map = useRef<mapboxgl.Map | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const onSpotSelectRef = useRef(onSpotSelect);
+  const [premiumStatuses, setPremiumStatuses] = useState<Record<string, boolean>>({});
 
   // Get pin color based on pricing type and spot type
   const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
@@ -60,6 +64,41 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                          spot.spotType?.includes('lot');
     return isEntireSpace ? baseScale + 0.2 : baseScale;
   };
+
+  // Check premium status for all unique owners
+  useEffect(() => {
+    const checkPremiumStatuses = async () => {
+      const uniqueOwnerIds = [...new Set(spots.map(spot => spot.owner_id).filter(Boolean))] as string[];
+      
+      if (uniqueOwnerIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('premium_subscriptions')
+          .select('user_id, status, current_period_end')
+          .in('user_id', uniqueOwnerIds)
+          .eq('status', 'active');
+
+        if (error) {
+          console.error('Error checking premium statuses:', error);
+          return;
+        }
+
+        const statuses: Record<string, boolean> = {};
+        data?.forEach(subscription => {
+          // Check if subscription is still valid
+          const isValid = new Date(subscription.current_period_end) > new Date();
+          statuses[subscription.user_id] = isValid;
+        });
+
+        setPremiumStatuses(statuses);
+      } catch (error) {
+        console.error('Error fetching premium statuses:', error);
+      }
+    };
+
+    checkPremiumStatuses();
+  }, [spots]);
 
   // Update the ref when onSpotSelect changes
   useEffect(() => {
@@ -198,6 +237,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               const createPopupContent = (currentIndex = 0) => {
                 const spot = group.spots[currentIndex];
                 const isMultiple = group.spots.length > 1;
+                const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
                 
                 return `
                   <div class="p-2" style="min-width: 200px;">
@@ -218,7 +258,17 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                         </div>
                       </div>
                     ` : ''}
-                    <h3 class="font-bold text-sm">${spot.title}</h3>
+                    <div class="flex items-center gap-2 mb-1">
+                      <h3 class="font-bold text-sm">${spot.title}</h3>
+                      ${isPremium ? `
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-amber-600">
+                            <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
+                          </svg>
+                          Premium
+                        </span>
+                      ` : ''}
+                    </div>
                     <p class="text-xs text-gray-600">${spot.address}</p>
                     <div class="flex justify-between items-center mb-2">
                       <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
@@ -417,6 +467,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       const createPopupContent = (currentIndex = 0) => {
         const spot = group.spots[currentIndex];
         const isMultiple = group.spots.length > 1;
+        const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
         
         return `
           <div class="p-2" style="min-width: 200px;">
@@ -437,14 +488,24 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 </div>
               </div>
             ` : ''}
-            <h3 class="font-bold text-sm">${spot.title}</h3>
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-bold text-sm">${spot.title}</h3>
+              ${isPremium ? `
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-amber-600">
+                    <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
+                  </svg>
+                  Premium
+                </span>
+              ` : ''}
+            </div>
             <p class="text-xs text-gray-600">${spot.address}</p>
             <div class="flex justify-between items-center mb-2">
               <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
               ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
             </div>
             <button 
-              id="book-btn-update-${spot.id}" 
+              id="book-btn-update-${spot.id}"
               class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
             >
               Book Now
