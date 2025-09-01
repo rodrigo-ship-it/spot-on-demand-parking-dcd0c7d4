@@ -147,9 +147,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Group spots by location (within ~50 meters)
+            // Group spots by location (within ~100 meters)
             const groupedSpots = new Map();
-            const tolerance = 0.0005; // ~50 meters
+            const tolerance = 0.001; // ~100 meters (increased from 50m)
             
             spots.forEach((spot) => {
               if (!spot.latitude || !spot.longitude) {
@@ -161,10 +161,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               let foundGroup = false;
               for (const [key, group] of groupedSpots) {
                 const [groupLat, groupLng] = key.split(',').map(Number);
-                const distance = Math.sqrt(
-                  Math.pow(spot.longitude - groupLng, 2) + 
-                  Math.pow(spot.latitude - groupLat, 2)
-                );
+                // Use proper distance calculation (Haversine formula approximation)
+                const latDiff = (spot.latitude - groupLat) * Math.PI / 180;
+                const lngDiff = (spot.longitude - groupLng) * Math.PI / 180;
+                const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
                 
                 if (distance < tolerance) {
                   group.spots.push(spot);
@@ -415,9 +415,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         .addTo(map.current!);
     }
     
-    // Group spots by location (within ~50 meters) - same logic as initialization
+    // Group spots by location (within ~100 meters) - same logic as initialization
     const groupedSpots = new Map();
-    const tolerance = 0.0005;
+    const tolerance = 0.001;
     
     spots.forEach((spot) => {
       if (!spot.latitude || !spot.longitude) {
@@ -429,10 +429,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       let foundGroup = false;
       for (const [key, group] of groupedSpots) {
         const [groupLat, groupLng] = key.split(',').map(Number);
-        const distance = Math.sqrt(
-          Math.pow(spot.longitude - groupLng, 2) + 
-          Math.pow(spot.latitude - groupLat, 2)
-        );
+        // Use proper distance calculation (Haversine formula approximation)
+        const latDiff = (spot.latitude - groupLat) * Math.PI / 180;
+        const lngDiff = (spot.longitude - groupLng) * Math.PI / 180;
+        const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
         
         if (distance < tolerance) {
           group.spots.push(spot);
