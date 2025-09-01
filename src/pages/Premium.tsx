@@ -123,20 +123,8 @@ const Premium = () => {
                 Ready to Maximize Your Earnings?
               </h3>
               <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-                Premium users typically earn 20-30% more from their parking spots through optimized pricing, 
-                reduced fees, and better visibility in search results.
+                Get started with Premium to access advanced tools and maximize your parking spot potential.
               </p>
-              <div className="space-y-4">
-                <div className="text-sm text-gray-500">
-                  ✓ Advanced Analytics & Insights
-                  <br />
-                  ✓ Priority Listing in Search Results
-                  <br />
-                  ✓ Smart Pricing Recommendations
-                  <br />
-                  ✓ Reduced Platform Fees (5% vs 7%)
-                </div>
-              </div>
             </CardContent>
           </Card>
         )}
