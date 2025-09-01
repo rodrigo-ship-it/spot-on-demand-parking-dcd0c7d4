@@ -114,7 +114,6 @@ const Index = () => {
             .from('premium_subscriptions')
             .select('user_id')
             .in('user_id', ownerIds)
-            .eq('status', 'active')
             .gte('current_period_end', new Date().toISOString());
 
           console.log('📊 Premium query result:', { premiumStatuses, error });
