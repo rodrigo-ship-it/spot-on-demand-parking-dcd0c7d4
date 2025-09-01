@@ -138,9 +138,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Group spots by location (within ~100 meters)
+            // Group spots by location (within ~200 meters)
             const groupedSpots = new Map();
-            const tolerance = 0.001; // ~100 meters (increased from 50m)
+            const tolerance = 0.002; // ~200 meters (increased significantly)
             
             spots.forEach((spot) => {
               if (!spot.latitude || !spot.longitude) {
@@ -236,39 +236,34 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               
               let marker;
               
-              if (isMultipleSpots) {
-                // Create a custom marker with a number badge for multiple spots
-                const el = document.createElement('div');
-                el.className = 'multiple-spot-marker';
-                el.style.cssText = `
-                  width: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
-                  height: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
-                  background: ${getPinColor(primarySpot, isMultipleSpots)};
-                  border-radius: 50%;
-                  border: 3px solid white;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                  cursor: pointer;
-                  position: relative;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                `;
-                
-                // Add number badge
-                el.innerHTML = `<span style="
-                  color: white;
-                  font-size: 12px;
-                  font-weight: bold;
-                  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-                ">${group.spots.length}</span>`;
-                
-                marker = new mapboxgl.Marker(el)
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
-                  .addTo(map.current!);
-              } else {
+      if (isMultipleSpots) {
+        // Create a custom pin-shaped marker with a number badge for multiple spots
+        const el = document.createElement('div');
+        el.className = 'multiple-spot-marker';
+        el.style.cssText = `
+          position: relative;
+          cursor: pointer;
+        `;
+        
+        // Create pin shape with SVG
+        el.innerHTML = `
+          <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+            <path d="M16 0C7.164 0 0 7.164 0 16s16 24 16 24 16-15.164 16-24S24.836 0 16 0z" 
+                  fill="${getPinColor(primarySpot, isMultipleSpots)}" 
+                  stroke="white" 
+                  stroke-width="2"/>
+            <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold" 
+                  style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${group.spots.length}</text>
+          </svg>
+        `;
+        
+        marker = new mapboxgl.Marker(el)
+          .setLngLat([group.longitude, group.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+          )
+          .addTo(map.current!);
+      } else {
                 // Regular single-color marker for single spots
                 marker = new mapboxgl.Marker({
                   color: getPinColor(primarySpot, isMultipleSpots),
@@ -394,9 +389,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         .addTo(map.current!);
     }
     
-    // Group spots by location (within ~100 meters) - same logic as initialization
+    // Group spots by location (within ~200 meters) - same logic as initialization
     const groupedSpots = new Map();
-    const tolerance = 0.001;
+    const tolerance = 0.002;
     
     spots.forEach((spot) => {
       if (!spot.latitude || !spot.longitude) {
@@ -493,30 +488,25 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       let marker;
       
       if (isMultipleSpots) {
-        // Create a custom marker with a number badge for multiple spots
+        // Create a custom pin-shaped marker with a number badge for multiple spots
         const el = document.createElement('div');
         el.className = 'multiple-spot-marker';
         el.style.cssText = `
-          width: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
-          height: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
-          background: ${getPinColor(primarySpot, isMultipleSpots)};
-          border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          cursor: pointer;
           position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          cursor: pointer;
         `;
         
-        // Add number badge
-        el.innerHTML = `<span style="
-          color: white;
-          font-size: 12px;
-          font-weight: bold;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        ">${group.spots.length}</span>`;
+        // Create pin shape with SVG
+        el.innerHTML = `
+          <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+            <path d="M16 0C7.164 0 0 7.164 0 16s16 24 16 24 16-15.164 16-24S24.836 0 16 0z" 
+                  fill="${getPinColor(primarySpot, isMultipleSpots)}" 
+                  stroke="white" 
+                  stroke-width="2"/>
+            <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold" 
+                  style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${group.spots.length}</text>
+          </svg>
+        `;
         
         marker = new mapboxgl.Marker(el)
           .setLngLat([group.longitude, group.latitude])
