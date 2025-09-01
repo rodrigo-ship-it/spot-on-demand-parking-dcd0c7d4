@@ -14,7 +14,6 @@ import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationSettings } from "@/components/NotificationSettings";
-import { TestActiveBooking } from "@/components/TestActiveBooking";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -580,15 +579,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* Test Extension System - Only for debugging */}
-      {user && (
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <TestActiveBooking />
-          </div>
-        </section>
-      )}
     </div>
   );
 };
