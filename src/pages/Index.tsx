@@ -117,13 +117,29 @@ const Index = () => {
             .in('user_id', ownerIds);
 
           console.log('📊 ALL premium subscriptions for owners:', { allSubscriptions, allError });
-          console.log('📅 Current date ISO:', new Date().toISOString());
+          const currentDateISO = new Date().toISOString();
+          console.log('📅 Current date ISO:', currentDateISO);
+          
+          // Let's see what happens with the date comparison
+          if (allSubscriptions && allSubscriptions.length > 0) {
+            allSubscriptions.forEach((sub: any) => {
+              const endDate = sub.current_period_end;
+              const isAfterNow = endDate >= currentDateISO;
+              console.log('📅 Subscription comparison:', {
+                user_id: sub.user_id,
+                current_period_end: endDate,
+                currentDateISO,
+                isAfterNow,
+                status: sub.status
+              });
+            });
+          }
 
           const { data: premiumStatuses, error } = await supabase
             .from('premium_subscriptions')
-            .select('user_id')
+            .select('user_id, current_period_end, status')
             .in('user_id', ownerIds)
-            .gte('current_period_end', new Date().toISOString());
+            .gte('current_period_end', currentDateISO);
 
           console.log('📊 Premium query result:', { premiumStatuses, error });
 
