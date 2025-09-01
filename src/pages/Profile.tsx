@@ -193,22 +193,6 @@ const Profile = () => {
           {/* Email Verification */}
           <EmailVerification />
 
-            {/* Premium Dashboard */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Premium Features</h3>
-              <p className="text-gray-600">
-                Premium features have been moved to their own dedicated page. 
-                Click the Premium button in the navigation to access advanced analytics, 
-                smart pricing tools, and reduced platform fees.
-              </p>
-              <Button 
-                onClick={() => navigate('/premium')}
-                className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                View Premium Features
-              </Button>
-            </div>
 
           {/* Profile Information */}
           <Card>
