@@ -35,6 +35,12 @@ serve(async (req) => {
     const threeHoursAgo = new Date();
     threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
     
+    logStep("Time validation", { 
+      currentTime: now.toISOString(), 
+      threeHoursAgo: threeHoursAgo.toISOString(),
+      queryFilter: `end_time <= ${threeHoursAgo.toISOString().slice(0, 19)}`
+    });
+    
     const { data: lateBookings, error: bookingsError } = await supabaseService
       .from('bookings')
       .select(`
@@ -82,6 +88,27 @@ serve(async (req) => {
         const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeLocal.getTime()) / (1000 * 60));
         
         logStep("Calculated lateness", { minutesLate, bookingId: booking.id });
+
+        // SAFETY CHECK: Don't process bookings that aren't actually late
+        if (minutesLate < 180) { // Less than 3 hours (180 minutes)
+          logStep("SAFETY: Booking not actually late, skipping", { 
+            bookingId: booking.id, 
+            minutesLate, 
+            endTime: booking.end_time, 
+            currentTime: currentTimeLocal.toISOString() 
+          });
+          continue;
+        }
+
+        // Additional safety check: Don't process future bookings
+        if (currentTimeLocal < endTimeLocal) {
+          logStep("SAFETY: Booking end time is in the future, skipping", { 
+            bookingId: booking.id, 
+            endTime: booking.end_time, 
+            currentTime: currentTimeLocal.toISOString() 
+          });
+          continue;
+        }
 
         // Check if we already have a penalty credit for this booking
         const { data: existingCredit } = await supabaseService
