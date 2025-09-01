@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -178,55 +179,156 @@ const HelpSupport = () => {
               <CardHeader>
                 <CardTitle>Frequently Asked Questions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">How do I book a parking spot?</h4>
-                  <p className="text-sm text-gray-600">
-                    Search for parking spots on the homepage, select your dates and times, and complete payment. You'll receive a booking confirmation and can manage your reservation from the "My Bookings" page.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I extend my parking time?</h4>
-                  <p className="text-sm text-gray-600">
-                    Go to "My Bookings" and click "Manage Time" on active reservations. You can extend your booking to avoid overstay penalties.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Can I cancel my booking?</h4>
-                  <div className="text-sm text-gray-600 space-y-2">
-                    <p>Yes, you can request refunds based on our cancellation policy:</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li><strong>24+ hours in advance:</strong> 100% refund, no fees</li>
-                      <li><strong>3-24 hours in advance:</strong> 90% refund (10% cancellation fee, max $5)</li>
-                      <li><strong>Less than 3 hours:</strong> No refund due to short notice</li>
-                    </ul>
-                    <p className="text-xs">Use the "Request Refund" button in your bookings to start the process.</p>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I rent using a QR code?</h4>
-                  <p className="text-sm text-gray-600">
-                    Scan the QR code at the parking location to instantly book that spot. This provides quick access for spontaneous parking needs.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I list my parking spot?</h4>
-                  <p className="text-sm text-gray-600">
-                    Click "List Your Spot" from the homepage, provide details about your space, upload photos, set pricing, and define availability. You can manage all your spots from "Manage Spots".
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">How do I get paid as a spot owner?</h4>
-                  <p className="text-sm text-gray-600">
-                    Connect your Stripe account through your profile to receive payments. Earnings are processed automatically after each completed booking.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">What if there's a dispute?</h4>
-                  <p className="text-sm text-gray-600">
-                    Use the "Report Issue" feature in your bookings to document problems with photos. Our team will review and resolve disputes fairly.
-                  </p>
-                </div>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="booking">
+                    <AccordionTrigger>How do I book a parking spot?</AccordionTrigger>
+                    <AccordionContent>
+                      Search for parking spots on the homepage, select your dates and times, and complete payment. You'll receive a booking confirmation and can manage your reservation from the "My Bookings" page.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="extend">
+                    <AccordionTrigger>How do I extend my parking time?</AccordionTrigger>
+                    <AccordionContent>
+                      Go to "My Bookings" and click "Manage Time" on active reservations. You can extend your booking to avoid overstay penalties.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="cancel">
+                    <AccordionTrigger>Can I cancel my booking?</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        <p>Yes, you can request refunds based on our cancellation policy:</p>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          <li><strong>24+ hours in advance:</strong> 100% refund, no fees</li>
+                          <li><strong>3-24 hours in advance:</strong> 90% refund (10% cancellation fee, max $5)</li>
+                          <li><strong>Less than 3 hours:</strong> No refund due to short notice</li>
+                        </ul>
+                        <p className="text-sm">Use the "Request Refund" button in your bookings to start the process.</p>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="qr-code">
+                    <AccordionTrigger>How do I rent using a QR code?</AccordionTrigger>
+                    <AccordionContent>
+                      Scan the QR code at the parking location to instantly book that spot. This provides quick access for spontaneous parking needs.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="list-spot">
+                    <AccordionTrigger>How do I list my parking spot?</AccordionTrigger>
+                    <AccordionContent>
+                      Click "List Your Spot" from the homepage, provide details about your space, upload photos, set pricing, and define availability. You can manage all your spots from "Manage Spots".
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="get-paid">
+                    <AccordionTrigger>How do I get paid as a spot owner?</AccordionTrigger>
+                    <AccordionContent>
+                      Connect your Stripe account through your profile to receive payments. Earnings are processed automatically after each completed booking.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="dispute">
+                    <AccordionTrigger>What if there's a dispute?</AccordionTrigger>
+                    <AccordionContent>
+                      Use the "Report Issue" feature in your bookings to document problems with photos. Our team will review and resolve disputes fairly.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="payment-failed">
+                    <AccordionTrigger>My payment failed, what should I do?</AccordionTrigger>
+                    <AccordionContent>
+                      Check that your card details are correct and you have sufficient funds. Try a different payment method or contact your bank. If issues persist, contact our support team.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="late-penalty">
+                    <AccordionTrigger>What happens if I'm late checking out?</AccordionTrigger>
+                    <AccordionContent>
+                      Late checkout results in penalty charges: $10 for 1-60 minutes late, $25 for 1-3 hours late, and $50 for 3+ hours late. Extend your booking in advance to avoid penalties.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="premium">
+                    <AccordionTrigger>What are premium features?</AccordionTrigger>
+                    <AccordionContent>
+                      Premium subscribers get priority listing placement, advanced analytics, reduced fees, and early access to new features. Upgrade from your profile settings.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="account-security">
+                    <AccordionTrigger>How is my account information protected?</AccordionTrigger>
+                    <AccordionContent>
+                      We use industry-standard encryption, secure payment processing through Stripe, and never store your payment details. Enable two-factor authentication for additional security.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="change-password">
+                    <AccordionTrigger>How do I change my password?</AccordionTrigger>
+                    <AccordionContent>
+                      Go to your Profile page and click "Change Password". You'll need to enter your current password and choose a new one.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="availability">
+                    <AccordionTrigger>How do I set availability for my parking spot?</AccordionTrigger>
+                    <AccordionContent>
+                      In "Manage Spots", edit your listing and set specific days, times, and date ranges when your spot is available. You can also block out dates when it's not available.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="pricing-strategy">
+                    <AccordionTrigger>How should I price my parking spot?</AccordionTrigger>
+                    <AccordionContent>
+                      Consider local parking rates, proximity to popular destinations, and demand patterns. Check similar spots in your area for competitive pricing. Premium subscribers get pricing analytics.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="photos">
+                    <AccordionTrigger>What photos should I upload for my spot?</AccordionTrigger>
+                    <AccordionContent>
+                      Include clear photos of the parking space, entrance/access, surrounding area, and any special features. Good photos increase booking rates and help guests find your spot easily.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="verification">
+                    <AccordionTrigger>Do I need to verify my account?</AccordionTrigger>
+                    <AccordionContent>
+                      Email verification is required for all users. Spot owners need to verify their Stripe account for payments. Phone verification may be required for high-value transactions.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="mobile-app">
+                    <AccordionTrigger>Is there a mobile app?</AccordionTrigger>
+                    <AccordionContent>
+                      Currently, Arriv is a responsive web application that works great on all devices. A dedicated mobile app is in development and will be available soon.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="emergency">
+                    <AccordionTrigger>What if I have an emergency during my booking?</AccordionTrigger>
+                    <AccordionContent>
+                      Contact our support team immediately through the app or email service@arrivparking.com. For vehicle-related emergencies, contact local authorities first, then notify us.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="accessibility">
+                    <AccordionTrigger>Are parking spots accessible for people with disabilities?</AccordionTrigger>
+                    <AccordionContent>
+                      Use the accessibility filter when searching to find spots that accommodate wheelchairs and other accessibility needs. Spot owners can specify accessibility features in their listings.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="multiple-vehicles">
+                    <AccordionTrigger>Can I book for multiple vehicles?</AccordionTrigger>
+                    <AccordionContent>
+                      Each booking is for one vehicle. If you need multiple spots, make separate bookings. Some larger spots may accommodate multiple vehicles - check the spot description.
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </CardContent>
             </Card>
 
