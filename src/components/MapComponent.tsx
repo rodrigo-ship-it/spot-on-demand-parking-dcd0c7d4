@@ -261,8 +261,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                     <div class="flex items-center gap-2 mb-1">
                       <h3 class="font-bold text-sm">${spot.title}</h3>
                        ${isPremium ? `
-                         <span class="inline-flex items-center text-xs px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200 hover:from-amber-200 hover:to-yellow-200 transition-colors">
-                           <svg width="12" height="12" viewBox="0 0 24 24" fill="#d97706" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                         <span class="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200 hover:from-amber-200 hover:to-yellow-200 transition-colors text-xs px-1.5 py-0.5">
+                           <svg class="mr-1 fill-amber-600 text-amber-600" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                              <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
                            </svg>
                            Premium
@@ -491,8 +491,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             <div class="flex items-center gap-2 mb-1">
               <h3 class="font-bold text-sm">${spot.title}</h3>
                       ${isPremium ? `
-                        <span class="inline-flex items-center text-xs px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200 hover:from-amber-200 hover:to-yellow-200 transition-colors">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="#d97706" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                        <span class="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200 hover:from-amber-200 hover:to-yellow-200 transition-colors text-xs px-1.5 py-0.5">
+                          <svg class="mr-1 fill-amber-600 text-amber-600" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
                           </svg>
                           Premium
