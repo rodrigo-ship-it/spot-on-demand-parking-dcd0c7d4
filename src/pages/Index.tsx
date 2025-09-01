@@ -124,57 +124,57 @@ const Index = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Modern Navigation */}
-      <nav className="bg-white/80 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Link to="/" className="hover:scale-105 transition-transform duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+      {/* Modern Navigation with Glass Effect */}
+      <nav className="glass-card border-0 border-b border-white/10 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto container-padding">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-3">
+              <Link to="/" className="interactive">
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                   alt="Arriv Logo" 
-                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
+                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-300"
                 />
               </Link>
-              <div className="hidden md:flex items-center space-x-6">
-                <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium">
+              <div className="hidden md:flex items-center space-x-8">
+                <Link to="/how-it-works" className="text-muted-foreground hover:text-primary smooth-transition font-semibold">
                   How it Works
                 </Link>
-                <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium">
+                <Link to="/manage-spots" className="text-muted-foreground hover:text-primary smooth-transition font-semibold">
                   My Spots
                 </Link>
               </div>
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-4">
               <NotificationSettings />
               {user ? (
                 <>
                   {user.email === 'rodrigo@arrivparking.com' && (
                     <Link to="/admin">
-                      <Button variant="outline" className="border-orange-200 hover:bg-orange-50 text-orange-600">
+                      <Button variant="warning" size="sm" className="text-sm">
                         Admin
                       </Button>
                     </Link>
                   )}
                   <Link to="/bookings">
-                    <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                    <Button variant="outline" size="sm">
                       My Bookings
                     </Button>
                   </Link>
                   <Link to="/profile">
-                    <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                    <Button variant="outline" size="sm">
                       Profile
                     </Button>
                   </Link>
-                  <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={signOut}>
+                  <Button variant="ghost" size="sm" onClick={signOut}>
                     Sign Out
                   </Button>
                 </>
               ) : (
-                <Button variant="outline" className="border-gray-200 hover:bg-gray-50" onClick={handleSignIn}>
+                <Button variant="default" size="sm" onClick={handleSignIn}>
                   Sign In
                 </Button>
               )}
@@ -259,35 +259,43 @@ const Index = () => {
       </nav>
 
       {/* Hero Section with Enhanced SEO */}
-      <section className="relative overflow-hidden py-20 lg:py-32" role="banner">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary-glow/5 to-secondary/10 animate-pulse-glow"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto animate-fade-in">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight gradient-text">
-              Find it. Book it. Arriv
+      <section className="relative overflow-hidden section-padding bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900" role="banner">
+        <div className="absolute inset-0 bg-gradient-hero opacity-10 animate-glow-pulse"></div>
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-tertiary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+        </div>
+        <div className="relative max-w-7xl mx-auto container-padding">
+          <div className="text-center max-w-5xl mx-auto animate-fade-in">
+            <h1 className="heading-xl mb-8 text-gradient leading-none">
+              Find it. Book it.
+              <span className="block text-primary-glow animate-bounce-in" style={{ animationDelay: '0.5s' }}>
+                Arriv
+              </span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed animate-slide-up">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed animate-slide-up max-w-3xl mx-auto font-medium" style={{ animationDelay: '0.3s' }}>
               Discover convenient parking spots or earn money by listing your unused space. 
               Join our growing community of drivers and property owners.
             </p>
             
-            {/* Enhanced Search Bar */}
-            <div className="bg-gradient-card rounded-2xl p-6 shadow-elegant border border-gray-100 max-w-4xl mx-auto hover-lift glass-effect animate-scale-in">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Enhanced Search Bar with Glass Effect */}
+            <div className="premium-card max-w-5xl mx-auto p-8 animate-scale-in" style={{ animationDelay: '0.6s' }}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2">
                   <GooglePlacesAutocomplete
                     value={searchLocation}
                     onChange={setSearchLocation}
                     onLocationSelect={handleLocationSelect}
                     placeholder="Where do you need parking?"
-                    className="h-12 border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 focus:shadow-glow"
+                    className="h-14 form-input text-lg rounded-xl border-2 focus:border-primary/50 bg-white/80 backdrop-blur-sm"
                   />
                 </div>
                 <Select value={searchDuration} onValueChange={setSearchDuration}>
-                  <SelectTrigger className="h-12 border-gray-200 transition-all duration-300 hover:border-primary">
+                  <SelectTrigger className="h-14 form-input text-lg rounded-xl border-2 bg-white/80 backdrop-blur-sm">
                     <SelectValue placeholder="Duration" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="1h">1 Hour</SelectItem>
                     <SelectItem value="2h">2 Hours</SelectItem>
                     <SelectItem value="4h">4 Hours</SelectItem>
@@ -295,14 +303,14 @@ const Index = () => {
                     <SelectItem value="daily">Daily</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="premium" size="lg" className="h-12" onClick={handleSearch}>
-                  <Search className="w-4 h-4 mr-2" />
+                <Button variant="premium" size="lg" className="h-14 text-lg font-bold" onClick={handleSearch}>
+                  <Search className="w-5 h-5 mr-2" />
                   Search
                 </Button>
               </div>
               {hasSearched && (
-                <div className="mt-4 flex justify-center">
-                  <Button variant="outline" onClick={clearSearch} className="text-sm">
+                <div className="mt-6 flex justify-center animate-slide-down">
+                  <Button variant="ghost" onClick={clearSearch} className="text-sm hover:bg-white/20 rounded-xl">
                     Clear Search & Show All
                   </Button>
                 </div>
