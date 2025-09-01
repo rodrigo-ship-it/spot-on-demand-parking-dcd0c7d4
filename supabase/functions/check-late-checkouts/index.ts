@@ -31,14 +31,14 @@ serve(async (req) => {
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
-    // Find all active/confirmed bookings that are 3+ hours past their LOCAL end time
+    // Find all active/confirmed bookings that are 3+ hours past their UTC end time
     const threeHoursAgo = new Date();
     threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
     
     logStep("Time validation", { 
       currentTime: now.toISOString(), 
       threeHoursAgo: threeHoursAgo.toISOString(),
-      queryFilter: `end_time <= ${threeHoursAgo.toISOString().slice(0, 19)}`
+      queryFilter: `end_time_utc <= ${threeHoursAgo.toISOString()}`
     });
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
@@ -54,8 +54,8 @@ serve(async (req) => {
         parking_spots!inner(title, address, price_per_hour, owner_id)
       `)
       .in('status', ['confirmed', 'active'])
-      .lte('end_time', threeHoursAgo.toISOString().slice(0, 19)) // Local time comparison without timezone
-      .order('end_time', { ascending: true });
+      .lte('end_time_utc', threeHoursAgo.toISOString()) // Use UTC time for accurate comparison
+      .order('end_time_utc', { ascending: true });
 
     if (bookingsError) {
       throw new Error(`Error fetching late bookings: ${bookingsError.message}`);
@@ -82,30 +82,30 @@ serve(async (req) => {
       try {
         logStep("Processing late booking", { bookingId: booking.id, endTimeLocal: booking.end_time, endTimeUtc: booking.end_time_utc });
 
-        // Use LOCAL times consistently for comparison
-        const endTimeLocal = new Date(booking.end_time);
-        const currentTimeLocal = new Date(); // Current local time
-        const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeLocal.getTime()) / (1000 * 60));
+        // Use UTC times consistently for comparison
+        const endTimeUtc = new Date(booking.end_time_utc);
+        const currentTimeUtc = new Date(); // Current UTC time
+        const minutesLate = Math.floor((currentTimeUtc.getTime() - endTimeUtc.getTime()) / (1000 * 60));
         
-        logStep("Calculated lateness", { minutesLate, bookingId: booking.id });
+        logStep("Calculated lateness", { minutesLate, bookingId: booking.id, endTimeUtc: booking.end_time_utc, currentTimeUtc: currentTimeUtc.toISOString() });
 
         // SAFETY CHECK: Don't process bookings that aren't actually late
         if (minutesLate < 180) { // Less than 3 hours (180 minutes)
           logStep("SAFETY: Booking not actually late, skipping", { 
             bookingId: booking.id, 
             minutesLate, 
-            endTime: booking.end_time, 
-            currentTime: currentTimeLocal.toISOString() 
+            endTimeUtc: booking.end_time_utc, 
+            currentTimeUtc: currentTimeUtc.toISOString() 
           });
           continue;
         }
 
         // Additional safety check: Don't process future bookings
-        if (currentTimeLocal < endTimeLocal) {
+        if (currentTimeUtc < endTimeUtc) {
           logStep("SAFETY: Booking end time is in the future, skipping", { 
             bookingId: booking.id, 
-            endTime: booking.end_time, 
-            currentTime: currentTimeLocal.toISOString() 
+            endTimeUtc: booking.end_time_utc, 
+            currentTimeUtc: currentTimeUtc.toISOString() 
           });
           continue;
         }
