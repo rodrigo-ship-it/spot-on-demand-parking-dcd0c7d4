@@ -29,6 +29,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const map = useRef<mapboxgl.Map | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const onSpotSelectRef = useRef(onSpotSelect);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   // Get pin color based on pricing type and spot type
   const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
@@ -138,6 +139,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
+            // Clear any existing markers
+            markersRef.current.forEach(marker => marker.remove());
+            markersRef.current = [];
+            
             // Group spots by exact address
             const groupedSpots = new Map();
             
@@ -158,6 +163,12 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 });
               }
             });
+            
+            console.log('Grouped spots:', Array.from(groupedSpots.entries()).map(([address, group]) => ({
+              address,
+              count: group.spots.length,
+              coordinates: [group.latitude, group.longitude]
+            })));
             
             // Create markers for each group
             groupedSpots.forEach((group) => {
@@ -227,12 +238,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           </svg>
         `;
         
-        marker = new mapboxgl.Marker(el)
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
-          .addTo(map.current!);
+                marker = new mapboxgl.Marker(el)
+                  .setLngLat([group.longitude, group.latitude])
+                  .setPopup(
+                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                  )
+                  .addTo(map.current!);
+                
+                // Store marker reference
+                markersRef.current.push(marker);
       } else {
                 // Regular single-color marker for single spots
                 marker = new mapboxgl.Marker({
@@ -244,6 +258,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                     new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
                   )
                   .addTo(map.current!);
+                
+                // Store marker reference
+                markersRef.current.push(marker);
               }
 
               // Track current spot index for this marker
@@ -321,6 +338,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
     return () => {
       clearTimeout(timeoutId);
+      // Clear markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -335,15 +355,16 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
     console.log('Updating markers for', spots.length, 'spots');
     
-    // Clear existing markers by removing them
-    // Note: In production, you'd want to track markers more efficiently
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
     
     // Add search location marker first (if exists)
     if (centerLocation) {
       // Update map center
       map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
       
-      new mapboxgl.Marker({
+      const searchMarker = new mapboxgl.Marker({
         color: '#ef4444',
         scale: 0.8,
       })
@@ -357,9 +378,11 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           `)
         )
         .addTo(map.current!);
+      
+      markersRef.current.push(searchMarker);
     }
     
-    // Group spots by exact address - same logic as initialization
+    // Group spots by exact address
     const groupedSpots = new Map();
     
     spots.forEach((spot) => {
@@ -379,6 +402,12 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         });
       }
     });
+    
+    console.log('Update - Grouped spots:', Array.from(groupedSpots.entries()).map(([address, group]) => ({
+      address,
+      count: group.spots.length,
+      coordinates: [group.latitude, group.longitude]
+    })));
     
     // Create markers for each group
     groupedSpots.forEach((group) => {
@@ -454,6 +483,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
           )
           .addTo(map.current!);
+        
+        markersRef.current.push(marker);
       } else {
         // Regular single-color marker for single spots
         marker = new mapboxgl.Marker({
@@ -465,6 +496,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
           )
           .addTo(map.current!);
+        
+        markersRef.current.push(marker);
       }
 
       // Track current spot index for this marker
