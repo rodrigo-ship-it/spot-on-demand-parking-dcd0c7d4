@@ -31,16 +31,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const onSpotSelectRef = useRef(onSpotSelect);
 
   // Get pin color based on pricing type and spot type
-  const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false, allSpots?: ParkingSpot[]) => {
-    // Check if this is a mixed payment type location
-    if (isMultiple && allSpots && allSpots.length > 1) {
-      const paymentTypes = [...new Set(allSpots.map(s => s.pricingType))];
-      if (paymentTypes.length > 1) {
-        // Return gradient for mixed payment types
-        return 'mixed';
-      }
-    }
-    
+  const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
     // If it's a clustered location, use a darker shade
     const opacity = isMultiple ? '1' : '0.9';
     
@@ -202,11 +193,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             groupedSpots.forEach((group) => {
               const isMultipleSpots = group.spots.length > 1;
               const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
-              const pinColor = getPinColor(primarySpot, isMultipleSpots, group.spots);
-              
-              // Check if this location has mixed payment types
-              const paymentTypes = [...new Set(group.spots.map(s => s.pricingType))];
-              const hasMixedTypes = paymentTypes.length > 1;
               
               // Create popup content function
               const createPopupContent = (currentIndex = 0) => {
@@ -250,38 +236,31 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               
               let marker;
               
-              if (hasMixedTypes) {
-                // Create a custom marker with multiple colors
+              if (isMultipleSpots) {
+                // Create a custom marker with a number badge for multiple spots
                 const el = document.createElement('div');
-                el.className = 'mixed-payment-marker';
+                el.className = 'multiple-spot-marker';
                 el.style.cssText = `
-                  width: ${getPinScale(primarySpot, isMultipleSpots) * 24}px;
-                  height: ${getPinScale(primarySpot, isMultipleSpots) * 24}px;
-                  background: conic-gradient(
-                    ${paymentTypes.includes('hourly') ? 'rgb(59, 130, 246) 0deg 90deg,' : ''}
-                    ${paymentTypes.includes('daily') ? 'rgb(34, 197, 94) 90deg 180deg,' : ''}
-                    ${paymentTypes.includes('monthly') ? 'rgb(168, 85, 247) 180deg 270deg,' : ''}
-                    ${paymentTypes.includes('one_time') ? 'rgb(249, 115, 22) 270deg 360deg' : ''}
-                  );
+                  width: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
+                  height: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
+                  background: ${getPinColor(primarySpot, isMultipleSpots)};
                   border-radius: 50%;
-                  border: 2px solid white;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                  border: 3px solid white;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
                   cursor: pointer;
                   position: relative;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                 `;
                 
-                // Add a small icon in the center
-                el.innerHTML = `<div style="
-                  position: absolute;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  width: 8px;
-                  height: 8px;
-                  background: white;
-                  border-radius: 50%;
-                  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-                "></div>`;
+                // Add number badge
+                el.innerHTML = `<span style="
+                  color: white;
+                  font-size: 12px;
+                  font-weight: bold;
+                  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                ">${group.spots.length}</span>`;
                 
                 marker = new mapboxgl.Marker(el)
                   .setLngLat([group.longitude, group.latitude])
@@ -290,9 +269,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                   )
                   .addTo(map.current!);
               } else {
-                // Regular single-color marker
+                // Regular single-color marker for single spots
                 marker = new mapboxgl.Marker({
-                  color: pinColor,
+                  color: getPinColor(primarySpot, isMultipleSpots),
                   scale: getPinScale(primarySpot, isMultipleSpots),
                 })
                   .setLngLat([group.longitude, group.latitude])
@@ -470,11 +449,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     groupedSpots.forEach((group) => {
       const isMultipleSpots = group.spots.length > 1;
       const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
-      const pinColor = getPinColor(primarySpot, isMultipleSpots, group.spots);
-      
-      // Check if this location has mixed payment types
-      const paymentTypes = [...new Set(group.spots.map(s => s.pricingType))];
-      const hasMixedTypes = paymentTypes.length > 1;
       
       // Create popup content function
       const createPopupContent = (currentIndex = 0) => {
@@ -518,38 +492,31 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       
       let marker;
       
-      if (hasMixedTypes) {
-        // Create a custom marker with multiple colors
+      if (isMultipleSpots) {
+        // Create a custom marker with a number badge for multiple spots
         const el = document.createElement('div');
-        el.className = 'mixed-payment-marker';
+        el.className = 'multiple-spot-marker';
         el.style.cssText = `
-          width: ${getPinScale(primarySpot, isMultipleSpots) * 24}px;
-          height: ${getPinScale(primarySpot, isMultipleSpots) * 24}px;
-          background: conic-gradient(
-            ${paymentTypes.includes('hourly') ? 'rgb(59, 130, 246) 0deg 90deg,' : ''}
-            ${paymentTypes.includes('daily') ? 'rgb(34, 197, 94) 90deg 180deg,' : ''}
-            ${paymentTypes.includes('monthly') ? 'rgb(168, 85, 247) 180deg 270deg,' : ''}
-            ${paymentTypes.includes('one_time') ? 'rgb(249, 115, 22) 270deg 360deg' : ''}
-          );
+          width: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
+          height: ${getPinScale(primarySpot, isMultipleSpots) * 28}px;
+          background: ${getPinColor(primarySpot, isMultipleSpots)};
           border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          border: 3px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
           cursor: pointer;
           position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         `;
         
-        // Add a small icon in the center
-        el.innerHTML = `<div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 8px;
-          height: 8px;
-          background: white;
-          border-radius: 50%;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        "></div>`;
+        // Add number badge
+        el.innerHTML = `<span style="
+          color: white;
+          font-size: 12px;
+          font-weight: bold;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        ">${group.spots.length}</span>`;
         
         marker = new mapboxgl.Marker(el)
           .setLngLat([group.longitude, group.latitude])
@@ -558,9 +525,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           )
           .addTo(map.current!);
       } else {
-        // Regular single-color marker
+        // Regular single-color marker for single spots
         marker = new mapboxgl.Marker({
-          color: pinColor,
+          color: getPinColor(primarySpot, isMultipleSpots),
           scale: getPinScale(primarySpot, isMultipleSpots),
         })
           .setLngLat([group.longitude, group.latitude])
