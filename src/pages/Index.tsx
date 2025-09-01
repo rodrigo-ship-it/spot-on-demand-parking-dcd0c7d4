@@ -27,32 +27,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  // Transform spots for UI compatibility
-  const transformedSpots = allParkingSpots.map(spot => ({
-    id: spot.id,
-    title: spot.title,
-    address: spot.address,
-    price: spot.pricing_type === 'hourly' 
-      ? Number(spot.price_per_hour)
-      : spot.pricing_type === 'daily'
-      ? Number(spot.daily_price)
-      : spot.pricing_type === 'monthly'
-      ? Number(spot.monthly_price)
-      : Number(spot.one_time_price),
-    pricingType: spot.pricing_type,
-    rating: Number(spot.rating) || 0,
-    distance: "0.5 miles", // This would need real geolocation calculation
-    type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
-    spotType: spot.spot_type,
-    totalSpots: spot.total_spots || 1,
-    available: "24/7", // This would come from availability_schedule
-    image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
-    latitude: Number(spot.latitude) || 40.7589,
-    longitude: Number(spot.longitude) || -73.9851
-  }));
-
-  const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
-
   // Calculate distance between two coordinates using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 3959; // Earth's radius in miles
@@ -65,6 +39,46 @@ const Index = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+
+  // Transform spots for UI compatibility
+  const transformedSpots = allParkingSpots.map(spot => {
+    // Calculate distance if search coordinates are available
+    let calculatedDistance = "Unknown distance";
+    if (searchCoordinates && spot.latitude && spot.longitude) {
+      const distance = calculateDistance(
+        searchCoordinates.latitude,
+        searchCoordinates.longitude,
+        Number(spot.latitude),
+        Number(spot.longitude)
+      );
+      calculatedDistance = `${distance.toFixed(1)} miles`;
+    }
+
+    return {
+      id: spot.id,
+      title: spot.title,
+      address: spot.address,
+      price: spot.pricing_type === 'hourly' 
+        ? Number(spot.price_per_hour)
+        : spot.pricing_type === 'daily'
+        ? Number(spot.daily_price)
+        : spot.pricing_type === 'monthly'
+        ? Number(spot.monthly_price)
+        : Number(spot.one_time_price),
+      pricingType: spot.pricing_type,
+      rating: Number(spot.rating) || 0,
+      distance: calculatedDistance,
+      type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
+      spotType: spot.spot_type,
+      totalSpots: spot.total_spots || 1,
+      available: "24/7", // This would come from availability_schedule
+      image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
+      latitude: Number(spot.latitude) || 40.7589,
+      longitude: Number(spot.longitude) || -73.9851
+    };
+  });
+
+  const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
   const handleSearch = () => {
     if (!searchLocation.trim()) {
