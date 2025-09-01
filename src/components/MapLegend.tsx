@@ -2,10 +2,10 @@ import React from 'react';
 
 export const MapLegend = () => {
   const legendItems = [
-    { color: 'rgb(59, 130, 246)', label: 'Hourly' },
-    { color: 'rgb(34, 197, 94)', label: 'Daily' },
-    { color: 'rgb(168, 85, 247)', label: 'Monthly' },
-    { color: 'rgb(249, 115, 22)', label: 'One-time' },
+    { color: 'rgb(59, 130, 246)', label: 'Hourly payment' },
+    { color: 'rgb(34, 197, 94)', label: 'Daily payment' },
+    { color: 'rgb(168, 85, 247)', label: 'Monthly payment' },
+    { color: 'rgb(249, 115, 22)', label: 'One-time payment' },
     { color: 'rgb(239, 68, 68)', label: 'Search Location' },
   ];
 

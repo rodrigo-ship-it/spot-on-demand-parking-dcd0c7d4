@@ -164,7 +164,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
                   <div className="flex flex-col items-end">
                     <div className="flex items-center text-lg font-bold text-gray-900">
                       <DollarSign className="w-4 h-4" />
-                      {spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : ''}
+                      {spot.price}{spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}
                     </div>
                     {spot.isPremiumLister && (
                       <div className="mt-1">
