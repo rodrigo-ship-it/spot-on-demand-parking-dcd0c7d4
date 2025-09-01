@@ -78,13 +78,7 @@ const Index = () => {
     
     // Filter spots based on search location and distance (5 mile radius)
     let filtered = transformedSpots.filter(spot => {
-      // Basic location text matching
-      const locationMatch = spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
-        spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
-        spot.type.toLowerCase().includes(searchLocation.toLowerCase());
-      
-      // Distance filtering if coordinates are available
-      let withinRadius = true;
+      // If we have search coordinates, use distance-based filtering
       if (searchCoordinates && spot.latitude && spot.longitude) {
         const distance = calculateDistance(
           searchCoordinates.latitude,
@@ -92,11 +86,14 @@ const Index = () => {
           spot.latitude,
           spot.longitude
         );
-        withinRadius = distance <= 5; // 5 mile radius
         console.log(`Spot ${spot.title}: ${distance.toFixed(2)} miles away`);
+        return distance <= 5; // Only include spots within 5 miles
       }
       
-      return locationMatch && withinRadius;
+      // Fallback to text matching if no coordinates available
+      return spot.title.toLowerCase().includes(searchLocation.toLowerCase()) ||
+        spot.address.toLowerCase().includes(searchLocation.toLowerCase()) ||
+        spot.type.toLowerCase().includes(searchLocation.toLowerCase());
     });
 
     // If a pricing type is selected, further filter based on that
@@ -111,7 +108,7 @@ const Index = () => {
     console.log("hasSearched should now be true, filtered spots:", filtered.length);
 
     if (filtered.length === 0) {
-      toast.info(`No parking spots found near "${searchLocation}"${searchPricingType ? ` with ${searchPricingType} pricing` : ""}. Showing map view to explore the area.`);
+      toast.info(`No parking spots found within 5 miles of "${searchLocation}"${searchPricingType ? ` with ${searchPricingType} pricing` : ""}. Showing map view to explore the area.`);
     } else {
       toast.success(`Found ${filtered.length} parking spot${filtered.length > 1 ? 's' : ''} within 5 miles of "${searchLocation}"${searchPricingType ? ` with ${searchPricingType} pricing` : ""}`);
     }
@@ -123,13 +120,7 @@ const Index = () => {
     
     // Automatically trigger search with distance filtering when location is selected
     let filtered = transformedSpots.filter(spot => {
-      // Basic location text matching
-      const locationMatch = spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
-        spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
-        spot.type.toLowerCase().includes(location.name.toLowerCase());
-      
-      // Distance filtering - 5 mile radius
-      let withinRadius = true;
+      // Use distance-based filtering when coordinates are available
       if (spot.latitude && spot.longitude) {
         const distance = calculateDistance(
           location.latitude,
@@ -137,10 +128,14 @@ const Index = () => {
           spot.latitude,
           spot.longitude
         );
-        withinRadius = distance <= 5;
+        console.log(`Auto-search: Spot ${spot.title}: ${distance.toFixed(2)} miles away`);
+        return distance <= 5; // Only include spots within 5 miles
       }
       
-      return locationMatch && withinRadius;
+      // Fallback to text matching if spot coordinates missing
+      return spot.title.toLowerCase().includes(location.name.toLowerCase()) ||
+        spot.address.toLowerCase().includes(location.name.toLowerCase()) ||
+        spot.type.toLowerCase().includes(location.name.toLowerCase());
     });
 
     // Apply pricing type filter if selected
