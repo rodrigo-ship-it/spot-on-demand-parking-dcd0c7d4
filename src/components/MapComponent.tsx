@@ -262,7 +262,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                       <h3 class="font-bold text-sm">${spot.title}</h3>
                       ${isPremium ? `
                         <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
                             <path d="M11.562 3.266a.5.5 0 0 1 .876 0L14.933 8.33a.5.5 0 0 0 .448.316L21.058 9a.5.5 0 0 1 .281.853L17 14.096a.5.5 0 0 0-.135.402L17.81 20a.5.5 0 0 1-.732.528L12 17.652l-5.078 2.876A.5.5 0 0 1 6.19 20l.945-5.502a.5.5 0 0 0-.135-.402L2.661 9.853A.5.5 0 0 1 2.942 9l5.677-.354a.5.5 0 0 0 .448-.316L11.562 3.266Z"/>
                           </svg>
                           Premium
@@ -492,8 +492,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               <h3 class="font-bold text-sm">${spot.title}</h3>
               ${isPremium ? `
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
-                    <path d="M11.562 3.266a.5.5 0 0 1 .876 0L14.933 8.33a.5.5 0 0 0 .448.316L21.058 9a.5.5 0 0 1 .281.853L17 14.096a.5.5 0 0 0-.135.402L17.81 20a.5.5 0 0 1-.732.528L12 17.652l-5.078 2.876A.5.5 0 0 1 6.19 20l.945-5.502a.5.5 0 0 0-.135-.402L2.661 9.853A.5.5 0 0 1 2.942 9l5.677-.354a.5.5 0 0 0 .448-.316L11.562 3.266Z"/>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                    <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
                   </svg>
                   Premium
                 </span>
