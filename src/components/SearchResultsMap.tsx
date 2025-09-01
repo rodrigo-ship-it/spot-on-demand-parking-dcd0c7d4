@@ -27,11 +27,12 @@ interface ParkingSpot {
 interface SearchResultsMapProps {
   searchLocation: string;
   searchCoordinates?: { latitude: number; longitude: number } | null;
-  spots: ParkingSpot[];
+  allSpots: ParkingSpot[];
+  filteredSpots: ParkingSpot[];
   onSpotSelect: (spotId: string | number) => void;
 }
 
-const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, spots, onSpotSelect }) => {
+const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, allSpots, filteredSpots, onSpotSelect }) => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -49,8 +50,31 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
     return d.toFixed(1);
   };
 
-  // Update spots with distances calculated from search location (if available) or user location
-  const spotsWithDistance = spots.map(spot => {
+  // Update ALL spots with distances for the map
+  const allSpotsWithDistance = allSpots.map(spot => {
+    const referenceLocation = searchCoordinates || userLocation || { lat: 40.7128, lng: -74.006 };
+    
+    // Handle both possible coordinate formats
+    const refLat = 'lat' in referenceLocation ? referenceLocation.lat : referenceLocation.latitude;
+    const refLng = 'lng' in referenceLocation ? referenceLocation.lng : referenceLocation.longitude;
+    
+    const distance = calculateDistance(
+      refLat,
+      refLng,
+      spot.latitude || spot.lat || 40.7128,
+      spot.longitude || spot.lng || -74.006
+    );
+    
+    return {
+      ...spot,
+      distance: `${distance} miles`,
+      lat: spot.latitude || spot.lat || 40.7128 + (Math.random() - 0.5) * 0.1,
+      lng: spot.longitude || spot.lng || -74.006 + (Math.random() - 0.5) * 0.1
+    };
+  });
+
+  // Update FILTERED spots with distances for the grid/list below
+  const filteredSpotsWithDistance = filteredSpots.map(spot => {
     const referenceLocation = searchCoordinates || userLocation || { lat: 40.7128, lng: -74.006 };
     
     // Handle both possible coordinate formats
@@ -105,7 +129,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
   const MapView = () => (
     <div className="space-y-6">
       <MapComponent 
-        spots={spotsWithDistance.map(spot => ({
+        spots={allSpotsWithDistance.map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,
@@ -114,10 +138,10 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         centerLocation={searchCoordinates}
       />
 
-      {/* Quick Spot Cards - only show if there are spots */}
+      {/* Quick Spot Cards - only show filtered spots (nearby ones) */}
       {hasSpots && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {spotsWithDistance.slice(0, 6).map((spot) => (
+          {filteredSpotsWithDistance.slice(0, 6).map((spot) => (
             <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-44" onClick={() => onSpotSelect(spot.id)}>
               <CardContent className="p-4 h-full flex flex-col">
                 {/* Header with title/address and price */}
@@ -187,12 +211,10 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
   );
 
   const ListView = () => {
-    console.log('ListView spots with pricingType:', spotsWithDistance.map(s => ({ id: s.id, title: s.title, pricingType: s.pricingType })));
-    
     return (
     <div className="space-y-4">
       {hasSpots ? (
-        spotsWithDistance.map((spot) => (
+        filteredSpotsWithDistance.map((spot) => (
           <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
             <div className="flex">
               <div className="relative w-48 h-32">
@@ -286,7 +308,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
   };
 
   // Always show the map, even when no spots are found
-  const hasSpots = spots.length > 0;
+  const hasSpots = filteredSpots.length > 0;
 
   return (
     <section className="py-16 bg-white/50">
@@ -297,7 +319,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
               Parking Near "{searchLocation}"
             </h2>
             <p className="text-gray-600">
-              {spots.length} spot{spots.length !== 1 ? 's' : ''} found
+              {filteredSpots.length} spot{filteredSpots.length !== 1 ? 's' : ''} found
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 sm:space-x-2">

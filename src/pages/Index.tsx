@@ -107,7 +107,6 @@ const Index = () => {
       // Fetch premium status for all spot owners
       if (newTransformedSpots.length > 0) {
         const ownerIds = [...new Set(newTransformedSpots.map(spot => spot.owner_id))];
-        console.log('🔍 Fetching premium status for owner IDs:', ownerIds);
         
         try {
           // Use the secure database function to check premium status
@@ -115,8 +114,6 @@ const Index = () => {
             .rpc('get_premium_status_for_owners', {
               owner_ids: ownerIds
             });
-
-          console.log('📊 Premium status result:', { premiumStatuses, error });
 
           if (error) {
             console.error('Error fetching premium statuses:', error);
@@ -126,12 +123,10 @@ const Index = () => {
           const premiumUserIds = new Set(
             premiumStatuses?.filter(ps => ps.is_premium).map(ps => ps.user_id) || []
           );
-          console.log('👑 Premium user IDs:', Array.from(premiumUserIds));
           
           // Update spots with premium status
           newTransformedSpots.forEach(spot => {
             spot.isPremiumLister = premiumUserIds.has(spot.owner_id);
-            console.log(`🏷️ Spot ${spot.title} (owner: ${spot.owner_id}) premium status:`, spot.isPremiumLister);
           });
         } catch (error) {
           console.error('Error fetching premium statuses:', error);
@@ -503,7 +498,8 @@ const Index = () => {
         <SearchResultsMap 
           searchLocation={searchLocation}
           searchCoordinates={searchCoordinates}
-          spots={filteredSpots.length > 0 ? filteredSpots : transformedSpots}
+          allSpots={transformedSpots}
+          filteredSpots={filteredSpots.length > 0 ? filteredSpots : transformedSpots}
           onSpotSelect={handleBookNow}
         />
       )}
