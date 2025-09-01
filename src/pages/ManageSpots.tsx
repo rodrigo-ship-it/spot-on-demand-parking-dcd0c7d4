@@ -840,7 +840,7 @@ const ManageSpots = () => {
 
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
+          <Card className="flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Plus className="w-5 h-5 mr-2 text-green-600" />
@@ -850,7 +850,7 @@ const ManageSpots = () => {
                 Add more parking spaces to increase your earning potential
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col justify-end">
               <Link to="/list-spot">
                 <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
                   List New Parking Spot
@@ -859,7 +859,7 @@ const ManageSpots = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Crown className="w-5 h-5 mr-2 text-amber-600" />
@@ -872,7 +872,7 @@ const ManageSpots = () => {
                 }
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col justify-end">
               {isPremium ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
