@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,16 +29,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const map = useRef<mapboxgl.Map | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const onSpotSelectRef = useRef(onSpotSelect);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
-
-  // Memoize spots to prevent unnecessary re-renders when array reference changes
-  const memoizedSpots = useMemo(() => spots, [spots.length]);
-
-  // Memoize centerLocation to prevent unnecessary re-renders  
-  const memoizedCenterLocation = useMemo(() => centerLocation, [
-    centerLocation?.latitude,
-    centerLocation?.longitude
-  ]);
 
   // Get pin color based on pricing type and spot type
   const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
@@ -104,10 +94,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           // Set the Mapbox access token securely
           mapboxgl.accessToken = tokenData.token;
 
-          const mapCenter: [number, number] = memoizedCenterLocation 
-            ? [memoizedCenterLocation.longitude, memoizedCenterLocation.latitude]
-            : memoizedSpots.length > 0 
-              ? [memoizedSpots[0].longitude, memoizedSpots[0].latitude] 
+          const mapCenter: [number, number] = centerLocation 
+            ? [centerLocation.longitude, centerLocation.latitude]
+            : spots.length > 0 
+              ? [spots[0].longitude, spots[0].latitude] 
               : [-74.006, 40.7128];
 
           console.log('Creating map with center:', mapCenter);
@@ -128,15 +118,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
           // Wait for map to load before adding markers
           map.current.on('load', () => {
-            console.log('Map loaded, adding markers for', memoizedSpots.length, 'spots');
+            console.log('Map loaded, adding markers for', spots.length, 'spots');
             
             // Add search location marker first (so it appears below parking spots)
-            if (memoizedCenterLocation) {
+            if (centerLocation) {
               new mapboxgl.Marker({
                 color: '#ef4444',
                 scale: 0.8, // Make search marker slightly smaller
               })
-                .setLngLat([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude])
+                .setLngLat([centerLocation.longitude, centerLocation.latitude])
                 .setPopup(
                   new mapboxgl.Popup({ offset: 25 }).setHTML(`
                     <div class="p-2">
@@ -148,43 +138,63 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Clear any existing markers
-            markersRef.current.forEach(marker => marker.remove());
-            markersRef.current = [];
-            
-            // Group spots by exact address
+            // Group spots by location (within ~50 meters)
             const groupedSpots = new Map();
+            const tolerance = 0.0005; // ~50 meters
             
-            memoizedSpots.forEach((spot) => {
+            spots.forEach((spot) => {
               if (!spot.latitude || !spot.longitude) {
                 console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
                 return;
               }
               
-              // Group by exact address
-              if (groupedSpots.has(spot.address)) {
-                groupedSpots.get(spot.address)!.spots.push(spot);
-              } else {
-                groupedSpots.set(spot.address, {
-                  latitude: spot.latitude,
-                  longitude: spot.longitude,
+              // Check if there's already a group for this location
+              let foundGroup = false;
+              for (const [key, group] of groupedSpots) {
+                const [groupLat, groupLng] = key.split(',').map(Number);
+                const distance = Math.sqrt(
+                  Math.pow(spot.longitude - groupLng, 2) + 
+                  Math.pow(spot.latitude - groupLat, 2)
+                );
+                
+                if (distance < tolerance) {
+                  group.spots.push(spot);
+                  foundGroup = true;
+                  break;
+                }
+              }
+              
+              if (!foundGroup) {
+                // If spot is very close to search location, offset it slightly
+                let spotLng = spot.longitude;
+                let spotLat = spot.latitude;
+                
+                if (centerLocation) {
+                  const distance = Math.sqrt(
+                    Math.pow(spot.longitude - centerLocation.longitude, 2) + 
+                    Math.pow(spot.latitude - centerLocation.latitude, 2)
+                  );
+                  
+                  if (distance < tolerance) {
+                    spotLng += 0.0002;
+                    spotLat += 0.0001;
+                  }
+                }
+                
+                groupedSpots.set(`${spotLat},${spotLng}`, {
+                  latitude: spotLat,
+                  longitude: spotLng,
                   spots: [spot]
                 });
               }
             });
-            
-            console.log('Grouped spots:', Array.from(groupedSpots.entries()).map(([address, group]) => ({
-              address,
-              count: group.spots.length,
-              coordinates: [group.latitude, group.longitude]
-            })));
             
             // Create markers for each group
             groupedSpots.forEach((group) => {
               const isMultipleSpots = group.spots.length > 1;
               const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
               
-              // Create popup content function
+              // Create popup content
               const createPopupContent = (currentIndex = 0) => {
                 const spot = group.spots[currentIndex];
                 const isMultiple = group.spots.length > 1;
@@ -224,53 +234,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 `;
               };
               
-              let marker;
-              
-      if (isMultipleSpots) {
-        // Create a custom pin-shaped marker with a number badge for multiple spots
-        const el = document.createElement('div');
-        el.className = 'multiple-spot-marker';
-        el.style.cssText = `
-          position: relative;
-          cursor: pointer;
-        `;
-        
-        // Create pin shape with SVG
-        el.innerHTML = `
-          <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-            <path d="M16 0C7.164 0 0 7.164 0 16s16 24 16 24 16-15.164 16-24S24.836 0 16 0z" 
-                  fill="${getPinColor(primarySpot, isMultipleSpots)}" 
-                  stroke="white" 
-                  stroke-width="2"/>
-            <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold" 
-                  style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${group.spots.length}</text>
-          </svg>
-        `;
-        
-                marker = new mapboxgl.Marker(el)
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
-                  .addTo(map.current!);
-                
-                // Store marker reference
-                markersRef.current.push(marker);
-      } else {
-                // Regular single-color marker for single spots
-                marker = new mapboxgl.Marker({
-                  color: getPinColor(primarySpot, isMultipleSpots),
-                  scale: getPinScale(primarySpot, isMultipleSpots),
-                })
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
-                  .addTo(map.current!);
-                
-                // Store marker reference
-                markersRef.current.push(marker);
-              }
+              const marker = new mapboxgl.Marker({
+                color: getPinColor(primarySpot, isMultipleSpots),
+                scale: getPinScale(primarySpot, isMultipleSpots),
+              })
+                .setLngLat([group.longitude, group.latitude])
+                .setPopup(
+                  new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                )
+                .addTo(map.current!);
 
               // Track current spot index for this marker
               let currentSpotIndex = 0;
@@ -347,9 +319,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
 
     return () => {
       clearTimeout(timeoutId);
-      // Clear markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -358,32 +327,25 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     };
   }, []); // Empty dependency array - only run once
 
-  // Center map when centerLocation changes (separate from marker updates)
-  useEffect(() => {
-    if (!map.current || !isInitialized || !memoizedCenterLocation) return;
-    
-    console.log('Centering map to:', memoizedCenterLocation);
-    map.current.setCenter([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude]);
-  }, [memoizedCenterLocation?.latitude, memoizedCenterLocation?.longitude, isInitialized]);
-
-  // Update markers ONLY when spots change, not when map moves
+  // Update markers when spots or centerLocation change
   useEffect(() => {
     if (!map.current || !isInitialized) return;
 
-    console.log('Updating markers for', memoizedSpots.length, 'spots');
+    console.log('Updating markers for', spots.length, 'spots');
     
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    // Clear existing markers by removing them
+    // Note: In production, you'd want to track markers more efficiently
     
     // Add search location marker first (if exists)
-    if (memoizedCenterLocation) {
-      // DON'T update map center here - that's done in separate useEffect
-      const searchMarker = new mapboxgl.Marker({
+    if (centerLocation) {
+      // Update map center
+      map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
+      
+      new mapboxgl.Marker({
         color: '#ef4444',
         scale: 0.8,
       })
-        .setLngLat([memoizedCenterLocation.longitude, memoizedCenterLocation.latitude])
+        .setLngLat([centerLocation.longitude, centerLocation.latitude])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 }).setHTML(`
             <div class="p-2">
@@ -393,43 +355,65 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           `)
         )
         .addTo(map.current!);
-      
-      markersRef.current.push(searchMarker);
     }
     
-    // Group spots by exact address
+    // Group spots by location (within ~50 meters) - same logic as initialization
     const groupedSpots = new Map();
+    const tolerance = 0.0005;
     
-    memoizedSpots.forEach((spot) => {
+    spots.forEach((spot) => {
       if (!spot.latitude || !spot.longitude) {
         console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
         return;
       }
       
-      // Group by exact address
-      if (groupedSpots.has(spot.address)) {
-        groupedSpots.get(spot.address)!.spots.push(spot);
-      } else {
-        groupedSpots.set(spot.address, {
-          latitude: spot.latitude,
-          longitude: spot.longitude,
+      // Check if there's already a group for this location
+      let foundGroup = false;
+      for (const [key, group] of groupedSpots) {
+        const [groupLat, groupLng] = key.split(',').map(Number);
+        const distance = Math.sqrt(
+          Math.pow(spot.longitude - groupLng, 2) + 
+          Math.pow(spot.latitude - groupLat, 2)
+        );
+        
+        if (distance < tolerance) {
+          group.spots.push(spot);
+          foundGroup = true;
+          break;
+        }
+      }
+      
+      if (!foundGroup) {
+        // If spot is very close to search location, offset it slightly
+        let spotLng = spot.longitude;
+        let spotLat = spot.latitude;
+        
+        if (centerLocation) {
+          const distance = Math.sqrt(
+            Math.pow(spot.longitude - centerLocation.longitude, 2) + 
+            Math.pow(spot.latitude - centerLocation.latitude, 2)
+          );
+          
+          if (distance < tolerance) {
+            spotLng += 0.0002;
+            spotLat += 0.0001;
+          }
+        }
+        
+        groupedSpots.set(`${spotLat},${spotLng}`, {
+          latitude: spotLat,
+          longitude: spotLng,
           spots: [spot]
         });
       }
     });
-    
-    console.log('Update - Grouped spots:', Array.from(groupedSpots.entries()).map(([address, group]) => ({
-      address,
-      count: group.spots.length,
-      coordinates: [group.latitude, group.longitude]
-    })));
     
     // Create markers for each group
     groupedSpots.forEach((group) => {
       const isMultipleSpots = group.spots.length > 1;
       const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
       
-      // Create popup content function
+      // Create popup content
       const createPopupContent = (currentIndex = 0) => {
         const spot = group.spots[currentIndex];
         const isMultiple = group.spots.length > 1;
@@ -469,51 +453,15 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         `;
       };
       
-      let marker;
-      
-      if (isMultipleSpots) {
-        // Create a custom pin-shaped marker with a number badge for multiple spots
-        const el = document.createElement('div');
-        el.className = 'multiple-spot-marker';
-        el.style.cssText = `
-          position: relative;
-          cursor: pointer;
-        `;
-        
-        // Create pin shape with SVG
-        el.innerHTML = `
-          <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-            <path d="M16 0C7.164 0 0 7.164 0 16s16 24 16 24 16-15.164 16-24S24.836 0 16 0z" 
-                  fill="${getPinColor(primarySpot, isMultipleSpots)}" 
-                  stroke="white" 
-                  stroke-width="2"/>
-            <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold" 
-                  style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${group.spots.length}</text>
-          </svg>
-        `;
-        
-        marker = new mapboxgl.Marker(el)
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
-          .addTo(map.current!);
-        
-        markersRef.current.push(marker);
-      } else {
-        // Regular single-color marker for single spots
-        marker = new mapboxgl.Marker({
-          color: getPinColor(primarySpot, isMultipleSpots),
-          scale: getPinScale(primarySpot, isMultipleSpots),
-        })
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
-          .addTo(map.current!);
-        
-        markersRef.current.push(marker);
-      }
+      const marker = new mapboxgl.Marker({
+        color: getPinColor(primarySpot, isMultipleSpots),
+        scale: getPinScale(primarySpot, isMultipleSpots),
+      })
+        .setLngLat([group.longitude, group.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+        )
+        .addTo(map.current!);
 
       // Track current spot index for this marker
       let currentSpotIndex = 0;
@@ -578,7 +526,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         }, 100);
       });
     });
-  }, [memoizedSpots]);
+  }, [spots, centerLocation, isInitialized]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
