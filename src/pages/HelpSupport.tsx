@@ -248,14 +248,14 @@ const HelpSupport = () => {
                   <AccordionItem value="late-penalty">
                     <AccordionTrigger>What happens if I'm late checking out?</AccordionTrigger>
                     <AccordionContent>
-                      Late checkout results in penalty charges: $10 for 1-60 minutes late, $25 for 1-3 hours late, and $50 for 3+ hours late. Extend your booking in advance to avoid penalties.
+                      Late checkout results in penalty charges based on how late you are. There's a 30-minute grace period, then: $8 for 31-60 minutes late, $12 for 61-120 minutes late, and $20 for 120+ minutes late. First-time offenders get a 20% reduction. You may also be charged for extra time used on hourly spots. Extend your booking in advance to avoid penalties.
                     </AccordionContent>
                   </AccordionItem>
 
                   <AccordionItem value="premium">
                     <AccordionTrigger>What are premium features?</AccordionTrigger>
                     <AccordionContent>
-                      Premium subscribers get priority listing placement, advanced analytics, reduced fees, and early access to new features. Upgrade from your profile settings.
+                      Premium subscriptions are available for users who want enhanced features and priority support. Current premium features are being developed and will be announced soon. Check your profile settings for subscription options.
                     </AccordionContent>
                   </AccordionItem>
 
@@ -283,7 +283,7 @@ const HelpSupport = () => {
                   <AccordionItem value="pricing-strategy">
                     <AccordionTrigger>How should I price my parking spot?</AccordionTrigger>
                     <AccordionContent>
-                      Consider local parking rates, proximity to popular destinations, and demand patterns. Check similar spots in your area for competitive pricing. Premium subscribers get pricing analytics.
+                      Consider local parking rates, proximity to popular destinations, and demand patterns. Check similar spots in your area for competitive pricing. You can adjust your rates anytime from your spot management page.
                     </AccordionContent>
                   </AccordionItem>
 
