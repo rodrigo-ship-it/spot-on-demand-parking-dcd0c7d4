@@ -110,6 +110,15 @@ const Index = () => {
         console.log('🔍 Fetching premium status for owner IDs:', ownerIds);
         
         try {
+          // First, let's see ALL premium subscriptions for these users
+          const { data: allSubscriptions, error: allError } = await supabase
+            .from('premium_subscriptions')
+            .select('*')
+            .in('user_id', ownerIds);
+
+          console.log('📊 ALL premium subscriptions for owners:', { allSubscriptions, allError });
+          console.log('📅 Current date ISO:', new Date().toISOString());
+
           const { data: premiumStatuses, error } = await supabase
             .from('premium_subscriptions')
             .select('user_id')
