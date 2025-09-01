@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
@@ -286,14 +286,28 @@ const Index = () => {
                       Profile
                     </Button>
                   </Link>
+                  <Link to="/help-support">
+                    <Button variant="ghost" size="sm">
+                      <HelpCircle className="w-4 h-4 mr-2" />
+                      Help
+                    </Button>
+                  </Link>
                   <Button variant="ghost" size="sm" onClick={signOut}>
                     Sign Out
                   </Button>
                 </>
               ) : (
-                <Button variant="default" size="sm" onClick={handleSignIn}>
-                  Sign In
-                </Button>
+                <>
+                  <Link to="/help-support">
+                    <Button variant="ghost" size="sm">
+                      <HelpCircle className="w-4 h-4 mr-2" />
+                      Help
+                    </Button>
+                  </Link>
+                  <Button variant="default" size="sm" onClick={handleSignIn}>
+                    Sign In
+                  </Button>
+                </>
               )}
             </div>
 
@@ -342,6 +356,12 @@ const Index = () => {
                               Profile
                             </Button>
                           </Link>
+                          <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                            <Button variant="outline" className="w-full justify-start h-12">
+                              <HelpCircle className="w-4 h-4 mr-2" />
+                              Help
+                            </Button>
+                          </Link>
                           <Button 
                             variant="outline" 
                             className="w-full justify-start h-12" 
@@ -354,16 +374,24 @@ const Index = () => {
                           </Button>
                         </>
                       ) : (
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start h-12" 
-                          onClick={() => {
-                            handleSignIn();
-                            setMobileMenuOpen(false);
-                          }}
-                        >
-                          Sign In
-                        </Button>
+                        <>
+                          <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                            <Button variant="outline" className="w-full justify-start h-12">
+                              <HelpCircle className="w-4 h-4 mr-2" />
+                              Help
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start h-12" 
+                            onClick={() => {
+                              handleSignIn();
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Sign In
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
