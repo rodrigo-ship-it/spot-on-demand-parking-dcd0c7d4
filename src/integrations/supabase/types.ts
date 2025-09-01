@@ -1144,6 +1144,12 @@ export type Database = {
         Args: { booking_id_param: string; target_user_id: string }
         Returns: string
       }
+      get_minimal_public_profile: {
+        Args: { user_id_param: string }
+        Returns: {
+          display_name: string
+        }[]
+      }
       get_public_profile_data: {
         Args: { user_id_param: string }
         Returns: {
