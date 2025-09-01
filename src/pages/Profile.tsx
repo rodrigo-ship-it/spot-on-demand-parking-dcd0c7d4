@@ -21,6 +21,7 @@ import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import PremiumDashboard from "@/components/PremiumDashboard";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -193,6 +194,9 @@ const Profile = () => {
         <div className="space-y-6">
           {/* Email Verification */}
           <EmailVerification />
+
+          {/* Premium Dashboard */}
+          <PremiumDashboard />
 
           {/* Profile Information */}
           <Card>
