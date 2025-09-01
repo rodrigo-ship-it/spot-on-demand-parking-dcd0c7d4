@@ -14,7 +14,6 @@ import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumBadge } from "@/components/PremiumBadge";
-import { NotificationSettings } from "@/components/NotificationSettings";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -268,7 +267,6 @@ const Index = () => {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
-              <NotificationSettings />
               {user ? (
                 <>
                   {user.email === 'rodrigo@arrivparking.com' && (
@@ -301,7 +299,6 @@ const Index = () => {
 
             {/* Mobile Navigation */}
             <div className="md:hidden flex items-center space-x-2">
-              <NotificationSettings />
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
