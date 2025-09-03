@@ -261,7 +261,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                     <div class="flex items-center justify-between mb-1">
                       <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
                       ${isPremium ? `
-                        <span class="inline-block leading-none text-amber-500" aria-label="Premium">👑</span>
+                        <svg class="shrink-0 text-amber-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M2 10l4 4 4-8 4 8 4-4 4 4" />
+                          <path d="M2 20h20" />
+                        </svg>
                       ` : ''}
                     </div>
                     <p class="text-xs text-gray-600">${spot.address}</p>
@@ -486,7 +489,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             <div class="flex items-center justify-between mb-1">
               <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
               ${isPremium ? `
-                <span class="inline-block leading-none text-amber-500" aria-label="Premium">👑</span>
+                <svg class="shrink-0 text-amber-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 10l4 4 4-8 4 8 4-4 4 4" />
+                  <path d="M2 20h20" />
+                </svg>
               ` : ''}
             </div>
             <p class="text-xs text-gray-600">${spot.address}</p>
