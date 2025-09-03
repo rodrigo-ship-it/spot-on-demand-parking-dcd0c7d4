@@ -147,8 +147,8 @@ export default {
 					'100%': { transform: 'scale(1)', opacity: '1' }
 				},
 				'pulse-glow': {
-					'0%, 100%': { boxShadow: '0 0 20px hsl(var(--primary-glow) / 0.3)' },
-					'50%': { boxShadow: '0 0 60px hsl(var(--primary-glow) / 0.8)' }
+					'0%, 100%': { boxShadow: '0 0 15px hsl(var(--primary-glow) / 0.2)' },
+					'50%': { boxShadow: '0 0 25px hsl(var(--primary-glow) / 0.4)' }
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0px)' },
