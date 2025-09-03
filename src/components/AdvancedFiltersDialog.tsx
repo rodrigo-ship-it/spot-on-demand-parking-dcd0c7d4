@@ -46,7 +46,8 @@ const SPOT_TYPES = [
 
 const AMENITIES = [
   'ev_charging', 'security_camera', 'lighting', 'covered', 'attendant', 
-  'wheelchair_accessible', 'motorcycle_friendly', 'height_clearance'
+  'wheelchair_accessible', 'motorcycle_friendly', 'height_clearance',
+  'bigger_parking_spots', 'compound_spots'
 ];
 
 export const AdvancedFiltersDialog = ({ onFiltersApply, currentFilters, children }: AdvancedFiltersDialogProps) => {

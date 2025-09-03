@@ -74,7 +74,8 @@ const ListSpot = () => {
 
   const availableFeatures = [
     "Covered/Garage", "Security Camera", "EV Charging", "24/7 Access", 
-    "Gated Entry", "Well Lit", "Wheelchair Accessible", "Car Wash Available"
+    "Gated Entry", "Well Lit", "Wheelchair Accessible", "Car Wash Available",
+    "Bigger Parking Spots", "Compound Spots"
   ];
 
   // Load existing spot data when in edit mode
