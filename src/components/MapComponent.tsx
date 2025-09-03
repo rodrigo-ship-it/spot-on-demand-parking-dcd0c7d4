@@ -581,7 +581,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         }, 100);
       });
     });
-  }, [spots, centerLocation, isInitialized]);
+  }, [spots, centerLocation, isInitialized, premiumStatuses]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
