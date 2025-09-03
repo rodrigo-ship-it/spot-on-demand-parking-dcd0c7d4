@@ -341,7 +341,7 @@ const Auth = () => {
                             { check: /[A-Z]/.test(formData.password), text: 'One uppercase letter' },
                             { check: /[a-z]/.test(formData.password), text: 'One lowercase letter' },
                             { check: /\d/.test(formData.password), text: 'One number' },
-                            { check: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password), text: 'One special character' }
+                            
                           ].map((req, index) => (
                             <div key={index} className="flex items-center space-x-2 text-sm">
                               {req.check ? (

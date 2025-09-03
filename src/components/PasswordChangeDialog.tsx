@@ -59,10 +59,6 @@ export const PasswordChangeDialog = ({ children }: PasswordChangeDialogProps) =>
       return;
     }
 
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword)) {
-      toast.error('Password must contain at least one special character');
-      return;
-    }
 
     setLoading(true);
     try {
@@ -100,13 +96,13 @@ export const PasswordChangeDialog = ({ children }: PasswordChangeDialogProps) =>
     const hasUpper = /[A-Z]/.test(password);
     const hasLower = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
-    const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const hasSymbol = false; // Removed special character requirement
     
-    const requirementsMet = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
+    const requirementsMet = [hasUpper, hasLower, hasNumber].filter(Boolean).length;
     
-    if (requirementsMet < 3) return { strength: 'Weak', color: 'text-red-500' };
-    if (requirementsMet === 3) return { strength: 'Good', color: 'text-yellow-500' };
-    if (requirementsMet === 4) return { strength: 'Strong', color: 'text-green-500' };
+    if (requirementsMet < 2) return { strength: 'Weak', color: 'text-red-500' };
+    if (requirementsMet === 2) return { strength: 'Good', color: 'text-yellow-500' };
+    if (requirementsMet === 3) return { strength: 'Strong', color: 'text-green-500' };
     
     return { strength: 'Weak', color: 'text-red-500' };
   };
