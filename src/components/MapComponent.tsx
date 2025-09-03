@@ -259,11 +259,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                       </div>
                     ` : ''}
                     <div class="flex items-center justify-between mb-1">
-                      <h3 class="font-bold text-sm pr-4">${spot.title}</h3>
+                      <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
                       ${isPremium ? `
-                        <svg class="shrink-0 text-amber-500" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                          <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
-                        </svg>
+                        <span class="inline-block leading-none text-amber-500" aria-label="Premium">👑</span>
                       ` : ''}
                     </div>
                     <p class="text-xs text-gray-600">${spot.address}</p>
@@ -486,11 +484,9 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               </div>
             ` : ''}
             <div class="flex items-center justify-between mb-1">
-              <h3 class="font-bold text-sm pr-4">${spot.title}</h3>
+              <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
               ${isPremium ? `
-                <svg class="shrink-0 text-amber-500" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
-                </svg>
+                <span class="inline-block leading-none text-amber-500" aria-label="Premium">👑</span>
               ` : ''}
             </div>
             <p class="text-xs text-gray-600">${spot.address}</p>
