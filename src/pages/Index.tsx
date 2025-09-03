@@ -686,7 +686,7 @@ const Index = () => {
               Join members of the Arriv community already making extra income.
             </p>
             <Link to="/list-spot">
-              <Button variant="glass" size="xl" className="animate-pulse-glow">
+              <Button variant="glass" size="xl">
                 <DollarSign className="w-5 h-5 mr-2" />
                 Start Earning Now
               </Button>
