@@ -21,6 +21,7 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refundType, setRefundType] = useState<"automatic" | "manual">("automatic");
   const { toast } = useToast();
 
   const refundReasons = [
@@ -60,27 +61,48 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
       const refundAmount = booking.total_amount;
       const cancellationFee = 0; // No cancellation fee for now
 
-      // Call the process-refund edge function
-      const { data, error } = await supabase.functions.invoke('process-refund', {
-        body: {
-          booking_id: booking.id,
-          refund_amount: refundAmount,
-          reason: `${reason}: ${description}`,
-          cancellation_fee: cancellationFee
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.success) {
-        toast({
-          title: "Refund Processed",
-          description: `Your refund of $${refundAmount.toFixed(2)} has been processed successfully.`
+      if (refundType === "automatic") {
+        // Call the process-refund edge function for automatic processing
+        const { data, error } = await supabase.functions.invoke('process-refund', {
+          body: {
+            booking_id: booking.id,
+            refund_amount: refundAmount,
+            reason: `${reason}: ${description}`,
+            cancellation_fee: cancellationFee
+          }
         });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          toast({
+            title: "Refund Processed",
+            description: `Your refund of $${refundAmount.toFixed(2)} has been processed successfully.`
+          });
+        } else {
+          toast({
+            title: "Refund Request Submitted",
+            description: "Your refund request has been submitted and will be processed manually."
+          });
+        }
       } else {
+        // Send email to support for manual processing
+        const { error } = await supabase.functions.invoke('send-refund-request', {
+          body: {
+            booking_id: booking.id,
+            user_email: user.email,
+            refund_amount: refundAmount,
+            reason: reason,
+            description: description,
+            cancellation_fee: cancellationFee
+          }
+        });
+
+        if (error) throw error;
+
         toast({
-          title: "Refund Request Submitted",
-          description: "Your refund request has been submitted and will be processed manually."
+          title: "Refund Request Sent",
+          description: "Your refund request has been sent to our support team at service@arrivparking.com. We'll review it within 24-48 hours."
         });
       }
       
@@ -88,8 +110,8 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
     } catch (error: any) {
       console.error('Refund error:', error);
       toast({
-        title: "Failed to Process Refund",
-        description: error.message || "There was an error processing your refund. Please try again or contact support.",
+        title: "Failed to Submit Request",
+        description: error.message || "There was an error submitting your refund request. Please try again or contact support.",
         variant: "destructive"
       });
     } finally {
@@ -114,6 +136,19 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
             <div className="text-2xl font-bold text-primary">
               ${Number(booking.total_amount || 0).toFixed(2)}
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="refund-type">Refund Type</Label>
+            <Select value={refundType} onValueChange={(value: "automatic" | "manual") => setRefundType(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select refund type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="automatic">Automatic Refund (Immediate)</SelectItem>
+                <SelectItem value="manual">Manual Review (Email to Support)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
