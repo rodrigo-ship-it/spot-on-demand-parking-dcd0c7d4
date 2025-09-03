@@ -399,7 +399,7 @@ const SpotDetails = () => {
                       </div>
                       <Badge variant="secondary" className="flex items-center">
                         <Car className="w-3 h-3 mr-1" />
-                        {spotData.spot_type}
+                        {spotData.spot_type?.replace(/-/g, ' ').toUpperCase()}
                       </Badge>
                       <Badge variant={spotData.is_active ? "default" : "secondary"}>
                         {spotData.is_active ? "Active" : "Inactive"}
