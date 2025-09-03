@@ -1150,6 +1150,10 @@ export type Database = {
       }
     }
     Functions: {
+      apply_data_retention_policies: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       auto_resolve_disputes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1179,6 +1183,19 @@ export type Database = {
       get_display_name_for_booking: {
         Args: { booking_id_param: string; target_user_id: string }
         Returns: string
+      }
+      get_masked_vehicle_data: {
+        Args: { p_user_id: string }
+        Returns: {
+          color: string
+          created_at: string
+          id: string
+          is_default: boolean
+          license_plate_masked: string
+          make: string
+          model: string
+          year: number
+        }[]
       }
       get_minimal_public_profile: {
         Args: { user_id_param: string }
@@ -1323,6 +1340,15 @@ export type Database = {
         }
         Returns: string
       }
+      log_sensitive_data_access: {
+        Args: {
+          p_operation: string
+          p_record_id?: string
+          p_table_name: string
+          p_user_id?: string
+        }
+        Returns: undefined
+      }
       manual_charge_penalty: {
         Args: { penalty_credit_id_param: string }
         Returns: Json
@@ -1361,6 +1387,14 @@ export type Database = {
       }
       user_owns_spot: {
         Args: { spot_id_param: string }
+        Returns: boolean
+      }
+      validate_financial_access: {
+        Args: {
+          p_resource_id: string
+          p_resource_type: string
+          p_user_id: string
+        }
         Returns: boolean
       }
       validate_sensitive_data_access: {
