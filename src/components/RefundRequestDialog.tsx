@@ -21,7 +21,6 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [refundType, setRefundType] = useState<"automatic" | "manual">("automatic");
   const { toast } = useToast();
 
   const refundReasons = [
@@ -61,50 +60,24 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
       const refundAmount = booking.total_amount;
       const cancellationFee = 0; // No cancellation fee for now
 
-      if (refundType === "automatic") {
-        // Call the process-refund edge function for automatic processing
-        const { data, error } = await supabase.functions.invoke('process-refund', {
-          body: {
-            booking_id: booking.id,
-            refund_amount: refundAmount,
-            reason: `${reason}: ${description}`,
-            cancellation_fee: cancellationFee
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.success) {
-          toast({
-            title: "Refund Processed",
-            description: `Your refund of $${refundAmount.toFixed(2)} has been processed successfully.`
-          });
-        } else {
-          toast({
-            title: "Refund Request Submitted",
-            description: "Your refund request has been submitted and will be processed manually."
-          });
+      // Send email to support for manual processing
+      const { error } = await supabase.functions.invoke('send-refund-request', {
+        body: {
+          booking_id: booking.id,
+          user_email: user.email,
+          refund_amount: refundAmount,
+          reason: reason,
+          description: description,
+          cancellation_fee: cancellationFee
         }
-      } else {
-        // Send email to support for manual processing
-        const { error } = await supabase.functions.invoke('send-refund-request', {
-          body: {
-            booking_id: booking.id,
-            user_email: user.email,
-            refund_amount: refundAmount,
-            reason: reason,
-            description: description,
-            cancellation_fee: cancellationFee
-          }
-        });
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Refund Request Sent",
-          description: "Your refund request has been sent to our support team at service@arrivparking.com. We'll review it within 24-48 hours."
-        });
-      }
+      toast({
+        title: "Refund Request Sent",
+        description: "Your refund request has been sent to our support team. We'll review it within 24-48 hours and process if approved."
+      });
       
       onClose();
     } catch (error: any) {
@@ -127,28 +100,22 @@ export default function RefundRequestDialog({ isOpen, onClose, booking }: Refund
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Request Refund</DialogTitle>
+          <DialogTitle>Request Refund Review</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              All refund requests are manually reviewed by our support team to prevent abuse. 
+              We'll review your request within 24-48 hours.
+            </p>
+          </div>
+          
           <div>
             <Label htmlFor="refund-amount">Refund Amount</Label>
             <div className="text-2xl font-bold text-primary">
               ${Number(booking.total_amount || 0).toFixed(2)}
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="refund-type">Refund Type</Label>
-            <Select value={refundType} onValueChange={(value: "automatic" | "manual") => setRefundType(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select refund type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="automatic">Automatic Refund (Immediate)</SelectItem>
-                <SelectItem value="manual">Manual Review (Email to Support)</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div>
