@@ -240,12 +240,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
                 
                 return `
-                  <div class="p-2 relative" style="min-width: 200px;">
-                    ${isPremium ? `
-                      <svg class="absolute top-1 right-1 fill-amber-500 text-amber-500" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
-                      </svg>
-                    ` : ''}
+                  <div class="p-2" style="min-width: 200px;">
                     ${isMultiple ? `
                       <div class="flex justify-between items-center mb-2">
                         <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
@@ -263,8 +258,13 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                         </div>
                       </div>
                     ` : ''}
-                    <div class="mb-1">
-                      <h3 class="font-bold text-sm">${spot.title}</h3>
+                    <div class="flex items-center justify-between mb-1">
+                      <h3 class="font-bold text-sm pr-4">${spot.title}</h3>
+                      ${isPremium ? `
+                        <svg class="shrink-0 text-amber-500" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                          <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
+                        </svg>
+                      ` : ''}
                     </div>
                     <p class="text-xs text-gray-600">${spot.address}</p>
                     <div class="flex justify-between items-center mb-2">
@@ -467,12 +467,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
         
         return `
-          <div class="p-2 relative" style="min-width: 200px;">
-            ${isPremium ? `
-              <svg class="absolute top-1 right-1 fill-amber-500 text-amber-500" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M5 16L3 5l5.5-1L12 10l3.5-6L21 5l-2 11H5z"/>
-              </svg>
-            ` : ''}
+          <div class="p-2" style="min-width: 200px;">
             ${isMultiple ? `
               <div class="flex justify-between items-center mb-2">
                 <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
@@ -490,8 +485,13 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 </div>
               </div>
             ` : ''}
-            <div class="mb-1">
-              <h3 class="font-bold text-sm">${spot.title}</h3>
+            <div class="flex items-center justify-between mb-1">
+              <h3 class="font-bold text-sm pr-4">${spot.title}</h3>
+              ${isPremium ? `
+                <svg class="shrink-0 text-amber-500" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
+                </svg>
+              ` : ''}
             </div>
             <p class="text-xs text-gray-600">${spot.address}</p>
             <div class="flex justify-between items-center mb-2">
