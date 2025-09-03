@@ -178,7 +178,7 @@ export default {
 				'slide-left': 'slide-left 0.6s ease-out',
 				'slide-right': 'slide-right 0.6s ease-out',
 				'bounce-in': 'bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-				'pulse-glow': 'pulse-glow 8s ease-in-out infinite',
+				'pulse-glow': 'pulse-glow 15s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
 				'shimmer': 'shimmer 2s linear infinite'
