@@ -26,6 +26,10 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
       // Store acceptance in localStorage
       localStorage.setItem('termsAccepted', 'true');
       localStorage.setItem('termsAcceptedDate', new Date().toISOString());
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event('termsAccepted'));
+      
       console.log('Terms accepted, calling onAccept callback');
       onAccept();
     } else {

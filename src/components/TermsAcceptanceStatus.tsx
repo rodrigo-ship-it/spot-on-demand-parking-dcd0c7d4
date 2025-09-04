@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 
 export const TermsAcceptanceStatus = () => {
   const [open, setOpen] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [date, setDate] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const getAcceptanceInfo = () => {
@@ -23,7 +25,37 @@ export const TermsAcceptanceStatus = () => {
     return { accepted: false, date: null };
   };
 
-  const { accepted, date } = getAcceptanceInfo();
+  // Check status on mount and listen for changes
+  useEffect(() => {
+    const updateStatus = () => {
+      const info = getAcceptanceInfo();
+      setAccepted(info.accepted);
+      setDate(info.date);
+    };
+
+    // Initial check
+    updateStatus();
+
+    // Listen for localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'termsAccepted' || e.key === 'termsAcceptedDate') {
+        updateStatus();
+      }
+    };
+
+    // Listen for custom events (for same-tab updates)
+    const handleTermsAccepted = () => {
+      updateStatus();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('termsAccepted', handleTermsAccepted);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('termsAccepted', handleTermsAccepted);
+    };
+  }, []);
 
   const handleReviewTerms = () => {
     setOpen(false);
