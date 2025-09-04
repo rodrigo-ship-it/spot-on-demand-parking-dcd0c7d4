@@ -18,7 +18,7 @@ interface ParkingSpot {
   available: string;
   distance?: string;
   owner_id?: string;
-  isPremiumOwner?: boolean;
+  isPremiumLister?: boolean;
 }
 
 interface MapComponentProps {
@@ -65,40 +65,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     return isEntireSpace ? baseScale + 0.2 : baseScale;
   };
 
-  // Check premium status for all unique owners
-  useEffect(() => {
-    const checkPremiumStatuses = async () => {
-      const uniqueOwnerIds = [...new Set(spots.map(spot => spot.owner_id).filter(Boolean))] as string[];
-      
-      if (uniqueOwnerIds.length === 0) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('premium_subscriptions')
-          .select('user_id, status, current_period_end')
-          .in('user_id', uniqueOwnerIds)
-          .eq('status', 'active');
-
-        if (error) {
-          console.error('Error checking premium statuses:', error);
-          return;
-        }
-
-        const statuses: Record<string, boolean> = {};
-        data?.forEach(subscription => {
-          // Check if subscription is still valid
-          const isValid = new Date(subscription.current_period_end) > new Date();
-          statuses[subscription.user_id] = isValid;
-        });
-
-        setPremiumStatuses(statuses);
-      } catch (error) {
-        console.error('Error fetching premium statuses:', error);
-      }
-    };
-
-    checkPremiumStatuses();
-  }, [spots]);
+  // Premium statuses are already fetched and set on spots by the parent component
+  // No need to fetch again - just use the isPremiumLister property
 
   // Update the ref when onSpotSelect changes
   useEffect(() => {
@@ -237,7 +205,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               const createPopupContent = (currentIndex = 0) => {
                 const spot = group.spots[currentIndex];
                 const isMultiple = group.spots.length > 1;
-                const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
+                const isPremium = spot.isPremiumLister || false;
                 
                 return `
                   <div class="p-2" style="min-width: 200px;">
@@ -464,7 +432,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       const createPopupContent = (currentIndex = 0) => {
         const spot = group.spots[currentIndex];
         const isMultiple = group.spots.length > 1;
-        const isPremium = spot.owner_id ? premiumStatuses[spot.owner_id] : false;
+        const isPremium = spot.isPremiumLister || false;
         
         return `
           <div class="p-2" style="min-width: 200px;">
@@ -581,7 +549,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         }, 100);
       });
     });
-  }, [spots, centerLocation, isInitialized, premiumStatuses]);
+  }, [spots, centerLocation, isInitialized]);
 
   return (
     <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
