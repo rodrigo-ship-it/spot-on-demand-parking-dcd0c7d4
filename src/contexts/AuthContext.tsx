@@ -102,9 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.success('Signed in successfully!');
         // Handle redirects after successful sign in
         const termsAccepted = localStorage.getItem('termsAccepted');
-        const isMobile = window.innerWidth < 768;
         
-        if (isMobile && !termsAccepted) {
+        if (termsAccepted !== 'true') {
           window.location.href = '/terms';
         } else {
           window.location.href = '/';

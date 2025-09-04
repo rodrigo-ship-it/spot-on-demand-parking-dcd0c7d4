@@ -1,20 +1,32 @@
-import { useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  requireTermsAcceptance?: boolean;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, requireTermsAcceptance = true }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
+    if (!loading) {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      if (requireTermsAcceptance) {
+        const termsAccepted = localStorage.getItem('termsAccepted');
+        if (termsAccepted !== 'true') {
+          navigate('/terms');
+          return;
+        }
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, requireTermsAcceptance]);
 
   if (loading) {
     return (
@@ -27,8 +39,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  if (!user) {
-    return null; // Will redirect via useEffect
+  if (!user || (requireTermsAcceptance && localStorage.getItem('termsAccepted') !== 'true')) {
+    return null;
   }
 
   return <>{children}</>;

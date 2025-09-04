@@ -67,7 +67,13 @@ const Auth = () => {
         }
       } else {
         toast.success('Welcome back!');
-        navigate('/');
+        // Check if user has accepted terms before redirecting
+        const termsAccepted = localStorage.getItem('termsAccepted');
+        if (termsAccepted === 'true') {
+          navigate('/');
+        } else {
+          navigate('/terms');
+        }
       }
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again.');
@@ -139,7 +145,7 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
-        toast.success('Account created! Please check your email for confirmation.');
+        toast.success('Account created! Please check your email for confirmation. After verifying your email, you\'ll need to accept our terms and conditions.');
       }
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again.');

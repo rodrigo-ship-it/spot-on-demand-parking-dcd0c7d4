@@ -25,6 +25,7 @@ import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/AdminDashboard";
 import ResetPassword from "./pages/ResetPassword";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -59,24 +60,24 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/terms" element={<TermsRoute />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/list-spot" element={<ProtectedListSpot />} />
-                <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/help" element={<HelpSupport />} />
-                <Route path="/help-support" element={<HelpSupport />} />
-                <Route path="/manage-spots" element={<ProtectedManageSpots />} />
-                <Route path="/spot/:id" element={<SpotDetails />} />
-                <Route path="/book-spot/:id" element={<BookSpot />} />
-                <Route path="/rent-qr/:spotId" element={<RentQR />} />
-                <Route path="/bookings" element={<Bookings />} />
-                <Route path="/booking-confirmed" element={<BookingConfirmed />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/premium" element={<Premium />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/list-spot" element={<ProtectedRoute><ProtectedListSpot /></ProtectedRoute>} />
+                <Route path="/how-it-works" element={<ProtectedRoute><HowItWorks /></ProtectedRoute>} />
+                <Route path="/help" element={<ProtectedRoute><HelpSupport /></ProtectedRoute>} />
+                <Route path="/help-support" element={<ProtectedRoute><HelpSupport /></ProtectedRoute>} />
+                <Route path="/manage-spots" element={<ProtectedRoute><ProtectedManageSpots /></ProtectedRoute>} />
+                <Route path="/spot/:id" element={<ProtectedRoute><SpotDetails /></ProtectedRoute>} />
+                <Route path="/book-spot/:id" element={<ProtectedRoute><BookSpot /></ProtectedRoute>} />
+                <Route path="/rent-qr/:spotId" element={<ProtectedRoute><RentQR /></ProtectedRoute>} />
+                <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+                <Route path="/booking-confirmed" element={<ProtectedRoute><BookingConfirmed /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
+                <Route path="/privacy-policy" element={<ProtectedRoute requireTermsAcceptance={false}><PrivacyPolicy /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
