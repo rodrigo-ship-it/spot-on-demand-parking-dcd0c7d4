@@ -41,7 +41,12 @@ const SpotDetails = () => {
 
   // Function to fetch reviews for this spot
   const fetchReviews = async () => {
-    if (!id) return;
+    if (!id) {
+      console.log('fetchReviews: No spot ID provided');
+      return;
+    }
+    
+    console.log('fetchReviews: Fetching reviews for spot ID:', id);
     
     try {
       // Get all bookings for this spot
@@ -50,8 +55,12 @@ const SpotDetails = () => {
         .select('id')
         .eq('spot_id', id);
 
+      console.log('fetchReviews: Bookings data:', bookingsData);
+      console.log('fetchReviews: Bookings error:', bookingsError);
+
       if (!bookingsError && bookingsData && bookingsData.length > 0) {
         const bookingIds = bookingsData.map(booking => booking.id);
+        console.log('fetchReviews: Looking for reviews with booking IDs:', bookingIds);
         
         // Fetch reviews with proper JOIN syntax instead of foreign key reference
         const { data: reviewsData, error: reviewsError } = await supabase
@@ -63,13 +72,17 @@ const SpotDetails = () => {
           .in('booking_id', bookingIds)
           .order('created_at', { ascending: false });
 
+        console.log('fetchReviews: Reviews data:', reviewsData);
+        console.log('fetchReviews: Reviews error:', reviewsError);
+
         if (!reviewsError && reviewsData) {
-          console.log('Fetched reviews:', reviewsData);
+          console.log('fetchReviews: Setting reviews state with:', reviewsData);
           setReviews(reviewsData);
         } else if (reviewsError) {
           console.error('Error fetching reviews:', reviewsError);
         }
       } else {
+        console.log('fetchReviews: No bookings found for this spot, setting empty reviews');
         setReviews([]);
       }
     } catch (err) {
