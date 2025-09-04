@@ -1,4 +1,5 @@
 import React from 'react';
+import { Crown } from 'lucide-react';
 
 export const MapLegend = () => {
   const legendItems = [
@@ -21,6 +22,10 @@ export const MapLegend = () => {
             <span className="text-xs text-gray-700 whitespace-nowrap">{item.label}</span>
           </div>
         ))}
+        <div className="flex items-center space-x-2">
+          <Crown className="w-3 h-3 text-amber-600 fill-amber-600 flex-shrink-0" />
+          <span className="text-xs text-gray-700 whitespace-nowrap">Premium subscription</span>
+        </div>
         <div className="flex items-center space-x-2 text-xs text-gray-600">
           <span>•</span>
           <span>Larger pins = Multiple spots or Garages</span>
