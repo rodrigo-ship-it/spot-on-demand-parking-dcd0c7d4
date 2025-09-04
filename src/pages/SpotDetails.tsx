@@ -39,6 +39,44 @@ const SpotDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isOwnerPremium, setIsOwnerPremium] = useState(false);
 
+  // Function to fetch reviews for this spot
+  const fetchReviews = async () => {
+    if (!id) return;
+    
+    try {
+      // Get all bookings for this spot
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('spot_id', id);
+
+      if (!bookingsError && bookingsData && bookingsData.length > 0) {
+        const bookingIds = bookingsData.map(booking => booking.id);
+        
+        // Fetch reviews with proper JOIN syntax instead of foreign key reference
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select(`
+            *,
+            profiles:reviewer_id(full_name)
+          `)
+          .in('booking_id', bookingIds)
+          .order('created_at', { ascending: false });
+
+        if (!reviewsError && reviewsData) {
+          console.log('Fetched reviews:', reviewsData);
+          setReviews(reviewsData);
+        } else if (reviewsError) {
+          console.error('Error fetching reviews:', reviewsError);
+        }
+      } else {
+        setReviews([]);
+      }
+    } catch (err) {
+      console.error('Error in fetchReviews:', err);
+    }
+  };
+
   // Fetch spot data from database with real-time updates
   useEffect(() => {
     const fetchSpotData = async () => {
@@ -100,27 +138,7 @@ const SpotDetails = () => {
         
         
         // Fetch reviews for this spot - get all bookings for this spot and their reviews
-        const { data: bookingsData, error: bookingsError } = await supabase
-          .from('bookings')
-          .select('id')
-          .eq('spot_id', id);
-
-        if (!bookingsError && bookingsData && bookingsData.length > 0) {
-          const bookingIds = bookingsData.map(booking => booking.id);
-          
-          const { data: reviewsData, error: reviewsError } = await supabase
-            .from('reviews')
-            .select(`
-              *,
-              profiles!reviews_reviewer_id_fkey(full_name)
-            `)
-            .in('booking_id', bookingIds)
-            .order('created_at', { ascending: false });
-
-          if (!reviewsError && reviewsData) {
-            setReviews(reviewsData);
-          }
-        }
+        await fetchReviews();
       } catch (err: any) {
         console.error('Error fetching spot data:', err);
         setError(err.message || "Failed to load spot data");
@@ -133,7 +151,7 @@ const SpotDetails = () => {
     fetchSpotData();
 
     // Set up real-time subscription for this specific spot
-    const channel = supabase
+    const spotChannel = supabase
       .channel(`spot_${id}`)
       .on(
         'postgres_changes',
@@ -150,8 +168,40 @@ const SpotDetails = () => {
       )
       .subscribe();
 
+    // Set up real-time subscription for reviews
+    const reviewsChannel = supabase
+      .channel(`reviews_${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'reviews'
+        },
+        (payload) => {
+          console.log('New review added:', payload);
+          // Refresh reviews when a new one is added
+          fetchReviews();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'reviews'
+        },
+        (payload) => {
+          console.log('Review updated:', payload);
+          // Refresh reviews when one is updated
+          fetchReviews();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(spotChannel);
+      supabase.removeChannel(reviewsChannel);
     };
   }, [id]);
 
@@ -991,7 +1041,11 @@ const SpotDetails = () => {
           <RatingSystem 
             bookingId={actualBookingData.id}
             userType="renter"
-            onSubmitRating={(rating, review) => console.log('Rating submitted:', rating, review)}
+      onSubmitRating={(rating, review) => {
+        console.log('Rating submitted:', rating, review);
+        // Refresh reviews after successful submission
+        fetchReviews();
+      }}
             onClose={() => console.log('Rating dialog closed')}
           />
 
