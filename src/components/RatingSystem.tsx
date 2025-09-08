@@ -74,7 +74,7 @@ export const RatingSystem = ({ bookingId, userType, onSubmitRating, onClose }: R
       // First get the booking to find the spot owner
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
-        .select('spot_id, parking_spots(owner_id)')
+        .select('spot_id, renter_id, parking_spots(owner_id)')
         .eq('id', bookingId)
         .single();
 
@@ -88,7 +88,7 @@ export const RatingSystem = ({ bookingId, userType, onSubmitRating, onClose }: R
         .insert({
           booking_id: bookingId,
           reviewer_id: user?.id,
-          reviewed_id: userType === 'renter' ? booking.parking_spots.owner_id : user?.id,
+          reviewed_id: userType === 'renter' ? booking.parking_spots.owner_id : booking.renter_id,
           user_type: userType,
           rating,
           comment: comment || null,

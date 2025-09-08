@@ -348,6 +348,10 @@ const Bookings = () => {
 
   const handleSubmitRating = (rating: number, comment: string, photo?: string) => {
     console.log("Rating submitted:", { rating, comment, photo });
+    // Refresh bookings data to show updated status
+    loadBookings();
+    // Close the review dialog
+    closeReviewDialog();
   };
 
   const handlePhotoTaken = (photo: string, disputeType: string) => {
