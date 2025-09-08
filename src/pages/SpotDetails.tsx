@@ -62,15 +62,12 @@ const SpotDetails = () => {
         const bookingIds = bookingsData.map(booking => booking.id);
         console.log('fetchReviews: Looking for reviews with booking IDs:', bookingIds);
         
-        // Fetch reviews with proper JOIN syntax instead of foreign key reference
+        // Fetch reviews without attempting foreign key join since it's not set up
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select(`
-            *,
-            profiles:reviewer_id(full_name)
-          `)
+          .select('*')
           .in('booking_id', bookingIds)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false});
 
         console.log('fetchReviews: Reviews data:', reviewsData);
         console.log('fetchReviews: Reviews error:', reviewsError);
