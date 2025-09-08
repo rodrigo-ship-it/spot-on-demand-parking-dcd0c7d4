@@ -499,7 +499,7 @@ const Index = () => {
           searchLocation={searchLocation}
           searchCoordinates={searchCoordinates}
           allSpots={transformedSpots}
-          filteredSpots={filteredSpots.length > 0 ? filteredSpots : transformedSpots}
+          filteredSpots={filteredSpots}
           onSpotSelect={handleBookNow}
         />
       )}
