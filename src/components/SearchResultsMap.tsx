@@ -137,7 +137,7 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
       </div>
       
       <MapComponent 
-        spots={allSpotsWithDistance.map(spot => ({
+        spots={filteredSpotsWithDistance.map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,
