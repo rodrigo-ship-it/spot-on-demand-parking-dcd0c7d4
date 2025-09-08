@@ -271,7 +271,7 @@ const Index = () => {
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-300"
                 />
               </Link>
-              <div className="hidden md:flex items-center space-x-8">
+              <div className="hidden lg:flex items-center space-x-8">
                 <Link to="/how-it-works" className="text-muted-foreground hover:text-primary smooth-transition font-semibold">
                   How it Works
                 </Link>
@@ -282,7 +282,7 @@ const Index = () => {
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-4">
               {user ? (
                 <>
                   <Button 
@@ -330,6 +330,69 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Button variant="default" size="sm" onClick={handleSignIn}>
+                    Sign In
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Tablet Navigation - Condensed */}
+            <div className="hidden md:flex lg:hidden items-center space-x-2">
+              {user ? (
+                <>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => navigate('/premium')}
+                    className="flex items-center bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-none px-2"
+                  >
+                    <Crown className="w-4 h-4" />
+                  </Button>
+                  <Link to="/bookings">
+                    <Button variant="outline" size="sm" className="px-2">
+                      Bookings
+                    </Button>
+                  </Link>
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm" className="px-2">
+                      Profile
+                    </Button>
+                  </Link>
+                  <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" size="sm" className="px-2">
+                        <Menu className="w-4 h-4" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-[300px]">
+                      <div className="flex flex-col space-y-4 mt-8">
+                        <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>
+                          How it Works
+                        </Link>
+                        <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>
+                          My Spots
+                        </Link>
+                        <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                          <Button variant="outline" className="w-full justify-start h-12">
+                            <HelpCircle className="w-4 h-4 mr-2" />
+                            Help
+                          </Button>
+                        </Link>
+                        <Button variant="outline" className="w-full justify-start h-12" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
+                          Sign Out
+                        </Button>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                </>
+              ) : (
+                <>
+                  <Link to="/help-support">
+                    <Button variant="ghost" size="sm" className="px-2">
+                      Help
+                    </Button>
+                  </Link>
+                  <Button variant="default" size="sm" onClick={handleSignIn} className="px-3">
                     Sign In
                   </Button>
                 </>
