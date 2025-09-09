@@ -233,12 +233,23 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                           <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
                         </svg>
                       ` : ''}
-                    </div>
-                    <p class="text-xs text-gray-600">${spot.address}</p>
-                    <div class="flex justify-between items-center mb-2">
-                      <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
-                      ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
-                    </div>
+                     </div>
+                     <p class="text-xs text-gray-600">${spot.address}</p>
+                     <div class="flex justify-between items-center mb-2">
+                       <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
+                       ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+                     </div>
+                     ${spot.rating > 0 ? `
+                       <div class="flex items-center mb-2">
+                         <svg class="w-3 h-3 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
+                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                         </svg>
+                         <span class="text-xs font-medium">${spot.rating}</span>
+                         <span class="text-xs text-gray-500 ml-1">(${spot.totalReviews || 0} reviews)</span>
+                       </div>
+                     ` : `
+                       <div class="text-xs text-gray-400 mb-2">No rating yet</div>
+                     `}
                     <button 
                       id="book-btn-${spot.id}" 
                       class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
@@ -461,11 +472,22 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 </svg>
               ` : ''}
             </div>
-            <p class="text-xs text-gray-600">${spot.address}</p>
-            <div class="flex justify-between items-center mb-2">
-              <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
-              ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
-            </div>
+             <p class="text-xs text-gray-600">${spot.address}</p>
+             <div class="flex justify-between items-center mb-2">
+               <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
+               ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+             </div>
+             ${spot.rating > 0 ? `
+               <div class="flex items-center mb-2">
+                 <svg class="w-3 h-3 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
+                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                 </svg>
+                 <span class="text-xs font-medium">${spot.rating}</span>
+                 <span class="text-xs text-gray-500 ml-1">(${spot.totalReviews || 0} reviews)</span>
+               </div>
+             ` : `
+               <div class="text-xs text-gray-400 mb-2">No rating yet</div>
+             `}
             <button 
               id="book-btn-update-${spot.id}"
               class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
@@ -525,11 +525,20 @@ const ManageSpots = () => {
                           </Badge>
                           {isPremium && <PremiumBadge size="sm" />}
                         </div>
-                         <p className="text-sm text-gray-600">
-                           ${spot.price}{spot.pricingType === 'hourly' ? '/hr' : 
-                                        spot.pricingType === 'daily' ? '/day' : 
-                                        spot.pricingType === 'monthly' ? '/month' : ' flat'} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
-                         </p>
+                          <p className="text-sm text-gray-600">
+                            ${spot.price}{spot.pricingType === 'hourly' ? '/hr' : 
+                                         spot.pricingType === 'daily' ? '/day' : 
+                                         spot.pricingType === 'monthly' ? '/month' : ' flat'} • {spot.totalSpots} spot{spot.totalSpots !== 1 ? 's' : ''}
+                          </p>
+                          {spot.rating > 0 ? (
+                            <div className="flex items-center mt-2">
+                              <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
+                              <span className="text-sm font-medium">{spot.rating}</span>
+                              <span className="text-xs text-gray-500 ml-1">({spot.totalReviews || 0} reviews)</span>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-400 mt-2">No rating yet</div>
+                          )}
                       </div>
                       <Button
                         onClick={() => setSelectedSpotForQR(selectedSpotForQR === spot.id ? null : spot.id)}
