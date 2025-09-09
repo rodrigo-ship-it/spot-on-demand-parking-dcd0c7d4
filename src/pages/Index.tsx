@@ -250,6 +250,11 @@ const Index = () => {
 
   const handleBookNow = (spotId: string | number) => {
     console.log('handleBookNow called with spotId:', spotId);
+    if (!user) {
+      toast.info("Please sign in to book a parking spot");
+      navigate("/auth");
+      return;
+    }
     navigate(`/spot/${spotId}`);
   };
 
