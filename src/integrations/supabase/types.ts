@@ -52,6 +52,7 @@ export type Database = {
       }
       bookings: {
         Row: {
+          auto_extend_enabled: boolean | null
           checkout_location_verified: boolean | null
           checkout_photo_verified: boolean | null
           checkout_timestamp_verified: boolean | null
@@ -80,6 +81,7 @@ export type Database = {
           verification_score: number | null
         }
         Insert: {
+          auto_extend_enabled?: boolean | null
           checkout_location_verified?: boolean | null
           checkout_photo_verified?: boolean | null
           checkout_timestamp_verified?: boolean | null
@@ -108,6 +110,7 @@ export type Database = {
           verification_score?: number | null
         }
         Update: {
+          auto_extend_enabled?: boolean | null
           checkout_location_verified?: boolean | null
           checkout_photo_verified?: boolean | null
           checkout_timestamp_verified?: boolean | null
