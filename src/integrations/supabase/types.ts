@@ -150,6 +150,13 @@ export type Database = {
             referencedRelation: "parking_spots"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bookings_spot_id_fkey"
+            columns: ["spot_id"]
+            isOneToOne: false
+            referencedRelation: "public_parking_spots"
+            referencedColumns: ["id"]
+          },
         ]
       }
       call_sessions: {
@@ -1148,6 +1155,78 @@ export type Database = {
         }
         Relationships: []
       }
+      public_parking_spots: {
+        Row: {
+          address: string | null
+          amenities: string[] | null
+          available_spots: number | null
+          created_at: string | null
+          daily_price: number | null
+          description: string | null
+          id: string | null
+          images: string[] | null
+          is_active: boolean | null
+          latitude: number | null
+          longitude: number | null
+          monthly_price: number | null
+          one_time_price: number | null
+          price_per_hour: number | null
+          pricing_type: string | null
+          rating: number | null
+          spot_type: string | null
+          title: string | null
+          total_reviews: number | null
+          total_spots: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[] | null
+          available_spots?: number | null
+          created_at?: string | null
+          daily_price?: number | null
+          description?: string | null
+          id?: string | null
+          images?: string[] | null
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          monthly_price?: number | null
+          one_time_price?: number | null
+          price_per_hour?: number | null
+          pricing_type?: string | null
+          rating?: number | null
+          spot_type?: string | null
+          title?: string | null
+          total_reviews?: number | null
+          total_spots?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[] | null
+          available_spots?: number | null
+          created_at?: string | null
+          daily_price?: number | null
+          description?: string | null
+          id?: string | null
+          images?: string[] | null
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          monthly_price?: number | null
+          one_time_price?: number | null
+          price_per_hour?: number | null
+          pricing_type?: string | null
+          rating?: number | null
+          spot_type?: string | null
+          title?: string | null
+          total_reviews?: number | null
+          total_spots?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       apply_data_retention_policies: {
@@ -1399,6 +1478,10 @@ export type Database = {
       }
       validate_sensitive_data_access: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      validate_stripe_account_ownership: {
+        Args: { account_id: string; user_id_param: string }
         Returns: boolean
       }
     }
