@@ -95,7 +95,15 @@ export const RatingSystem = ({ bookingId, userType, onSubmitRating, onClose }: R
           photo_url: photo || null
         });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate review error
+        if (error.code === '23505' || error.message?.includes('reviews_booking_reviewer_unique')) {
+          toast.error("You have already left a review for this booking.");
+          onClose();
+          return;
+        }
+        throw error;
+      }
 
       onSubmitRating(rating, comment, photo || undefined);
       toast.success("Review submitted successfully!");
