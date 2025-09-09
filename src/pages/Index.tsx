@@ -91,6 +91,7 @@ const Index = () => {
             : Number(spot.one_time_price),
           pricingType: spot.pricing_type,
           rating: Number(spot.rating) || 0,
+          totalReviews: Number(spot.total_reviews) || 0,
           distance: calculatedDistance,
           type: spot.spot_type?.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Parking Spot',
           spotType: spot.spot_type,
