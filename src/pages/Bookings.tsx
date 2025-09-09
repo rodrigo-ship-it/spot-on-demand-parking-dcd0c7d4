@@ -30,6 +30,7 @@ const Bookings = () => {
   const [advancedFilters, setAdvancedFilters] = useState<any>({});
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [existingReviews, setExistingReviews] = useState<Set<string>>(new Set());
   const [reviewDialog, setReviewDialog] = useState<{
     isOpen: boolean;
     type: "rating" | "dispute";
@@ -244,6 +245,22 @@ const Bookings = () => {
         const validBookings = transformedBookings.filter(booking => booking !== null);
 
         setBookings(validBookings);
+
+        // Load existing reviews for completed bookings
+        const completedBookingIds = validBookings
+          .filter(booking => booking.status === "Completed")
+          .map(booking => booking.id);
+
+        if (completedBookingIds.length > 0) {
+          const { data: reviewsData } = await supabase
+            .from('reviews')
+            .select('booking_id')
+            .eq('reviewer_id', user.id)
+            .in('booking_id', completedBookingIds);
+
+          const reviewedBookingIds = new Set(reviewsData?.map(review => review.booking_id) || []);
+          setExistingReviews(reviewedBookingIds);
+        }
       } catch (error) {
         console.error('Error loading bookings:', error);
         toast.error('Failed to load bookings. Please try again.');
@@ -580,15 +597,27 @@ const Bookings = () => {
                           </Dialog>
                         )}
                         {reservation.status === "Completed" && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleLeaveReview(reservation.id)}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            <Star className="w-3 h-3 mr-1" />
-                            Leave Review
-                          </Button>
+                          existingReviews.has(reservation.id) ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              disabled
+                              className="text-gray-500"
+                            >
+                              <Star className="w-3 h-3 mr-1 fill-current" />
+                              Reviewed
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleLeaveReview(reservation.id)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Star className="w-3 h-3 mr-1" />
+                              Leave Review
+                            </Button>
+                          )
                         )}
                         {reservation.status === "Active" && (
                           <Button 
