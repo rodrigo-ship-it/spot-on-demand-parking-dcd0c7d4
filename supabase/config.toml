@@ -56,3 +56,24 @@ verify_jwt = true
 
 [functions.check-late-checkouts]
 verify_jwt = false
+
+[functions.process-extension]
+verify_jwt = true
+
+[functions.process-auto-extension]
+verify_jwt = false
+
+[functions.manual-charge-penalty]
+verify_jwt = true
+
+[functions.create-premium-subscription]
+verify_jwt = true
+
+[functions.premium-portal]
+verify_jwt = true
+
+[functions.get-analytics-data]
+verify_jwt = true
+
+[functions.send-refund-request]
+verify_jwt = true

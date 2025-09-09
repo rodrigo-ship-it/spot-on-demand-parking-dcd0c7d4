@@ -1,0 +1,227 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[PROCESS-AUTO-EXTENSION] ${step}${detailsStr}`);
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    logStep("Starting auto-extension processing");
+
+    // Create Supabase client with service role key
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+      apiVersion: "2023-10-16",
+    });
+
+    const { bookingId, autoExtensionHours = 1 } = await req.json();
+
+    if (!bookingId) {
+      throw new Error("Booking ID is required");
+    }
+
+    logStep("Processing auto-extension request", { bookingId, autoExtensionHours });
+
+    // Get booking details
+    const { data: booking, error: bookingError } = await supabaseService
+      .from('bookings')
+      .select(`
+        id,
+        renter_id,
+        spot_id,
+        end_time,
+        end_time_utc,
+        total_amount,
+        status,
+        parking_spots!inner(
+          title,
+          address,
+          price_per_hour,
+          owner_id
+        )
+      `)
+      .eq('id', bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      throw new Error(`Failed to fetch booking: ${bookingError?.message || 'Booking not found'}`);
+    }
+
+    logStep("Retrieved booking data", { 
+      bookingId: booking.id, 
+      status: booking.status,
+      endTime: booking.end_time,
+      pricePerHour: booking.parking_spots.price_per_hour
+    });
+
+    // Check if booking is eligible for auto-extension
+    if (booking.status !== 'active' && booking.status !== 'confirmed') {
+      throw new Error(`Booking is not active (status: ${booking.status})`);
+    }
+
+    // Get user's Stripe customer info
+    const { data: userProfile } = await supabaseService
+      .from('profiles')
+      .select('email, full_name')  
+      .eq('user_id', booking.renter_id)
+      .single();
+
+    if (!userProfile?.email) {
+      throw new Error("User profile not found");
+    }
+
+    // Check for existing Stripe customer
+    const customers = await stripe.customers.list({ 
+      email: userProfile.email, 
+      limit: 1 
+    });
+
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    } else {
+      // Create new customer
+      const customer = await stripe.customers.create({
+        email: userProfile.email,
+        name: userProfile.full_name || undefined,
+      });
+      customerId = customer.id;
+    }
+
+    // Calculate extension pricing using the SAME structure as manual extensions
+    const pricePerHour = booking.parking_spots.price_per_hour || 6;
+    const basePrice = pricePerHour * autoExtensionHours;
+    
+    // Use the exact same pricing formula as ExtensionSystem.tsx
+    const totalAmount = Math.round((basePrice * 1.07 * 1.0875) * 100) / 100;
+    
+    // Calculate breakdown for platform fees (matching create-payment logic)
+    const platformFeeFromRenter = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
+    const subtotalWithPlatformFee = basePrice + platformFeeFromRenter;
+    const taxAmount = Math.round(subtotalWithPlatformFee * 0.0875 * 100) / 100; // 8.75% tax
+    const estimatedProcessingFee = Math.round(totalAmount * 0.029 * 100) / 100 + 0.30; // 2.9% + $0.30
+    
+    // Calculate platform fees for payout (same structure as create-payment)
+    const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
+    const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% from lister
+    const totalPlatformFee = platformFeeFromRenter + (platformFeeFromLister / 100);
+
+    logStep("Extension pricing calculated", {
+      basePrice,
+      totalAmount,
+      platformFeeFromRenter,
+      estimatedProcessingFee,
+      autoExtensionHours
+    });
+
+    // Create payment intent for auto-extension (immediate charge)
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(totalAmount * 100), // Convert to cents
+      currency: "usd",
+      customer: customerId,
+      description: `Auto-extension: ${autoExtensionHours} hour(s) for ${booking.parking_spots.title}`,
+      payment_method_types: ["card"],
+      confirm: true, // Automatically confirm the payment
+      metadata: {
+        booking_id: bookingId,
+        extension_hours: autoExtensionHours.toString(),
+        type: "auto_extension"
+      }
+    });
+
+    if (paymentIntent.status !== 'succeeded') {
+      throw new Error(`Payment failed: ${paymentIntent.status}`);
+    }
+
+    logStep("Payment intent created and confirmed", { 
+      paymentIntentId: paymentIntent.id, 
+      status: paymentIntent.status 
+    });
+
+    // Calculate new end time
+    const currentEndTime = new Date(booking.end_time);
+    const newEndTimeLocal = new Date(currentEndTime.getTime() + (autoExtensionHours * 60 * 60 * 1000));
+    const newEndTimeUTC = new Date(newEndTimeLocal.getTime() + (4 * 60 * 60 * 1000)); // Convert to UTC
+
+    // Update booking with new end time
+    const { error: updateError } = await supabaseService
+      .from('bookings')
+      .update({
+        end_time: newEndTimeLocal.toISOString().slice(0, -1), // Store as local time
+        end_time_utc: newEndTimeUTC.toISOString(),
+        total_amount: (Number(booking.total_amount) + totalAmount),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId);
+
+    if (updateError) {
+      throw new Error(`Failed to update booking: ${updateError.message}`);
+    }
+
+    // Record the extension in the extensions table
+    const { error: extensionError } = await supabaseService
+      .from('extensions')
+      .insert({
+        booking_id: bookingId,
+        requested_hours: autoExtensionHours,
+        rate_per_hour: pricePerHour,
+        total_amount: totalAmount,
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+        stripe_payment_intent_id: paymentIntent.id,
+        new_end_time: newEndTimeUTC.toISOString()
+      });
+
+    if (extensionError) {
+      logStep("Warning: Failed to record extension", { error: extensionError });
+    }
+
+    logStep("Auto-extension completed successfully", {
+      bookingId,
+      newEndTime: newEndTimeLocal.toISOString(),
+      totalCharged: totalAmount,
+      paymentIntentId: paymentIntent.id
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: `Auto-extension processed: ${autoExtensionHours} hour(s) added`,
+      newEndTime: newEndTimeLocal.toISOString(),
+      amountCharged: totalAmount,
+      paymentIntentId: paymentIntent.id
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in process-auto-extension", { message: errorMessage });
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: errorMessage 
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+});

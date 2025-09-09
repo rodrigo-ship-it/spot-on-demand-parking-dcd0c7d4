@@ -219,7 +219,7 @@ const BookSpot = () => {
   const [hostSettings] = useState({
     allowAutoExtend: true,
     maxAutoExtend: 4, // hours
-    extensionRate: basePrice * 1.2 // 20% premium for extensions
+    extensionRate: basePrice // Use base price, apply same fee structure as manual extensions
   });
 
   const handleTimeChange = (field: string, value: string) => {
@@ -909,7 +909,7 @@ const BookSpot = () => {
                     <div>
                       <div className="font-medium">Auto-extend if running late</div>
                       <div className="text-sm text-gray-600">
-                        Automatically extend up to {hostSettings.maxAutoExtend} hours at ${hostSettings.extensionRate}/hr
+                        Automatically extend up to {hostSettings.maxAutoExtend} hours at ${hostSettings.extensionRate}/hr base rate (fees and taxes apply)
                       </div>
                     </div>
                     <Switch
@@ -1019,10 +1019,10 @@ const BookSpot = () => {
                    <span>${total.toFixed(2)}</span>
                  </div>
                  
-                 {bookingDetails.autoExtend && (
-                  <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded">
-                    Auto-extensions: ${hostSettings.extensionRate}/hr (if needed)
-                  </div>
+                  {bookingDetails.autoExtend && (
+                   <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded">
+                     Auto-extensions: ${hostSettings.extensionRate}/hr base rate + platform fees + taxes (same as manual extensions)
+                   </div>
                 )}
               </CardContent>
             </Card>

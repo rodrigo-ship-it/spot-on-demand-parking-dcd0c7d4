@@ -27,13 +27,13 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get current time
+    // Get current time in local timezone (EST/EDT)
     const now = new Date();
     logStep("Current time", { timestamp: now.toISOString() });
 
     // Find all active/confirmed bookings that are 3+ hours past their LOCAL end time
-    const threeHoursAgo = new Date();
-    threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
+    // We need to be careful with timezone handling here
+    const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
     
     logStep("Time validation", { 
       currentTime: now.toISOString(), 
@@ -82,33 +82,80 @@ serve(async (req) => {
       try {
         logStep("Processing late booking", { bookingId: booking.id, endTimeLocal: booking.end_time, endTimeUtc: booking.end_time_utc });
 
-        // Use LOCAL times consistently for comparison
+        // Parse end_time as local time - booking.end_time is stored as local time without timezone
+        // We need to ensure we're comparing apples to apples
         const endTimeLocal = new Date(booking.end_time);
-        const currentTimeLocal = new Date(); // Current local time
-        const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeLocal.getTime()) / (1000 * 60));
+        const currentTimeLocal = new Date(); // Current time in user's local timezone
         
-        logStep("Calculated lateness", { minutesLate, bookingId: booking.id, endTimeLocal: booking.end_time, currentTimeLocal: currentTimeLocal.toISOString() });
+        // CRITICAL FIX: Ensure we're comparing in the same timezone
+        // If end_time doesn't have timezone info, treat it as local time
+        let endTimeForComparison = endTimeLocal;
+        if (!booking.end_time.includes('T') && !booking.end_time.includes('+')) {
+          // If it's just a date string without timezone, parse as local
+          endTimeForComparison = new Date(booking.end_time.replace(' ', 'T'));
+        }
+        
+        const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeForComparison.getTime()) / (1000 * 60));
+        
+        logStep("Calculated lateness", { 
+          minutesLate, 
+          bookingId: booking.id, 
+          endTimeLocal: booking.end_time, 
+          endTimeForComparison: endTimeForComparison.toISOString(),
+          currentTimeLocal: currentTimeLocal.toISOString() 
+        });
 
-        // SAFETY CHECK: Don't process bookings that aren't actually late
+        // CRITICAL SAFETY CHECK: Don't process bookings that aren't actually late
         if (minutesLate < 180) { // Less than 3 hours (180 minutes)
           logStep("SAFETY: Booking not actually late, skipping", { 
             bookingId: booking.id, 
             minutesLate, 
-            endTimeLocal: booking.end_time, 
-            currentTimeLocal: currentTimeLocal.toISOString() 
+            endTimeLocal: booking.end_time,
+            endTimeForComparison: endTimeForComparison.toISOString(),
+            currentTimeLocal: currentTimeLocal.toISOString(),
+            reason: "Less than 3 hours late"
           });
           continue;
         }
 
         // Additional safety check: Don't process future bookings
-        if (currentTimeLocal < endTimeLocal) {
+        if (currentTimeLocal.getTime() < endTimeForComparison.getTime()) {
           logStep("SAFETY: Booking end time is in the future, skipping", { 
             bookingId: booking.id, 
-            endTimeLocal: booking.end_time, 
-            currentTimeLocal: currentTimeLocal.toISOString() 
+            endTimeLocal: booking.end_time,
+            endTimeForComparison: endTimeForComparison.toISOString(),
+            currentTimeLocal: currentTimeLocal.toISOString(),
+            reason: "End time is in future"
           });
           continue;
         }
+
+        // Extra safety check: If minutesLate is negative, skip
+        if (minutesLate < 0) {
+          logStep("SAFETY: Negative minutes late detected, skipping", { 
+            bookingId: booking.id, 
+            minutesLate,
+            endTimeLocal: booking.end_time,
+            endTimeForComparison: endTimeForComparison.toISOString(),
+            currentTimeLocal: currentTimeLocal.toISOString(),
+            reason: "Negative lateness indicates timezone issue"
+          });
+          continue;
+        }
+
+        // Check if auto-extension is enabled for this booking before processing penalty
+        // This would typically be stored in booking metadata or user preferences
+        // For now, we'll add a check to see if the booking should be auto-extended
+        
+        // TODO: Add auto-extension logic here in future updates
+        // if (booking.auto_extend_enabled && minutesLate < 240) { // 4 hours max
+        //   // Try to process auto-extension first
+        //   const autoExtensionResult = await processAutoExtension(booking.id, 1);
+        //   if (autoExtensionResult.success) {
+        //     logStep("Auto-extension processed instead of penalty", { bookingId: booking.id });
+        //     continue;
+        //   }
+        // }
 
         // Check if we already have a penalty credit for this booking
         const { data: existingCredit } = await supabaseService

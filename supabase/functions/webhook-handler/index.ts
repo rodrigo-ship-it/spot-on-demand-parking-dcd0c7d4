@@ -318,6 +318,8 @@ serve(async (req) => {
           qr_code_used: isQRBooking,
           platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
           owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
+          // Store auto-extension preference from booking details
+          auto_extend_enabled: bookingDetails.autoExtend === true,
           display_date: (() => {
             // Use the exact date components to avoid timezone conversion
             const bookingDate = new Date(bookingDetails.date);
