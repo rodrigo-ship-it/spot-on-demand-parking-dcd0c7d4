@@ -344,26 +344,52 @@ const Index = () => {
 
             {/* Tablet Navigation - Condensed */}
             <div className="hidden md:flex lg:hidden items-center space-x-2">
-              {user ? (
-                <>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={() => navigate('/premium')}
-                    className="flex items-center bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-none px-2"
-                  >
-                    <Crown className="w-4 h-4" />
-                  </Button>
-                  <Link to="/bookings">
-                    <Button variant="outline" size="sm" className="px-2">
-                      Bookings
-                    </Button>
-                  </Link>
-                  <Link to="/profile">
-                    <Button variant="outline" size="sm" className="px-2">
-                      Profile
-                    </Button>
-                  </Link>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={() => {
+                  if (!user) {
+                    toast.info("Please sign in to access premium features");
+                    navigate("/auth");
+                    return;
+                  }
+                  navigate('/premium');
+                }}
+                className="flex items-center bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-none px-2"
+              >
+                <Crown className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="px-2"
+                onClick={() => {
+                  if (!user) {
+                    toast.info("Please sign in to view your bookings");
+                    navigate("/auth");
+                    return;
+                  }
+                  navigate("/bookings");
+                }}
+              >
+                Bookings
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="px-2"
+                onClick={() => {
+                  if (!user) {
+                    toast.info("Please sign in to access your profile");
+                    navigate("/auth");
+                    return;
+                  }
+                  navigate("/profile");
+                }}
+              >
+                Profile
+              </Button>
+              {user && (
                   <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                     <SheetTrigger asChild>
                       <Button variant="outline" size="sm" className="px-2">
@@ -390,18 +416,17 @@ const Index = () => {
                       </div>
                     </SheetContent>
                   </Sheet>
-                </>
-              ) : (
-                <>
-                  <Link to="/help-support">
-                    <Button variant="ghost" size="sm" className="px-2">
-                      Help
-                    </Button>
-                  </Link>
-                  <Button variant="default" size="sm" onClick={handleSignIn} className="px-3">
-                    Sign In
-                  </Button>
-                </>
+                )
+              }
+              <Link to="/help-support">
+                <Button variant="ghost" size="sm" className="px-2">
+                  Help
+                </Button>
+              </Link>
+              {!user && (
+                <Button variant="default" size="sm" onClick={handleSignIn} className="px-3">
+                  Sign In
+                </Button>
               )}
             </div>
 
@@ -429,51 +454,87 @@ const Index = () => {
                     >
                       My Spots
                     </Link>
-                    <Link 
-                      to="/premium" 
-                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50 flex items-center"
-                      onClick={() => setMobileMenuOpen(false)}
+                    <Button 
+                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50 flex items-center w-full justify-start bg-transparent border-none shadow-none"
+                      onClick={() => {
+                        if (!user) {
+                          toast.info("Please sign in to access premium features");
+                          navigate("/auth");
+                          setMobileMenuOpen(false);
+                          return;
+                        }
+                        navigate("/premium");
+                        setMobileMenuOpen(false);
+                      }}
                     >
                       <Crown className="w-4 h-4 mr-2" />
                       Premium
-                    </Link>
+                    </Button>
                     
                     <div className="border-t pt-4 flex flex-col space-y-3">
+                      {user?.email === 'rodrigo@arrivparking.com' && (
+                        <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                          <Button variant="outline" className="w-full justify-start h-12 border-orange-200 hover:bg-orange-50 text-orange-600">
+                            Admin
+                          </Button>
+                        </Link>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start h-12"
+                        onClick={() => {
+                          if (!user) {
+                            toast.info("Please sign in to view your bookings");
+                            navigate("/auth");
+                            setMobileMenuOpen(false);
+                            return;
+                          }
+                          navigate("/bookings");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        My Bookings
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start h-12"
+                        onClick={() => {
+                          if (!user) {
+                            toast.info("Please sign in to access your profile");
+                            navigate("/auth");
+                            setMobileMenuOpen(false);
+                            return;
+                          }
+                          navigate("/profile");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        Profile
+                      </Button>
                       {user ? (
                         <>
-                          {user.email === 'rodrigo@arrivparking.com' && (
-                            <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                              <Button variant="outline" className="w-full justify-start h-12 border-orange-200 hover:bg-orange-50 text-orange-600">
-                                Admin
-                              </Button>
-                            </Link>
-                          )}
-                          <Link to="/bookings" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                            <Button variant="outline" className="w-full justify-start h-12">
-                              My Bookings
-                            </Button>
-                          </Link>
-                          <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                            <Button variant="outline" className="w-full justify-start h-12">
-                              Profile
-                            </Button>
-                          </Link>
                           <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
                             <Button variant="outline" className="w-full justify-start h-12">
                               <HelpCircle className="w-4 h-4 mr-2" />
                               Help
                             </Button>
                           </Link>
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start h-12" 
-                            onClick={() => {
-                              signOut();
-                              setMobileMenuOpen(false);
-                            }}
-                          >
-                            Sign Out
+                        <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                          <Button variant="outline" className="w-full justify-start h-12">
+                            <HelpCircle className="w-4 h-4 mr-2" />
+                            Help
                           </Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start h-12" 
+                          onClick={() => {
+                            signOut();
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          Sign Out
+                        </Button>
                         </>
                       ) : (
                         <>
