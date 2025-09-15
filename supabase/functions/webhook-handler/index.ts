@@ -279,25 +279,79 @@ serve(async (req) => {
         
         console.log(`✅ [OVERLAP_CHECK_PASSED] No overlapping bookings found`);
 
-        // Create timezone-aware UTC timestamps
-        // The startTimeStr and endTimeStr are in local time (EDT), we need to convert to UTC
-        const startDate = new Date(startTimeStr.split('T')[0] + 'T00:00:00');
-        const endDate = new Date(endTimeStr.split('T')[0] + 'T00:00:00');
+        // Create proper local time timestamps
+        // Store timestamps as LOCAL time without timezone conversion
+        const startDate = new Date(bookingDetails.date);
         
         if (isPricingMonthly) {
           // For monthly bookings, set to start of day (full day access)
           startDate.setHours(0, 0, 0, 0);
+          
+          // Calculate end date by adding months
+          const endDate = new Date(startDate);
+          endDate.setMonth(endDate.getMonth() + (bookingDetails.numberOfMonths || 1));
           endDate.setHours(23, 59, 59, 999); // End of the last day
+          
+          // Store as local time strings
+          startTimeStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
+          endTimeStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
         } else {
           // For hourly/daily bookings, use the specified times
           const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
-          const [endHour, endMinute] = (isPricingDaily ? bookingDetails.startTime : bookingDetails.endTime).split(':').map(Number);
-          
           startDate.setHours(startHour, startMinute, 0, 0);
-          endDate.setHours(endHour, endMinute, 0, 0);
+          
+          let endDate;
+          if (isPricingDaily) {
+            // For daily bookings, add days and use same time
+            endDate = new Date(startDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+          } else {
+            // For hourly bookings, use the specified end time
+            const [endHour, endMinute] = bookingDetails.endTime.split(':').map(Number);
+            endDate = new Date(startDate);
+            endDate.setHours(endHour, endMinute, 0, 0);
+          }
+          
+          // Store as local time strings (remove timezone info)
+          startTimeStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
+          endTimeStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
         }
+
+        // Create UTC timestamps for comparison and API compatibility
+        const startDateUTC = new Date(startDate.getTime() + (startDate.getTimezoneOffset() * 60000));
+        const endDateUTC = new Date(endDate.getTime() + (endDate.getTimezoneOffset() * 60000));
         
-        // Convert to UTC properly - add EDT offset (EDT is UTC-4, so add 4 hours)
+        const startTimeUTC = startDateUTC.toISOString();
+        const endTimeUTC = endDateUTC.toISOString();
+        
+        console.log(`📅 [TIME_FINAL] Local times - Start: ${startTimeStr}, End: ${endTimeStr}`);
+        console.log(`📅 [TIME_FINAL] UTC times - Start: ${startTimeUTC}, End: ${endTimeUTC}`);
+
+        // Get display time labels
+        const startOption = timeOptions.find(opt => opt.value === bookingDetails.startTime);
+        const endOption = timeOptions.find(opt => opt.value === (isPricingDaily ? bookingDetails.startTime : bookingDetails.endTime));
+        
+        const displayStartTime = startOption ? startOption.label : bookingDetails.startTime;
+        const displayEndTime = endOption ? endOption.label : (isPricingDaily ? displayStartTime : bookingDetails.endTime);
+        
+        // Format display date
+        const displayDate = startDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+        
+        // Format duration text
+        let durationText;
+        if (isPricingMonthly) {
+          const months = bookingDetails.numberOfMonths || 1;
+          durationText = `${months} month${months !== 1 ? 's' : ''}`;
+        } else if (isPricingDaily) {
+          const days = bookingDetails.numberOfDays || 1;
+          durationText = `${days} day${days !== 1 ? 's' : ''}`;
+        } else {
+          durationText = `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`;
+        }
         const edtOffsetMs = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
         const startTimeUTC = new Date(startDate.getTime() + edtOffsetMs).toISOString();
         const endTimeUTC = new Date(endDate.getTime() + edtOffsetMs).toISOString();
@@ -318,36 +372,11 @@ serve(async (req) => {
           qr_code_used: isQRBooking,
           platform_fee_amount: metadata.platform_fee ? parseFloat(metadata.platform_fee) / 100 : 0,
           owner_payout_amount: metadata.lister_amount ? parseFloat(metadata.lister_amount) / 100 : 0,
-          // Store auto-extension preference from booking details
           auto_extend_enabled: bookingDetails.autoExtend === true,
-          display_date: (() => {
-            // Use the exact date components to avoid timezone conversion
-            const bookingDate = new Date(bookingDetails.date);
-            const year = bookingDate.getFullYear();
-            const month = bookingDate.getMonth();
-            const day = bookingDate.getDate();
-            // Create a new date with explicit local components to avoid timezone issues
-            const localDate = new Date(year, month, day);
-            return localDate.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            });
-          })(),
-          display_start_time: isPricingMonthly 
-            ? null  // Don't show start time for monthly bookings
-            : timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime,
-          display_end_time: isPricingMonthly 
-            ? null  // Don't show end time for monthly bookings
-            : (isPricingDaily 
-              ? timeOptions.find(opt => opt.value === bookingDetails.startTime)?.label || bookingDetails.startTime
-              : timeOptions.find(opt => opt.value === bookingDetails.endTime)?.label || bookingDetails.endTime),
-          display_duration_text: isPricingMonthly
-            ? `${bookingDetails.numberOfMonths || 1} month${(bookingDetails.numberOfMonths || 1) !== 1 ? 's' : ''}`
-            : (isPricingDaily 
-              ? `${bookingDetails.numberOfDays || 1} day${(bookingDetails.numberOfDays || 1) !== 1 ? 's' : ''}`
-              : `${bookingDetails.duration || 1} hour${(bookingDetails.duration || 1) !== 1 ? 's' : ''}`)
+          display_date: displayDate,
+          display_start_time: isPricingMonthly ? null : displayStartTime,
+          display_end_time: isPricingMonthly ? null : displayEndTime,
+          display_duration_text: durationText
         };
         
         console.log(`💾 [BOOKING_DATA] Inserting booking data:`, bookingData);

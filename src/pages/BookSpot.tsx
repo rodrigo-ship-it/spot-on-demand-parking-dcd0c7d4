@@ -55,9 +55,13 @@ const BookSpot = () => {
     phone: ''
   });
 
-  // Booking state
+  // Booking state - ensure date uses proper local timezone
   const [bookingDetails, setBookingDetails] = useState({
-    date: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()),
+    date: (() => {
+      // Create today's date in local timezone without any UTC conversion
+      const today = new Date();
+      return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    })(),
     startTime: "09:00",
     endTime: "09:00", // Will be updated based on pricing type
     duration: 1, // Changed from 8 to 1 hour default
