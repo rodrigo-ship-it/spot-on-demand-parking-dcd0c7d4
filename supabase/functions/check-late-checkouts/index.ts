@@ -27,18 +27,26 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get current time in local timezone (EST/EDT)
+    // Get current LOCAL time - NOT UTC
     const now = new Date();
-    logStep("Current time", { timestamp: now.toISOString() });
+    // Convert to local time string in format that matches database storage
+    const currentLocalTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    const currentLocalTimeStr = currentLocalTime.toISOString().slice(0, 19);
+    
+    logStep("Current time", { 
+      timestamp: now.toISOString(),
+      localTime: currentLocalTimeStr,
+      timezoneOffset: now.getTimezoneOffset()
+    });
 
-    // Find all active/confirmed bookings that are 3+ hours past their LOCAL end time
-    // We need to be careful with timezone handling here
-    const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+    // Calculate 3 hours ago in LOCAL time
+    const threeHoursAgoLocal = new Date(currentLocalTime.getTime() - (3 * 60 * 60 * 1000));
+    const threeHoursAgoLocalStr = threeHoursAgoLocal.toISOString().slice(0, 19);
     
     logStep("Time validation", { 
-      currentTime: now.toISOString(), 
-      threeHoursAgo: threeHoursAgo.toISOString(),
-      queryFilter: `end_time <= ${threeHoursAgo.toISOString().slice(0, 19)}`
+      currentLocalTime: currentLocalTimeStr,
+      threeHoursAgoLocal: threeHoursAgoLocalStr,
+      queryFilter: `end_time <= ${threeHoursAgoLocalStr}`
     });
     
     const { data: lateBookings, error: bookingsError } = await supabaseService
@@ -46,6 +54,7 @@ serve(async (req) => {
       .select(`
         id, 
         renter_id, 
+        start_time,
         end_time,
         end_time_utc, 
         status,
@@ -54,7 +63,7 @@ serve(async (req) => {
         parking_spots!inner(title, address, price_per_hour, owner_id)
       `)
       .in('status', ['confirmed', 'active'])
-      .lte('end_time', threeHoursAgo.toISOString().slice(0, 19)) // Use LOCAL time for comparison
+      .lte('end_time', threeHoursAgoLocalStr) // Compare LOCAL time strings directly
       .order('end_time', { ascending: true });
 
     if (bookingsError) {
@@ -80,29 +89,37 @@ serve(async (req) => {
 
     for (const booking of lateBookings) {
       try {
-        logStep("Processing late booking", { bookingId: booking.id, endTimeLocal: booking.end_time, endTimeUtc: booking.end_time_utc });
+        logStep("Processing late booking", { 
+          bookingId: booking.id, 
+          startTimeLocal: booking.start_time,
+          endTimeLocal: booking.end_time, 
+          endTimeUtc: booking.end_time_utc 
+        });
 
-        // Parse end_time as local time - booking.end_time is stored as local time without timezone
-        // We need to ensure we're comparing apples to apples
-        const endTimeLocal = new Date(booking.end_time);
-        const currentTimeLocal = new Date(); // Current time in user's local timezone
+        // CRITICAL: Work entirely in LOCAL time strings to avoid timezone conversion issues
+        // Both database times and current time should be treated as local timezone
         
-        // CRITICAL FIX: Ensure we're comparing in the same timezone
-        // If end_time doesn't have timezone info, treat it as local time
-        let endTimeForComparison = endTimeLocal;
-        if (!booking.end_time.includes('T') && !booking.end_time.includes('+')) {
-          // If it's just a date string without timezone, parse as local
-          endTimeForComparison = new Date(booking.end_time.replace(' ', 'T'));
-        }
+        // Parse booking times as LOCAL time (database stores as local without timezone)
+        const endTimeLocalStr = booking.end_time; // e.g., "2025-09-15 20:30:00"
+        const startTimeLocalStr = booking.start_time; // e.g., "2025-09-15 20:00:00"
         
-        const minutesLate = Math.floor((currentTimeLocal.getTime() - endTimeForComparison.getTime()) / (1000 * 60));
+        // Current time in same format as database (local time string)
+        const currentLocalTimeForComparison = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+        const currentLocalTimeStr = currentLocalTimeForComparison.toISOString().slice(0, 19).replace('T', ' ');
+        
+        // Calculate minutes late using LOCAL time strings
+        const endTimeDate = new Date(endTimeLocalStr.replace(' ', 'T'));
+        const currentTimeDate = new Date(currentLocalTimeStr.replace(' ', 'T'));
+        const minutesLate = Math.floor((currentTimeDate.getTime() - endTimeDate.getTime()) / (1000 * 60));
         
         logStep("Calculated lateness", { 
           minutesLate, 
           bookingId: booking.id, 
-          endTimeLocal: booking.end_time, 
-          endTimeForComparison: endTimeForComparison.toISOString(),
-          currentTimeLocal: currentTimeLocal.toISOString() 
+          startTimeLocal: startTimeLocalStr,
+          endTimeLocal: endTimeLocalStr,
+          currentTimeLocal: currentLocalTimeStr,
+          endTimeAsDate: endTimeDate.toISOString(),
+          currentTimeAsDate: currentTimeDate.toISOString()
         });
 
         // CRITICAL SAFETY CHECK: Don't process bookings that aren't actually late
@@ -110,35 +127,33 @@ serve(async (req) => {
           logStep("SAFETY: Booking not actually late, skipping", { 
             bookingId: booking.id, 
             minutesLate, 
-            endTimeLocal: booking.end_time,
-            endTimeForComparison: endTimeForComparison.toISOString(),
-            currentTimeLocal: currentTimeLocal.toISOString(),
+            endTimeLocal: endTimeLocalStr,
+            currentTimeLocal: currentLocalTimeStr,
             reason: "Less than 3 hours late"
           });
           continue;
         }
 
         // Additional safety check: Don't process future bookings
-        if (currentTimeLocal.getTime() < endTimeForComparison.getTime()) {
+        if (minutesLate < 0) {
           logStep("SAFETY: Booking end time is in the future, skipping", { 
             bookingId: booking.id, 
-            endTimeLocal: booking.end_time,
-            endTimeForComparison: endTimeForComparison.toISOString(),
-            currentTimeLocal: currentTimeLocal.toISOString(),
-            reason: "End time is in future"
+            minutesLate,
+            endTimeLocal: endTimeLocalStr,
+            currentTimeLocal: currentLocalTimeStr,
+            reason: "End time is in future - negative lateness"
           });
           continue;
         }
 
-        // Extra safety check: If minutesLate is negative, skip
-        if (minutesLate < 0) {
-          logStep("SAFETY: Negative minutes late detected, skipping", { 
+        // Extra safety check: Don't process bookings that haven't even started yet
+        const startTimeDate = new Date(startTimeLocalStr.replace(' ', 'T'));
+        if (currentTimeDate.getTime() < startTimeDate.getTime()) {
+          logStep("SAFETY: Booking hasn't started yet, skipping", { 
             bookingId: booking.id, 
-            minutesLate,
-            endTimeLocal: booking.end_time,
-            endTimeForComparison: endTimeForComparison.toISOString(),
-            currentTimeLocal: currentTimeLocal.toISOString(),
-            reason: "Negative lateness indicates timezone issue"
+            startTimeLocal: startTimeLocalStr,
+            currentTimeLocal: currentLocalTimeStr,
+            reason: "Booking start time is in future"
           });
           continue;
         }
