@@ -99,57 +99,20 @@ const SpotDetails = () => {
       }
 
       try {
-        // Load parking spot data - first get the spot, then the owner info separately
-        const { data: spot, error: spotError } = await supabase
-          .from('parking_spots')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-
-        if (spotError) {
-          console.error('SpotDetails - Error loading spot:', spotError);
-          toast.error("Failed to load parking spot");
-          navigate('/');
-          return;
-        }
-
-        if (!spot) {
+        // Load parking spot data using secure function
+        const spotData = await getSecureParkingSpotDetail(id);
+        
+        if (!spotData) {
           console.error('SpotDetails - No spot found with ID:', id);
           setError("Parking spot not found");
           setLoading(false);
           return;
         }
 
-        // Now get the owner profile
-        const { data: ownerProfile } = await supabase
-          .from('profiles')
-          .select('full_name, phone')
-          .eq('user_id', spot.owner_id)
-          .single();
-
-        // Combine the data
-        const spotWithOwner = {
-          ...spot,
-          profiles: ownerProfile
-        };
-
-        setSpotData(spotWithOwner);
+        // Set the basic spot data
+        setSpotData(spotData);
         
-        // Check if owner is premium
-        if (spot.owner_id) {
-          const { data: premiumData } = await supabase
-            .from('premium_subscriptions')
-            .select('user_id')
-            .eq('user_id', spot.owner_id)
-            .eq('status', 'active')
-            .gte('current_period_end', new Date().toISOString())
-            .single();
-            
-          setIsOwnerPremium(!!premiumData);
-        }
-        
-        
-        // Fetch reviews for this spot - get all bookings for this spot and their reviews
+        // Fetch reviews for this spot
         await fetchReviews();
       } catch (err: any) {
         console.error('Error fetching spot data:', err);

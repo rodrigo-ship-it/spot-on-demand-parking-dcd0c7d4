@@ -66,7 +66,10 @@ const Index = () => {
   // Transform spots and fetch premium status when parking spots change
   useEffect(() => {
     const transformSpots = async () => {
-      const newTransformedSpots = allParkingSpots.map(spot => {
+      // Use secure parking data instead of direct spots access
+      const secureSpots = await getSecureParkingListings(1000, 0); // Get all spots
+      
+      const newTransformedSpots = secureSpots.map(spot => {
         // Calculate distance using search coordinates or user location as reference
         let calculatedDistance = "Unknown distance";
         const referenceLocation = searchCoordinates || userLocation;
@@ -108,15 +111,13 @@ const Index = () => {
         };
       });
 
-      // Note: Premium status fetching removed for security
-      // Owner information is no longer exposed to prevent competitor data harvesting
-      // Premium badges will be shown based on spot-level indicators instead
-
       setTransformedSpots(newTransformedSpots);
     };
 
-    transformSpots();
-  }, [allParkingSpots, searchCoordinates, userLocation]);
+    if (!loading) { // Only transform when loading is complete
+      transformSpots();
+    }
+  }, [loading, searchCoordinates, userLocation, getSecureParkingListings]);
 
   const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
