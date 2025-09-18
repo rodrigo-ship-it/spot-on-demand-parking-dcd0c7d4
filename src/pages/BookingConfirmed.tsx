@@ -79,7 +79,7 @@ const BookingConfirmed = () => {
                 if (!spotError && spot) {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
-          const isMonthly = spot.pricing_type === 'monthly';
+          const isMonthly = spot?.pricing_type === 'monthly';
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
@@ -103,7 +103,7 @@ const BookingConfirmed = () => {
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour),
+              price: isMonthly ? ((spot as any).monthly_price || 0) : (isDaily ? ((spot as any).daily_price || (spot as any).one_time_price || 0) : ((spot as any).price_per_hour || 0)),
               pricing_type: spot.pricing_type
             }
           };
@@ -150,7 +150,7 @@ const BookingConfirmed = () => {
           // Use the stored display values - exactly what the user originally saw
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
-          const isMonthly = spot.pricing_type === 'monthly';
+          const isMonthly = spot?.pricing_type === 'monthly';
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
@@ -174,7 +174,7 @@ const BookingConfirmed = () => {
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour),
+              price: isMonthly ? ((spot as any).monthly_price || 0) : (isDaily ? ((spot as any).daily_price || (spot as any).one_time_price || 0) : ((spot as any).price_per_hour || 0)),
               pricing_type: spot.pricing_type
             }
           };
@@ -210,7 +210,7 @@ const BookingConfirmed = () => {
 
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
-          const isMonthly = spot.pricing_type === 'monthly';
+          const isMonthly = spot?.pricing_type === 'monthly';
           
           const formattedData = {
             date: booking.display_date || "Your selected date",
@@ -234,7 +234,7 @@ const BookingConfirmed = () => {
             spotData: {
               title: spot.title,
               address: spot.address,
-              price: isMonthly ? spot.monthly_price : (isDaily ? (spot.daily_price || spot.one_time_price) : spot.price_per_hour),
+              price: isMonthly ? ((spot as any).monthly_price || 0) : (isDaily ? ((spot as any).daily_price || (spot as any).one_time_price || 0) : ((spot as any).price_per_hour || 0)),
               pricing_type: spot.pricing_type
             }
           };
@@ -330,7 +330,7 @@ const BookingConfirmed = () => {
             title: spot.title,
             address: spot.address,
             price_per_hour: spot.price_per_hour,
-            one_time_price: spot.one_time_price,
+            one_time_price: (spot as any).one_time_price || null,
             daily_price: spot.daily_price,
             pricing_type: spot.pricing_type
           },
