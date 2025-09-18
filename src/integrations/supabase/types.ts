@@ -1441,6 +1441,14 @@ export type Database = {
         }
         Returns: string
       }
+      log_admin_banking_access: {
+        Args: {
+          p_action: string
+          p_payout_setting_id: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
       log_api_access: {
         Args: {
           endpoint_name: string
