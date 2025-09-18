@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
-import { useSecureParkingData } from "@/hooks/useSecureParkingData";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,7 +27,7 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [transformedSpots, setTransformedSpots] = useState([]);
   const { spots: allParkingSpots, loading } = useRealTimeSpots();
-  const { getSecureParkingListings } = useSecureParkingData();
+  
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
@@ -127,7 +127,7 @@ const Index = () => {
     if (!loading) { // Only transform when loading is complete
       transformSpots();
     }
-  }, [loading, searchCoordinates, userLocation, getSecureParkingListings]);
+  }, [loading, searchCoordinates, userLocation]);
 
   const parkingSpots = hasSearched ? filteredSpots : transformedSpots;
 
