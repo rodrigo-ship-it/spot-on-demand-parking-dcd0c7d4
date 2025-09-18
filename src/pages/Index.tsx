@@ -65,8 +65,19 @@ const Index = () => {
   // Transform spots and fetch premium status when parking spots change
   useEffect(() => {
     const transformSpots = async () => {
-      // Use secure parking data instead of direct spots access
-      const secureSpots = await getSecureParkingListings(1000, 0); // Get all spots
+      // Use regular parking spots data since secure function isn't working
+      const { data: spotData, error } = await supabase
+        .from('parking_spots')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching parking spots:', error);
+        return;
+      }
+      
+      const secureSpots = spotData || [];
       
       const newTransformedSpots = secureSpots.map(spot => {
         // Calculate distance using search coordinates or user location as reference
