@@ -99,8 +99,12 @@ const SpotDetails = () => {
       }
 
       try {
+        console.log('SpotDetails - Loading spot with ID:', id);
+        
         // Load parking spot data using secure function
         const spotData = await getSecureParkingSpotDetail(id);
+        
+        console.log('SpotDetails - Received spot data:', spotData);
         
         if (!spotData) {
           console.error('SpotDetails - No spot found with ID:', id);
@@ -112,10 +116,12 @@ const SpotDetails = () => {
         // Set the basic spot data
         setSpotData(spotData);
         
+        console.log('SpotDetails - Successfully set spot data');
+        
         // Fetch reviews for this spot
         await fetchReviews();
       } catch (err: any) {
-        console.error('Error fetching spot data:', err);
+        console.error('SpotDetails - Error loading spot:', err);
         setError(err.message || "Failed to load spot data");
         toast.error("Failed to load parking spot details");
       } finally {
