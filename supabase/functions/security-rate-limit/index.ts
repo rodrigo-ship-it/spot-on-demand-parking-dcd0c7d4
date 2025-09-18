@@ -16,7 +16,12 @@ const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
   login: { maxAttempts: 5, windowMs: 15 * 60 * 1000, blockDurationMs: 30 * 60 * 1000 },
   payment: { maxAttempts: 3, windowMs: 60 * 60 * 1000, blockDurationMs: 2 * 60 * 60 * 1000 },
   api: { maxAttempts: 100, windowMs: 60 * 1000, blockDurationMs: 5 * 60 * 1000 },
-  stripe_access: { maxAttempts: 10, windowMs: 60 * 1000, blockDurationMs: 10 * 60 * 1000 }
+  stripe_access: { maxAttempts: 10, windowMs: 60 * 1000, blockDurationMs: 10 * 60 * 1000 },
+  // Enhanced data protection against scraping
+  spot_listings: { maxAttempts: 50, windowMs: 60 * 60 * 1000, blockDurationMs: 30 * 60 * 1000 }, // 50 per hour
+  place_search: { maxAttempts: 30, windowMs: 60 * 60 * 1000, blockDurationMs: 60 * 60 * 1000 }, // 30 per hour
+  data_export: { maxAttempts: 5, windowMs: 60 * 60 * 1000, blockDurationMs: 4 * 60 * 60 * 1000 }, // 5 per hour
+  bulk_access: { maxAttempts: 3, windowMs: 60 * 60 * 1000, blockDurationMs: 6 * 60 * 60 * 1000 }  // 3 per hour
 };
 
 serve(async (req) => {

@@ -1253,6 +1253,16 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      detect_scraping_patterns: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          first_request: string
+          ip_address: unknown
+          last_request: string
+          request_count: number
+          risk_score: number
+        }[]
+      }
       get_available_time_slots: {
         Args: {
           p_date: string
@@ -1324,6 +1334,32 @@ export type Database = {
         Returns: {
           avatar_url: string
           full_name: string
+        }[]
+      }
+      get_public_spot_listings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          address: string
+          amenities: string[]
+          available_spots: number
+          created_at: string
+          daily_price: number
+          description: string
+          id: string
+          images: string[]
+          is_active: boolean
+          latitude: number
+          longitude: number
+          monthly_price: number
+          one_time_price: number
+          price_per_hour: number
+          pricing_type: string
+          rating: number
+          spot_type: string
+          title: string
+          total_reviews: number
+          total_spots: number
+          updated_at: string
         }[]
       }
       get_safe_parking_spot_data: {
@@ -1404,6 +1440,14 @@ export type Database = {
           p_target_user_id?: string
         }
         Returns: string
+      }
+      log_api_access: {
+        Args: {
+          endpoint_name: string
+          ip_address_param?: unknown
+          user_id_param?: string
+        }
+        Returns: undefined
       }
       log_data_access: {
         Args: { operation: string; record_count?: number; table_name: string }

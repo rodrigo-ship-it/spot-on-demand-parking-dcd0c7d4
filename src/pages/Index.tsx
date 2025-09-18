@@ -14,6 +14,7 @@ import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumBadge } from "@/components/PremiumBadge";
+import { SecurityWrapper } from "@/components/SecurityWrapper";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -100,39 +101,14 @@ const Index = () => {
           image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
           latitude: Number(spot.latitude) || 40.7589,
           longitude: Number(spot.longitude) || -73.9851,
-          owner_id: spot.owner_id,
+          // Note: owner_id removed for security - no longer exposed to public
           isPremiumLister: false // We'll fetch this separately
         };
       });
 
-      // Fetch premium status for all spot owners
-      if (newTransformedSpots.length > 0) {
-        const ownerIds = [...new Set(newTransformedSpots.map(spot => spot.owner_id))];
-        
-        try {
-          // Use the secure database function to check premium status
-          const { data: premiumStatuses, error } = await supabase
-            .rpc('get_premium_status_for_owners', {
-              owner_ids: ownerIds
-            });
-
-          if (error) {
-            console.error('Error fetching premium statuses:', error);
-            return;
-          }
-
-          const premiumUserIds = new Set(
-            premiumStatuses?.filter(ps => ps.is_premium).map(ps => ps.user_id) || []
-          );
-          
-          // Update spots with premium status
-          newTransformedSpots.forEach(spot => {
-            spot.isPremiumLister = premiumUserIds.has(spot.owner_id);
-          });
-        } catch (error) {
-          console.error('Error fetching premium statuses:', error);
-        }
-      }
+      // Note: Premium status fetching removed for security
+      // Owner information is no longer exposed to prevent competitor data harvesting
+      // Premium badges will be shown based on spot-level indicators instead
 
       setTransformedSpots(newTransformedSpots);
     };
@@ -264,7 +240,13 @@ const Index = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+    <SecurityWrapper 
+      endpoint="spot_listings"
+      requireAuth={false}
+      maxRequests={100}
+      timeWindowMs={3600000}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       {/* Modern Navigation with Glass Effect */}
       <nav className="glass-card border-0 border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto container-padding">
@@ -892,7 +874,8 @@ const Index = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </SecurityWrapper>
   );
 };
 

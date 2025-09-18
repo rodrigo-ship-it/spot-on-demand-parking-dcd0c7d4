@@ -1,11 +1,38 @@
-import React, { useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { getSecurityHeaders, auditLog } from '@/lib/security';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, Clock, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface SecurityWrapperProps {
   children: ReactNode;
+  endpoint?: string;
+  requireAuth?: boolean;
+  maxRequests?: number;
+  timeWindowMs?: number;
 }
 
-export const SecurityWrapper: React.FC<SecurityWrapperProps> = ({ children }) => {
+interface RateLimitStatus {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
+  blockedReason?: string;
+}
+
+export const SecurityWrapper: React.FC<SecurityWrapperProps> = ({ 
+  children,
+  endpoint,
+  requireAuth = false,
+  maxRequests = 50,
+  timeWindowMs = 3600000 // 1 hour
+}) => {
+  const { user } = useAuth();
+  const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitStatus | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     // Set security headers (where possible in client-side)
     const headers = getSecurityHeaders();
@@ -14,8 +41,14 @@ export const SecurityWrapper: React.FC<SecurityWrapperProps> = ({ children }) =>
     auditLog.logSecurityEvent('security_wrapper_initialized', {
       headers: Object.keys(headers),
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      endpoint: endpoint || 'unknown'
     });
+
+    // Check rate limit if endpoint is specified
+    if (endpoint) {
+      checkRateLimit();
+    }
 
     // Prevent right-click in production (optional)
     const handleContextMenu = (e: MouseEvent) => {
@@ -62,7 +95,131 @@ export const SecurityWrapper: React.FC<SecurityWrapperProps> = ({ children }) =>
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [endpoint, user]);
+
+  const checkRateLimit = async () => {
+    try {
+      setLoading(true);
+      
+      // If auth is required and user is not logged in, block access
+      if (requireAuth && !user) {
+        setIsBlocked(true);
+        setRateLimitStatus({
+          allowed: false,
+          remaining: 0,
+          resetTime: Date.now() + timeWindowMs,
+          blockedReason: 'Authentication required'
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Call the rate limiting edge function
+      const { data, error } = await supabase.functions.invoke('security-rate-limit', {
+        body: {
+          action: endpoint?.replace(/[^a-zA-Z0-9_]/g, '_') || 'default', // Sanitize endpoint name
+          key: user?.id || 'anonymous',
+          userId: user?.id || null
+        }
+      });
+
+      if (error) {
+        console.error('Rate limit check error:', error);
+        // Fail open - allow access if rate limit check fails
+        setRateLimitStatus({
+          allowed: true,
+          remaining: maxRequests,
+          resetTime: Date.now() + timeWindowMs
+        });
+        setIsBlocked(false);
+      } else {
+        setRateLimitStatus(data);
+        setIsBlocked(!data.allowed);
+      }
+    } catch (error) {
+      console.error('Security wrapper error:', error);
+      // Fail open for availability
+      setRateLimitStatus({
+        allowed: true,
+        remaining: maxRequests,
+        resetTime: Date.now() + timeWindowMs
+      });
+      setIsBlocked(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    checkRateLimit();
+  };
+
+  if (loading && endpoint) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Shield className="w-4 h-4 animate-pulse" />
+          <span>Checking access permissions...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isBlocked && rateLimitStatus && endpoint) {
+    const timeUntilReset = rateLimitStatus.resetTime - Date.now();
+    const minutesUntilReset = Math.ceil(timeUntilReset / 60000);
+
+    return (
+      <div className="flex items-center justify-center min-h-[400px] p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="w-12 h-12 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-warning" />
+            </div>
+            <CardTitle className="text-xl">Access Limited</CardTitle>
+            <CardDescription>
+              {rateLimitStatus.blockedReason === 'Authentication required' 
+                ? 'Please sign in to access this feature'
+                : 'Too many requests from your location'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            {rateLimitStatus.blockedReason === 'Authentication required' ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  This feature requires authentication to prevent automated access and protect user data.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/auth'}
+                  className="w-full"
+                >
+                  Sign In
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  <span>Access will be restored in {minutesUntilReset} minutes</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Rate limiting helps protect our service and ensures fair access for all users.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  className="w-full"
+                >
+                  Check Again
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return <>{children}</>;
 };
