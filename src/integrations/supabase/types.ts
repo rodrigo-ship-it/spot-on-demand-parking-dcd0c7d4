@@ -1515,6 +1515,14 @@ export type Database = {
         Args: { spot_id_param: string }
         Returns: boolean
       }
+      validate_enhanced_financial_access: {
+        Args: {
+          p_resource_id: string
+          p_resource_type: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       validate_financial_access: {
         Args: {
           p_resource_id: string
