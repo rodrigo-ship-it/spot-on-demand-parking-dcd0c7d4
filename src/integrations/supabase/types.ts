@@ -1276,6 +1276,18 @@ export type Database = {
         Args: { booking_id_param: string; target_user_id: string }
         Returns: string
       }
+      get_masked_banking_info: {
+        Args: { p_user_id: string }
+        Returns: {
+          account_last_four: string
+          account_type: string
+          bank_name: string
+          id: string
+          is_verified: boolean
+          onboarding_completed: boolean
+          payouts_enabled: boolean
+        }[]
+      }
       get_masked_vehicle_data: {
         Args: { p_user_id: string }
         Returns: {
@@ -1397,6 +1409,16 @@ export type Database = {
         Returns: {
           avatar_url: string
           full_name: string
+        }[]
+      }
+      get_secure_payout_settings: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: string
+          onboarding_completed: boolean
+          payouts_enabled: boolean
+          stripe_connect_account_id: string
+          user_id: string
         }[]
       }
       get_spot_owner_for_booking: {

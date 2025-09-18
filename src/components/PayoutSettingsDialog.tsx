@@ -14,11 +14,11 @@ import { useAuth } from "@/contexts/AuthContext";
 interface PayoutSettings {
   id: string;
   bank_name: string;
-  account_number_last_four: string;
-  routing_number: string;
-  account_holder_name: string;
+  account_last_four: string; // Updated to match secure function
   account_type: string;
   is_verified: boolean;
+  onboarding_completed: boolean;
+  payouts_enabled: boolean;
 }
 
 interface PayoutSettingsDialogProps {
@@ -50,13 +50,12 @@ export const PayoutSettingsDialog = ({ children }: PayoutSettingsDialogProps) =>
     
     setLoading(true);
     try {
+      // Use secure masked banking info function
       const { data, error } = await supabase
-        .from('payout_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .rpc('get_masked_banking_info', { p_user_id: user.id })
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         throw error;
       }
 
@@ -64,9 +63,9 @@ export const PayoutSettingsDialog = ({ children }: PayoutSettingsDialogProps) =>
         setSettings(data);
         setFormData({
           bankName: data.bank_name || "",
-          accountNumber: `****${data.account_number_last_four}`,
-          routingNumber: data.routing_number || "",
-          accountHolderName: data.account_holder_name || "",
+          accountNumber: `****${data.account_last_four}`, // Updated to use new property
+          routingNumber: "", // Not available in masked data for security
+          accountHolderName: "", // Not available in masked data for security
           accountType: data.account_type || "checking"
         });
       }
@@ -105,7 +104,7 @@ export const PayoutSettingsDialog = ({ children }: PayoutSettingsDialogProps) =>
       const settingsData = {
         user_id: user.id,
         bank_name: formData.bankName,
-        account_number_last_four: lastFour,
+        account_number_last_four: lastFour, // Still using old column for database insert
         routing_number: formData.routingNumber,
         account_holder_name: formData.accountHolderName,
         account_type: formData.accountType,
@@ -170,10 +169,10 @@ export const PayoutSettingsDialog = ({ children }: PayoutSettingsDialogProps) =>
               </CardHeader>
               <CardContent className="pt-0">
                 <p className="text-sm text-muted-foreground">
-                  {settings.bank_name} •••• {settings.account_number_last_four}
+                  {settings.bank_name} •••• {settings.account_last_four}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {settings.account_holder_name}
+                  Account Type: {settings.account_type || 'Not specified'}
                 </p>
                 {!settings.is_verified && (
                   <Button 

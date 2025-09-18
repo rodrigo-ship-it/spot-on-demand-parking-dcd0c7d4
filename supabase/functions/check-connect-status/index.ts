@@ -40,11 +40,9 @@ serve(async (req) => {
     
     console.log('User authenticated:', user.id);
 
-    // Get user's payout settings using service role to bypass RLS
+    // Get user's payout settings using secure function
     const { data: payoutSettings, error: dbError } = await supabaseService
-      .from("payout_settings")
-      .select("*")
-      .eq("user_id", user.id)
+      .rpc('get_secure_payout_settings', { p_user_id: user.id })
       .maybeSingle();
 
     console.log('Payout settings from DB:', payoutSettings);

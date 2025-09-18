@@ -148,11 +148,9 @@ serve(async (req) => {
         console.log("🔧 Created user object from booking data:", user.email);
       }
       
-      // Get payout settings for spot owner
+      // Get payout settings for spot owner using secure function
       const { data: payoutSettings, error: payoutError } = await supabaseService
-        .from("payout_settings")
-        .select("*")
-        .eq("user_id", bookingData.parking_spots.owner_id)
+        .rpc('get_secure_payout_settings', { p_user_id: bookingData.parking_spots.owner_id })
         .maybeSingle();
 
       console.log("📝 Payout settings:", { payoutSettings, payoutError });
@@ -181,11 +179,9 @@ serve(async (req) => {
       });
     }
 
-    // Get payout settings using service role to bypass RLS
+    // Get payout settings using secure function
     const { data: payoutSettings, error: payoutError } = await supabaseService
-      .from("payout_settings")
-      .select("*")
-      .eq("user_id", parkingSpot.owner_id)
+      .rpc('get_secure_payout_settings', { p_user_id: parkingSpot.owner_id })
       .maybeSingle();
 
     if (payoutError || !payoutSettings?.stripe_connect_account_id || !payoutSettings?.payouts_enabled) {

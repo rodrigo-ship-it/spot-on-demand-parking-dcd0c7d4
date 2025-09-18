@@ -281,14 +281,12 @@ serve(async (req) => {
         logStep("Spot lookup result", { spot, spotError });
 
         if (!spotError && spot) {
-          // Get spot owner's Stripe Connect account
+          // Get spot owner's Stripe Connect account using secure function
           const { data: payout_settings, error: payoutError } = await supabaseService
-            .from('payout_settings')
-            .select('stripe_connect_account_id')
-            .eq('user_id', spot.owner_id)
-            .single();
+            .rpc('get_secure_payout_settings', { p_user_id: spot.owner_id })
+            .maybeSingle();
 
-          logStep("Payout settings lookup", { payout_settings, payoutError, spotOwnerId: spot.owner_id });
+          logStep("Secure payout settings lookup", { payout_settings, payoutError, spotOwnerId: spot.owner_id });
 
           if (payout_settings?.stripe_connect_account_id) {
             // Use the calculated owner payout amount from the trigger if provided, otherwise fallback to 93% calculation
