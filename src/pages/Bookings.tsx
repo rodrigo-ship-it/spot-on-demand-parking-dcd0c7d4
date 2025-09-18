@@ -78,7 +78,8 @@ const Bookings = () => {
           .from('bookings')
           .select(`
             *,
-            parking_spots (
+            parking_spots!inner (
+              id,
               title,
               address,
               price_per_hour,
@@ -180,21 +181,25 @@ const Bookings = () => {
               console.log('🔴 [STATUS] Setting as Completed - fallback status');
             }
 
-            // Get owner profile separately
+            // Get owner profile using secure function
             let ownerName = 'Unknown Owner';
             let ownerPhone = 'No phone';
             let ownerId = null;
             if (booking.parking_spots?.owner_id) {
               ownerId = booking.parking_spots.owner_id;
-              const { data: ownerProfile } = await supabase
-                .from('profiles')
-                .select('full_name, phone')
-                .eq('user_id', booking.parking_spots.owner_id)
-                .single();
-              
-              if (ownerProfile) {
-                ownerName = ownerProfile.full_name || 'Unknown Owner';
-                ownerPhone = ownerProfile.phone || 'No phone';
+              try {
+                const { data: ownerData, error: ownerError } = await supabase.rpc('get_booking_owner_info', {
+                  booking_id_param: booking.id
+                });
+                
+                if (!ownerError && ownerData && ownerData.length > 0) {
+                  const owner = ownerData[0];
+                  ownerName = owner.owner_name || 'Unknown Owner';
+                  ownerPhone = owner.owner_phone || 'No phone';
+                  ownerId = owner.owner_id;
+                }
+              } catch (err) {
+                console.warn('Could not fetch owner info for booking:', booking.id, err);
               }
             }
 
@@ -207,23 +212,23 @@ const Bookings = () => {
               ownerName: ownerName,
               ownerId: ownerId,
               ownerPhone: ownerPhone,
-              date: booking.display_date || (() => {
-                // Use the raw date components without timezone conversion
-                const year = startDate.getFullYear();
-                const month = String(startDate.getMonth() + 1).padStart(2, '0');
-                const day = String(startDate.getDate()).padStart(2, '0');
-                return `${month}/${day}/${year}`;
-              })(),
+              date: booking.display_date || startDate.toLocaleDateString('en-US', { 
+                month: '2-digit', 
+                day: '2-digit', 
+                year: 'numeric' 
+              }),
               startTime: isMonthly ? null : (booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: true
               })),
               endTime: isMonthly ? null : (booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: true
               })),
-              startDate: isMonthly ? startDate.toLocaleDateString() : null,
-              endDate: isMonthly ? endDate.toLocaleDateString() : null,
+              startDate: isMonthly ? startDate.toLocaleDateString('en-US') : null,
+              endDate: isMonthly ? endDate.toLocaleDateString('en-US') : null,
               duration: isMonthly 
                 ? (booking.display_duration_text || "1 month") // Use stored duration for monthly
                 : `${duration} hours`,

@@ -1267,6 +1267,19 @@ export type Database = {
           risk_score: number
         }[]
       }
+      format_booking_time_display: {
+        Args: {
+          end_time_param: string
+          pricing_type_param: string
+          start_time_param: string
+        }
+        Returns: {
+          display_date: string
+          display_duration_text: string
+          display_end_time: string
+          display_start_time: string
+        }[]
+      }
       get_available_time_slots: {
         Args: {
           p_date: string
@@ -1275,6 +1288,27 @@ export type Database = {
           p_timezone?: string
         }
         Returns: string
+      }
+      get_booking_owner_info: {
+        Args: { booking_id_param: string }
+        Returns: {
+          owner_id: string
+          owner_name: string
+          owner_phone: string
+        }[]
+      }
+      get_booking_spot_details: {
+        Args: { booking_id_param: string; spot_id_param: string }
+        Returns: {
+          address: string
+          daily_price: number
+          id: string
+          monthly_price: number
+          owner_id: string
+          price_per_hour: number
+          pricing_type: string
+          title: string
+        }[]
       }
       get_display_name_for_booking: {
         Args: { booking_id_param: string; target_user_id: string }
@@ -1484,6 +1518,10 @@ export type Database = {
           stripe_connect_account_id: string
           user_id: string
         }[]
+      }
+      get_session_payment_intent: {
+        Args: { session_id_param: string }
+        Returns: string
       }
       get_spot_owner_for_booking: {
         Args: { booking_id_param: string; spot_id_param: string }

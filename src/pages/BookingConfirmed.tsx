@@ -69,13 +69,13 @@ const BookingConfirmed = () => {
                 // Use the most recent confirmed booking
                 const booking = recentBookings[0];
                 
-                // Fetch spot details
-                const { data: spot, error: spotError } = await supabase
-                  .from('parking_spots')
-                  .select('*')
-                  .eq('id', booking.spot_id)
-                  .single();
+                // Fetch spot details using secure function
+                const { data: spotData, error: spotError } = await supabase.rpc('get_booking_spot_details', {
+                  spot_id_param: booking.spot_id,
+                  booking_id_param: booking.id
+                });
 
+                const spot = spotData && spotData.length > 0 ? spotData[0] : null;
                 if (!spotError && spot) {
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
@@ -135,14 +135,17 @@ const BookingConfirmed = () => {
             throw bookingError;
           }
 
-          // Fetch spot details
-          const { data: spot, error: spotError } = await supabase
-            .from('parking_spots')
-            .select('*')
-            .eq('id', booking.spot_id)
-            .single();
+          // Fetch spot details using secure function
+          const { data: spotData, error: spotError } = await supabase.rpc('get_booking_spot_details', {
+            spot_id_param: booking.spot_id,
+            booking_id_param: booking.id
+          });
 
-          if (spotError) throw spotError;
+          const spot = spotData && spotData.length > 0 ? spotData[0] : null;
+          if (spotError || !spot) {
+            console.error('Spot error:', spotError);
+            throw new Error('Could not fetch spot details');
+          }
 
           // Use the stored display values - exactly what the user originally saw
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
@@ -196,14 +199,14 @@ const BookingConfirmed = () => {
 
           if (bookingError) throw bookingError;
 
-          // Fetch spot details
-          const { data: spot, error: spotError } = await supabase
-            .from('parking_spots')
-            .select('*')
-            .eq('id', booking.spot_id)
-            .single();
+          // Fetch spot details using secure function
+          const { data: spotData, error: spotError } = await supabase.rpc('get_booking_spot_details', {
+            spot_id_param: booking.spot_id,
+            booking_id_param: booking.id
+          });
 
-          if (spotError) throw spotError;
+          const spot = spotData && spotData.length > 0 ? spotData[0] : null;
+          if (spotError || !spot) throw new Error('Could not fetch spot details');
 
           const durationInHours = Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60));
           const isDaily = durationInHours >= 24;
@@ -296,14 +299,14 @@ const BookingConfirmed = () => {
         return;
       }
 
-      // Get spot details
-      const { data: spot, error: spotError } = await supabase
-        .from('parking_spots')
-        .select('*')
-        .eq('id', booking.spot_id)
-        .single();
+      // Get spot details using secure function
+      const { data: spotData, error: spotError } = await supabase.rpc('get_booking_spot_details', {
+        spot_id_param: booking.spot_id,
+        booking_id_param: booking.id
+      });
 
-      if (spotError) {
+      const spot = spotData && spotData.length > 0 ? spotData[0] : null;
+      if (spotError || !spot) {
         toast.error('Failed to fetch spot details');
         return;
       }
