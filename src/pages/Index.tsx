@@ -15,7 +15,6 @@ import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumBadge } from "@/components/PremiumBadge";
-import { SecurityWrapper } from "@/components/SecurityWrapper";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -243,13 +242,7 @@ const Index = () => {
 
 
   return (
-    <SecurityWrapper 
-      endpoint="spot_listings"
-      requireAuth={false}
-      maxRequests={100}
-      timeWindowMs={3600000}
-    >
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       {/* Modern Navigation with Glass Effect */}
       <nav className="glass-card border-0 border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto container-padding">
@@ -878,7 +871,6 @@ const Index = () => {
         </div>
       </section>
       </div>
-    </SecurityWrapper>
   );
 };
 
