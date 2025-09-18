@@ -22,14 +22,13 @@ export const useRealTimeSpots = () => {
     // Wait for auth context to be ready before making database calls
     if (authLoading) return;
     
-    // Initial load
+    // Initial load using secure function
     const loadSpots = async () => {
       try {
-        const { data, error } = await supabase
-          .from('parking_spots')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
+        const { data, error } = await supabase.rpc('get_secure_parking_listings', {
+          p_limit: 1000, // Large limit to get all spots
+          p_offset: 0
+        });
 
         if (error) throw error;
         setSpots(data || []);

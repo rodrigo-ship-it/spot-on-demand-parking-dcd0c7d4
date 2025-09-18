@@ -1249,6 +1249,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_rate_limit_parking_access: {
+        Args: { p_ip_address?: unknown; p_user_id?: string }
+        Returns: boolean
+      }
       current_user_has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
@@ -1310,6 +1314,17 @@ export type Database = {
       get_platform_fee_rate: {
         Args: { user_id_param: string }
         Returns: number
+      }
+      get_potential_scraping_activity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          first_request: string
+          ip_address: unknown
+          last_request: string
+          request_count: number
+          risk_level: string
+          user_id: string
+        }[]
       }
       get_premium_status_for_owners: {
         Args: { owner_ids: string[] }
@@ -1411,6 +1426,55 @@ export type Database = {
           full_name: string
         }[]
       }
+      get_secure_parking_listings: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          address: string
+          amenities: string[]
+          available_spots: number
+          created_at: string
+          daily_price: number
+          description: string
+          id: string
+          images: string[]
+          is_active: boolean
+          latitude: number
+          longitude: number
+          monthly_price: number
+          one_time_price: number
+          price_per_hour: number
+          pricing_type: string
+          rating: number
+          spot_type: string
+          title: string
+          total_reviews: number
+          total_spots: number
+        }[]
+      }
+      get_secure_parking_spot_detail: {
+        Args: { spot_id_param: string }
+        Returns: {
+          access_instructions: string
+          address: string
+          amenities: string[]
+          available_spots: number
+          daily_price: number
+          description: string
+          id: string
+          images: string[]
+          latitude: number
+          longitude: number
+          monthly_price: number
+          one_time_price: number
+          price_per_hour: number
+          pricing_type: string
+          rating: number
+          spot_type: string
+          title: string
+          total_reviews: number
+          total_spots: number
+        }[]
+      }
       get_secure_payout_settings: {
         Args: { p_user_id: string }
         Returns: {
@@ -1423,6 +1487,12 @@ export type Database = {
       }
       get_spot_owner_for_booking: {
         Args: { booking_id_param: string; spot_id_param: string }
+        Returns: {
+          owner_id: string
+        }[]
+      }
+      get_spot_owner_for_involved_users: {
+        Args: { spot_id_param: string }
         Returns: {
           owner_id: string
         }[]

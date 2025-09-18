@@ -46,6 +46,7 @@ import { PenaltyTestReal } from "@/components/PenaltyTestReal";
 import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
 import { LateCheckoutTrigger } from "@/components/LateCheckoutTrigger";
 import { ManualPenaltyCharge } from "@/components/ManualPenaltyCharge";
+import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -1750,18 +1751,7 @@ Check browser console for detailed ID analysis.
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security & Audit Logs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Security monitoring active</p>
-                  <p className="text-sm">System logs and security events will appear here</p>
-                </div>
-              </CardContent>
-            </Card>
+            <SecurityMonitoringDashboard />
           </TabsContent>
         </Tabs>
 

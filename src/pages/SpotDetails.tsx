@@ -21,6 +21,7 @@ import { PremiumBadge } from "@/components/PremiumBadge";
 import { TimeManagement } from "@/components/TimeManagement";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { supabase } from "@/integrations/supabase/client";
+import { useSecureParkingData } from "@/hooks/useSecureParkingData";
 import { toast } from "sonner";
 
 const SpotDetails = () => {
@@ -38,6 +39,7 @@ const SpotDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isOwnerPremium, setIsOwnerPremium] = useState(false);
+  const { getSecureParkingSpotDetail } = useSecureParkingData();
 
   // Function to fetch reviews for this spot
   const fetchReviews = async () => {
