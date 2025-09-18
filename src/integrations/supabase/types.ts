@@ -1304,6 +1304,7 @@ export type Database = {
           daily_price: number
           id: string
           monthly_price: number
+          one_time_price: number
           owner_id: string
           price_per_hour: number
           pricing_type: string
