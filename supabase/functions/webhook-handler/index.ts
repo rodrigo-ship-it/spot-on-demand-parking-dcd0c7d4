@@ -282,25 +282,21 @@ serve(async (req) => {
         // Create proper local time timestamps
         // Store timestamps as LOCAL time without timezone conversion
         const startDate = new Date(bookingDetails.date);
+        let endDate;
         
         if (isPricingMonthly) {
           // For monthly bookings, set to start of day (full day access)
           startDate.setHours(0, 0, 0, 0);
           
           // Calculate end date by adding months
-          const endDate = new Date(startDate);
+          endDate = new Date(startDate);
           endDate.setMonth(endDate.getMonth() + (bookingDetails.numberOfMonths || 1));
           endDate.setHours(23, 59, 59, 999); // End of the last day
-          
-          // Store as local time strings
-          startTimeStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
-          endTimeStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
         } else {
           // For hourly/daily bookings, use the specified times
           const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
           startDate.setHours(startHour, startMinute, 0, 0);
           
-          let endDate;
           if (isPricingDaily) {
             // For daily bookings, add days and use same time
             endDate = new Date(startDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
@@ -310,18 +306,15 @@ serve(async (req) => {
             endDate = new Date(startDate);
             endDate.setHours(endHour, endMinute, 0, 0);
           }
-          
-          // Store as local time strings (remove timezone info)
-          startTimeStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
-          endTimeStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
         }
-
-        // Create UTC timestamps for comparison and API compatibility
-        const startDateUTC = new Date(startDate.getTime() + (startDate.getTimezoneOffset() * 60000));
-        const endDateUTC = new Date(endDate.getTime() + (endDate.getTimezoneOffset() * 60000));
         
-        const startTimeUTC = startDateUTC.toISOString();
-        const endTimeUTC = endDateUTC.toISOString();
+        // Store as LOCAL time strings (remove timezone info)
+        startTimeStr = startDate.toISOString().slice(0, 19);
+        endTimeStr = endDate.toISOString().slice(0, 19);
+
+        // Create UTC timestamps - convert local times to UTC properly
+        const startTimeUTC = new Date(startDate.getTime()).toISOString();
+        const endTimeUTC = new Date(endDate.getTime()).toISOString();
         
         console.log(`📅 [TIME_FINAL] Local times - Start: ${startTimeStr}, End: ${endTimeStr}`);
         console.log(`📅 [TIME_FINAL] UTC times - Start: ${startTimeUTC}, End: ${endTimeUTC}`);
@@ -352,9 +345,6 @@ serve(async (req) => {
         } else {
           durationText = `${bookingDetails.duration} hour${bookingDetails.duration !== 1 ? 's' : ''}`;
         }
-        const edtOffsetMs = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
-        const startTimeUTC = new Date(startDate.getTime() + edtOffsetMs).toISOString();
-        const endTimeUTC = new Date(endDate.getTime() + edtOffsetMs).toISOString();
 
         // Create booking
         console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);

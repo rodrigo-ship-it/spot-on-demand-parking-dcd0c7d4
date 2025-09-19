@@ -123,28 +123,75 @@ const BookingConfirmed = () => {
           // Find booking by payment_intent_id
           console.log('🔍 [BOOKING_LOOKUP] Looking for booking with payment_intent_id:', sessionData.payment_intent_id);
           
-          const { data: booking, error: bookingError } = await supabase
-            .from('bookings')
-            .select('*')
-            .eq('payment_intent_id', sessionData.payment_intent_id)
-            .single();
+          let booking;
+          let bookingError;
+          
+          // Try multiple times with delays to handle webhook processing timing
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            console.log(`🔄 [BOOKING_LOOKUP_ATTEMPT] Attempt ${attempt}/3`);
+            
+            const { data: bookingData, error: lookupError } = await supabase
+              .from('bookings')
+              .select('*')
+              .eq('payment_intent_id', sessionData.payment_intent_id)
+              .maybeSingle();
 
-          if (bookingError) {
-            console.error('❌ [BOOKING_ERROR] Failed to find booking:', bookingError);
-            console.error('🔍 [BOOKING_ERROR_DETAILS] Payment intent ID used:', sessionData.payment_intent_id);
-            throw bookingError;
+            if (!lookupError && bookingData) {
+              booking = bookingData;
+              bookingError = null;
+              console.log('✅ [BOOKING_FOUND] Found booking:', booking.id);
+              break;
+            } else {
+              bookingError = lookupError;
+              console.log(`❌ [BOOKING_ATTEMPT_${attempt}] No booking found, waiting...`);
+              
+              if (attempt < 3) {
+                // Wait before next attempt (increasing delay)
+                await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+              }
+            }
           }
 
-          // Fetch spot details using secure function
-          const { data: spotData, error: spotError } = await supabase.rpc('get_booking_spot_details', {
-            spot_id_param: booking.spot_id,
-            booking_id_param: booking.id
-          });
+          if (bookingError || !booking) {
+            console.error('❌ [BOOKING_ERROR] Failed to find booking after all attempts:', bookingError);
+            console.error('🔍 [BOOKING_ERROR_DETAILS] Payment intent ID used:', sessionData.payment_intent_id);
+            throw new Error('Booking not found after payment. Please contact support.');
+          }
+
+          // Fetch spot details using secure function with retry logic
+          console.log('🏢 [SPOT_LOOKUP] Fetching spot details for:', booking.spot_id);
+          
+          let spotData, spotError;
+          
+          // Try multiple times to get spot details
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            console.log(`🔄 [SPOT_LOOKUP_ATTEMPT] Attempt ${attempt}/3`);
+            
+            const { data: retrievedSpotData, error: retrievedSpotError } = await supabase.rpc('get_booking_spot_details', {
+              spot_id_param: booking.spot_id,
+              booking_id_param: booking.id
+            });
+
+            if (!retrievedSpotError && retrievedSpotData && retrievedSpotData.length > 0) {
+              spotData = retrievedSpotData;
+              spotError = null;
+              console.log('✅ [SPOT_FOUND] Found spot details:', retrievedSpotData[0].title);
+              break;
+            } else {
+              spotError = retrievedSpotError;
+              console.log(`❌ [SPOT_ATTEMPT_${attempt}] No spot data found:`, retrievedSpotError);
+              
+              if (attempt < 3) {
+                // Wait before next attempt
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+            }
+          }
 
           const spot = spotData && spotData.length > 0 ? spotData[0] : null;
           if (spotError || !spot) {
-            console.error('Spot error:', spotError);
-            throw new Error('Could not fetch spot details');
+            console.error('❌ [SPOT_ERROR] Failed to get spot details after all attempts:', spotError);
+            throw new Error('Could not fetch parking spot details. Please contact support.');
           }
 
           // Use the stored display values - exactly what the user originally saw
