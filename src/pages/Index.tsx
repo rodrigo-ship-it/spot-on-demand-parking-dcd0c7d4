@@ -36,16 +36,32 @@ const Index = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          console.log("User location obtained:", position.coords);
           setUserLocation({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           });
         },
         (error) => {
-          console.log("User denied location access or location unavailable:", error);
-          // Don't set a fallback - wait for user to search
+          console.log("Geolocation failed, using default location:", error);
+          // Use a central US location as fallback for distance calculations
+          setUserLocation({
+            latitude: 39.8283, // Geographic center of US
+            longitude: -98.5795
+          });
+        },
+        {
+          timeout: 10000,
+          enableHighAccuracy: false
         }
       );
+    } else {
+      // Fallback if geolocation is not supported
+      console.log("Geolocation not supported, using default location");
+      setUserLocation({
+        latitude: 39.8283,
+        longitude: -98.5795
+      });
     }
   }, []);
 
@@ -81,7 +97,7 @@ const Index = () => {
       
       const newTransformedSpots = secureSpots.map(spot => {
         // Calculate distance using search coordinates or user location as reference
-        let calculatedDistance = "Unknown distance";
+        let calculatedDistance = "Calculating...";
         const referenceLocation = searchCoordinates || userLocation;
         
         if (referenceLocation && spot.latitude && spot.longitude) {
@@ -91,7 +107,19 @@ const Index = () => {
             Number(spot.latitude),
             Number(spot.longitude)
           );
-          calculatedDistance = `${distance.toFixed(1)} miles`;
+          
+          // If using fallback location (center of US), show generic distance
+          const isUsingFallbackLocation = !searchCoordinates && userLocation && 
+            Math.abs(userLocation.latitude - 39.8283) < 0.001 && 
+            Math.abs(userLocation.longitude + 98.5795) < 0.001;
+            
+          if (isUsingFallbackLocation && distance > 100) {
+            calculatedDistance = "Distance varies";
+          } else {
+            calculatedDistance = `${distance.toFixed(1)} miles`;
+          }
+        } else if (!referenceLocation) {
+          calculatedDistance = "Getting location...";
         }
 
         return {
