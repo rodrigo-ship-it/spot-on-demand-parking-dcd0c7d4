@@ -79,13 +79,31 @@ serve(async (req) => {
             minute: '2-digit' 
           });
           
+          // Format as local time string for database (YYYY-MM-DD HH:MM:SS)
+          const newEndTimeStr = newEndTimeLocal.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
+          
           const { error: bookingError } = await supabaseService
             .from('bookings')
             .update({
-              end_time: new Date(newEndTime).toISOString().slice(0, -1), // Remove Z for timestamp without timezone
-              end_time_utc: newEndTime,
-              display_end_time: displayEndTime, // Update the display field too
-              updated_at: new Date().toISOString()
+              end_time: newEndTimeStr,
+              display_end_time: displayEndTime,
+              updated_at: new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6')
             })
             .eq('id', bookingId);
 
@@ -99,7 +117,15 @@ serve(async (req) => {
             .from('extensions')
             .update({
               status: 'approved',
-              approved_at: new Date().toISOString(),
+              approved_at: new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6'),
               stripe_payment_intent_id: session.payment_intent as string
             })
             .eq('booking_id', bookingId)

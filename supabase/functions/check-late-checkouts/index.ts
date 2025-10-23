@@ -60,7 +60,6 @@ serve(async (req) => {
         renter_id, 
         start_time,
         end_time,
-        end_time_utc, 
         status,
         total_amount,
         payment_intent_id,
@@ -96,41 +95,17 @@ serve(async (req) => {
         logStep("Processing late booking", { 
           bookingId: booking.id, 
           startTimeLocal: booking.start_time,
-          endTimeLocal: booking.end_time, 
-          endTimeUtc: booking.end_time_utc 
+          endTimeLocal: booking.end_time
         });
 
-        // CRITICAL FIX: Use UTC times if available, otherwise convert local times properly
-        const endTimeLocalStr = booking.end_time; // e.g., "2025-09-19 15:00:00"
-        const startTimeLocalStr = booking.start_time; // e.g., "2025-09-19 14:00:00"
+        // Parse times as local timezone
+        const endTimeLocalStr = booking.end_time;
+        const startTimeLocalStr = booking.start_time;
         
-        // Use end_time_utc if available (proper UTC timestamp)
-        // Otherwise, parse local time and add EDT/EST offset (UTC-4 or UTC-5)
-        let endTimeDate: Date;
-        let startTimeDate: Date;
-        
-        if (booking.end_time_utc) {
-          // Use the UTC timestamp if available
-          endTimeDate = new Date(booking.end_time_utc);
-          startTimeDate = booking.start_time_utc ? new Date(booking.start_time_utc) : new Date(startTimeLocalStr.replace(' ', 'T'));
-        } else {
-          // Database times are in local timezone (America/New_York = EDT/EST)
-          // EDT is UTC-4, EST is UTC-5. We need to add offset to convert to UTC.
-          // Parse as local time WITHOUT the Z suffix to get the right interpretation
-          const localEndTime = new Date(endTimeLocalStr.replace(' ', 'T'));
-          const localStartTime = new Date(startTimeLocalStr.replace(' ', 'T'));
-          
-          // Get the timezone offset in minutes (negative for timezones behind UTC)
-          // For EDT (UTC-4): offset = 240 minutes
-          // JavaScript getTimezoneOffset() returns opposite sign (positive for behind UTC)
-          const offsetMinutes = localEndTime.getTimezoneOffset();
-          
-          // Convert local time to UTC by adding the offset
-          endTimeDate = new Date(localEndTime.getTime() - (offsetMinutes * 60 * 1000));
-          startTimeDate = new Date(localStartTime.getTime() - (offsetMinutes * 60 * 1000));
-        }
-        
-        const currentTimeDate = new Date(); // Current UTC time
+        // Parse local time strings directly without UTC conversion
+        const endTimeDate = new Date(endTimeLocalStr.replace(' ', 'T'));
+        const startTimeDate = new Date(startTimeLocalStr.replace(' ', 'T'));
+        const currentTimeDate = new Date();
         
         // Calculate minutes since end time
         const minutesLate = Math.floor((currentTimeDate.getTime() - endTimeDate.getTime()) / (1000 * 60));
@@ -140,8 +115,8 @@ serve(async (req) => {
           bookingId: booking.id, 
           startTime: startTimeLocalStr,
           endTime: endTimeLocalStr,
-          endTimeAsUTC: endTimeDate.toISOString(),
-          currentTimeAsUTC: currentTimeDate.toISOString(),
+          endTimeAsLocal: endTimeDate.toLocaleString(),
+          currentTimeAsLocal: currentTimeDate.toLocaleString(),
           bookingHasStarted: currentTimeDate.getTime() >= startTimeDate.getTime(),
           bookingHasEnded: currentTimeDate.getTime() >= endTimeDate.getTime()
         });
@@ -162,7 +137,7 @@ serve(async (req) => {
           logStep("SAFETY: Booking hasn't started yet, skipping", { 
             bookingId: booking.id, 
             startTime: startTimeLocalStr,
-            currentTime: currentTimeDate.toISOString(),
+            currentTime: currentTimeDate.toLocaleString(),
             reason: "Booking start time is in future",
             minutesUntilStart: Math.floor((startTimeDate.getTime() - currentTimeDate.getTime()) / (1000 * 60))
           });

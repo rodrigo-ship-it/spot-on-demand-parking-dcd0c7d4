@@ -98,34 +98,40 @@ serve(async (req) => {
       });
     }
 
-    // Check availability for extension period - calculate consistently with frontend
-    const currentEndTime = new Date(booking.end_time);
+    // Check availability for extension period - calculate in local timezone
+    const currentEndTime = new Date(booking.end_time.replace(' ', 'T'));
     const newEndTime = new Date(currentEndTime.getTime() + (extensionHours * 60 * 60 * 1000));
     
-    // Convert to UTC for database comparison (EDT is UTC-4, so add 4 hours)
-    const newEndTimeUTC = new Date(newEndTime.getTime() + (4 * 60 * 60 * 1000));
+    // Format as local time string for database (YYYY-MM-DD HH:MM:SS)
+    const newEndTimeStr = newEndTime.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
     
     console.log('📅 Extension time calculation:', {
       originalEndTime: booking.end_time,
-      originalEndTimeUTC: booking.end_time_utc,
       extensionHours,
-      newEndTimeLocal: newEndTime.toISOString().slice(0, -1),
-      newEndTimeUTC: newEndTimeUTC.toISOString()
+      newEndTimeLocal: newEndTimeStr
     });
 
     const { data: conflicts } = await supabaseService
       .from('bookings')
-      .select('id, start_time_utc, end_time_utc')
+      .select('id, start_time, end_time')
       .eq('spot_id', booking.spot_id)
       .in('status', ['confirmed', 'active'])
       .neq('id', bookingId)
-      .gte('start_time_utc', booking.end_time_utc)
-      .lt('start_time_utc', newEndTimeUTC.toISOString());
+      .gte('start_time', booking.end_time)
+      .lt('start_time', newEndTimeStr);
 
     console.log('🔍 Backend conflict check:', {
       spotId: booking.spot_id,
-      currentEndUTC: booking.end_time_utc,
-      newEndUTC: newEndTimeUTC.toISOString(),
+      currentEnd: booking.end_time,
+      newEnd: newEndTimeStr,
       conflictingBookings: conflicts
     });
 

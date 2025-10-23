@@ -157,19 +157,36 @@ serve(async (req) => {
       status: paymentIntent.status 
     });
 
-    // Calculate new end time
-    const currentEndTime = new Date(booking.end_time);
+    // Calculate new end time in local timezone
+    const currentEndTime = new Date(booking.end_time.replace(' ', 'T'));
     const newEndTimeLocal = new Date(currentEndTime.getTime() + (autoExtensionHours * 60 * 60 * 1000));
-    const newEndTimeUTC = new Date(newEndTimeLocal.getTime() + (4 * 60 * 60 * 1000)); // Convert to UTC
+    
+    // Format as local time string for database (YYYY-MM-DD HH:MM:SS)
+    const newEndTimeStr = newEndTimeLocal.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
 
     // Update booking with new end time
     const { error: updateError } = await supabaseService
       .from('bookings')
       .update({
-        end_time: newEndTimeLocal.toISOString().slice(0, -1), // Store as local time
-        end_time_utc: newEndTimeUTC.toISOString(),
+        end_time: newEndTimeStr,
         total_amount: (Number(booking.total_amount) + totalAmount),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6')
       })
       .eq('id', bookingId);
 
@@ -186,9 +203,17 @@ serve(async (req) => {
         rate_per_hour: pricePerHour,
         total_amount: totalAmount,
         status: 'approved',
-        approved_at: new Date().toISOString(),
+        approved_at: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6'),
         stripe_payment_intent_id: paymentIntent.id,
-        new_end_time: newEndTimeUTC.toISOString()
+        new_end_time: newEndTimeStr
       });
 
     if (extensionError) {

@@ -17,13 +17,25 @@ export const AvailabilityDisplay = ({ spotType, totalSpots = 1, spotId }: Availa
   useEffect(() => {
     const fetchCurrentAvailability = async () => {
       try {
+        // Format current time as local time string for database comparison
+        const now = new Date();
+        const nowStr = now.toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
+        
         const { data: activeBookings, error } = await supabase
           .from('bookings')
           .select('*')
           .eq('spot_id', spotId)
           .in('status', ['confirmed', 'active'])
-          .lte('start_time', new Date().toISOString())
-          .gte('end_time', new Date().toISOString());
+          .lte('start_time', nowStr)
+          .gte('end_time', nowStr);
 
         if (error) throw error;
 

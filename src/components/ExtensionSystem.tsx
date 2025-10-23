@@ -80,7 +80,7 @@ export const ExtensionSystem = ({
       // Get current booking details
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
-        .select('end_time, end_time_utc, spot_id')
+        .select('end_time, spot_id')
         .eq('id', bookingId)
         .maybeSingle();
 
@@ -91,29 +91,36 @@ export const ExtensionSystem = ({
 
       console.log('📅 Current booking:', booking);
 
-      // Calculate new end time from LOCAL time (consistent with backend logic)
-      const currentEndTime = new Date(booking.end_time);
+      // Calculate new end time from LOCAL time
+      const currentEndTime = new Date(booking.end_time.replace(' ', 'T'));
       const newEndTime = new Date(currentEndTime.getTime() + (hours * 60 * 60 * 1000));
       
-      // Convert to UTC for database comparison
-      const newEndTimeUTC = new Date(newEndTime.getTime() + (4 * 60 * 60 * 1000)); // Add 4 hours for EDT->UTC
+      // Format as local time string for database (YYYY-MM-DD HH:MM:SS)
+      const newEndTimeStr = newEndTime.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
 
       console.log('📅 Extension calculation:', {
         currentEndLocal: booking.end_time,
-        newEndLocal: newEndTime.toISOString().slice(0, -1),
-        newEndUTC: newEndTimeUTC.toISOString(),
+        newEndLocal: newEndTimeStr,
         extensionHours: hours
       });
 
-      // Check for conflicts using UTC times
+      // Check for conflicts using LOCAL times
       const { data: conflicts, error: conflictError } = await supabase
         .from('bookings')
-        .select('id, start_time_utc, end_time_utc')
+        .select('id, start_time, end_time')
         .eq('spot_id', booking.spot_id)
         .in('status', ['confirmed', 'active'])
         .neq('id', bookingId)
-        .gte('start_time_utc', booking.end_time_utc)
-        .lt('start_time_utc', newEndTimeUTC.toISOString());
+        .gte('start_time', booking.end_time)
+        .lt('start_time', newEndTimeStr);
 
       if (conflictError) {
         console.error('❌ Conflict check error:', conflictError);
@@ -123,8 +130,8 @@ export const ExtensionSystem = ({
       console.log('🔍 Conflicts found:', conflicts);
       console.log('🔍 Conflict check details:', {
         spotId: booking.spot_id,
-        currentEndUTC: booking.end_time_utc,
-        newEndUTC: newEndTimeUTC.toISOString(),
+        currentEndLocal: booking.end_time,
+        newEndLocal: newEndTimeStr,
         conflictingBookings: conflicts
       });
 
