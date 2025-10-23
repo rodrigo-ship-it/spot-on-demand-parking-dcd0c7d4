@@ -22,6 +22,7 @@ const Auth = () => {
     email: '',
     password: '',
     fullName: '',
+    phone: '',
     confirmPassword: ''
   });
   const [passwordValidation, setPasswordValidation] = useState({
@@ -109,9 +110,16 @@ const Auth = () => {
     const password = formData.get('password') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
     const fullName = formData.get('fullName') as string;
+    const phone = formData.get('phone') as string;
 
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!phone || phone.trim() === '') {
+      toast.error('Phone number is required');
       setIsLoading(false);
       return;
     }
@@ -125,7 +133,7 @@ const Auth = () => {
     }
 
     try {
-      const { error } = await signUp(email, password, fullName);
+      const { error } = await signUp(email, password, fullName, phone);
       
       if (error) {
         if (error.message.includes('User already registered')) {
@@ -310,6 +318,19 @@ const Auth = () => {
                       onChange={handleInputChange}
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone Number *</Label>
+                    <Input
+                      id="signup-phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="(555) 555-5555"
+                      value={formData.phone || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    <p className="text-sm text-muted-foreground">Required for booking notifications and contact</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>

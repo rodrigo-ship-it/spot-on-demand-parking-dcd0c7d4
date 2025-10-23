@@ -27,25 +27,35 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // CRITICAL FIX: Calculate 3 hours ago in local timezone for DB comparison
-    // The database stores times WITHOUT timezone info, treating them as local time
-    const now = new Date();
+    // CRITICAL FIX: Work ONLY with local time strings - NO timezone conversion
+    // Database stores times as "YYYY-MM-DD HH:MM:SS" without timezone
+    // We compare these AS-IS, treating them as local time
     
-    // Get current time in local timezone for logging
-    const currentLocalTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60 * 1000));
-    const currentLocalTimeForDB = currentLocalTime.toISOString().slice(0, 19).replace('T', ' ');
+    // Get current local time as string in database format
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const currentLocalTimeForDB = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     
     logStep("Current time", { 
-      timestamp: now.toISOString(),
       localTimeForDB: currentLocalTimeForDB,
-      timezoneOffset: now.getTimezoneOffset(),
-      timezoneOffsetHours: now.getTimezoneOffset() / 60
+      explanation: "Using system local time directly, no timezone conversion"
     });
 
-    // Calculate 3 hours ago IN LOCAL TIMEZONE for comparison with database times
-    const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-    const threeHoursAgoLocal = new Date(threeHoursAgo.getTime() - (threeHoursAgo.getTimezoneOffset() * 60 * 1000));
-    const threeHoursAgoForDB = threeHoursAgoLocal.toISOString().slice(0, 19).replace('T', ' ');
+    // Calculate 3 hours ago in local time (subtract from current local time string)
+    const threeHoursAgoMs = now.getTime() - (3 * 60 * 60 * 1000);
+    const threeHoursAgoDate = new Date(threeHoursAgoMs);
+    const year3h = threeHoursAgoDate.getFullYear();
+    const month3h = String(threeHoursAgoDate.getMonth() + 1).padStart(2, '0');
+    const day3h = String(threeHoursAgoDate.getDate()).padStart(2, '0');
+    const hours3h = String(threeHoursAgoDate.getHours()).padStart(2, '0');
+    const minutes3h = String(threeHoursAgoDate.getMinutes()).padStart(2, '0');
+    const seconds3h = String(threeHoursAgoDate.getSeconds()).padStart(2, '0');
+    const threeHoursAgoForDB = `${year3h}-${month3h}-${day3h} ${hours3h}:${minutes3h}:${seconds3h}`;
     
     logStep("Time validation", { 
       currentLocalTime: currentLocalTimeForDB,
@@ -98,14 +108,22 @@ serve(async (req) => {
           endTimeLocal: booking.end_time
         });
 
-        // Parse times as local timezone
-        const endTimeLocalStr = booking.end_time;
+        // Parse local time strings - compare string-to-string for safety
+        const endTimeLocalStr = booking.end_time; // e.g., "2025-01-23 15:30:00"
         const startTimeLocalStr = booking.start_time;
         
-        // Parse local time strings directly without UTC conversion
-        const endTimeDate = new Date(endTimeLocalStr.replace(' ', 'T'));
-        const startTimeDate = new Date(startTimeLocalStr.replace(' ', 'T'));
-        const currentTimeDate = new Date();
+        // Parse local time string by extracting components directly
+        const parseLocalTime = (timeStr: string) => {
+          const [datePart, timePart] = timeStr.split(' ');
+          const [year, month, day] = datePart.split('-').map(Number);
+          const [hour, minute, second] = timePart.split(':').map(Number);
+          // Create date using local time components (no timezone conversion)
+          return new Date(year, month - 1, day, hour, minute, second);
+        };
+        
+        const endTimeDate = parseLocalTime(endTimeLocalStr);
+        const startTimeDate = parseLocalTime(startTimeLocalStr);
+        const currentTimeDate = new Date(); // Current time in local timezone
         
         // Calculate minutes since end time
         const minutesLate = Math.floor((currentTimeDate.getTime() - endTimeDate.getTime()) / (1000 * 60));
