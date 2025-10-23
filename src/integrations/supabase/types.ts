@@ -21,7 +21,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           target_resource: string | null
           target_user_id: string | null
           user_agent: string | null
@@ -32,7 +32,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           target_resource?: string | null
           target_user_id?: string | null
           user_agent?: string | null
@@ -43,7 +43,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           target_resource?: string | null
           target_user_id?: string | null
           user_agent?: string | null
@@ -64,7 +64,6 @@ export type Database = {
           display_end_time: string | null
           display_start_time: string | null
           end_time: string
-          end_time_utc: string | null
           id: string
           owner_payout_amount: number | null
           payment_intent_id: string | null
@@ -73,7 +72,6 @@ export type Database = {
           renter_id: string
           spot_id: string
           start_time: string
-          start_time_utc: string | null
           status: string
           stripe_transfer_id: string | null
           total_amount: number
@@ -93,7 +91,6 @@ export type Database = {
           display_end_time?: string | null
           display_start_time?: string | null
           end_time: string
-          end_time_utc?: string | null
           id?: string
           owner_payout_amount?: number | null
           payment_intent_id?: string | null
@@ -102,7 +99,6 @@ export type Database = {
           renter_id: string
           spot_id: string
           start_time: string
-          start_time_utc?: string | null
           status?: string
           stripe_transfer_id?: string | null
           total_amount: number
@@ -122,7 +118,6 @@ export type Database = {
           display_end_time?: string | null
           display_start_time?: string | null
           end_time?: string
-          end_time_utc?: string | null
           id?: string
           owner_payout_amount?: number | null
           payment_intent_id?: string | null
@@ -131,7 +126,6 @@ export type Database = {
           renter_id?: string
           spot_id?: string
           start_time?: string
-          start_time_utc?: string | null
           status?: string
           stripe_transfer_id?: string | null
           total_amount?: number
@@ -950,7 +944,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string | null
         }
@@ -959,7 +953,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -968,7 +962,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -1232,14 +1226,8 @@ export type Database = {
       }
     }
     Functions: {
-      apply_data_retention_policies: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      auto_resolve_disputes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      apply_data_retention_policies: { Args: never; Returns: undefined }
+      auto_resolve_disputes: { Args: never; Returns: undefined }
       check_booking_overlap: {
         Args: {
           p_end_time: string
@@ -1258,7 +1246,7 @@ export type Database = {
         Returns: boolean
       }
       detect_scraping_patterns: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           first_request: string
           ip_address: unknown
@@ -1351,7 +1339,7 @@ export type Database = {
         Returns: number
       }
       get_potential_scraping_activity: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           first_request: string
           ip_address: unknown
@@ -1399,7 +1387,7 @@ export type Database = {
         }[]
       }
       get_public_spot_listings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           address: string
           amenities: string[]
@@ -1547,18 +1535,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_v2: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_premium_lister: {
-        Args: { lister_user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
+      is_admin_v2: { Args: never; Returns: boolean }
+      is_premium_lister: { Args: { lister_user_id: string }; Returns: boolean }
       is_spot_owner_premium: {
         Args: { spot_owner_id: string }
         Returns: boolean
@@ -1622,26 +1601,11 @@ export type Database = {
         Args: { penalty_credit_id_param: string }
         Returns: Json
       }
-      manual_check_late_checkouts: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      manual_check_late_checkouts_v2: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      mark_message_as_read: {
-        Args: { message_id: string }
-        Returns: undefined
-      }
-      mask_license_plate: {
-        Args: { plate_text: string }
-        Returns: string
-      }
-      refresh_analytics_views: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      manual_check_late_checkouts: { Args: never; Returns: Json }
+      manual_check_late_checkouts_v2: { Args: never; Returns: Json }
+      mark_message_as_read: { Args: { message_id: string }; Returns: undefined }
+      mask_license_plate: { Args: { plate_text: string }; Returns: string }
+      refresh_analytics_views: { Args: never; Returns: undefined }
       test_slot_availability: {
         Args: { p_date: string; p_slot_time: string; p_spot_id: string }
         Returns: Json
@@ -1650,10 +1614,7 @@ export type Database = {
         Args: { booking_id_param: string }
         Returns: boolean
       }
-      user_owns_spot: {
-        Args: { spot_id_param: string }
-        Returns: boolean
-      }
+      user_owns_spot: { Args: { spot_id_param: string }; Returns: boolean }
       validate_enhanced_financial_access: {
         Args: {
           p_resource_id: string
@@ -1670,10 +1631,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      validate_sensitive_data_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      validate_sensitive_data_access: { Args: never; Returns: boolean }
       validate_stripe_account_ownership: {
         Args: { account_id: string; user_id_param: string }
         Returns: boolean
