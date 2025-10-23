@@ -13,7 +13,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error?: any }>;
+  signUp: (email: string, password: string, fullName?: string, phone?: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: any }>;
 }
@@ -136,7 +136,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName || ''
+            full_name: fullName || '',
+            phone: phone || ''
           }
         }
       });
@@ -157,6 +158,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
+        // Create profile with phone number
+        await supabase.from('profiles').insert([
+          {
+            user_id: data.user.id,
+            email: email,
+            full_name: fullName || '',
+            phone: phone || ''
+          },
+        ]);
         toast.success('Account created! Please check your email to confirm.');
       }
 

@@ -249,7 +249,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number *</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
@@ -257,8 +257,11 @@ const Profile = () => {
                       value={profileData.phone}
                       onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
                       className="pl-10"
+                      placeholder="(555) 555-5555"
+                      required
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">Required for booking notifications</p>
                 </div>
               </div>
 
