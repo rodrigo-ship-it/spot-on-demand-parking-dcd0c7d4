@@ -49,7 +49,7 @@ class NotificationService {
       
       const subscription = await ready.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey)
+        applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey) as BufferSource
       });
 
       // Store subscription in Supabase
@@ -193,7 +193,8 @@ class NotificationService {
       .replace(/_/g, '/');
 
     const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
+    const buffer = new ArrayBuffer(rawData.length);
+    const outputArray = new Uint8Array(buffer);
 
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
