@@ -27,20 +27,25 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // CRITICAL FIX: Use database timestamps directly without timezone conversion
-    // Database stores booking times in local timezone, so we compare directly
+    // CRITICAL FIX: Calculate 3 hours ago in local timezone for DB comparison
+    // The database stores times WITHOUT timezone info, treating them as local time
     const now = new Date();
-    const currentLocalTimeForDB = now.toISOString().slice(0, 19).replace('T', ' ');
+    
+    // Get current time in local timezone for logging
+    const currentLocalTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60 * 1000));
+    const currentLocalTimeForDB = currentLocalTime.toISOString().slice(0, 19).replace('T', ' ');
     
     logStep("Current time", { 
       timestamp: now.toISOString(),
       localTimeForDB: currentLocalTimeForDB,
-      timezoneOffset: now.getTimezoneOffset()
+      timezoneOffset: now.getTimezoneOffset(),
+      timezoneOffsetHours: now.getTimezoneOffset() / 60
     });
 
-    // Calculate 3 hours ago for comparison with database times
+    // Calculate 3 hours ago IN LOCAL TIMEZONE for comparison with database times
     const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-    const threeHoursAgoForDB = threeHoursAgo.toISOString().slice(0, 19).replace('T', ' ');
+    const threeHoursAgoLocal = new Date(threeHoursAgo.getTime() - (threeHoursAgo.getTimezoneOffset() * 60 * 1000));
+    const threeHoursAgoForDB = threeHoursAgoLocal.toISOString().slice(0, 19).replace('T', ' ');
     
     logStep("Time validation", { 
       currentLocalTime: currentLocalTimeForDB,
@@ -95,13 +100,36 @@ serve(async (req) => {
           endTimeUtc: booking.end_time_utc 
         });
 
-        // CRITICAL FIX: Use consistent time handling without timezone conversion errors
+        // CRITICAL FIX: Use UTC times if available, otherwise convert local times properly
         const endTimeLocalStr = booking.end_time; // e.g., "2025-09-19 15:00:00"
         const startTimeLocalStr = booking.start_time; // e.g., "2025-09-19 14:00:00"
         
-        // Parse times directly as they're stored in the database
-        const endTimeDate = new Date(endTimeLocalStr.replace(' ', 'T') + 'Z'); // Treat as UTC to avoid local timezone issues
-        const startTimeDate = new Date(startTimeLocalStr.replace(' ', 'T') + 'Z');
+        // Use end_time_utc if available (proper UTC timestamp)
+        // Otherwise, parse local time and add EDT/EST offset (UTC-4 or UTC-5)
+        let endTimeDate: Date;
+        let startTimeDate: Date;
+        
+        if (booking.end_time_utc) {
+          // Use the UTC timestamp if available
+          endTimeDate = new Date(booking.end_time_utc);
+          startTimeDate = booking.start_time_utc ? new Date(booking.start_time_utc) : new Date(startTimeLocalStr.replace(' ', 'T'));
+        } else {
+          // Database times are in local timezone (America/New_York = EDT/EST)
+          // EDT is UTC-4, EST is UTC-5. We need to add offset to convert to UTC.
+          // Parse as local time WITHOUT the Z suffix to get the right interpretation
+          const localEndTime = new Date(endTimeLocalStr.replace(' ', 'T'));
+          const localStartTime = new Date(startTimeLocalStr.replace(' ', 'T'));
+          
+          // Get the timezone offset in minutes (negative for timezones behind UTC)
+          // For EDT (UTC-4): offset = 240 minutes
+          // JavaScript getTimezoneOffset() returns opposite sign (positive for behind UTC)
+          const offsetMinutes = localEndTime.getTimezoneOffset();
+          
+          // Convert local time to UTC by adding the offset
+          endTimeDate = new Date(localEndTime.getTime() - (offsetMinutes * 60 * 1000));
+          startTimeDate = new Date(localStartTime.getTime() - (offsetMinutes * 60 * 1000));
+        }
+        
         const currentTimeDate = new Date(); // Current UTC time
         
         // Calculate minutes since end time
