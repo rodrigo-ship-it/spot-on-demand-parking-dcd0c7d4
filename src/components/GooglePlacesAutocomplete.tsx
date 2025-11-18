@@ -326,33 +326,63 @@ export const GooglePlacesAutocomplete = ({
       </div>
       
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white/95 backdrop-blur-md border border-gray-200/50 rounded-2xl shadow-premium overflow-hidden">
+        <div 
+          className="absolute top-full left-0 right-0 z-[9999] mt-2 rounded-xl overflow-hidden"
+          style={{ backgroundColor: '#FFFFFF', border: '2px solid #E5E7EB', boxShadow: '0 20px 40px -4px rgba(0,0,0,0.25)' }}
+        >
           {suggestions.map((suggestion, index) => (
             <div
               key={suggestion.id}
-              className={cn(
-                "px-6 py-4 cursor-pointer transition-all duration-300 border-b border-gray-100/50 last:border-b-0",
-                "hover:bg-gradient-to-r hover:from-orange-50/80 hover:to-blue-50/80 hover:scale-[1.02] hover:shadow-md",
-                selectedIndex === index && "bg-gradient-to-r from-orange-50 to-blue-50 shadow-inner"
-              )}
+              className="px-5 py-4 cursor-pointer border-b last:border-b-0"
+              style={{
+                backgroundColor: selectedIndex === index ? '#FEF3C7' : '#FFFFFF',
+                borderBottomColor: '#F3F4F6'
+              }}
+              onMouseEnter={(e) => {
+                if (selectedIndex !== index) {
+                  e.currentTarget.style.backgroundColor = '#FFF7ED';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedIndex !== index) {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                }
+              }}
               onClick={() => handleSuggestionClick(suggestion)}
             >
-              <div className="flex items-start justify-between space-x-4">
-                <div className="flex items-start space-x-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                    <MapPin className="w-5 h-5 text-white" />
+              <div className="flex items-start justify-between space-x-3">
+                <div className="flex items-start space-x-3 flex-1 min-w-0">
+                  <div 
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: '#F97316' }}
+                  >
+                    <MapPin className="w-5 h-5" style={{ color: '#FFFFFF' }} />
                   </div>
-                  <div className="flex-1 min-w-0 pt-1">
-                    <div className="font-semibold text-gray-900 truncate text-base">
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <div 
+                      className="font-semibold truncate"
+                      style={{ color: '#111827', fontSize: '15px' }}
+                    >
                       {suggestion.name}
                     </div>
-                    <div className="text-sm text-gray-600 truncate mt-0.5">
+                    <div 
+                      className="truncate mt-0.5"
+                      style={{ color: '#6B7280', fontSize: '13px' }}
+                    >
                       {suggestion.description}
                     </div>
                   </div>
                 </div>
                 {suggestion.distance && (
-                  <div className="text-xs font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full flex-shrink-0">
+                  <div 
+                    className="px-2 py-1 rounded-md flex-shrink-0"
+                    style={{ 
+                      backgroundColor: '#FFEDD5', 
+                      color: '#EA580C',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}
+                  >
                     {suggestion.distance}
                   </div>
                 )}
