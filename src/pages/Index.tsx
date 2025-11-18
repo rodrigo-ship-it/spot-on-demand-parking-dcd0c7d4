@@ -588,24 +588,6 @@ const Index = () => {
             transition={{ duration: 0.8 }}
             className="text-center space-y-8 w-full"
           >
-            {/* Live Badge with Motion */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="flex justify-center"
-            >
-              <div className="glass-card px-6 py-3 flex items-center gap-3 border border-border">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
-                </span>
-                <span className="text-sm font-semibold text-foreground">
-                  <LiveAvailabilityBadge />
-                </span>
-              </div>
-            </motion.div>
-            
             {/* Revolutionary Heading */}
             <div className="space-y-6">
               {/* Animated Logo */}
