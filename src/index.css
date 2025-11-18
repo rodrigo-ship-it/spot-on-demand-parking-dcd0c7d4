@@ -153,7 +153,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply text-foreground font-sans bg-gradient-to-br from-red-50 via-orange-50 to-amber-50;
+    min-height: 100vh;
   }
   
   * {
