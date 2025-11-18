@@ -11,10 +11,10 @@ export const MapLegend = () => {
   ];
 
   return (
-    <div className="bg-card/95 backdrop-blur-sm rounded-lg border border-border px-4 py-3 shadow-sm">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div className="bg-card/95 backdrop-blur-sm rounded-lg border border-border px-3 py-2 shadow-sm w-fit">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         {legendItems.map((item, index) => (
-          <div key={item.label} className="flex items-center gap-2">
+          <div key={item.label} className="flex items-center gap-1.5">
             <div 
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: item.color }}
@@ -22,11 +22,11 @@ export const MapLegend = () => {
             <span className="text-xs text-foreground whitespace-nowrap">{item.label}</span>
           </div>
         ))}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Crown className="w-3 h-3 text-amber-600 fill-amber-600 flex-shrink-0" />
           <span className="text-xs text-foreground whitespace-nowrap">Premium subscription</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span>•</span>
           <span className="hidden sm:inline">Larger pins = Multiple spots or Garages</span>
           <span className="sm:hidden">Larger = Multiple/Garages</span>
