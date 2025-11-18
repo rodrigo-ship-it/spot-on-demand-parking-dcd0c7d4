@@ -268,8 +268,8 @@
 
   /* Loading states */
   .loading-skeleton {
-    @apply animate-pulse rounded;
-    background: linear-gradient(110deg, hsl(var(--muted)) 8%, hsl(var(--muted-foreground) / 0.1) 18%, hsl(var(--muted)) 33%);
+    @apply animate-pulse rounded-xl;
+    background: linear-gradient(110deg, hsl(var(--muted)) 8%, hsl(var(--primary) / 0.1) 18%, hsl(var(--muted)) 33%);
     background-size: 200% 100%;
     animation: loading 1.5s ease-in-out infinite;
   }
@@ -277,6 +277,22 @@
   @keyframes loading {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
+  }
+  
+  /* Staggered animations for cards */
+  .animate-stagger {
+    animation: staggered-fade 0.5s ease-out forwards;
+  }
+  
+  @keyframes staggered-fade {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* Enhanced form elements */
