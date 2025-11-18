@@ -326,31 +326,33 @@ export const GooglePlacesAutocomplete = ({
       </div>
       
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white/95 backdrop-blur-md border border-gray-200/50 rounded-2xl shadow-premium overflow-hidden">
           {suggestions.map((suggestion, index) => (
             <div
               key={suggestion.id}
               className={cn(
-                "px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 last:border-b-0",
-                "hover:bg-orange-50",
-                selectedIndex === index && "bg-blue-50"
+                "px-6 py-4 cursor-pointer transition-all duration-300 border-b border-gray-100/50 last:border-b-0",
+                "hover:bg-gradient-to-r hover:from-orange-50/80 hover:to-blue-50/80 hover:scale-[1.02] hover:shadow-md",
+                selectedIndex === index && "bg-gradient-to-r from-orange-50 to-blue-50 shadow-inner"
               )}
               onClick={() => handleSuggestionClick(suggestion)}
             >
-              <div className="flex items-start justify-between space-x-3">
-                <div className="flex items-start space-x-3 flex-1 min-w-0">
-                  <MapPin className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
+              <div className="flex items-start justify-between space-x-4">
+                <div className="flex items-start space-x-4 flex-1 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <MapPin className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0 pt-1">
+                    <div className="font-semibold text-gray-900 truncate text-base">
                       {suggestion.name}
                     </div>
-                    <div className="text-sm text-gray-600 truncate">
+                    <div className="text-sm text-gray-600 truncate mt-0.5">
                       {suggestion.description}
                     </div>
                   </div>
                 </div>
                 {suggestion.distance && (
-                  <div className="text-xs text-gray-500 flex-shrink-0">
+                  <div className="text-xs font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full flex-shrink-0">
                     {suggestion.distance}
                   </div>
                 )}
