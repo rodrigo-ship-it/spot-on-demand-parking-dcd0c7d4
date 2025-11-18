@@ -663,9 +663,9 @@ const Index = () => {
             >
               <div className="relative group">
                 {/* Glow Effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 via-blue-500 to-slate-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
                 
-                <div className="relative bg-white rounded-3xl p-8 border-2 border-gray-200 shadow-2xl">
+                <div className="relative bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 border-2 border-slate-200 shadow-2xl backdrop-blur-sm">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-2">
                       <GooglePlacesAutocomplete
@@ -673,14 +673,14 @@ const Index = () => {
                         onChange={setSearchLocation}
                         onLocationSelect={handleLocationSelect}
                         placeholder="Where to?"
-                        className="h-14 text-base rounded-2xl bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                        className="h-14 text-base rounded-2xl bg-white border-2 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 hover:border-slate-400 transition-colors"
                       />
                     </div>
                     <Select value={searchPricingType} onValueChange={setSearchPricingType}>
-                      <SelectTrigger className="h-14 text-base rounded-2xl bg-gray-50 border-2 border-gray-300 text-gray-900">
+                      <SelectTrigger className="h-14 text-base rounded-2xl bg-white border-2 border-slate-300 text-slate-900 hover:border-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors">
                         <SelectValue placeholder="Type" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl bg-white border-2 border-gray-300">
+                      <SelectContent className="rounded-2xl bg-white border-2 border-slate-300">
                         <SelectItem value="hourly">Hourly</SelectItem>
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -689,7 +689,7 @@ const Index = () => {
                     </Select>
                     <Button 
                       size="lg" 
-                      className="h-14 rounded-2xl font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-105 transition-all" 
+                      className="h-14 rounded-2xl font-bold bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-400 hover:to-blue-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-105 transition-all" 
                       onClick={handleSearch}
                     >
                       <Search className="w-5 h-5 mr-2" />
@@ -698,7 +698,7 @@ const Index = () => {
                   </div>
                   
                   {/* Sleek Quick Actions */}
-                  <div className="flex flex-wrap gap-3 justify-center mt-8 pt-6 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-3 justify-center mt-8 pt-6 border-t border-slate-200">
                     {[
                       { label: "Near Me", icon: MapPin },
                       { label: "Airport", icon: Plane },
@@ -717,7 +717,7 @@ const Index = () => {
                             if (chip.label === "Monthly") setSearchPricingType("monthly");
                             handleSearch();
                           }}
-                          className="px-6 py-3 rounded-full bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 hover:border-cyan-500 text-gray-900 text-sm font-medium transition-all flex items-center gap-2"
+                          className="px-6 py-3 rounded-full bg-white hover:bg-slate-50 border-2 border-slate-300 hover:border-orange-500 text-slate-900 text-sm font-medium transition-all flex items-center gap-2 hover:shadow-md"
                         >
                           <Icon className="w-4 h-4" />
                           {chip.label}
@@ -735,32 +735,13 @@ const Index = () => {
                       <Button 
                         variant="ghost" 
                         onClick={clearSearch} 
-                        className="text-sm text-white/60 hover:text-white hover:bg-white/5"
+                        className="text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full"
                       >
                         Clear Search
                       </Button>
                     </motion.div>
                   )}
                 </div>
-              </div>
-            </motion.div>
-            
-            {/* Scroll Indicator */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2, duration: 1 }}
-              className="absolute bottom-10 left-1/2 -translate-x-1/2"
-            >
-              <div className="flex flex-col items-center gap-2 text-white/60">
-                <span className="text-xs uppercase tracking-wider">Scroll to explore</span>
-                <motion.div
-                  animate={{ y: [0, 10, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-2"
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
-                </motion.div>
               </div>
             </motion.div>
           </motion.div>
