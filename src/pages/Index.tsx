@@ -622,7 +622,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/arriv-steering-wheel.png" 
                     alt="Arriv Steering Wheel Logo" 
-                    className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl brightness-0 invert"
+                    className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-2xl"
                   />
                 </motion.div>
               </motion.div>
