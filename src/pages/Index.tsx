@@ -571,14 +571,8 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Revolutionary Hero Section with 3D */}
+      {/* Revolutionary Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
-        {/* 3D Background */}
-        <Hero3D />
-        
-        {/* Animated Particles */}
-        <AnimatedBackground />
-        
         {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/30"></div>
         
