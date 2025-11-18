@@ -620,9 +620,13 @@ const Index = () => {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="relative"
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 p-1 shadow-2xl shadow-blue-500/50">
-                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-                      <Car className="w-10 h-10 md:w-12 md:h-12 text-cyan-400" />
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 p-1 shadow-2xl shadow-blue-500/50">
+                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                        alt="Arriv Logo" 
+                        className="w-20 h-20 md:w-28 md:h-28 object-contain"
+                      />
                     </div>
                   </div>
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 blur-xl opacity-50 animate-pulse" />
