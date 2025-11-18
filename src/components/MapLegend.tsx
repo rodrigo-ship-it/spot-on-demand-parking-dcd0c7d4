@@ -11,25 +11,25 @@ export const MapLegend = () => {
   ];
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 px-3 sm:px-4 py-2 shadow-sm max-w-full">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-6 sm:gap-y-0">
+    <div className="bg-card/95 backdrop-blur-sm rounded-lg border border-border px-4 py-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {legendItems.map((item, index) => (
-          <div key={item.label} className="flex items-center space-x-1.5 sm:space-x-2">
+          <div key={item.label} className="flex items-center gap-2">
             <div 
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-xs text-gray-700 whitespace-nowrap">{item.label}</span>
+            <span className="text-xs text-foreground whitespace-nowrap">{item.label}</span>
           </div>
         ))}
-        <div className="flex items-center space-x-1.5 sm:space-x-2">
+        <div className="flex items-center gap-2">
           <Crown className="w-3 h-3 text-amber-600 fill-amber-600 flex-shrink-0" />
-          <span className="text-xs text-gray-700 whitespace-nowrap">Premium subscription</span>
+          <span className="text-xs text-foreground whitespace-nowrap">Premium subscription</span>
         </div>
-        <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-gray-600">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>•</span>
           <span className="hidden sm:inline">Larger pins = Multiple spots or Garages</span>
-          <span className="sm:hidden">Larger pins = Multiple/Garages</span>
+          <span className="sm:hidden">Larger = Multiple/Garages</span>
         </div>
       </div>
     </div>
