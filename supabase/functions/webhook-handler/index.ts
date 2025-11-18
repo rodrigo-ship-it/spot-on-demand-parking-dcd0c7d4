@@ -380,8 +380,6 @@ serve(async (req) => {
           renter_id: metadata.user_id || null,
           start_time: startTimeStr,
           end_time: endTimeStr,
-          start_time_utc: startTimeUTC,
-          end_time_utc: endTimeUTC,
           total_amount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'confirmed',
           payment_intent_id: session.payment_intent?.toString(),
