@@ -621,11 +621,11 @@ const Index = () => {
                   className="relative"
                 >
                   <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 p-1 shadow-2xl shadow-blue-500/50">
-                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                       <img 
-                        src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                        alt="Arriv Logo" 
-                        className="w-20 h-20 md:w-28 md:h-28 object-contain"
+                        src="/lovable-uploads/arriv-steering-wheel.png" 
+                        alt="Arriv Steering Wheel Logo" 
+                        className="w-16 h-16 md:w-20 md:h-20 object-contain"
                       />
                     </div>
                   </div>
