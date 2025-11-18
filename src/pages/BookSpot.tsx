@@ -769,18 +769,11 @@ const BookSpot = () => {
                                      : "No times available for this date";
                                  })()}
                                </SelectItem>
-                               ) : (
-                                timeOptions.map((option) => {
-                                      // Convert timeOption format (24-hour: 17:30) to API format (12-hour: 5:30)
-                                      const [hours, minutes] = option.value.split(':');
-                                      const hour24 = parseInt(hours);
-                                      
-                                       // Use 24-hour format to match database response
-                                       const convertedTime = `${hour24}:${minutes}`;
-                                       
-                                       // Find corresponding slot data using 24-hour format that matches database
-                                       const slotData = timeSlots.find(slot => slot.time === convertedTime);
-                                      const isAvailable = slotData ? slotData.isAvailable : true;
+                                ) : (
+                                 timeOptions.map((option) => {
+                                       // Find corresponding slot data - option.value is already in correct format with leading zeros
+                                       const slotData = timeSlots.find(slot => slot.time === option.value);
+                                       const isAvailable = slotData ? slotData.isAvailable : true;
                                       
                                       return (
                                         <SelectItem 
@@ -833,16 +826,11 @@ const BookSpot = () => {
                               <SelectValue placeholder="Select time" />
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="max-h-[200px]">
-                            {timeOptions.map((option) => {
-                               // Convert timeOption format to match database response
-                               const [hours, minutes] = option.value.split(':');
-                               const hour24 = parseInt(hours);
-                               const convertedTime = `${hour24}:${minutes}`;
-                               
-                               // Find corresponding slot data using 24-hour format that matches database
-                               const slotData = timeSlots.find(slot => slot.time === convertedTime);
-                               const isAvailable = slotData ? slotData.isAvailable : true;
+                           <SelectContent className="max-h-[200px]">
+                             {timeOptions.map((option) => {
+                                // Find corresponding slot data - option.value is already in correct format with leading zeros
+                                const slotData = timeSlots.find(slot => slot.time === option.value);
+                                const isAvailable = slotData ? slotData.isAvailable : true;
                                
                                return (
                                  <SelectItem 
