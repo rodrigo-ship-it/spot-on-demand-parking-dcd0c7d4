@@ -665,7 +665,7 @@ const Index = () => {
                 {/* Glow Effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
                 
-                <div className="relative bg-card/80 backdrop-blur-2xl rounded-3xl p-8 border border-border">
+                <div className="relative bg-white rounded-3xl p-8 border-2 border-gray-200 shadow-2xl">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-2">
                       <GooglePlacesAutocomplete
@@ -673,14 +673,14 @@ const Index = () => {
                         onChange={setSearchLocation}
                         onLocationSelect={handleLocationSelect}
                         placeholder="Where to?"
-                        className="h-14 text-base rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-cyan-400/50 focus:bg-white/10 backdrop-blur-sm"
+                        className="h-14 text-base rounded-2xl bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
                       />
                     </div>
                     <Select value={searchPricingType} onValueChange={setSearchPricingType}>
-                      <SelectTrigger className="h-14 text-base rounded-2xl bg-white/5 border-white/10 text-white">
+                      <SelectTrigger className="h-14 text-base rounded-2xl bg-gray-50 border-2 border-gray-300 text-gray-900">
                         <SelectValue placeholder="Type" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl bg-slate-900 border-white/20">
+                      <SelectContent className="rounded-2xl bg-white border-2 border-gray-300">
                         <SelectItem value="hourly">Hourly</SelectItem>
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -698,7 +698,7 @@ const Index = () => {
                   </div>
                   
                   {/* Sleek Quick Actions */}
-                  <div className="flex flex-wrap gap-3 justify-center mt-8 pt-6 border-t border-white/10">
+                  <div className="flex flex-wrap gap-3 justify-center mt-8 pt-6 border-t border-gray-200">
                     {[
                       { label: "Near Me", icon: MapPin },
                       { label: "Airport", icon: Plane },
@@ -717,7 +717,7 @@ const Index = () => {
                             if (chip.label === "Monthly") setSearchPricingType("monthly");
                             handleSearch();
                           }}
-                          className="px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 text-white text-sm font-medium transition-all flex items-center gap-2 backdrop-blur-sm"
+                          className="px-6 py-3 rounded-full bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 hover:border-cyan-500 text-gray-900 text-sm font-medium transition-all flex items-center gap-2"
                         >
                           <Icon className="w-4 h-4" />
                           {chip.label}
