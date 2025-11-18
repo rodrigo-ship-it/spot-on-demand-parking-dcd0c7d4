@@ -15,6 +15,12 @@ import SearchResultsMap from "@/components/SearchResultsMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumBadge } from "@/components/PremiumBadge";
+import QuickSearchChips from "@/components/QuickSearchChips";
+import LiveAvailabilityBadge from "@/components/LiveAvailabilityBadge";
+import FeaturedSpotsCarousel from "@/components/FeaturedSpotsCarousel";
+import HowItWorksTimeline from "@/components/HowItWorksTimeline";
+import FAQAccordion from "@/components/FAQAccordion";
+import CityGrid from "@/components/CityGrid";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -578,7 +584,12 @@ const Index = () => {
             </p>
             
             {/* Enhanced Search Bar with Glass Effect */}
-            <div className="premium-card max-w-5xl mx-auto p-8 animate-scale-in" style={{ animationDelay: '0.6s' }}>
+            <div className="premium-card max-w-5xl mx-auto p-8 animate-scale-in relative" style={{ animationDelay: '0.6s' }}>
+              {/* Live Availability Badge */}
+              <div className="absolute -top-4 right-4">
+                <LiveAvailabilityBadge />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2">
                   <GooglePlacesAutocomplete
@@ -605,6 +616,16 @@ const Index = () => {
                   Search
                 </Button>
               </div>
+              
+              {/* Quick Search Chips */}
+              <QuickSearchChips 
+                onChipClick={(query, type) => {
+                  if (query) setSearchLocation(query);
+                  if (type) setSearchPricingType(type);
+                  handleSearch();
+                }}
+              />
+              
               {hasSearched && (
                 <div className="mt-6 flex justify-center animate-slide-down">
                   <Button variant="ghost" onClick={clearSearch} className="text-sm hover:bg-white/20 rounded-xl">
@@ -660,6 +681,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Spots Carousel */}
+      <FeaturedSpotsCarousel />
+
+      {/* How It Works Timeline */}
+      <HowItWorksTimeline />
 
       {/* Parking Spots - Only show when no search has been made */}
       {!hasSearched && (
@@ -796,6 +823,12 @@ const Index = () => {
           </div>
         </section>
       )}
+
+      {/* FAQ Accordion */}
+      <FAQAccordion />
+
+      {/* City Grid */}
+      <CityGrid />
 
       {/* Enhanced CTA Section */}
       <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
