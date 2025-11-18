@@ -33,6 +33,7 @@ const Index = () => {
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchPricingType, setSearchPricingType] = useState("");
+  const [searchTimeFilter, setSearchTimeFilter] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -649,7 +650,7 @@ const Index = () => {
                 
                 <div className="relative bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 border-2 border-slate-200 shadow-2xl backdrop-blur-sm">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-1">
                       <GooglePlacesAutocomplete
                         value={searchLocation}
                         onChange={setSearchLocation}
@@ -669,6 +670,18 @@ const Index = () => {
                         <SelectItem value="one_time">One-time</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Select value={searchTimeFilter} onValueChange={setSearchTimeFilter}>
+                      <SelectTrigger className="h-14 text-base rounded-2xl bg-white border-2 border-slate-300 text-slate-900 hover:border-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors">
+                        <SelectValue placeholder="Time" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl bg-white border-2 border-slate-300">
+                        <SelectItem value="anytime">Anytime</SelectItem>
+                        <SelectItem value="now">Now</SelectItem>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                        <SelectItem value="this_week">This Week</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button 
                       size="lg" 
                       className="h-14 rounded-2xl font-bold bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-400 hover:to-blue-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-105 transition-all" 
@@ -677,35 +690,6 @@ const Index = () => {
                       <Search className="w-5 h-5 mr-2" />
                       Search
                     </Button>
-                  </div>
-                  
-                  {/* Sleek Quick Actions */}
-                  <div className="flex flex-wrap gap-3 justify-center mt-8 pt-6 border-t border-slate-200">
-                    {[
-                      { label: "Near Me", icon: MapPin },
-                      { label: "Airport", icon: Plane },
-                      { label: "Downtown", icon: Building2 },
-                      { label: "Monthly", icon: Calendar },
-                    ].map((chip) => {
-                      const Icon = chip.icon;
-                      return (
-                        <motion.button
-                          key={chip.label}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => {
-                            if (chip.label === "Airport") setSearchLocation("airport");
-                            if (chip.label === "Downtown") setSearchLocation("downtown");
-                            if (chip.label === "Monthly") setSearchPricingType("monthly");
-                            handleSearch();
-                          }}
-                          className="px-6 py-3 rounded-full bg-white hover:bg-slate-50 border-2 border-slate-300 hover:border-orange-500 text-slate-900 text-sm font-medium transition-all flex items-center gap-2 hover:shadow-md"
-                        >
-                          <Icon className="w-4 h-4" />
-                          {chip.label}
-                        </motion.button>
-                      );
-                    })}
                   </div>
                   
                   {hasSearched && (
