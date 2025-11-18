@@ -109,11 +109,23 @@ serve(async (req) => {
 
     // Sort by distance if user location is provided, otherwise keep Google's relevance order
     if (userLocation) {
+      console.log('Sorting results by distance. User location:', userLocation);
+      validPlaces.forEach(place => {
+        console.log(`${place.name}: ${place.distance}`);
+      });
+      
       validPlaces.sort((a, b) => {
         const distA = parseFloat(a.distance) || 999999
         const distB = parseFloat(b.distance) || 999999
         return distA - distB
       })
+      
+      console.log('After sorting:');
+      validPlaces.forEach(place => {
+        console.log(`${place.name}: ${place.distance}`);
+      });
+    } else {
+      console.log('No user location provided, keeping Google relevance order');
     }
 
     return new Response(
