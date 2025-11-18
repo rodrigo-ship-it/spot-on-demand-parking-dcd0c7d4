@@ -8,21 +8,21 @@ const HowItWorksTimeline = () => {
       number: 1,
       title: "Search & Compare",
       description: "Find the perfect parking spot by location, price, and amenities",
-      color: "from-blue-500 to-cyan-500",
+      color: "from-blue-500 to-blue-600",
     },
     {
       icon: Calendar,
       number: 2,
       title: "Book Instantly",
       description: "Secure your reservation in seconds with instant confirmation",
-      color: "from-purple-500 to-pink-500",
+      color: "from-orange-500 to-amber-500",
     },
     {
       icon: CheckCircle,
       number: 3,
       title: "Park & Go",
       description: "Show your QR code, park with ease, and enjoy your day",
-      color: "from-green-500 to-emerald-500",
+      color: "from-slate-600 to-slate-700",
     },
   ];
 
