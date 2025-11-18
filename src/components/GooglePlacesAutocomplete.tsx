@@ -326,13 +326,14 @@ export const GooglePlacesAutocomplete = ({
       </div>
       
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-lg shadow-premium max-h-60 overflow-y-auto backdrop-blur-sm">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-gray-900 border border-border rounded-lg shadow-premium max-h-60 overflow-y-auto">
           {suggestions.map((suggestion, index) => (
             <div
               key={suggestion.id}
               className={cn(
-                "px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors border-b border-border last:border-b-0",
-                selectedIndex === index && "bg-primary/10 text-primary"
+                "px-4 py-3 cursor-pointer transition-colors border-b border-border last:border-b-0",
+                "hover:bg-primary/5 dark:hover:bg-primary/10",
+                selectedIndex === index && "bg-primary/10 dark:bg-primary/20"
               )}
               onClick={() => handleSuggestionClick(suggestion)}
             >
@@ -340,16 +341,16 @@ export const GooglePlacesAutocomplete = ({
                 <div className="flex items-start space-x-3 flex-1 min-w-0">
                   <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-foreground truncate">
+                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
                       {suggestion.name}
                     </div>
-                    <div className="text-sm text-muted-foreground truncate">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
                       {suggestion.description}
                     </div>
                   </div>
                 </div>
                 {suggestion.distance && (
-                  <div className="text-xs text-muted-foreground flex-shrink-0">
+                  <div className="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
                     {suggestion.distance}
                   </div>
                 )}
