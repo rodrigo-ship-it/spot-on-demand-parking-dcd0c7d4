@@ -165,6 +165,16 @@ export default {
 				'shimmer': {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' }
+				},
+				'staggered-fade': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(20px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
 				}
 			},
 			animation: {
@@ -181,7 +191,8 @@ export default {
 				'pulse-glow': 'pulse-glow 15s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
-				'shimmer': 'shimmer 2s linear infinite'
+				'shimmer': 'shimmer 2s linear infinite',
+				'stagger': 'staggered-fade 0.5s ease-out forwards'
 			}
 		}
 	},
