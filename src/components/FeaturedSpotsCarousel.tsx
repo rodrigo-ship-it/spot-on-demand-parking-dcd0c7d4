@@ -15,6 +15,8 @@ interface FeaturedSpot {
   rating: number;
   price_per_hour: number;
   daily_price: number;
+  monthly_price: number;
+  one_time_price: number;
   pricing_type: string;
   owner_id: string;
   is_premium?: boolean;
@@ -117,10 +119,16 @@ const FeaturedSpotsCarousel = () => {
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-primary">
-                            ${spot.pricing_type === "hourly" ? spot.price_per_hour : spot.daily_price}
+                            ${spot.pricing_type === "hourly" ? spot.price_per_hour : 
+                              spot.pricing_type === "daily" ? spot.daily_price :
+                              spot.pricing_type === "monthly" ? spot.monthly_price :
+                              spot.one_time_price}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            per {spot.pricing_type === "hourly" ? "hour" : "day"}
+                            {spot.pricing_type === "hourly" ? "per hour" : 
+                             spot.pricing_type === "daily" ? "per day" :
+                             spot.pricing_type === "monthly" ? "per month" :
+                             "one-time"}
                           </div>
                         </div>
                       </div>
