@@ -784,9 +784,9 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Zap, title: "Instant Booking", desc: "Reserve in seconds with real-time availability", gradient: "from-yellow-500 to-orange-500", delay: 0 },
-              { icon: Shield, title: "Bank-Level Security", desc: "Encrypted payments and data protection", gradient: "from-blue-500 to-cyan-500", delay: 0.2 },
-              { icon: Users, title: "Trusted Community", desc: "Join thousands of verified drivers and hosts", gradient: "from-purple-500 to-pink-500", delay: 0.4 }
+              { icon: Zap, title: "Instant Booking", desc: "Reserve in seconds with real-time availability", gradient: "from-orange-500 to-amber-500", delay: 0 },
+              { icon: Shield, title: "Bank-Level Security", desc: "Encrypted payments and data protection", gradient: "from-blue-500 to-blue-600", delay: 0.2 },
+              { icon: Users, title: "Trusted Community", desc: "Join thousands of verified drivers and hosts", gradient: "from-slate-600 to-slate-700", delay: 0.4 }
             ].map((feature, idx) => (
               <ScrollReveal key={idx} delay={feature.delay}>
                 <motion.div
