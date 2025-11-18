@@ -18,7 +18,7 @@ export const MapLegend = () => {
     <div className="bg-card border border-border shadow-lg rounded-xl overflow-hidden backdrop-blur-md bg-opacity-95">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent/50 transition-colors"
       >
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
@@ -38,45 +38,45 @@ export const MapLegend = () => {
       >
         <Separator />
         
-        <div className="p-4 space-y-4">
-          {/* Pricing Types */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2.5">Payment Types</p>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="p-3 flex items-start gap-4">
+          {/* Payment Types */}
+          <div className="flex-1">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Payment Types</p>
+            <div className="flex flex-wrap gap-2">
               {pricingTypes.map((item) => (
-                <div key={item.label} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/30 transition-colors">
-                  <div className={`w-4 h-4 rounded-full ${item.bgClass} flex-shrink-0 shadow-sm`} />
-                  <span className="text-xs text-foreground">{item.label}</span>
+                <div key={item.label} className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent/30 transition-colors">
+                  <div className={`w-3 h-3 rounded-full ${item.bgClass} flex-shrink-0 shadow-sm`} />
+                  <span className="text-xs text-foreground whitespace-nowrap">{item.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <Separator />
+          <Separator orientation="vertical" className="h-auto self-stretch" />
 
           {/* Special Markers */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2.5">Special Markers</p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/30 transition-colors">
-                <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0 shadow-sm" />
-                <span className="text-xs text-foreground">Your Location</span>
+          <div className="flex-1">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Special Markers</p>
+            <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent/30 transition-colors">
+                <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0 shadow-sm" />
+                <span className="text-xs text-foreground whitespace-nowrap">Your Location</span>
               </div>
               
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/30 transition-colors">
-                <Crown className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />
-                <span className="text-xs text-foreground">Premium Spots</span>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent/30 transition-colors">
+                <Crown className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
+                <span className="text-xs text-foreground whitespace-nowrap">Premium Spots</span>
               </div>
             </div>
           </div>
 
-          <Separator />
+          <Separator orientation="vertical" className="h-auto self-stretch" />
 
           {/* Info */}
-          <div className="flex items-start gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-            <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-1.5 px-2 py-1 rounded-md bg-muted/30 max-w-[200px]">
+            <Info className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Larger markers indicate multiple spots or garage facilities
+              Larger markers = multiple spots
             </p>
           </div>
         </div>
