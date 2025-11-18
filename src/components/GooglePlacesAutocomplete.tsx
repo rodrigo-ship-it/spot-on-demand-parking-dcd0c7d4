@@ -312,44 +312,44 @@ export const GooglePlacesAutocomplete = ({
           type="button"
           size="sm"
           variant="ghost"
-          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-accent/10"
           onClick={getCurrentLocation}
           disabled={isLoading}
           title="Use current location"
         >
           {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
           ) : (
-            <Navigation className="w-4 h-4" />
+            <Navigation className="w-4 h-4 text-primary" />
           )}
         </Button>
       </div>
       
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-lg shadow-premium max-h-60 overflow-y-auto backdrop-blur-sm">
           {suggestions.map((suggestion, index) => (
             <div
               key={suggestion.id}
               className={cn(
-                "px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0",
-                selectedIndex === index && "bg-blue-50 text-blue-700"
+                "px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors border-b border-border last:border-b-0",
+                selectedIndex === index && "bg-primary/10 text-primary"
               )}
               onClick={() => handleSuggestionClick(suggestion)}
             >
               <div className="flex items-start justify-between space-x-3">
                 <div className="flex items-start space-x-3 flex-1 min-w-0">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
+                    <div className="font-medium text-foreground truncate">
                       {suggestion.name}
                     </div>
-                    <div className="text-sm text-gray-500 truncate">
+                    <div className="text-sm text-muted-foreground truncate">
                       {suggestion.description}
                     </div>
                   </div>
                 </div>
                 {suggestion.distance && (
-                  <div className="text-xs text-gray-400 flex-shrink-0">
+                  <div className="text-xs text-muted-foreground flex-shrink-0">
                     {suggestion.distance}
                   </div>
                 )}

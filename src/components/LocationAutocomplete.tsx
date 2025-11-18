@@ -180,24 +180,24 @@ export const LocationAutocomplete = ({
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-lg shadow-premium max-h-60 overflow-y-auto backdrop-blur-sm"
         >
           {suggestions.map((suggestion, index) => (
             <div
               key={suggestion.id}
               className={cn(
-                "px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0",
-                selectedIndex === index && "bg-blue-50 text-blue-700"
+                "px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors border-b border-border last:border-b-0",
+                selectedIndex === index && "bg-primary/10 text-primary"
               )}
               onClick={() => handleSuggestionClick(suggestion)}
             >
               <div className="flex items-start space-x-3">
-                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">
+                  <div className="font-medium text-foreground truncate">
                     {suggestion.name}
                   </div>
-                  <div className="text-sm text-gray-500 truncate">
+                  <div className="text-sm text-muted-foreground truncate">
                     {suggestion.address}
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export const LocationAutocomplete = ({
       )}
       
       {!apiKey && value.length >= 2 && (
-        <div className="absolute top-full left-0 right-0 z-40 mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+        <div className="absolute top-full left-0 right-0 z-40 mt-1 p-3 bg-warning/10 border border-warning/20 rounded-lg text-sm text-warning-foreground backdrop-blur-sm">
           <strong>Demo Mode:</strong> Using mock location data. Connect to a places API for real suggestions.
         </div>
       )}
