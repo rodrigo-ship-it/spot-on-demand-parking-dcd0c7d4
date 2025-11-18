@@ -608,6 +608,27 @@ const Index = () => {
             
             {/* Revolutionary Heading */}
             <div className="space-y-6">
+              {/* Animated Logo */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
+                className="flex justify-center mb-8"
+              >
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative"
+                >
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 p-1 shadow-2xl shadow-blue-500/50">
+                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
+                      <Car className="w-10 h-10 md:w-12 md:h-12 text-cyan-400" />
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 blur-xl opacity-50 animate-pulse" />
+                </motion.div>
+              </motion.div>
+
               <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
