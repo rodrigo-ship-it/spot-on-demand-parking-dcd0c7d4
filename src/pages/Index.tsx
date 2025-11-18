@@ -571,7 +571,7 @@ const Index = () => {
       </nav>
 
       {/* Revolutionary Hero Section with 3D */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
         {/* 3D Background */}
         <Hero3D />
         
@@ -581,12 +581,12 @@ const Index = () => {
         {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/30"></div>
         
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 flex items-center justify-center min-h-screen">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center space-y-8"
+            className="text-center space-y-8 w-full"
           >
             {/* Live Badge with Motion */}
             <motion.div 
@@ -639,7 +639,7 @@ const Index = () => {
                 <span className="block mt-2">
                   <TypewriterText 
                     words={["Park Smarter.", "Park Faster.", "Park Better."]}
-                    className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent"
                   />
                 </span>
               </motion.h1>
