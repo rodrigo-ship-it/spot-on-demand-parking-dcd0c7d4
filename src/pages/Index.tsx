@@ -571,7 +571,7 @@ const Index = () => {
       </nav>
 
       {/* Revolutionary Hero Section with 3D */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950" role="banner">
+      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50" role="banner">
         {/* 3D Background */}
         <Hero3D />
         
@@ -579,7 +579,7 @@ const Index = () => {
         <AnimatedBackground />
         
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/5 to-background/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/30"></div>
         
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <motion.div 
@@ -595,12 +595,12 @@ const Index = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="flex justify-center"
             >
-              <div className="glass-card px-6 py-3 flex items-center gap-3 border border-white/20">
+              <div className="glass-card px-6 py-3 flex items-center gap-3 border border-border">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
                 </span>
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-semibold text-foreground">
                   <LiveAvailabilityBadge />
                 </span>
               </div>
@@ -622,7 +622,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/arriv-steering-wheel.png" 
                     alt="Arriv Steering Wheel Logo" 
-                    className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-2xl"
+                    className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
                   />
                 </motion.div>
               </motion.div>
@@ -633,7 +633,7 @@ const Index = () => {
                 transition={{ delay: 0.3, duration: 0.8 }}
                 className="text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter"
               >
-                <span className="block bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-2xl">
+                <span className="block text-foreground drop-shadow-2xl">
                   Arriv
                 </span>
                 <span className="block mt-2">
@@ -648,7 +648,7 @@ const Index = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-xl md:text-2xl text-blue-100/80 max-w-3xl mx-auto font-medium"
+                className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium"
               >
                 The future of parking is here. Find spots instantly or earn from your space.
               </motion.p>
@@ -665,7 +665,7 @@ const Index = () => {
                 {/* Glow Effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
                 
-                <div className="relative bg-black/40 backdrop-blur-2xl rounded-3xl p-8 border border-white/10">
+                <div className="relative bg-card/80 backdrop-blur-2xl rounded-3xl p-8 border border-border">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-2">
                       <GooglePlacesAutocomplete
