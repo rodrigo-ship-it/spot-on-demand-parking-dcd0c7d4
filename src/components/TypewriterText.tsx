@@ -35,7 +35,7 @@ export const TypewriterText = ({ words, className = "" }: TypewriterTextProps) =
   return (
     <span className={className}>
       {currentText}
-      <span className="animate-pulse">|</span>
+      <span className="animate-pulse text-orange-600">|</span>
     </span>
   );
 };
