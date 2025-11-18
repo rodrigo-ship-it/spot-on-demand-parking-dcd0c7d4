@@ -636,7 +636,7 @@ const Index = () => {
                 <span className="block text-foreground drop-shadow-2xl">
                   Arriv
                 </span>
-                <span className="block mt-2">
+                <span className="block mt-2 min-h-[4rem] md:min-h-[6rem] lg:min-h-[8rem] overflow-visible">
                   <TypewriterText 
                     words={["Park Smarter.", "Park Faster.", "Park Better."]}
                     className="bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent"
