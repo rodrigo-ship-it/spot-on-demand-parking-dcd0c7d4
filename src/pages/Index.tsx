@@ -618,18 +618,12 @@ const Index = () => {
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative"
                 >
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 p-1 shadow-2xl shadow-blue-500/50">
-                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                      <img 
-                        src="/lovable-uploads/arriv-steering-wheel.png" 
-                        alt="Arriv Steering Wheel Logo" 
-                        className="w-16 h-16 md:w-20 md:h-20 object-contain"
-                      />
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 blur-xl opacity-50 animate-pulse" />
+                  <img 
+                    src="/lovable-uploads/arriv-steering-wheel.png" 
+                    alt="Arriv Steering Wheel Logo" 
+                    className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-2xl"
+                  />
                 </motion.div>
               </motion.div>
 
