@@ -107,6 +107,15 @@ serve(async (req) => {
     // Filter out null results
     const validPlaces = detailedPlaces.filter(place => place !== null)
 
+    // Sort by distance if user location is provided, otherwise keep Google's relevance order
+    if (userLocation) {
+      validPlaces.sort((a, b) => {
+        const distA = parseFloat(a.distance) || 999999
+        const distB = parseFloat(b.distance) || 999999
+        return distA - distB
+      })
+    }
+
     return new Response(
       JSON.stringify({ places: validPlaces }),
       { 
