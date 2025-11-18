@@ -565,44 +565,34 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Modern Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900" role="banner">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
+      {/* Modern Clean Hero Section */}
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-gradient-to-b from-background via-background to-muted/20" role="banner">
+        {/* Subtle Background Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000,transparent)]"></div>
         
-        {/* Grid Pattern Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+        {/* Single Subtle Glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"></div>
         
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center space-y-8 animate-fade-in">
+          <div className="text-center space-y-8">
             {/* Live Badge */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center animate-fade-in">
               <LiveAvailabilityBadge />
             </div>
             
-            {/* Main Heading */}
-            <h1 className="text-6xl md:text-8xl font-black leading-none tracking-tight">
-              <span className="block bg-gradient-to-r from-blue-400 via-cyan-300 to-purple-400 bg-clip-text text-transparent drop-shadow-2xl">
-                Find it.
-              </span>
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-300 to-blue-400 bg-clip-text text-transparent drop-shadow-2xl mt-2">
-                Book it.
-              </span>
-              <span className="block text-white drop-shadow-2xl mt-2">Arriv</span>
-            </h1>
+            {/* Clean Main Heading */}
+            <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tight text-foreground">
+                Find it. Book it. <span className="text-primary">Arriv</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Discover convenient parking spots or earn money by listing your unused space
+              </p>
+            </div>
             
-            {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-blue-100/90 max-w-3xl mx-auto font-medium leading-relaxed" style={{ animationDelay: '0.2s' }}>
-              Discover convenient parking spots or earn money by listing your unused space
-            </p>
-            
-            {/* Search Card */}
-            <div className="max-w-5xl mx-auto mt-12 animate-scale-in" style={{ animationDelay: '0.4s' }}>
-              <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+            {/* Clean Search Card */}
+            <div className="max-w-4xl mx-auto mt-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <div className="bg-card rounded-2xl p-6 md:p-8 border shadow-lg">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="md:col-span-2">
                     <GooglePlacesAutocomplete
@@ -610,14 +600,14 @@ const Index = () => {
                       onChange={setSearchLocation}
                       onLocationSelect={handleLocationSelect}
                       placeholder="Where do you need parking?"
-                      className="h-14 text-lg rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-cyan-400/50 focus:bg-white/20"
+                      className="h-12 text-base rounded-xl bg-background"
                     />
                   </div>
                   <Select value={searchPricingType} onValueChange={setSearchPricingType}>
-                    <SelectTrigger className="h-14 text-lg rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white">
+                    <SelectTrigger className="h-12 text-base rounded-xl bg-background">
                       <SelectValue placeholder="Parking type" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl bg-slate-800 border-white/20">
+                    <SelectContent className="rounded-xl">
                       <SelectItem value="hourly">Hourly</SelectItem>
                       <SelectItem value="daily">Daily</SelectItem>
                       <SelectItem value="monthly">Monthly</SelectItem>
@@ -626,49 +616,49 @@ const Index = () => {
                   </Select>
                   <Button 
                     size="lg" 
-                    className="h-14 text-lg font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl shadow-xl shadow-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/60 transition-all duration-300" 
+                    className="h-12 rounded-xl font-semibold" 
                     onClick={handleSearch}
                   >
-                    <Search className="w-5 h-5 mr-2" />
+                    <Search className="w-4 h-4 mr-2" />
                     Search
                   </Button>
                 </div>
                 
-                {/* Modern Quick Search Chips */}
-                <div className="flex flex-wrap gap-3 justify-center mt-6">
+                {/* Clean Quick Search Options */}
+                <div className="flex flex-wrap gap-2 justify-center mt-6 pt-6 border-t">
                   {[
-                    { label: "Near Me", icon: MapPin, query: "", type: "nearby" },
-                    { label: "Airport", icon: Plane, query: "airport", type: "hourly" },
-                    { label: "Downtown", icon: Building2, query: "downtown", type: "hourly" },
-                    { label: "Monthly", icon: Calendar, query: "", type: "monthly" },
-                  ].map((chip, index) => {
+                    { label: "Near Me", icon: MapPin },
+                    { label: "Airport", icon: Plane },
+                    { label: "Downtown", icon: Building2 },
+                    { label: "Monthly", icon: Calendar },
+                  ].map((chip) => {
                     const Icon = chip.icon;
                     return (
                       <button
                         key={chip.label}
                         onClick={() => {
-                          if (chip.query) setSearchLocation(chip.query);
-                          if (chip.type) setSearchPricingType(chip.type);
+                          if (chip.label === "Airport") setSearchLocation("airport");
+                          if (chip.label === "Downtown") setSearchLocation("downtown");
+                          if (chip.label === "Monthly") setSearchPricingType("monthly");
                           handleSearch();
                         }}
-                        className="group px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 hover:border-cyan-400/50 transition-all duration-300 flex items-center gap-2 hover:scale-105"
-                        style={{ animationDelay: `${0.6 + index * 0.1}s` }}
+                        className="px-4 py-2 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-colors flex items-center gap-2"
                       >
-                        <Icon className="w-4 h-4 text-cyan-300 group-hover:text-cyan-200" />
-                        <span className="text-sm font-medium text-white/90 group-hover:text-white">{chip.label}</span>
+                        <Icon className="w-4 h-4" />
+                        {chip.label}
                       </button>
                     );
                   })}
                 </div>
                 
                 {hasSearched && (
-                  <div className="mt-6 flex justify-center animate-slide-down">
+                  <div className="mt-4 flex justify-center">
                     <Button 
                       variant="ghost" 
                       onClick={clearSearch} 
-                      className="text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-xl"
+                      className="text-sm"
                     >
-                      Clear Search & Show All
+                      Clear Search
                     </Button>
                   </div>
                 )}
@@ -676,9 +666,6 @@ const Index = () => {
             </div>
           </div>
         </div>
-        
-        {/* Bottom Gradient Fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
       </section>
 
       {/* Search Results with Map - Show after search */}
