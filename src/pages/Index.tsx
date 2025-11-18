@@ -615,11 +615,11 @@ const Index = () => {
                 className="text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter"
               >
                 <span className="block bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-2xl">
-                  Park
+                  Arriv
                 </span>
                 <span className="block mt-2">
                   <TypewriterText 
-                    words={["Smarter.", "Faster.", "Better."]}
+                    words={["Park Smarter.", "Park Faster.", "Park Better."]}
                     className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
                   />
                 </span>
