@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { useRealTimeSpots } from "@/hooks/useRealTimeSpots";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle, Settings, Filter, Crown, Plane, Building2, Calendar } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle, Settings, Filter, Crown, Plane, Building2, Calendar, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
@@ -21,6 +22,10 @@ import FeaturedSpotsCarousel from "@/components/FeaturedSpotsCarousel";
 import HowItWorksTimeline from "@/components/HowItWorksTimeline";
 import FAQAccordion from "@/components/FAQAccordion";
 import CityGrid from "@/components/CityGrid";
+import { Hero3D } from "@/components/Hero3D";
+import { TypewriterText } from "@/components/TypewriterText";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -565,106 +570,181 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Modern Clean Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-gradient-to-b from-background via-background to-muted/20" role="banner">
-        {/* Subtle Background Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000,transparent)]"></div>
+      {/* Revolutionary Hero Section with 3D */}
+      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950" role="banner">
+        {/* 3D Background */}
+        <Hero3D />
         
-        {/* Single Subtle Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"></div>
+        {/* Animated Particles */}
+        <AnimatedBackground />
         
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center space-y-8">
-            {/* Live Badge */}
-            <div className="flex justify-center animate-fade-in">
-              <LiveAvailabilityBadge />
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/5 to-background/80"></div>
+        
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center space-y-8"
+          >
+            {/* Live Badge with Motion */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="flex justify-center"
+            >
+              <div className="glass-card px-6 py-3 flex items-center gap-3 border border-white/20">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                </span>
+                <span className="text-sm font-semibold text-white">
+                  <LiveAvailabilityBadge />
+                </span>
+              </div>
+            </motion.div>
+            
+            {/* Revolutionary Heading */}
+            <div className="space-y-6">
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="text-6xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter"
+              >
+                <span className="block bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-2xl">
+                  Park
+                </span>
+                <span className="block mt-2">
+                  <TypewriterText 
+                    words={["Smarter.", "Faster.", "Better."]}
+                    className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+                  />
+                </span>
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-xl md:text-2xl text-blue-100/80 max-w-3xl mx-auto font-medium"
+              >
+                The future of parking is here. Find spots instantly or earn from your space.
+              </motion.p>
             </div>
             
-            {/* Clean Main Heading */}
-            <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tight text-foreground">
-                Find it. Book it. <span className="text-primary">Arriv</span>
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Discover convenient parking spots or earn money by listing your unused space
-              </p>
-            </div>
-            
-            {/* Clean Search Card */}
-            <div className="max-w-4xl mx-auto mt-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="bg-card rounded-2xl p-6 md:p-8 border shadow-lg">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-2">
-                    <GooglePlacesAutocomplete
-                      value={searchLocation}
-                      onChange={setSearchLocation}
-                      onLocationSelect={handleLocationSelect}
-                      placeholder="Where do you need parking?"
-                      className="h-12 text-base rounded-xl bg-background"
-                    />
-                  </div>
-                  <Select value={searchPricingType} onValueChange={setSearchPricingType}>
-                    <SelectTrigger className="h-12 text-base rounded-xl bg-background">
-                      <SelectValue placeholder="Parking type" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="hourly">Hourly</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="one_time">One-time</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="lg" 
-                    className="h-12 rounded-xl font-semibold" 
-                    onClick={handleSearch}
-                  >
-                    <Search className="w-4 h-4 mr-2" />
-                    Search
-                  </Button>
-                </div>
+            {/* Futuristic Search Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+              className="max-w-4xl mx-auto mt-16"
+            >
+              <div className="relative group">
+                {/* Glow Effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
                 
-                {/* Clean Quick Search Options */}
-                <div className="flex flex-wrap gap-2 justify-center mt-6 pt-6 border-t">
-                  {[
-                    { label: "Near Me", icon: MapPin },
-                    { label: "Airport", icon: Plane },
-                    { label: "Downtown", icon: Building2 },
-                    { label: "Monthly", icon: Calendar },
-                  ].map((chip) => {
-                    const Icon = chip.icon;
-                    return (
-                      <button
-                        key={chip.label}
-                        onClick={() => {
-                          if (chip.label === "Airport") setSearchLocation("airport");
-                          if (chip.label === "Downtown") setSearchLocation("downtown");
-                          if (chip.label === "Monthly") setSearchPricingType("monthly");
-                          handleSearch();
-                        }}
-                        className="px-4 py-2 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-colors flex items-center gap-2"
-                      >
-                        <Icon className="w-4 h-4" />
-                        {chip.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                {hasSearched && (
-                  <div className="mt-4 flex justify-center">
+                <div className="relative bg-black/40 backdrop-blur-2xl rounded-3xl p-8 border border-white/10">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-2">
+                      <GooglePlacesAutocomplete
+                        value={searchLocation}
+                        onChange={setSearchLocation}
+                        onLocationSelect={handleLocationSelect}
+                        placeholder="Where to?"
+                        className="h-14 text-base rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-cyan-400/50 focus:bg-white/10 backdrop-blur-sm"
+                      />
+                    </div>
+                    <Select value={searchPricingType} onValueChange={setSearchPricingType}>
+                      <SelectTrigger className="h-14 text-base rounded-2xl bg-white/5 border-white/10 text-white">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl bg-slate-900 border-white/20">
+                        <SelectItem value="hourly">Hourly</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="one_time">One-time</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button 
-                      variant="ghost" 
-                      onClick={clearSearch} 
-                      className="text-sm"
+                      size="lg" 
+                      className="h-14 rounded-2xl font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-105 transition-all" 
+                      onClick={handleSearch}
                     >
-                      Clear Search
+                      <Search className="w-5 h-5 mr-2" />
+                      Search
                     </Button>
                   </div>
-                )}
+                  
+                  {/* Sleek Quick Actions */}
+                  <div className="flex flex-wrap gap-3 justify-center mt-8 pt-6 border-t border-white/10">
+                    {[
+                      { label: "Near Me", icon: MapPin },
+                      { label: "Airport", icon: Plane },
+                      { label: "Downtown", icon: Building2 },
+                      { label: "Monthly", icon: Calendar },
+                    ].map((chip) => {
+                      const Icon = chip.icon;
+                      return (
+                        <motion.button
+                          key={chip.label}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => {
+                            if (chip.label === "Airport") setSearchLocation("airport");
+                            if (chip.label === "Downtown") setSearchLocation("downtown");
+                            if (chip.label === "Monthly") setSearchPricingType("monthly");
+                            handleSearch();
+                          }}
+                          className="px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 text-white text-sm font-medium transition-all flex items-center gap-2 backdrop-blur-sm"
+                        >
+                          <Icon className="w-4 h-4" />
+                          {chip.label}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  
+                  {hasSearched && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-4 flex justify-center"
+                    >
+                      <Button 
+                        variant="ghost" 
+                        onClick={clearSearch} 
+                        className="text-sm text-white/60 hover:text-white hover:bg-white/5"
+                      >
+                        Clear Search
+                      </Button>
+                    </motion.div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+            
+            {/* Scroll Indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 1 }}
+              className="absolute bottom-10 left-1/2 -translate-x-1/2"
+            >
+              <div className="flex flex-col items-center gap-2 text-white/60">
+                <span className="text-xs uppercase tracking-wider">Scroll to explore</span>
+                <motion.div
+                  animate={{ y: [0, 10, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-2"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -679,35 +759,55 @@ const Index = () => {
         />
       )}
 
-      {/* Enhanced Features Section */}
-      <section className="py-16 bg-white/50" aria-labelledby="features-heading">
+      {/* Revolutionary Features Section */}
+      <section className="py-24 bg-gradient-to-b from-background to-muted/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <header className="text-center mb-12">
-            <h2 id="features-heading" className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">Experience the future of parking with our innovative features</p>
-          </header>
+          <ScrollReveal>
+            <div className="text-center mb-20">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold mb-4"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Why Choose Arriv</span>
+              </motion.div>
+              <h2 className="text-4xl md:text-6xl font-bold mb-4">
+                Parking <span className="text-primary">Reimagined</span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Experience next-generation parking with cutting-edge technology
+              </p>
+            </div>
+          </ScrollReveal>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <article className="text-center group hover-lift">
-              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Booking</h3>
-              <p className="text-gray-600">Book parking spots instantly with our real-time availability system and get immediate confirmation</p>
-            </article>
-            <article className="text-center group hover-lift">
-              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-gray-600">Industry-standard security with encrypted transactions powered by Stripe and comprehensive data protection</p>
-            </article>
-            <article className="text-center group hover-lift">
-              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-glow">
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Trusted Community</h3>
-              <p className="text-gray-600">Connect with drivers and property owners in our growing community with user profiles and ratings</p>
-            </article>
+            {[
+              { icon: Zap, title: "Instant Booking", desc: "Reserve in seconds with real-time availability", gradient: "from-yellow-500 to-orange-500", delay: 0 },
+              { icon: Shield, title: "Bank-Level Security", desc: "Encrypted payments and data protection", gradient: "from-blue-500 to-cyan-500", delay: 0.2 },
+              { icon: Users, title: "Trusted Community", desc: "Join thousands of verified drivers and hosts", gradient: "from-purple-500 to-pink-500", delay: 0.4 }
+            ].map((feature, idx) => (
+              <ScrollReveal key={idx} delay={feature.delay}>
+                <motion.div
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="relative group"
+                >
+                  {/* Glow effect on hover */}
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${feature.gradient} rounded-3xl blur opacity-0 group-hover:opacity-30 transition duration-500`}></div>
+                  
+                  <Card className="relative border-2 h-full bg-card/50 backdrop-blur-sm">
+                    <CardHeader className="text-center pb-4">
+                      <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform duration-300`}>
+                        <feature.icon className="w-10 h-10 text-white" />
+                      </div>
+                      <CardTitle className="text-2xl mb-2">{feature.title}</CardTitle>
+                      <CardDescription className="text-base">{feature.desc}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
@@ -770,88 +870,91 @@ const Index = () => {
             ) : (
               <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
               {transformedSpots.map((spot, index) => (
-                <Card key={spot.id} className="group hover-lift border-0 shadow-card hover:shadow-elegant animate-fade-in flex flex-col h-full" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <img 
-                      src={spot.image} 
-                      alt={`Parking spot at ${spot.address} - ${spot.title}`}
-                      className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    {spot.rating > 0 && (
-                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold flex items-center shadow-card animate-bounce-in">
-                        <Star className="w-3 h-3 text-yellow-500 mr-1 fill-current" />
-                        {spot.rating}
+                <ScrollReveal key={spot.id} delay={index * 0.1}>
+                  <motion.div
+                    whileHover={{ y: -8 }}
+                    className="h-full"
+                  >
+                    <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 flex flex-col h-full overflow-hidden bg-card/50 backdrop-blur-sm">
+                      <div className="relative overflow-hidden">
+                        <motion.img 
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.6 }}
+                          src={spot.image} 
+                          alt={`Parking spot at ${spot.address} - ${spot.title}`}
+                          className="w-full h-48 object-cover"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-transparent"></div>
+                        {spot.rating > 0 && (
+                          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-sm font-semibold flex items-center shadow-xl">
+                            <Star className="w-3.5 h-3.5 text-yellow-500 mr-1 fill-current" />
+                            {spot.rating}
+                          </div>
+                        )}
+                        {spot.isPremiumLister && (
+                          <div className="absolute top-3 left-3">
+                            <PremiumBadge size="sm" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <CardHeader className="pb-3">
-                     <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                            {spot.title}
-                          </CardTitle>
-                          <CardDescription className="flex items-center text-gray-600 mt-1">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            {spot.address}
-                          </CardDescription>
-                        </div>
-                       <div className="text-right">
-                         <div className="text-2xl font-bold text-gray-900">${spot.price}</div>
-                         <div className="text-sm text-gray-500">
-                           {spot.pricingType === 'hourly' ? 'per hour' : 
-                            spot.pricingType === 'daily' ? 'per day' : 
-                            spot.pricingType === 'monthly' ? 'per month' :
-                            'one-time'}
-                         </div>
-                         {spot.isPremiumLister && (
-                           <div className="mt-1">
-                             <PremiumBadge size="sm" />
+                      <CardHeader className="pb-3">
+                         <div className="flex justify-between items-start gap-4">
+                            <div className="flex-1">
+                              <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors line-clamp-1">
+                                {spot.title}
+                              </CardTitle>
+                              <CardDescription className="flex items-center mt-2">
+                                <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                                <span className="line-clamp-1">{spot.address}</span>
+                              </CardDescription>
+                            </div>
+                           <div className="text-right flex-shrink-0">
+                             <div className="text-2xl font-bold text-primary">${spot.price}</div>
+                             <div className="text-xs text-muted-foreground">
+                               {spot.pricingType === 'hourly' ? 'per hour' : 
+                                spot.pricingType === 'daily' ? 'per day' : 
+                                spot.pricingType === 'monthly' ? 'per month' :
+                                'one-time'}
+                             </div>
                            </div>
-                         )}
-                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 flex flex-col flex-grow">
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                      <div className="flex items-center">
-                        <Car className="w-4 h-4 mr-1" />
-                        {spot.type}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {spot.available}
-                      </div>
-                    </div>
-                    
-                    {/* Availability Display */}
-                    <div className="mb-4 min-h-[2rem]">
-                      <AvailabilityDisplay 
-                        spotType={spot.spotType}
-                        totalSpots={spot.totalSpots}
-                        spotId={spot.id.toString()}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="text-sm text-gray-500 font-medium">{spot.distance} away</span>
-                      <Button 
-                        variant="premium"
-                        size="sm" 
-                        onClick={() => handleBookNow(spot.id)}
-                        aria-label={`Book parking spot at ${spot.title}`}
-                      >
-                        Book Now
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 flex flex-col flex-grow">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                          <div className="flex items-center">
+                            <Car className="w-4 h-4 mr-1" />
+                            {spot.type}
+                          </div>
+                          {spot.distance && (
+                            <div className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              {spot.distance}
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-auto">
+                          <AvailabilityDisplay 
+                            spotId={spot.id} 
+                            spotType={spot.type}
+                            totalSpots={spot.totalSpots || 1}
+                          />
+                          <Button 
+                            className="w-full mt-3 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 font-semibold shadow-lg hover:shadow-xl transition-all" 
+                            onClick={() => handleBookNow(spot.id)}
+                          >
+                            Book Now
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </ScrollReveal>
               ))}
             </div>
-            )}
-          </div>
-        </section>
+          )}
+        </div>
+      </section>
       )}
 
       {/* FAQ Accordion */}
