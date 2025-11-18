@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle, Settings, Filter, Crown } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Grid, List, Search, Star, Shield, Zap, Users, Menu, X, HelpCircle, Settings, Filter, Crown, Plane, Building2, Calendar } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
@@ -565,77 +565,120 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Hero Section with Enhanced SEO */}
-      <section className="relative overflow-hidden section-padding bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900" role="banner">
-        <div className="absolute inset-0 bg-gradient-hero opacity-10 animate-glow-pulse"></div>
+      {/* Modern Hero Section */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900" role="banner">
+        {/* Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-tertiary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
-        <div className="relative max-w-7xl mx-auto container-padding">
-          <div className="text-center max-w-5xl mx-auto animate-fade-in">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none mb-8 text-gradient">
-              Find it. Book it. <span className="text-primary-glow">Arriv</span>
+        
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+        
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center space-y-8 animate-fade-in">
+            {/* Live Badge */}
+            <div className="flex justify-center mb-4">
+              <LiveAvailabilityBadge />
+            </div>
+            
+            {/* Main Heading */}
+            <h1 className="text-6xl md:text-8xl font-black leading-none tracking-tight">
+              <span className="block bg-gradient-to-r from-blue-400 via-cyan-300 to-purple-400 bg-clip-text text-transparent drop-shadow-2xl">
+                Find it.
+              </span>
+              <span className="block bg-gradient-to-r from-purple-400 via-pink-300 to-blue-400 bg-clip-text text-transparent drop-shadow-2xl mt-2">
+                Book it.
+              </span>
+              <span className="block text-white drop-shadow-2xl mt-2">Arriv</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed animate-slide-up max-w-3xl mx-auto font-medium" style={{ animationDelay: '0.3s' }}>
-              Discover convenient parking spots or earn money by listing your unused space. 
-              Join our growing community of drivers and property owners.
+            
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-blue-100/90 max-w-3xl mx-auto font-medium leading-relaxed" style={{ animationDelay: '0.2s' }}>
+              Discover convenient parking spots or earn money by listing your unused space
             </p>
             
-            {/* Enhanced Search Bar with Glass Effect */}
-            <div className="premium-card max-w-5xl mx-auto p-8 animate-scale-in relative" style={{ animationDelay: '0.6s' }}>
-              {/* Live Availability Badge */}
-              <div className="absolute -top-4 right-4">
-                <LiveAvailabilityBadge />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-2">
-                  <GooglePlacesAutocomplete
-                    value={searchLocation}
-                    onChange={setSearchLocation}
-                    onLocationSelect={handleLocationSelect}
-                    placeholder="Where do you need parking?"
-                    className="h-14 form-input text-lg rounded-xl border-2 focus:border-primary/50 bg-white/80 backdrop-blur-sm"
-                  />
-                </div>
-                <Select value={searchPricingType} onValueChange={setSearchPricingType}>
-                  <SelectTrigger className="h-14 form-input text-lg rounded-xl border-2 bg-white/80 backdrop-blur-sm">
-                    <SelectValue placeholder="Parking type" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="hourly">Hourly</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="one_time">One-time payment</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="premium" size="lg" className="h-14 text-lg font-bold" onClick={handleSearch}>
-                  <Search className="w-5 h-5 mr-2" />
-                  Search
-                </Button>
-              </div>
-              
-              {/* Quick Search Chips */}
-              <QuickSearchChips 
-                onChipClick={(query, type) => {
-                  if (query) setSearchLocation(query);
-                  if (type) setSearchPricingType(type);
-                  handleSearch();
-                }}
-              />
-              
-              {hasSearched && (
-                <div className="mt-6 flex justify-center animate-slide-down">
-                  <Button variant="ghost" onClick={clearSearch} className="text-sm hover:bg-white/20 rounded-xl">
-                    Clear Search & Show All
+            {/* Search Card */}
+            <div className="max-w-5xl mx-auto mt-12 animate-scale-in" style={{ animationDelay: '0.4s' }}>
+              <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-2">
+                    <GooglePlacesAutocomplete
+                      value={searchLocation}
+                      onChange={setSearchLocation}
+                      onLocationSelect={handleLocationSelect}
+                      placeholder="Where do you need parking?"
+                      className="h-14 text-lg rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-cyan-400/50 focus:bg-white/20"
+                    />
+                  </div>
+                  <Select value={searchPricingType} onValueChange={setSearchPricingType}>
+                    <SelectTrigger className="h-14 text-lg rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white">
+                      <SelectValue placeholder="Parking type" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl bg-slate-800 border-white/20">
+                      <SelectItem value="hourly">Hourly</SelectItem>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="one_time">One-time</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    size="lg" 
+                    className="h-14 text-lg font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl shadow-xl shadow-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/60 transition-all duration-300" 
+                    onClick={handleSearch}
+                  >
+                    <Search className="w-5 h-5 mr-2" />
+                    Search
                   </Button>
                 </div>
-              )}
+                
+                {/* Modern Quick Search Chips */}
+                <div className="flex flex-wrap gap-3 justify-center mt-6">
+                  {[
+                    { label: "Near Me", icon: MapPin, query: "", type: "nearby" },
+                    { label: "Airport", icon: Plane, query: "airport", type: "hourly" },
+                    { label: "Downtown", icon: Building2, query: "downtown", type: "hourly" },
+                    { label: "Monthly", icon: Calendar, query: "", type: "monthly" },
+                  ].map((chip, index) => {
+                    const Icon = chip.icon;
+                    return (
+                      <button
+                        key={chip.label}
+                        onClick={() => {
+                          if (chip.query) setSearchLocation(chip.query);
+                          if (chip.type) setSearchPricingType(chip.type);
+                          handleSearch();
+                        }}
+                        className="group px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 hover:border-cyan-400/50 transition-all duration-300 flex items-center gap-2 hover:scale-105"
+                        style={{ animationDelay: `${0.6 + index * 0.1}s` }}
+                      >
+                        <Icon className="w-4 h-4 text-cyan-300 group-hover:text-cyan-200" />
+                        <span className="text-sm font-medium text-white/90 group-hover:text-white">{chip.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {hasSearched && (
+                  <div className="mt-6 flex justify-center animate-slide-down">
+                    <Button 
+                      variant="ghost" 
+                      onClick={clearSearch} 
+                      className="text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-xl"
+                    >
+                      Clear Search & Show All
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
+        
+        {/* Bottom Gradient Fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
       </section>
 
       {/* Search Results with Map - Show after search */}
