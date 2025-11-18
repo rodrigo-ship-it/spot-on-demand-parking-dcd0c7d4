@@ -5,14 +5,16 @@ import { Suspense } from 'react';
 function FloatingCar() {
   return (
     <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-      <mesh position={[2, 0, 0]}>
-        <boxGeometry args={[1.5, 0.8, 3]} />
-        <meshStandardMaterial color="#3b82f6" metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[2.4, 0.5, 0.8]}>
-        <boxGeometry args={[0.8, 0.6, 1.2]} />
-        <meshStandardMaterial color="#60a5fa" metalness={0.6} roughness={0.3} transparent opacity={0.8} />
-      </mesh>
+      <group position={[2, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[1.5, 0.8, 3]} />
+          <meshStandardMaterial color="#3b82f6" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0.4, 0.5, 0.8]}>
+          <boxGeometry args={[0.8, 0.6, 1.2]} />
+          <meshStandardMaterial color="#60a5fa" metalness={0.6} roughness={0.3} transparent opacity={0.8} />
+        </mesh>
+      </group>
     </Float>
   );
 }
@@ -20,16 +22,17 @@ function FloatingCar() {
 function FloatingSphere({ position, color, speed }: { position: [number, number, number], color: string, speed: number }) {
   return (
     <Float speed={speed} rotationIntensity={0.3} floatIntensity={0.8}>
-      <Sphere args={[0.8, 32, 32]} position={position}>
-        <MeshDistortMaterial color={color} speed={2} distort={0.3} radius={1} />
-      </Sphere>
+      <mesh position={position}>
+        <sphereGeometry args={[0.8, 32, 32]} />
+        <MeshDistortMaterial color={color} speed={2} distort={0.3} />
+      </mesh>
     </Float>
   );
 }
 
 export const Hero3D = () => {
   return (
-    <div className="absolute inset-0 -z-10">
+    <div className="absolute inset-0 -z-10 opacity-60">
       <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
         <Suspense fallback={null}>
           <ambientLight intensity={0.5} />
