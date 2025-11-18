@@ -571,7 +571,7 @@ const Index = () => {
       </nav>
 
       {/* Revolutionary Hero Section with 3D */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50" role="banner">
+      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-blue-100 via-cyan-100 to-purple-100" role="banner">
         {/* 3D Background */}
         <Hero3D />
         
