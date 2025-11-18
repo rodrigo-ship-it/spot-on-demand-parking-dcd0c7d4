@@ -589,7 +589,7 @@ const Index = () => {
             className="text-center space-y-8 w-full"
           >
             {/* Revolutionary Heading */}
-            <div className="space-y-6">
+            <div className="space-y-6 pt-16 md:pt-20">
               {/* Animated Logo */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.5 }}
