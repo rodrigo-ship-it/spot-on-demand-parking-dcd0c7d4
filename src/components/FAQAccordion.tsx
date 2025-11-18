@@ -56,7 +56,7 @@ const FAQAccordion = () => {
     <div className="w-full py-16 px-4 bg-gradient-to-b from-background/50 to-background">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent leading-tight pb-1">
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
