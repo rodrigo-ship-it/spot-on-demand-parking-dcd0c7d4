@@ -334,6 +334,8 @@ export const GooglePlacesAutocomplete = ({
             boxShadow: '0 20px 40px -4px rgba(0,0,0,0.25)',
             maxHeight: '400px'
           }}
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           {suggestions.map((suggestion, index) => (
             <div
