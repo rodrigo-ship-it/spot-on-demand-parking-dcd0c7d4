@@ -38,6 +38,7 @@ export const GooglePlacesAutocomplete = ({
   
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get user's current location for distance calculation
   useEffect(() => {
@@ -327,15 +328,35 @@ export const GooglePlacesAutocomplete = ({
       
       {showSuggestions && suggestions.length > 0 && (
         <div 
-          className="absolute top-full left-0 right-0 z-[9999] mt-2 rounded-xl overflow-y-auto"
+          ref={dropdownRef}
+          className="absolute top-full left-0 right-0 z-[9999] mt-2 rounded-xl"
           style={{ 
             backgroundColor: '#FFFFFF', 
             border: '2px solid #E5E7EB', 
             boxShadow: '0 20px 40px -4px rgba(0,0,0,0.25)',
-            maxHeight: '400px'
+            maxHeight: '400px',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain'
           }}
-          onWheel={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
+          onWheel={(e) => {
+            const element = dropdownRef.current;
+            if (!element) return;
+            
+            const atTop = element.scrollTop === 0;
+            const atBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
+            
+            // Only stop propagation if we're scrolling within bounds
+            if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) {
+              e.stopPropagation();
+            } else if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+              // At boundary, prevent both default and propagation
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+          onTouchMove={(e) => {
+            e.stopPropagation();
+          }}
         >
           {suggestions.map((suggestion, index) => (
             <div
