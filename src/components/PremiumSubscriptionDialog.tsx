@@ -8,10 +8,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Check, Star } from "lucide-react";
+import { Crown, Check, Star, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PremiumBadge } from './PremiumBadge';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 interface PremiumSubscriptionDialogProps {
   children: React.ReactNode;
@@ -20,8 +21,14 @@ interface PremiumSubscriptionDialogProps {
 export const PremiumSubscriptionDialog = ({ children }: PremiumSubscriptionDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const { isPremium, loading: premiumLoading } = usePremiumStatus();
 
   const handleSubscribe = async () => {
+    if (isPremium) {
+      toast.info('You already have an active premium subscription');
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -37,6 +44,25 @@ export const PremiumSubscriptionDialog = ({ children }: PremiumSubscriptionDialo
     } catch (error: any) {
       console.error('Subscription error:', error);
       toast.error(error.message || 'Failed to create subscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke('premium-portal');
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        setOpen(false);
+      }
+    } catch (error: any) {
+      console.error('Portal error:', error);
+      toast.error('Failed to open subscription management');
     } finally {
       setLoading(false);
     }
@@ -58,10 +84,12 @@ export const PremiumSubscriptionDialog = ({ children }: PremiumSubscriptionDialo
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Crown className="h-6 w-6 text-amber-600 fill-amber-600" />
-            Go Premium
+            {isPremium ? "Premium Active" : "Go Premium"}
           </DialogTitle>
           <DialogDescription>
-            Upgrade to a premium lister account for just $5/month
+            {isPremium 
+              ? "You're already enjoying all premium benefits" 
+              : "Upgrade to a premium lister account for just $5/month"}
           </DialogDescription>
         </DialogHeader>
         
@@ -90,15 +118,32 @@ export const PremiumSubscriptionDialog = ({ children }: PremiumSubscriptionDialo
 
           {/* CTA */}
           <div className="space-y-3">
-            <Button 
-              onClick={handleSubscribe} 
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700"
-            >
-              {loading ? "Processing..." : "Subscribe Now"}
-            </Button>
+            {isPremium ? (
+              <Button 
+                onClick={handleManageSubscription} 
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700"
+              >
+                {loading ? "Loading..." : (
+                  <>
+                    Manage Subscription
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSubscribe} 
+                disabled={loading || premiumLoading}
+                className="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700"
+              >
+                {loading ? "Processing..." : "Subscribe Now"}
+              </Button>
+            )}
             <p className="text-xs text-gray-500 text-center">
-              Cancel anytime. Secure payment processed by Stripe.
+              {isPremium 
+                ? "Manage your subscription or cancel anytime via Stripe." 
+                : "Cancel anytime. Secure payment processed by Stripe."}
             </p>
           </div>
         </div>
