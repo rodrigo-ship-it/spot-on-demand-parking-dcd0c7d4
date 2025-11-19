@@ -44,7 +44,7 @@ const CityGrid = () => {
   };
 
   return (
-    <div className="w-full py-16 px-4">
+    <div className="w-full py-16 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent leading-tight pb-1">
