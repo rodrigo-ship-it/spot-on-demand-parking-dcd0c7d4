@@ -121,7 +121,7 @@ const RentQR = () => {
 
   if (!spot) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading parking spot...</h2>
@@ -131,7 +131,7 @@ const RentQR = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Quick Rental</h1>

@@ -313,7 +313,7 @@ const SpotDetails = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="mt-2 text-gray-600">Loading spot details...</p>
@@ -325,7 +325,7 @@ const SpotDetails = () => {
   // Error state
   if (error || !spotData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-gray-900 mb-2">Spot Not Found</h1>
@@ -342,9 +342,9 @@ const SpotDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="bg-white shadow-lg border-b">
+      <nav className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
