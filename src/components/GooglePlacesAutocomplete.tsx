@@ -329,12 +329,15 @@ export const GooglePlacesAutocomplete = ({
       {showSuggestions && suggestions.length > 0 && (
         <div 
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 z-[9999] mt-2 rounded-xl"
+          className="absolute top-full left-0 z-[9999] mt-2 rounded-xl"
           style={{ 
             backgroundColor: '#FFFFFF', 
             border: '2px solid #E5E7EB', 
             boxShadow: '0 20px 40px -4px rgba(0,0,0,0.25)',
             maxHeight: '400px',
+            minWidth: '500px',
+            width: 'max-content',
+            maxWidth: '90vw',
             overflowY: 'auto',
             overscrollBehavior: 'contain'
           }}
