@@ -115,13 +115,12 @@ const ResetPassword = () => {
                 <span>Back to Sign In</span>
               </button>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <img 
                 src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
                 alt="Arriv Logo" 
                 className="w-16 h-16"
               />
-              <h1 className="text-xl font-bold text-gray-900">Arriv</h1>
             </div>
           </div>
         </div>
