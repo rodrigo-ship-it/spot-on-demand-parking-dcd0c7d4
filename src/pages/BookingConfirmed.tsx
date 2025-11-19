@@ -6,6 +6,7 @@ import { CheckCircle, Calendar, MapPin, DollarSign, Clock, ArrowLeft, Phone, Mes
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BookingConfirmed = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const BookingConfirmed = () => {
   const [bookingData, setBookingData] = useState(location.state);
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const { user, signOut } = useAuth();
 
   // Get URL parameters from Stripe redirect
   const sessionId = searchParams.get('session_id');
@@ -422,9 +424,15 @@ const BookingConfirmed = () => {
                   My Bookings
                 </Button>
               </Link>
-              <Link to="/auth">
-                <Button size="sm">Sign In</Button>
-              </Link>
+              {user ? (
+                <Button size="sm" onClick={signOut}>
+                  Sign Out
+                </Button>
+              ) : (
+                <Link to="/auth">
+                  <Button size="sm">Sign In</Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
