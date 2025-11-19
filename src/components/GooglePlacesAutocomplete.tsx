@@ -379,28 +379,28 @@ export const GooglePlacesAutocomplete = ({
               onClick={() => handleSuggestionClick(suggestion)}
             >
               <div className="flex items-start justify-between space-x-3">
-                <div className="flex items-start space-x-3 flex-1 min-w-0">
-                  <div 
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: '#F97316' }}
-                  >
-                    <MapPin className="w-5 h-5" style={{ color: '#FFFFFF' }} />
-                  </div>
-                  <div className="flex-1 min-w-0 pt-0.5">
+                  <div className="flex items-start space-x-3 flex-1 min-w-0">
                     <div 
-                      className="font-semibold truncate"
-                      style={{ color: '#111827', fontSize: '15px' }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: '#F97316' }}
                     >
-                      {suggestion.name}
+                      <MapPin className="w-5 h-5" style={{ color: '#FFFFFF' }} />
                     </div>
-                    <div 
-                      className="truncate mt-0.5"
-                      style={{ color: '#6B7280', fontSize: '13px' }}
-                    >
-                      {suggestion.description}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div 
+                        className="font-semibold break-words line-clamp-2"
+                        style={{ color: '#111827', fontSize: '15px' }}
+                      >
+                        {suggestion.name}
+                      </div>
+                      <div 
+                        className="break-words line-clamp-2 mt-0.5"
+                        style={{ color: '#6B7280', fontSize: '13px' }}
+                      >
+                        {suggestion.description}
+                      </div>
                     </div>
                   </div>
-                </div>
                 {suggestion.distance && (
                   <div 
                     className="px-2 py-1 rounded-md flex-shrink-0"
