@@ -88,7 +88,9 @@ const FeaturedSpotsCarousel = () => {
                   className="min-w-[calc(100%-2rem)] md:min-w-[calc(33.333%-1rem)] cursor-pointer"
                   onClick={() => navigate(`/spot/${spot.id}`)}
                 >
-                  <Card className="glass-card hover-lift overflow-hidden h-full group">
+                  <Card className={`glass-card hover-lift overflow-hidden h-full group ${
+                    spot.is_premium ? 'border-2 border-amber-400' : ''
+                  }`}>
                     <div className="relative h-48 overflow-hidden">
                       <img
                         src={spot.images?.[0] || "/placeholder.svg"}
