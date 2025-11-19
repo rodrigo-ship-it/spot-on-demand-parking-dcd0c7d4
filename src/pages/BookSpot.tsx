@@ -472,7 +472,7 @@ const BookSpot = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-white/20">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center">
           <Button 
             variant="ghost" 

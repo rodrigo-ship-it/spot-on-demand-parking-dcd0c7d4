@@ -59,7 +59,7 @@ const HelpSupport = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -77,7 +77,7 @@ const HelpSupport = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Button
           variant="ghost"

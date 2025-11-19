@@ -13,7 +13,7 @@ const Premium = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-6xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-12 bg-gray-200 rounded w-1/3"></div>
@@ -25,9 +25,9 @@ const Premium = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-white/80 backdrop-blur-lg border-b border-white/20 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
