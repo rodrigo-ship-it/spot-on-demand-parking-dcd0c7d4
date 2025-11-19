@@ -150,7 +150,13 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
       {hasSpots && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSpotsWithDistance.slice(0, 6).map((spot) => (
-            <Card key={spot.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 border hover:border-primary/20 h-44" onClick={() => onSpotSelect(spot.id)}>
+            <Card 
+              key={spot.id} 
+              className={`cursor-pointer hover:shadow-lg transition-all duration-300 hover:border-primary/20 h-44 ${
+                spot.isPremiumLister ? 'border-2 border-amber-400' : 'border'
+              }`}
+              onClick={() => onSpotSelect(spot.id)}
+            >
               <CardContent className="p-4 h-full flex flex-col">
                 {/* Header with title/address and price */}
                 <div className="flex justify-between items-start mb-3">
@@ -230,7 +236,12 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
     <div className="space-y-4">
       {hasSpots ? (
         filteredSpotsWithDistance.map((spot) => (
-          <Card key={spot.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg shadow-gray-900/5 hover:-translate-y-1">
+          <Card 
+            key={spot.id} 
+            className={`group hover:shadow-xl transition-all duration-300 shadow-lg shadow-gray-900/5 hover:-translate-y-1 ${
+              spot.isPremiumLister ? 'border-2 border-amber-400' : 'border-0'
+            }`}
+          >
             <div className="flex">
               <div className="relative w-48 h-32">
                 <img 
