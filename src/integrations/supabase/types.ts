@@ -1610,6 +1610,7 @@ export type Database = {
         Args: { p_date: string; p_slot_time: string; p_spot_id: string }
         Returns: Json
       }
+      update_expired_bookings: { Args: never; Returns: undefined }
       user_involved_in_booking: {
         Args: { booking_id_param: string }
         Returns: boolean
