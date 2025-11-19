@@ -51,7 +51,8 @@ serve(async (req) => {
       .eq("status", "active")
       .single();
 
-    if (existingSubscription) {
+    // Check if subscription is actually still valid (not expired)
+    if (existingSubscription && new Date(existingSubscription.current_period_end) > new Date()) {
       throw new Error("User already has an active premium subscription");
     }
 
