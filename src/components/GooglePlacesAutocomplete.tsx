@@ -327,8 +327,13 @@ export const GooglePlacesAutocomplete = ({
       
       {showSuggestions && suggestions.length > 0 && (
         <div 
-          className="absolute top-full left-0 right-0 z-[9999] mt-2 rounded-xl overflow-hidden"
-          style={{ backgroundColor: '#FFFFFF', border: '2px solid #E5E7EB', boxShadow: '0 20px 40px -4px rgba(0,0,0,0.25)' }}
+          className="absolute top-full left-0 right-0 z-[9999] mt-2 rounded-xl overflow-y-auto"
+          style={{ 
+            backgroundColor: '#FFFFFF', 
+            border: '2px solid #E5E7EB', 
+            boxShadow: '0 20px 40px -4px rgba(0,0,0,0.25)',
+            maxHeight: '400px'
+          }}
         >
           {suggestions.map((suggestion, index) => (
             <div
