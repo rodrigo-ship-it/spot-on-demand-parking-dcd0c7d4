@@ -68,7 +68,8 @@ const BookSpot = () => {
     numberOfDays: 1,
     numberOfMonths: 1,
     autoExtend: true,
-    maxExtension: 2 // hours
+    maxExtension: 2, // hours
+    timezoneOffset: new Date().getTimezoneOffset() // Add timezone offset in minutes
   });
 
   // Load spot data and user profile
