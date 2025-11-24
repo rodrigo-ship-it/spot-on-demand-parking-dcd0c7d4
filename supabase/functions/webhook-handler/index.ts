@@ -216,56 +216,47 @@ serve(async (req) => {
         const isPricingDaily = spot.pricing_type === 'daily';
         const isPricingMonthly = spot.pricing_type === 'monthly';
         
-        // Calculate dates and times with proper timezone handling
+        // Calculate dates and times - store exactly as entered
         let startTimeStr, endTimeStr;
         
         try {
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
-          
-          // Get user's timezone offset
-          const timezoneOffset = bookingDetails.timezoneOffset || 0;
-          console.log(`🌍 [TIMEZONE_PARSING] User timezone offset: ${timezoneOffset} minutes`);
           
           const bookingDate = new Date(bookingDetails.date);
           if (isNaN(bookingDate.getTime())) {
             throw new Error(`Invalid booking date: ${bookingDetails.date}`);
           }
           
-          // Get date components in UTC
-          const year = bookingDate.getUTCFullYear();
-          const month = bookingDate.getUTCMonth();
-          const day = bookingDate.getUTCDate();
+          // Format date as YYYY-MM-DD
+          const year = bookingDate.getFullYear();
+          const month = String(bookingDate.getMonth() + 1).padStart(2, '0');
+          const day = String(bookingDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
           
-          // Create UTC datetime and apply user's timezone offset
           if (isPricingMonthly) {
-            const startUTC = new Date(Date.UTC(year, month, day, 0, 0, 0));
-            const startLocal = new Date(startUTC.getTime() + (timezoneOffset * 60 * 1000));
-            const endLocal = new Date(startLocal);
-            endLocal.setUTCMonth(endLocal.getUTCMonth() + (bookingDetails.numberOfMonths || 1));
+            // For monthly: start at midnight, add months
+            startTimeStr = `${dateStr} 00:00:00`;
             
-            startTimeStr = startLocal.toISOString().slice(0, 19).replace('T', ' ');
-            endTimeStr = endLocal.toISOString().slice(0, 19).replace('T', ' ');
+            const endDate = new Date(bookingDate);
+            endDate.setMonth(endDate.getMonth() + (bookingDetails.numberOfMonths || 1));
+            const endYear = endDate.getFullYear();
+            const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+            const endDay = String(endDate.getDate()).padStart(2, '0');
+            endTimeStr = `${endYear}-${endMonth}-${endDay} 00:00:00`;
           } else if (isPricingDaily) {
-            const [hour, minute] = bookingDetails.startTime.split(':').map(Number);
-            const startUTC = new Date(Date.UTC(year, month, day, hour, minute, 0));
-            const startLocal = new Date(startUTC.getTime() + (timezoneOffset * 60 * 1000));
-            const endLocal = new Date(startLocal.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
+            // For daily: use selected time, add days
+            startTimeStr = `${dateStr} ${bookingDetails.startTime}:00`;
             
-            startTimeStr = startLocal.toISOString().slice(0, 19).replace('T', ' ');
-            endTimeStr = endLocal.toISOString().slice(0, 19).replace('T', ' ');
+            const endDate = new Date(bookingDate);
+            endDate.setDate(endDate.getDate() + (bookingDetails.numberOfDays || 1));
+            const endYear = endDate.getFullYear();
+            const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+            const endDay = String(endDate.getDate()).padStart(2, '0');
+            endTimeStr = `${endYear}-${endMonth}-${endDay} ${bookingDetails.startTime}:00`;
           } else {
-            // Hourly bookings
-            const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
-            const [endHour, endMinute] = bookingDetails.endTime.split(':').map(Number);
-            
-            const startUTC = new Date(Date.UTC(year, month, day, startHour, startMinute, 0));
-            const endUTC = new Date(Date.UTC(year, month, day, endHour, endMinute, 0));
-            
-            const startLocal = new Date(startUTC.getTime() + (timezoneOffset * 60 * 1000));
-            const endLocal = new Date(endUTC.getTime() + (timezoneOffset * 60 * 1000));
-            
-            startTimeStr = startLocal.toISOString().slice(0, 19).replace('T', ' ');
-            endTimeStr = endLocal.toISOString().slice(0, 19).replace('T', ' ');
+            // For hourly: use start and end times as-is
+            startTimeStr = `${dateStr} ${bookingDetails.startTime}:00`;
+            endTimeStr = `${dateStr} ${bookingDetails.endTime}:00`;
           }
           
           console.log(`📅 [DATE_SUCCESS] Start: ${startTimeStr}, End: ${endTimeStr}, Pricing: ${spot.pricing_type}`);
@@ -309,55 +300,7 @@ serve(async (req) => {
         
         console.log(`✅ [OVERLAP_CHECK_PASSED] No overlapping bookings found`);
 
-        // Get user's timezone offset (in minutes, positive for behind UTC)
-        const timezoneOffset = bookingDetails.timezoneOffset || 0; // Default to UTC if not provided
-        console.log(`🌍 [TIMEZONE] User timezone offset: ${timezoneOffset} minutes`);
-        
-        // Create date in user's local timezone
-        const bookingDate = new Date(bookingDetails.date);
-        const year = bookingDate.getUTCFullYear();
-        const month = bookingDate.getUTCMonth();
-        const day = bookingDate.getUTCDate();
-        
-        let startDate, endDate;
-        
-        if (isPricingMonthly) {
-          // For monthly bookings, set to start of day in user's timezone
-          startDate = new Date(Date.UTC(year, month, day, 0, 0, 0));
-          // Add timezone offset to convert from user's local time to UTC
-          startDate = new Date(startDate.getTime() + (timezoneOffset * 60 * 1000));
-          
-          // Calculate end date by adding months
-          endDate = new Date(startDate);
-          endDate.setUTCMonth(endDate.getUTCMonth() + (bookingDetails.numberOfMonths || 1));
-        } else {
-          // Parse user's local time
-          const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
-          
-          // Create date at user's local time, then convert to UTC
-          startDate = new Date(Date.UTC(year, month, day, startHour, startMinute, 0));
-          startDate = new Date(startDate.getTime() + (timezoneOffset * 60 * 1000));
-          
-          if (isPricingDaily) {
-            // For daily bookings, add days
-            endDate = new Date(startDate.getTime() + (bookingDetails.numberOfDays * 24 * 60 * 60 * 1000));
-          } else {
-            // For hourly bookings, use the specified end time
-            const [endHour, endMinute] = bookingDetails.endTime.split(':').map(Number);
-            endDate = new Date(Date.UTC(year, month, day, endHour, endMinute, 0));
-            endDate = new Date(endDate.getTime() + (timezoneOffset * 60 * 1000));
-          }
-        }
-        
-        // Store as UTC time strings without timezone suffix for database
-        startTimeStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
-        endTimeStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
-
-        const startTimeUTC = startDate.toISOString();
-        const endTimeUTC = endDate.toISOString();
-        
-        console.log(`📅 [TIME_FINAL] Database times (UTC): Start: ${startTimeStr}, End: ${endTimeStr}`);
-        console.log(`📅 [TIME_FINAL] UTC times - Start: ${startTimeUTC}, End: ${endTimeUTC}`);
+        console.log(`📅 [TIME_FINAL] Database times (as entered): Start: ${startTimeStr}, End: ${endTimeStr}`);
 
         // Get display time labels
         const startOption = timeOptions.find(opt => opt.value === bookingDetails.startTime);
@@ -366,8 +309,9 @@ serve(async (req) => {
         const displayStartTime = startOption ? startOption.label : bookingDetails.startTime;
         const displayEndTime = endOption ? endOption.label : (isPricingDaily ? displayStartTime : bookingDetails.endTime);
         
-        // Format display date
-        const displayDate = startDate.toLocaleDateString('en-US', { 
+        // Format display date from the booking date
+        const bookingDate = new Date(bookingDetails.date);
+        const displayDate = bookingDate.toLocaleDateString('en-US', { 
           weekday: 'long', 
           year: 'numeric', 
           month: 'long', 
