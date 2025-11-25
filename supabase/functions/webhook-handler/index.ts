@@ -223,7 +223,8 @@ serve(async (req) => {
           console.log(`📅 [DATE_PARSING] Booking details:`, bookingDetails);
           
           // Parse date string directly without Date object to avoid timezone conversion
-          const dateStr = bookingDetails.date; // "2025-11-24"
+          // Extract just the date part if ISO format is provided (e.g., "2025-11-24T05:00:00.000Z" -> "2025-11-24")
+          const dateStr = bookingDetails.date.split('T')[0]; // "2025-11-24"
           const [year, month, day] = dateStr.split('-').map(Number);
           
           if (isPricingMonthly) {
