@@ -224,14 +224,14 @@ serve(async (req) => {
           
           // Parse date string directly without Date object to avoid timezone conversion
           const dateStr = bookingDetails.date; // "2025-11-24"
+          const [year, month, day] = dateStr.split('-').map(Number);
           
           if (isPricingMonthly) {
             // For monthly: start at midnight, add months
             startTimeStr = `${dateStr} 00:00:00`;
             
-            // Parse date parts for month calculation
-            const [year, month, day] = dateStr.split('-').map(Number);
-            let endMonth = month + (bookingDetails.numberOfMonths || 1);
+            const monthsToAdd = bookingDetails.numberOfMonths || 1;
+            let endMonth = month + monthsToAdd;
             let endYear = year;
             
             // Handle month overflow
@@ -240,20 +240,38 @@ serve(async (req) => {
               endYear += 1;
             }
             
-            const endDateStr = `${endYear}-${String(endMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            endTimeStr = `${endDateStr} 00:00:00`;
+            // Handle day overflow for months with fewer days
+            const daysInEndMonth = [31, (endYear % 4 === 0 && endYear % 100 !== 0) || endYear % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][endMonth - 1];
+            const endDay = Math.min(day, daysInEndMonth);
+            
+            endTimeStr = `${endYear}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')} 00:00:00`;
           } else if (isPricingDaily) {
             // For daily: use selected time, add days
             startTimeStr = `${dateStr} ${bookingDetails.startTime}:00`;
             
-            // Parse date parts for day calculation
-            const [year, month, day] = dateStr.split('-').map(Number);
             const daysToAdd = bookingDetails.numberOfDays || 1;
             
-            // Simple day addition (doesn't handle month boundaries perfectly but works for most cases)
-            const endDay = day + daysToAdd;
-            const endDateStr = `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
-            endTimeStr = `${endDateStr} ${bookingDetails.startTime}:00`;
+            // Days in each month
+            const daysInMonth = [31, (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            
+            let endYear = year;
+            let endMonth = month;
+            let endDay = day + daysToAdd;
+            
+            // Handle day overflow across months
+            while (endDay > daysInMonth[endMonth - 1]) {
+              endDay -= daysInMonth[endMonth - 1];
+              endMonth += 1;
+              
+              if (endMonth > 12) {
+                endMonth = 1;
+                endYear += 1;
+                // Update daysInMonth for new year if needed
+                daysInMonth[1] = (endYear % 4 === 0 && endYear % 100 !== 0) || endYear % 400 === 0 ? 29 : 28;
+              }
+            }
+            
+            endTimeStr = `${endYear}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')} ${bookingDetails.startTime}:00`;
           } else {
             // For hourly: use start and end times exactly as provided
             startTimeStr = `${dateStr} ${bookingDetails.startTime}:00`;
