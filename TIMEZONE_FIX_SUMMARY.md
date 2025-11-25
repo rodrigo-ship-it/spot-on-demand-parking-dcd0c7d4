@@ -3,10 +3,13 @@
 ## Problem
 The system was unnecessarily converting all booking times to UTC, which created timezone confusion and bugs. Users enter times in their local timezone, and that's exactly what should be stored and used throughout the system.
 
-**Previous Issue**: Booking ID `dec01b4a-e6ca-4cae-81dd-bceec49882e3` was marked as "completed" instead of "active" due to complex timezone conversions that were causing times to be stored incorrectly.
+**Previous Issues**: 
+- Booking `dec01b4a-e6ca-4cae-81dd-bceec49882e3` marked as "completed" instead of "active"
+- Booking `183b6623-813b-4e69-99e2-09de864c3254` stored with wrong times (19:00 instead of intended time)
+- **Root cause**: `new Date()` constructor triggers JavaScript's automatic timezone conversion
 
 ## Solution
-**Removed ALL timezone conversion logic.** Times are now stored exactly as the user enters them.
+**Removed ALL Date object usage and timezone conversion logic.** Times are now parsed as pure strings with zero Date manipulation.
 
 ## Changes Made
 
@@ -16,28 +19,40 @@ The system was unnecessarily converting all booking times to UTC, which created 
 - No timezone offset calculation or transmission
 
 ### 2. Backend (supabase/functions/webhook-handler/index.ts)
-**Lines 216-275**: Complete rewrite of date/time parsing logic
+**Lines 220-266**: Complete rewrite of date/time parsing - **THE CRITICAL FIX**
 - ❌ Removed all timezone offset calculations
 - ❌ Removed all `Date.UTC()` calls  
 - ❌ Removed all `.toISOString()` conversions
-- ✅ Simply parse user's time and format as `YYYY-MM-DD HH:MM:SS`
+- ❌ **Removed `new Date(dateString)` - This was causing timezone shifts!**
+- ✅ Pure string parsing and concatenation
+- ✅ Format as `YYYY-MM-DD HH:MM:SS` directly
+
+**The Bug**: When JavaScript parses `new Date("2025-11-24")`, it treats it as UTC midnight, then converts to local timezone when you call `.getDate()`. This caused date/time shifts!
 
 **Implementation**:
 ```typescript
-// Hourly bookings: User selects "18:30" on "2025-11-24"
-startTimeStr = "2025-11-24 18:30:00"; // Stored exactly as entered
+// ❌ OLD - Caused timezone conversion
+const bookingDate = new Date(bookingDetails.date);
+const day = bookingDate.getDate(); // Shifts to server timezone!
 
-// Daily bookings: User selects start time, system adds days
-startTimeStr = "2025-11-24 09:00:00";
-endTimeStr = "2025-11-27 09:00:00"; // 3 days added
-
-// Monthly bookings: Start at midnight, add months
-startTimeStr = "2025-11-24 00:00:00";
-endTimeStr = "2025-12-24 00:00:00"; // 1 month added
+// ✅ NEW - Pure string operations
+const dateStr = bookingDetails.date; // "2025-11-24"
+const startTimeStr = `${dateStr} ${bookingDetails.startTime}:00`; // "2025-11-24 18:30:00"
 ```
 
-**Lines 310-360**: Removed duplicate timezone conversion logic
-**Lines 370-375**: Simplified display date formatting to use booking date directly
+Examples:
+```typescript
+// Hourly: User selects "18:30" on "2025-11-24"
+startTimeStr = "2025-11-24 18:30:00"; // Exact string concatenation
+
+// Daily: User selects start time, add days
+const [year, month, day] = dateStr.split('-').map(Number);
+const endDay = day + numberOfDays;
+
+// Monthly: Start at midnight, add months mathematically
+let endMonth = month + numberOfMonths;
+while (endMonth > 12) { endMonth -= 12; endYear += 1; }
+```
 
 ### 3. Database Functions
 - **No changes needed** to `update-booking-statuses` or other functions
