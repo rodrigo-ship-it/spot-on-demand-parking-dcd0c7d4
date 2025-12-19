@@ -291,8 +291,8 @@ const BookSpot = () => {
     }
   };
 
-  // Generate time options for the time picker using SPOT's timezone
-  const generateTimeOptions = () => {
+  // Generate time options for start time picker using SPOT's timezone (15-minute increments)
+  const generateStartTimeOptions = () => {
     const now = new Date();
     const selectedDate = new Date(bookingDetails.date);
     
@@ -315,12 +315,11 @@ const BookSpot = () => {
     const isToday = spotTodayString === bookingDateString;
     const isPastDate = bookingDate.getTime() < spotToday.getTime();
     
-    // Determine time increment based on minimum booking hours
-    // If minimum is 1 hour or more, use 60-minute increments; otherwise 30-minute
-    const timeIncrement = minimumBookingHours >= 1 ? 60 : 30;
+    // Always use 15-minute increments for start time
+    const timeIncrement = 15;
     
     // Debug logging
-    console.log('🕐 [TIME_OPTIONS] Spot timezone filtering:', {
+    console.log('🕐 [START_TIME_OPTIONS] Spot timezone filtering:', {
       spotTimezone,
       spotCurrentHour,
       spotCurrentMinute,
@@ -332,7 +331,7 @@ const BookSpot = () => {
     
     // Don't show any times for past dates
     if (isPastDate) {
-      console.log('🕐 [TIME_OPTIONS] Returning empty array - past date detected');
+      console.log('🕐 [START_TIME_OPTIONS] Returning empty array - past date detected');
       return [];
     }
     
@@ -356,15 +355,56 @@ const BookSpot = () => {
       }
     }
     
-    console.log('🕐 [TIME_OPTIONS] Generated options count:', options.length, 'first option:', options[0]?.value);
+    console.log('🕐 [START_TIME_OPTIONS] Generated options count:', options.length, 'first option:', options[0]?.value);
     return options;
   };
 
-  const timeOptions = generateTimeOptions();
+  // Generate end time options based on start time and minimum booking hours
+  const generateEndTimeOptions = () => {
+    const [startHour, startMin] = bookingDetails.startTime.split(':').map(Number);
+    const startTotalMinutes = startHour * 60 + startMin;
+    const minEndMinutes = startTotalMinutes + (minimumBookingHours * 60);
+    
+    // Always use 15-minute increments for end time
+    const timeIncrement = 15;
+    
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += timeIncrement) {
+        const totalMinutes = hour * 60 + minute;
+        
+        // Only show times that are at least minimumBookingHours after start time
+        if (totalMinutes < minEndMinutes) {
+          continue;
+        }
+        
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          hour12: true 
+        });
+        options.push({ value: timeString, label: displayTime });
+      }
+    }
+    
+    console.log('🕐 [END_TIME_OPTIONS] Generated options:', {
+      startTime: bookingDetails.startTime,
+      minimumBookingHours,
+      minEndMinutes,
+      optionsCount: options.length,
+      firstOption: options[0]?.value
+    });
+    
+    return options;
+  };
+
+  const startTimeOptions = generateStartTimeOptions();
+  const endTimeOptions = generateEndTimeOptions();
   
   console.log('🔧 [COMPONENT] timeOptions after generation:', {
-    timeOptionsLength: timeOptions.length,
-    timeOptions: timeOptions.slice(0, 3), // First 3 options
+    startTimeOptionsLength: startTimeOptions.length,
+    endTimeOptionsLength: endTimeOptions.length,
     bookingDate: bookingDetails.date,
     dateString: bookingDetails.date.toString()
   });
@@ -381,7 +421,7 @@ const BookSpot = () => {
   // Debug logging for time slot filtering
   console.log('🔍 Debug time slots:', {
     timeSlots: timeSlots.slice(0, 5), // First 5 slots
-    timeOptionsFirst5: timeOptions.slice(0, 5).map(opt => opt.value),
+    startTimeOptionsFirst5: startTimeOptions.slice(0, 5).map(opt => opt.value),
     selectedDate: selectedDateString,
     duration: Math.ceil(currentDuration)
   });
@@ -593,20 +633,20 @@ const BookSpot = () => {
                            <SelectContent className="max-h-[200px]">
                              {slotsLoading ? (
                                <SelectItem value="loading" disabled>Loading available times...</SelectItem>
-                             ) : timeOptions.length === 0 ? (
+                             ) : startTimeOptions.length === 0 ? (
                                <SelectItem value="no-times" disabled>
                                  No times available for this date
                                </SelectItem>
                              ) : slotsError ? (
                                // API error - show basic time options
-                               timeOptions.map((option) => (
+                               startTimeOptions.map((option) => (
                                  <SelectItem key={option.value} value={option.value}>
                                    {option.label}
                                  </SelectItem>
                                ))
                              ) : timeSlots.length === 0 ? (
                                // No slots from API - show basic time options
-                               timeOptions.map((option) => (
+                               startTimeOptions.map((option) => (
                                  <SelectItem key={option.value} value={option.value}>
                                    {option.label}
                                  </SelectItem>
@@ -614,7 +654,7 @@ const BookSpot = () => {
                              ) : (
                                // Show availability-aware slots
                                timeSlots.map((slot) => {
-                                 const timeOption = timeOptions.find(opt => opt.value === slot.time);
+                                 const timeOption = startTimeOptions.find(opt => opt.value === slot.time);
                                  if (!timeOption) return null;
                                  
                                  return (
@@ -756,7 +796,7 @@ const BookSpot = () => {
                            <SelectContent className="max-h-[300px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                              {slotsLoading ? (
                                <SelectItem value="loading" disabled>Loading available times...</SelectItem>
-                             ) : timeOptions.length === 0 ? (
+                             ) : startTimeOptions.length === 0 ? (
                                <SelectItem value="no-times" disabled>
                                  {(() => {
                                    const now = new Date();
@@ -771,7 +811,7 @@ const BookSpot = () => {
                                  })()}
                                </SelectItem>
                                 ) : (
-                                 timeOptions.map((option) => {
+                                 startTimeOptions.map((option) => {
                                        // Find corresponding slot data - option.value is already in correct format with leading zeros
                                        const slotData = timeSlots.find(slot => slot.time === option.value);
                                        const isAvailable = slotData ? slotData.isAvailable : true;
@@ -812,7 +852,7 @@ const BookSpot = () => {
                             </div>
                           </SelectTrigger>
                            <SelectContent className="max-h-[200px]">
-                             {timeOptions.map((option) => {
+                             {endTimeOptions.map((option) => {
                                 // Find corresponding slot data - option.value is already in correct format with leading zeros
                                 const slotData = timeSlots.find(slot => slot.time === option.value);
                                 const isAvailable = slotData ? slotData.isAvailable : true;
@@ -1074,7 +1114,7 @@ const BookSpot = () => {
                       user,
                       isQRCodeBooking,
                       guestDetails,
-                      timeOptions,
+                      startTimeOptions,
                       isPricingDaily
                     }}
                     totalAmount={total}
