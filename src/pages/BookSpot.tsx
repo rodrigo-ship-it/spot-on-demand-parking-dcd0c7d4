@@ -818,22 +818,6 @@ const BookSpot = () => {
                              })}
                           </SelectContent>
                         </Select>
-                        {/* Availability indicator for selected end time */}
-                        {(
-                          (() => {
-                            const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.endTime);
-                            const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.endTime);
-                            if (!selectedSlot?.isAvailable && nextAvailable) {
-                              const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
-                              return (
-                                <p className="text-xs text-orange-600 mt-1">
-                                  Next available: {nextOption?.label}
-                                </p>
-                              );
-                            }
-                            return null;
-                          })()
-                        )}
                       </div>
                    </div>
                  )}
