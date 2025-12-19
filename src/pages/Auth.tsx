@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { validatePassword } from '@/lib/security';
 import { SecurityEnhancedForm } from '@/components/SecurityEnhancedForm';
-import rivoLogo from "@/assets/rivo-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -183,10 +182,11 @@ const Auth = () => {
             <Link to="/" className="flex items-center space-x-4">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
               <img 
-                src={rivoLogo} 
-                alt="Rivo Logo" 
+                src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                alt="Arriv Logo" 
                 className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
               />
+              <h1 className="text-xl font-bold text-gray-900">Arriv</h1>
             </Link>
           </div>
         </div>

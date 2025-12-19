@@ -26,7 +26,6 @@ import { Hero3D } from "@/components/Hero3D";
 import { TypewriterText } from "@/components/TypewriterText";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import rivoLogo from "@/assets/rivo-logo.png";
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -279,8 +278,8 @@ const Index = () => {
             <div className="flex items-center space-x-3">
               <Link to="/" className="interactive">
                 <img 
-                  src={rivoLogo} 
-                  alt="Rivo Logo" 
+                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                  alt="Arriv Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-300"
                 />
               </Link>

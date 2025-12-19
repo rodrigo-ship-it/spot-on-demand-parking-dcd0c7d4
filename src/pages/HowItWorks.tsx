@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MapPin, CreditCard, Car, DollarSign, Clock, Shield, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import rivoLogo from "@/assets/rivo-logo.png";
 
 const HowItWorks = () => {
   return (
@@ -15,8 +14,8 @@ const HowItWorks = () => {
             <div className="flex items-center space-x-4">
               <Link to="/" className="hover:scale-105 transition-transform duration-200">
                 <img 
-                  src={rivoLogo} 
-                  alt="Rivo Logo" 
+                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                  alt="Arriv Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
