@@ -157,7 +157,7 @@ const ListSpot = () => {
           accessRequirements: data.access_requirements || '',
           accessInstructions: '', // Keep this empty for backward compatibility
           photos: data.images || [],
-          minimumBooking: "1",
+          minimumBooking: String(data.minimum_booking_hours || 1),
           maximumBooking: "24"
         });
       }
@@ -309,6 +309,7 @@ const ListSpot = () => {
         images: formData.photos.length > 0 ? formData.photos : null,
         access_requirements: formData.accessRequirements || null,
         access_instructions: formData.specialInstructions || null,
+        minimum_booking_hours: parseFloat(formData.minimumBooking) || 1,
         is_active: true
       };
 

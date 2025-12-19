@@ -194,15 +194,25 @@ const BookSpot = () => {
   const isPricingDaily = spotData?.pricing_type === 'daily';
   const isPricingMonthly = spotData?.pricing_type === 'monthly';
 
-  // Update end time to match start time for daily spots
+  // Update end time based on pricing type and minimum booking
   useEffect(() => {
     if (isPricingDaily) {
       setBookingDetails(prev => ({ ...prev, endTime: prev.startTime }));
-    } else if (bookingDetails.endTime === bookingDetails.startTime) {
-      // Reset to default end time for hourly spots
-      setBookingDetails(prev => ({ ...prev, endTime: "17:00" }));
+    } else if (isPricingHourly && spotData) {
+      // For hourly spots, set end time to be minimum booking hours after start time
+      const minHours = spotData.minimum_booking_hours || 1;
+      const [startHour, startMin] = bookingDetails.startTime.split(':').map(Number);
+      const endHour = startHour + minHours;
+      if (endHour < 24) {
+        const newEndTime = `${endHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+        setBookingDetails(prev => ({ 
+          ...prev, 
+          endTime: newEndTime,
+          duration: minHours
+        }));
+      }
     }
-  }, [isPricingDaily, bookingDetails.startTime]);
+  }, [isPricingDaily, isPricingHourly, spotData, bookingDetails.startTime]);
 
   const basePrice = isPricingHourly 
     ? (spotData?.price_per_hour || 8)
@@ -226,6 +236,9 @@ const BookSpot = () => {
     extensionRate: basePrice // Use base price, apply same fee structure as manual extensions
   });
 
+  // Get minimum booking hours from spot data (default to 1 hour)
+  const minimumBookingHours = spotData?.minimum_booking_hours || 1;
+
   const handleTimeChange = (field: string, value: string) => {
     const newDetails = { ...bookingDetails, [field]: value };
     
@@ -233,7 +246,8 @@ const BookSpot = () => {
       const start = new Date(`2000-01-01T${newDetails.startTime}`);
       const end = new Date(`2000-01-01T${newDetails.endTime}`);
       const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-      newDetails.duration = Math.max(1, diffHours);
+      // Enforce minimum booking duration
+      newDetails.duration = Math.max(minimumBookingHours, diffHours);
     }
     
     setBookingDetails(newDetails);
@@ -301,16 +315,19 @@ const BookSpot = () => {
     const isToday = spotTodayString === bookingDateString;
     const isPastDate = bookingDate.getTime() < spotToday.getTime();
     
+    // Determine time increment based on minimum booking hours
+    // If minimum is 1 hour or more, use 60-minute increments; otherwise 30-minute
+    const timeIncrement = minimumBookingHours >= 1 ? 60 : 30;
+    
     // Debug logging
     console.log('🕐 [TIME_OPTIONS] Spot timezone filtering:', {
       spotTimezone,
-      spotNow: spotNow.toString(),
       spotCurrentHour,
       spotCurrentMinute,
-      spotTodayString,
-      bookingDateString,
       isToday,
-      isPastDate
+      isPastDate,
+      minimumBookingHours,
+      timeIncrement
     });
     
     // Don't show any times for past dates
@@ -321,7 +338,7 @@ const BookSpot = () => {
     
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
+      for (let minute = 0; minute < 60; minute += timeIncrement) {
         // Skip past times if booking for today (using SPOT's timezone)
         if (isToday) {
           if (hour < spotCurrentHour || (hour === spotCurrentHour && minute <= spotCurrentMinute)) {
@@ -372,6 +389,12 @@ const BookSpot = () => {
   const handleBooking = async () => {
     if (!spotData) {
       toast.error("Missing required data");
+      return;
+    }
+
+    // Validate minimum booking duration for hourly spots
+    if (isPricingHourly && bookingDetails.duration < minimumBookingHours) {
+      toast.error(`Minimum booking is ${minimumBookingHours} hour${minimumBookingHours !== 1 ? 's' : ''}`);
       return;
     }
 

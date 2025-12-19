@@ -486,6 +486,7 @@ export type Database = {
           is_active: boolean
           latitude: number | null
           longitude: number | null
+          minimum_booking_hours: number | null
           monthly_price: number | null
           one_time_price: number | null
           owner_id: string
@@ -514,6 +515,7 @@ export type Database = {
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
+          minimum_booking_hours?: number | null
           monthly_price?: number | null
           one_time_price?: number | null
           owner_id: string
@@ -542,6 +544,7 @@ export type Database = {
           is_active?: boolean
           latitude?: number | null
           longitude?: number | null
+          minimum_booking_hours?: number | null
           monthly_price?: number | null
           one_time_price?: number | null
           owner_id?: string
