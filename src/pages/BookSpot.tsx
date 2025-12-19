@@ -277,60 +277,54 @@ const BookSpot = () => {
     }
   };
 
-  // Generate time options for the time picker
+  // Generate time options for the time picker using SPOT's timezone
   const generateTimeOptions = () => {
-    // Use local time throughout, not UTC
     const now = new Date();
     const selectedDate = new Date(bookingDetails.date);
     
+    // Get the spot's timezone - default to user's timezone if not set
+    const spotTimezone = spotData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Get current time in the SPOT's timezone
+    const spotNow = new Date(now.toLocaleString('en-US', { timeZone: spotTimezone }));
+    const spotCurrentHour = spotNow.getHours();
+    const spotCurrentMinute = spotNow.getMinutes();
+    
+    // Get today's date in the SPOT's timezone
+    const spotTodayString = now.toLocaleDateString('en-CA', { timeZone: spotTimezone }); // YYYY-MM-DD format
+    const spotToday = new Date(spotTodayString + 'T00:00:00');
+    
+    // Get selected date for comparison
+    const bookingDateString = format(selectedDate, 'yyyy-MM-dd');
+    const bookingDate = new Date(bookingDateString + 'T00:00:00');
+    
+    const isToday = spotTodayString === bookingDateString;
+    const isPastDate = bookingDate.getTime() < spotToday.getTime();
+    
     // Debug logging
-    console.log('🕐 [TIME_OPTIONS] Debug info:', {
-      now: now.toString(),
-      nowLocal: now.toLocaleDateString(),
-      nowLocalTime: now.toLocaleString(),
-      selectedDate: selectedDate.toString(),
-      selectedDateLocal: selectedDate.toLocaleDateString(),
-      selectedDateLocalTime: selectedDate.toLocaleString(),
-      bookingDetailsDate: bookingDetails.date,
-      bookingDetailsDateType: typeof bookingDetails.date,
-      bookingDetailsDateToString: bookingDetails.date.toString(),
-      userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    });
-    
-    // Compare dates using local time only (ignore time components)
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const bookingDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-    
-    const isToday = bookingDate.getTime() === today.getTime();
-    const isPastDate = bookingDate.getTime() < today.getTime();
-    
-    console.log('🕐 [TIME_OPTIONS] Date comparison:', {
-      today: today.toString(),
-      bookingDate: bookingDate.toString(),
+    console.log('🕐 [TIME_OPTIONS] Spot timezone filtering:', {
+      spotTimezone,
+      spotNow: spotNow.toString(),
+      spotCurrentHour,
+      spotCurrentMinute,
+      spotTodayString,
+      bookingDateString,
       isToday,
-      isPastDate,
-      todayTime: today.getTime(),
-      bookingDateTime: bookingDate.getTime()
+      isPastDate
     });
     
-    // Don't show any times for past dates (in local timezone)
+    // Don't show any times for past dates
     if (isPastDate) {
       console.log('🕐 [TIME_OPTIONS] Returning empty array - past date detected');
       return [];
     }
     
-    // Use local time for current hour/minute comparison
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    console.log('🕐 [TIME_OPTIONS] Current time:', { currentHour, currentMinute });
-    
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        // Skip past times if booking for today (using local time)
+        // Skip past times if booking for today (using SPOT's timezone)
         if (isToday) {
-          if (hour < currentHour || (hour === currentHour && minute <= currentMinute)) {
+          if (hour < spotCurrentHour || (hour === spotCurrentHour && minute <= spotCurrentMinute)) {
             continue;
           }
         }
@@ -345,7 +339,7 @@ const BookSpot = () => {
       }
     }
     
-    console.log('🕐 [TIME_OPTIONS] Generated options count:', options.length);
+    console.log('🕐 [TIME_OPTIONS] Generated options count:', options.length, 'first option:', options[0]?.value);
     return options;
   };
 
