@@ -105,26 +105,63 @@ const Bookings = () => {
             
             // Get current time in the SPOT's timezone (same pattern as BookSpot.tsx)
             const now = new Date();
-            const spotNow = new Date(now.toLocaleString('en-US', { timeZone: spotTimezone }));
+            const spotNowStr = now.toLocaleString('en-US', { timeZone: spotTimezone });
+            const spotNow = new Date(spotNowStr);
             
-            // Parse the stored times as local times in the spot's timezone
-            // The database stores times like "2024-01-15 09:00:00" without timezone info
+            // The database stores times like "2025-12-18 20:30:00" without timezone info
             // These represent the LOCAL time at the spot
+            // We need to parse them AS local times in the spot's timezone
             const startTimeStr = booking.start_time;
             const endTimeStr = booking.end_time;
             
-            // Parse the date/time strings - they're stored as local times
+            // Parse the stored times by converting to spot's local interpretation
+            // The trick: create a date string that JavaScript will parse in the spot's timezone context
+            // We'll compare timestamps in the same timezone context
+            
+            // Format the spot's current date/time components for comparison
+            const spotNowParts = {
+              year: parseInt(now.toLocaleString('en-US', { timeZone: spotTimezone, year: 'numeric' })),
+              month: parseInt(now.toLocaleString('en-US', { timeZone: spotTimezone, month: 'numeric' })),
+              day: parseInt(now.toLocaleString('en-US', { timeZone: spotTimezone, day: 'numeric' })),
+              hour: parseInt(now.toLocaleString('en-US', { timeZone: spotTimezone, hour: 'numeric', hour12: false })),
+              minute: parseInt(now.toLocaleString('en-US', { timeZone: spotTimezone, minute: 'numeric' }))
+            };
+            
+            // Parse the stored time strings (format: "2025-12-18 20:30:00")
+            const parseStoredTime = (timeStr: string) => {
+              const [datePart, timePart] = timeStr.split(' ');
+              const [year, month, day] = datePart.split('-').map(Number);
+              const [hour, minute] = timePart.split(':').map(Number);
+              return { year, month, day, hour, minute };
+            };
+            
+            const startParts = parseStoredTime(startTimeStr);
+            const endParts = parseStoredTime(endTimeStr);
+            
+            // Convert to comparable timestamps (minutes since epoch in local context)
+            const toMinutes = (parts: { year: number; month: number; day: number; hour: number; minute: number }) => {
+              // Create a simple comparable number: YYYYMMDDHHMM
+              return parts.year * 100000000 + parts.month * 1000000 + parts.day * 10000 + parts.hour * 100 + parts.minute;
+            };
+            
+            const spotNowMinutes = toMinutes(spotNowParts);
+            const startMinutes = toMinutes(startParts);
+            const endMinutes = toMinutes(endParts);
+            
+            // For display purposes, still parse dates the old way
             const startDate = new Date(startTimeStr);
             const endDate = new Date(endTimeStr);
             
             console.log('📅 [TIMEZONE_STATUS_DEBUG]', {
               id: booking.id.substring(0, 8),
               spotTimezone,
-              spotNowLocal: spotNow.toLocaleString(),
-              start_time_raw: startTimeStr,
-              end_time_raw: endTimeStr,
-              startDate: startDate.toLocaleString(),
-              endDate: endDate.toLocaleString()
+              spotNowStr,
+              spotNowParts,
+              startParts,
+              endParts,
+              spotNowMinutes,
+              startMinutes,
+              endMinutes
             });
             
             // Check if dates are valid
@@ -144,25 +181,36 @@ const Bookings = () => {
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
             
-            // Determine status based on spot's local time
+            // Determine status based on spot's local time using parsed components
             let status = 'Upcoming';
-            
-            // Use the spot's current time for comparison
-            const spotNowTime = spotNow.getTime();
-            const startTime = startDate.getTime();
-            const endTime = endDate.getTime();
             
             console.log('🕐 [SPOT_TIMEZONE_STATUS]', {
               bookingId: booking.id.substring(0, 8),
               spotTimezone,
-              spotNow: spotNow.toLocaleString(),
-              startDate: startDate.toLocaleString(),
-              endDate: endDate.toLocaleString(),
-              spotNowTime,
-              startTime,
-              endTime,
+              spotNowMinutes,
+              startMinutes,
+              endMinutes,
               dbStatus: booking.status
             });
+            
+            // Calculate grace period end (3 hours = 300 in our minute format)
+            // But we need to handle day overflow properly
+            const addHoursToMinutes = (mins: number, hours: number) => {
+              const day = Math.floor((mins % 1000000) / 10000);
+              const hour = Math.floor((mins % 10000) / 100);
+              const minute = mins % 100;
+              
+              let newHour = hour + hours;
+              let newDay = day;
+              if (newHour >= 24) {
+                newDay += Math.floor(newHour / 24);
+                newHour = newHour % 24;
+              }
+              
+              return Math.floor(mins / 1000000) * 1000000 + newDay * 10000 + newHour * 100 + minute;
+            };
+            
+            const gracePeriodEndMinutes = addHoursToMinutes(endMinutes, 3);
             
             // Determine status with spot's timezone
             if (booking.status === 'cancelled') {
@@ -171,18 +219,15 @@ const Bookings = () => {
             } else if (booking.status === 'completed') {
               status = 'Completed';
               console.log('✅ [STATUS] Setting as Completed - database shows completed');
-            } else if (spotNowTime >= startTime && spotNowTime <= endTime) {
+            } else if (spotNowMinutes >= startMinutes && spotNowMinutes <= endMinutes) {
               status = 'Active';
               console.log('🟢 [STATUS] Setting as Active - spot\'s current time is between start and end');
-            } else if (spotNowTime < startTime) {
+            } else if (spotNowMinutes < startMinutes) {
               status = 'Upcoming';
               console.log('🟡 [STATUS] Setting as Upcoming - spot\'s current time is before start time');
-            } else if (spotNowTime > endTime) {
+            } else if (spotNowMinutes > endMinutes) {
               // Past end time but not marked completed - check grace period
-              const gracePeriodHours = 3;
-              const gracePeriodEndTime = endTime + (gracePeriodHours * 60 * 60 * 1000);
-              
-              if (spotNowTime <= gracePeriodEndTime) {
+              if (spotNowMinutes <= gracePeriodEndMinutes) {
                 status = 'Active';
                 console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period (spot timezone)');
               } else {
