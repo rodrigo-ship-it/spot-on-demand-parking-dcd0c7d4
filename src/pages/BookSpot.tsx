@@ -978,22 +978,33 @@ const BookSpot = () => {
                    </div>
                  )}
                  
-                 <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                   {isPricingDaily 
-                     ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''} (starts at ${new Date(`2000-01-01T${bookingDetails.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })})`
-                     : isPricingMonthly
-                     ? `Duration: ${bookingDetails.numberOfMonths || 1} month${(bookingDetails.numberOfMonths || 1) !== 1 ? 's' : ''} (starts on ${format(bookingDetails.date, "MMM d, yyyy")})`
-                     : (() => {
-                         const isSameDay = bookingDetails.date.toDateString() === bookingDetails.endDate.toDateString();
-                         const hours = Math.round(bookingDetails.duration * 100) / 100;
-                         if (isSameDay) {
-                           return `Duration: ${hours} hour${hours !== 1 ? 's' : ''}`;
-                         } else {
-                           return `Duration: ${hours} hours (${format(bookingDetails.date, "MMM d")} to ${format(bookingDetails.endDate, "MMM d")})`;
-                         }
-                       })()
-                   }
-                 </div>
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded space-y-1">
+                    <div>
+                      {isPricingDaily 
+                        ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''} (starts at ${new Date(`2000-01-01T${bookingDetails.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })})`
+                        : isPricingMonthly
+                        ? `Duration: ${bookingDetails.numberOfMonths || 1} month${(bookingDetails.numberOfMonths || 1) !== 1 ? 's' : ''} (starts on ${format(bookingDetails.date, "MMM d, yyyy")})`
+                        : (() => {
+                            const isSameDay = bookingDetails.date.toDateString() === bookingDetails.endDate.toDateString();
+                            const hours = Math.round(bookingDetails.duration * 100) / 100;
+                            if (isSameDay) {
+                              return `Duration: ${hours} hour${hours !== 1 ? 's' : ''}`;
+                            } else {
+                              return `Duration: ${hours} hours (${format(bookingDetails.date, "MMM d")} to ${format(bookingDetails.endDate, "MMM d")})`;
+                            }
+                          })()
+                      }
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {isPricingMonthly 
+                        ? "Minimum: 1 month"
+                        : isPricingDaily
+                        ? "Minimum: 1 day"
+                        : `Minimum: ${spotData?.minimum_booking_hours || 1} hour${(spotData?.minimum_booking_hours || 1) !== 1 ? 's' : ''}`
+                      }
+                      {!isPricingMonthly && !isPricingDaily && " • No maximum"}
+                    </div>
+                  </div>
               </CardContent>
             </Card>
 
