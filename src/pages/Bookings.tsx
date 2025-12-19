@@ -20,8 +20,7 @@ import RefundRequestDialog from "@/components/RefundRequestDialog";
 import { CancellationPolicyDialog } from "@/components/CancellationPolicyDialog";
 import { ContactButtons } from "@/components/ContactButtons";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { toZonedTime } from "date-fns-tz";
-import { parse, addHours } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 
 const Bookings = () => {
   const { user } = useAuth();
@@ -105,100 +104,68 @@ const Bookings = () => {
             // Get the spot's timezone - default to America/Chicago if not set
             const spotTimezone = booking.spot_timezone || booking.parking_spots?.timezone || 'America/Chicago';
             
-            // SIMPLE APPROACH: Parse the stored times as local times (no timezone conversion)
-            // The database stores times like "2025-12-18 20:45:00" which represents LOCAL time at the spot
-            // We need to compare against the CURRENT LOCAL TIME at the spot
+            // DEAD SIMPLE APPROACH:
+            // 1. Get current time at the spot as a string "2025-12-18 20:45:00"
+            // 2. Compare that string to booking start/end times (also strings)
+            // 3. String comparison works because format is YYYY-MM-DD HH:mm:ss
             
-            const startTimeStr = booking.start_time; // e.g., "2025-12-18 20:45:00"
-            const endTimeStr = booking.end_time;
-            
-            // Parse the time string WITHOUT any timezone interpretation
-            // Replace 'T' with space if present, then parse with date-fns
-            const normalizeTimeStr = (str: string) => str.replace('T', ' ');
-            const startDate = parse(normalizeTimeStr(startTimeStr), 'yyyy-MM-dd HH:mm:ss', new Date());
-            const endDate = parse(normalizeTimeStr(endTimeStr), 'yyyy-MM-dd HH:mm:ss', new Date());
-            
-            // Get the current time in the spot's timezone
-            // toZonedTime converts UTC now to what the clock shows at the spot
+            // Get current time in the spot's timezone as a formatted string
             const now = new Date();
-            const spotNow = toZonedTime(now, spotTimezone);
+            const currentTimeAtSpot = formatInTimeZone(now, spotTimezone, 'yyyy-MM-dd HH:mm:ss');
             
-            // Extract just the date/time components from spotNow (strip timezone info)
-            // This gives us comparable values
-            const spotNowYear = spotNow.getFullYear();
-            const spotNowMonth = spotNow.getMonth();
-            const spotNowDate = spotNow.getDate();
-            const spotNowHours = spotNow.getHours();
-            const spotNowMinutes = spotNow.getMinutes();
-            const spotNowSeconds = spotNow.getSeconds();
+            // Normalize the stored times (replace T with space if present)
+            const startTimeStr = booking.start_time.replace('T', ' ').substring(0, 19); // "2025-12-18 20:45:00"
+            const endTimeStr = booking.end_time.replace('T', ' ').substring(0, 19);
             
-            // Create a "timezone-neutral" date for comparison
-            const spotCurrentTime = new Date(spotNowYear, spotNowMonth, spotNowDate, spotNowHours, spotNowMinutes, spotNowSeconds);
+            // Calculate grace period end (3 hours after end time)
+            // Parse end time, add 3 hours, format back to string
+            const endParts = endTimeStr.split(/[- :]/);
+            const endDateObj = new Date(
+              parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]),
+              parseInt(endParts[3]), parseInt(endParts[4]), parseInt(endParts[5] || '0')
+            );
+            endDateObj.setHours(endDateObj.getHours() + 3);
+            const gracePeriodEnd = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')} ${String(endDateObj.getHours()).padStart(2, '0')}:${String(endDateObj.getMinutes()).padStart(2, '0')}:${String(endDateObj.getSeconds()).padStart(2, '0')}`;
             
-            console.log('📅 [SIMPLE_TIME_DEBUG]', {
+            console.log('📅 [SIMPLE_STRING_COMPARE]', {
               id: booking.id.substring(0, 8),
               spotTimezone,
-              spotCurrentTime: spotCurrentTime.toLocaleString('en-US'),
-              startDate: startDate.toLocaleString('en-US'),
-              endDate: endDate.toLocaleString('en-US'),
+              currentTimeAtSpot,
               startTimeStr,
-              endTimeStr
+              endTimeStr,
+              gracePeriodEnd
             });
             
-            // Check if dates are valid
-            const isStartDateValid = startDate && !isNaN(startDate.getTime());
-            const isEndDateValid = endDate && !isNaN(endDate.getTime());
+            // DETERMINE STATUS - Simple string comparison
+            let status = 'Upcoming';
             
-            if (!isStartDateValid || !isEndDateValid) {
-              console.error('Invalid date in booking:', booking.id, {
-                start_time: booking.start_time,
-                end_time: booking.end_time,
-                startDateValid: isStartDateValid,
-                endDateValid: isEndDateValid
-              });
-              return null;
+            if (booking.status === 'cancelled') {
+              status = 'Cancelled';
+            } else if (currentTimeAtSpot < startTimeStr) {
+              status = 'Upcoming';
+            } else if (currentTimeAtSpot <= endTimeStr) {
+              status = 'Active';
+            } else if (currentTimeAtSpot <= gracePeriodEnd) {
+              status = 'Active'; // Grace period
+            } else {
+              status = 'Completed';
             }
+            
+            console.log('🕐 [STATUS]', { id: booking.id.substring(0, 8), status, currentTimeAtSpot, startTimeStr });
+            
+            // Parse dates for display formatting
+            const startParts = startTimeStr.split(/[- :]/);
+            const startDate = new Date(
+              parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]),
+              parseInt(startParts[3]), parseInt(startParts[4]), parseInt(startParts[5] || '0')
+            );
+            const endDate = new Date(
+              parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]),
+              parseInt(endParts[3]), parseInt(endParts[4]), parseInt(endParts[5] || '0')
+            );
             
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
-            
-            // Grace period: 3 hours after end time
-            const gracePeriodEnd = addHours(endDate, 3);
-            
-            // DETERMINE STATUS BASED ON TIME COMPARISON ONLY
-            // Ignore the database status for active/upcoming/completed - calculate it dynamically
-            let status = 'Upcoming';
-            
-            // Only respect cancelled status from database
-            if (booking.status === 'cancelled') {
-              status = 'Cancelled';
-              console.log('❌ [STATUS] Cancelled - booking was cancelled by user');
-            } else if (spotCurrentTime < startDate) {
-              // Current spot time is before start - UPCOMING
-              status = 'Upcoming';
-              console.log('🟡 [STATUS] Upcoming - spot current time is before start');
-            } else if (spotCurrentTime <= endDate) {
-              // Current spot time is between start and end - ACTIVE
-              status = 'Active';
-              console.log('🟢 [STATUS] Active - spot current time is between start and end');
-            } else if (spotCurrentTime <= gracePeriodEnd) {
-              // Past end but within grace period - still ACTIVE
-              status = 'Active';
-              console.log('🟠 [STATUS] Active (grace period) - within 3 hours after end time');
-            } else {
-              // Past grace period - COMPLETED
-              status = 'Completed';
-              console.log('✅ [STATUS] Completed - past grace period');
-            }
-            
-            console.log('🕐 [STATUS_RESULT]', {
-              bookingId: booking.id.substring(0, 8),
-              status,
-              spotCurrentTime: spotCurrentTime.toLocaleString('en-US'),
-              startDate: startDate.toLocaleString('en-US'),
-              endDate: endDate.toLocaleString('en-US'),
-              gracePeriodEnd: gracePeriodEnd.toLocaleString('en-US')
-            });
 
             // Get owner profile using secure function
             let ownerName = 'Unknown Owner';
