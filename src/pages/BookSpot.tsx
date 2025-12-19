@@ -622,22 +622,6 @@ const BookSpot = () => {
                              )}
                            </SelectContent>
                          </Select>
-                         {/* Show next available slot suggestion */}
-                         {!slotsLoading && !slotsError && timeSlots.length > 0 && (
-                           (() => {
-                             const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.startTime);
-                             const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.startTime);
-                             if (!selectedSlot?.isAvailable && nextAvailable) {
-                               const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
-                               return (
-                                 <p className="text-xs text-orange-600 mt-1">
-                                   Next available: {nextOption?.label}
-                                 </p>
-                               );
-                             }
-                             return null;
-                           })()
-                         )}
                        </div>
                      <div>
                        <Label>Number of Days</Label>
@@ -794,22 +778,6 @@ const BookSpot = () => {
                               )}
                            </SelectContent>
                         </Select>
-                        {/* Show next available slot suggestion */}
-                        {!slotsLoading && !slotsError && timeSlots.length > 0 && (
-                          (() => {
-                            const nextAvailable = timeSlots.find(slot => slot.isAvailable && slot.time > bookingDetails.startTime);
-                            const selectedSlot = timeSlots.find(slot => slot.time === bookingDetails.startTime);
-                            if (!selectedSlot?.isAvailable && nextAvailable) {
-                              const nextOption = timeOptions.find(opt => opt.value === nextAvailable.time);
-                              return (
-                                <p className="text-xs text-orange-600 mt-1">
-                                  Next available: {nextOption?.label}
-                                </p>
-                              );
-                            }
-                            return null;
-                          })()
-                        )}
                       </div>
                       <div>
                         <Label>End Time</Label>
