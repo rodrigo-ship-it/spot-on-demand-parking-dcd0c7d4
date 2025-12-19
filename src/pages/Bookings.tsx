@@ -21,7 +21,7 @@ import { CancellationPolicyDialog } from "@/components/CancellationPolicyDialog"
 import { ContactButtons } from "@/components/ContactButtons";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { toZonedTime } from "date-fns-tz";
-import { parse, isAfter, isBefore, addHours } from "date-fns";
+import { parse, addHours } from "date-fns";
 
 const Bookings = () => {
   const { user } = useAuth();
@@ -102,46 +102,47 @@ const Bookings = () => {
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
           try {
-            // Get the spot's timezone - default to America/New_York if not set
-            const spotTimezone = booking.spot_timezone || booking.parking_spots?.timezone || 'America/New_York';
+            // Get the spot's timezone - default to America/Chicago if not set
+            const spotTimezone = booking.spot_timezone || booking.parking_spots?.timezone || 'America/Chicago';
             
-            // Get current time in the SPOT's timezone using date-fns-tz
+            // SIMPLE APPROACH: Parse the stored times as local times (no timezone conversion)
+            // The database stores times like "2025-12-18 20:45:00" which represents LOCAL time at the spot
+            // We need to compare against the CURRENT LOCAL TIME at the spot
+            
+            const startTimeStr = booking.start_time; // e.g., "2025-12-18 20:45:00"
+            const endTimeStr = booking.end_time;
+            
+            // Parse the time string WITHOUT any timezone interpretation
+            // Replace 'T' with space if present, then parse with date-fns
+            const normalizeTimeStr = (str: string) => str.replace('T', ' ');
+            const startDate = parse(normalizeTimeStr(startTimeStr), 'yyyy-MM-dd HH:mm:ss', new Date());
+            const endDate = parse(normalizeTimeStr(endTimeStr), 'yyyy-MM-dd HH:mm:ss', new Date());
+            
+            // Get the current time in the spot's timezone
+            // toZonedTime converts UTC now to what the clock shows at the spot
             const now = new Date();
             const spotNow = toZonedTime(now, spotTimezone);
             
-            // The database stores times like "2025-12-18 20:30:00" without timezone info
-            // These represent the LOCAL time at the spot
-            // Parse them as dates (they'll be interpreted in local context, which is fine for comparison)
-            const startTimeStr = booking.start_time; // e.g., "2025-12-18 20:30:00"
-            const endTimeStr = booking.end_time;
+            // Extract just the date/time components from spotNow (strip timezone info)
+            // This gives us comparable values
+            const spotNowYear = spotNow.getFullYear();
+            const spotNowMonth = spotNow.getMonth();
+            const spotNowDate = spotNow.getDate();
+            const spotNowHours = spotNow.getHours();
+            const spotNowMinutes = spotNow.getMinutes();
+            const spotNowSeconds = spotNow.getSeconds();
             
-            // Parse the stored time strings into Date objects
-            // The stored times can be in different formats:
-            // - ISO format with T: "2025-09-01T14:30:00"
-            // - Space-separated: "2025-09-01 14:30:00"
-            // Try ISO format first, then fallback to space-separated
-            const parseTimeString = (timeStr: string) => {
-              // First try native Date parsing (handles ISO format)
-              const nativeDate = new Date(timeStr);
-              if (!isNaN(nativeDate.getTime())) {
-                return nativeDate;
-              }
-              // Fallback to date-fns parse for space-separated format
-              return parse(timeStr, 'yyyy-MM-dd HH:mm:ss', new Date());
-            };
+            // Create a "timezone-neutral" date for comparison
+            const spotCurrentTime = new Date(spotNowYear, spotNowMonth, spotNowDate, spotNowHours, spotNowMinutes, spotNowSeconds);
             
-            const startDate = parseTimeString(startTimeStr);
-            const endDate = parseTimeString(endTimeStr);
-            
-            console.log('📅 [TIMEZONE_STATUS_DEBUG]', {
+            console.log('📅 [SIMPLE_TIME_DEBUG]', {
               id: booking.id.substring(0, 8),
               spotTimezone,
-              spotNow: spotNow.toISOString(),
-              spotNowLocal: spotNow.toLocaleString(),
+              spotCurrentTime: spotCurrentTime.toLocaleString('en-US'),
+              startDate: startDate.toLocaleString('en-US'),
+              endDate: endDate.toLocaleString('en-US'),
               startTimeStr,
-              endTimeStr,
-              startDate: startDate.toLocaleString(),
-              endDate: endDate.toLocaleString()
+              endTimeStr
             });
             
             // Check if dates are valid
@@ -161,50 +162,43 @@ const Bookings = () => {
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
             
-            // Determine status based on spot's local time
-            let status = 'Upcoming';
-            
             // Grace period: 3 hours after end time
             const gracePeriodEnd = addHours(endDate, 3);
             
-            console.log('🕐 [SPOT_TIMEZONE_STATUS]', {
-              bookingId: booking.id.substring(0, 8),
-              spotTimezone,
-              spotNow: spotNow.toLocaleString(),
-              startDate: startDate.toLocaleString(),
-              endDate: endDate.toLocaleString(),
-              gracePeriodEnd: gracePeriodEnd.toLocaleString(),
-              dbStatus: booking.status,
-              isBeforeStart: isBefore(spotNow, startDate),
-              isAfterEnd: isAfter(spotNow, endDate),
-              isAfterGrace: isAfter(spotNow, gracePeriodEnd)
-            });
+            // DETERMINE STATUS BASED ON TIME COMPARISON ONLY
+            // Ignore the database status for active/upcoming/completed - calculate it dynamically
+            let status = 'Upcoming';
             
-            // Determine status with spot's timezone
-            // The spot's current time (spotNow) is compared against the booking times (stored in spot's local time)
+            // Only respect cancelled status from database
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
-              console.log('❌ [STATUS] Setting as Cancelled - booking was cancelled');
-            } else if (booking.status === 'completed') {
-              status = 'Completed';
-              console.log('✅ [STATUS] Setting as Completed - database shows completed');
-            } else if (isBefore(spotNow, startDate)) {
-              // Spot's current time is before the booking start time
+              console.log('❌ [STATUS] Cancelled - booking was cancelled by user');
+            } else if (spotCurrentTime < startDate) {
+              // Current spot time is before start - UPCOMING
               status = 'Upcoming';
-              console.log('🟡 [STATUS] Setting as Upcoming - spot\'s current time is before start time');
-            } else if (!isAfter(spotNow, endDate)) {
-              // Spot's current time is between start and end (inclusive of end)
+              console.log('🟡 [STATUS] Upcoming - spot current time is before start');
+            } else if (spotCurrentTime <= endDate) {
+              // Current spot time is between start and end - ACTIVE
               status = 'Active';
-              console.log('🟢 [STATUS] Setting as Active - spot\'s current time is between start and end');
-            } else if (!isAfter(spotNow, gracePeriodEnd)) {
-              // Past end time but within 3-hour grace period
+              console.log('🟢 [STATUS] Active - spot current time is between start and end');
+            } else if (spotCurrentTime <= gracePeriodEnd) {
+              // Past end but within grace period - still ACTIVE
               status = 'Active';
-              console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period (spot timezone)');
+              console.log('🟠 [STATUS] Active (grace period) - within 3 hours after end time');
             } else {
-              // Past grace period
+              // Past grace period - COMPLETED
               status = 'Completed';
-              console.log('🔴 [STATUS] Setting as Completed - past grace period in spot timezone');
+              console.log('✅ [STATUS] Completed - past grace period');
             }
+            
+            console.log('🕐 [STATUS_RESULT]', {
+              bookingId: booking.id.substring(0, 8),
+              status,
+              spotCurrentTime: spotCurrentTime.toLocaleString('en-US'),
+              startDate: startDate.toLocaleString('en-US'),
+              endDate: endDate.toLocaleString('en-US'),
+              gracePeriodEnd: gracePeriodEnd.toLocaleString('en-US')
+            });
 
             // Get owner profile using secure function
             let ownerName = 'Unknown Owner';
@@ -238,20 +232,22 @@ const Bookings = () => {
               ownerId: ownerId,
               ownerPhone: ownerPhone,
               date: booking.display_date || startDate.toLocaleDateString('en-US', { 
-                month: '2-digit', 
-                day: '2-digit', 
+                weekday: 'long',
+                month: 'long', 
+                day: 'numeric', 
                 year: 'numeric' 
               }),
-              startTime: isMonthly ? null : (booking.display_start_time || startDate.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+              // Always format times from the parsed dates to ensure 12-hour format
+              startTime: isMonthly ? null : startDate.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
                 minute: '2-digit',
                 hour12: true
-              })),
-              endTime: isMonthly ? null : (booking.display_end_time || endDate.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+              }),
+              endTime: isMonthly ? null : endDate.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
                 minute: '2-digit',
                 hour12: true
-              })),
+              }),
               startDate: isMonthly ? startDate.toLocaleDateString('en-US') : null,
               endDate: isMonthly ? endDate.toLocaleDateString('en-US') : null,
               duration: isMonthly 
