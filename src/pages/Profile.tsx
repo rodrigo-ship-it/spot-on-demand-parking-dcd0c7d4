@@ -20,6 +20,7 @@ import { PayoutSettingsDialog } from "@/components/PayoutSettingsDialog";
 import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { TermsAcceptanceStatus } from "@/components/TermsAcceptanceStatus";
 import { EmailVerification } from "@/components/EmailVerification";
+import rivoLogo from "@/assets/rivo-logo.png";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -165,8 +166,8 @@ const Profile = () => {
               <Link to="/" className="flex items-center space-x-4">
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
                 <img 
-                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                  alt="Arriv Logo" 
+                  src={rivoLogo} 
+                  alt="Rivo Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
