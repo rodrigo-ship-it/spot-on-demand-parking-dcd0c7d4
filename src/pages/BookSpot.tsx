@@ -997,10 +997,10 @@ const BookSpot = () => {
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {isPricingMonthly 
-                        ? "Minimum: 1 month"
+                        ? "Minimum for this spot: 1 month"
                         : isPricingDaily
-                        ? "Minimum: 1 day"
-                        : `Minimum: ${spotData?.minimum_booking_hours || 1} hour${(spotData?.minimum_booking_hours || 1) !== 1 ? 's' : ''}`
+                        ? "Minimum for this spot: 1 day"
+                        : `Minimum for this spot: ${spotData?.minimum_booking_hours || 1} hour${(spotData?.minimum_booking_hours || 1) !== 1 ? 's' : ''}`
                       }
                       {!isPricingMonthly && !isPricingDaily && " • No maximum"}
                     </div>
