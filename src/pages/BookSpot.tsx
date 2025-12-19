@@ -62,6 +62,11 @@ const BookSpot = () => {
       const today = new Date();
       return new Date(today.getFullYear(), today.getMonth(), today.getDate());
     })(),
+    endDate: (() => {
+      // End date defaults to same as start date
+      const today = new Date();
+      return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    })(),
     startTime: "09:00",
     endTime: "09:00", // Will be updated based on pricing type
     duration: 1, // Changed from 8 to 1 hour default
@@ -240,17 +245,50 @@ const BookSpot = () => {
   const minimumBookingHours = spotData?.minimum_booking_hours || 1;
 
   const handleTimeChange = (field: string, value: string) => {
-    const newDetails = { ...bookingDetails, [field]: value };
-    
-    if (field === 'startTime' || field === 'endTime') {
-      const start = new Date(`2000-01-01T${newDetails.startTime}`);
-      const end = new Date(`2000-01-01T${newDetails.endTime}`);
-      const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-      // Enforce minimum booking duration
-      newDetails.duration = Math.max(minimumBookingHours, diffHours);
+    setBookingDetails(prev => {
+      const newDetails = { ...prev, [field]: value };
+      
+      // Recalculate duration for hourly bookings
+      if (field === 'startTime' || field === 'endTime') {
+        const startDateTime = new Date(newDetails.date);
+        const [startHour, startMin] = newDetails.startTime.split(':').map(Number);
+        startDateTime.setHours(startHour, startMin, 0, 0);
+        
+        const endDateTime = new Date(newDetails.endDate);
+        const [endHour, endMin] = newDetails.endTime.split(':').map(Number);
+        endDateTime.setHours(endHour, endMin, 0, 0);
+        
+        const diffHours = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
+        // Enforce minimum booking duration
+        newDetails.duration = Math.max(minimumBookingHours, diffHours);
+      }
+      
+      return newDetails;
+    });
+  };
+
+  const handleEndDateChange = (date: Date | undefined) => {
+    if (date) {
+      const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      
+      setBookingDetails(prev => {
+        const newDetails = { ...prev, endDate: localDate };
+        
+        // Recalculate duration
+        const startDateTime = new Date(prev.date);
+        const [startHour, startMin] = prev.startTime.split(':').map(Number);
+        startDateTime.setHours(startHour, startMin, 0, 0);
+        
+        const endDateTime = new Date(localDate);
+        const [endHour, endMin] = prev.endTime.split(':').map(Number);
+        endDateTime.setHours(endHour, endMin, 0, 0);
+        
+        const diffHours = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
+        newDetails.duration = Math.max(minimumBookingHours, diffHours);
+        
+        return newDetails;
+      });
     }
-    
-    setBookingDetails(newDetails);
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -270,6 +308,11 @@ const BookSpot = () => {
       setBookingDetails(prev => {
         const newDetails = { ...prev, date: localDate };
         
+        // If end date is before the new start date, update end date to match
+        if (prev.endDate < localDate) {
+          newDetails.endDate = localDate;
+        }
+        
         // If selecting today and current start time has passed, reset to first available time
         const now = new Date();
         const isToday = localDate.toDateString() === now.toDateString();
@@ -285,6 +328,18 @@ const BookSpot = () => {
             }
           }
         }
+        
+        // Recalculate duration
+        const startDateTime = new Date(localDate);
+        const [startHour, startMin] = newDetails.startTime.split(':').map(Number);
+        startDateTime.setHours(startHour, startMin, 0, 0);
+        
+        const endDateTime = new Date(newDetails.endDate);
+        const [endHour, endMin] = prev.endTime.split(':').map(Number);
+        endDateTime.setHours(endHour, endMin, 0, 0);
+        
+        const diffHours = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
+        newDetails.duration = Math.max(minimumBookingHours, diffHours);
         
         return newDetails;
       });
@@ -359,11 +414,10 @@ const BookSpot = () => {
     return options;
   };
 
-  // Generate end time options based on start time and minimum booking hours
+  // Generate end time options based on start time, minimum booking hours, and whether it's a different day
   const generateEndTimeOptions = () => {
     const [startHour, startMin] = bookingDetails.startTime.split(':').map(Number);
-    const startTotalMinutes = startHour * 60 + startMin;
-    const minEndMinutes = startTotalMinutes + (minimumBookingHours * 60);
+    const isSameDay = bookingDetails.date.toDateString() === bookingDetails.endDate.toDateString();
     
     // Always use 15-minute increments for end time
     const timeIncrement = 15;
@@ -372,12 +426,15 @@ const BookSpot = () => {
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += timeIncrement) {
         const totalMinutes = hour * 60 + minute;
+        const startTotalMinutes = startHour * 60 + startMin;
+        const minEndMinutes = startTotalMinutes + (minimumBookingHours * 60);
         
-        // Only show times that are at least minimumBookingHours after start time
-        if (totalMinutes < minEndMinutes) {
+        // If same day, only show times that are at least minimumBookingHours after start time
+        if (isSameDay && totalMinutes < minEndMinutes) {
           continue;
         }
         
+        // If different day, show all times (any time on the next day is valid)
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], { 
           hour: 'numeric', 
@@ -391,7 +448,7 @@ const BookSpot = () => {
     console.log('🕐 [END_TIME_OPTIONS] Generated options:', {
       startTime: bookingDetails.startTime,
       minimumBookingHours,
-      minEndMinutes,
+      isSameDay,
       optionsCount: options.length,
       firstOption: options[0]?.value
     });
@@ -751,48 +808,50 @@ const BookSpot = () => {
                      </div>
                    </div>
                  ) : (
-                   // Hourly pricing interface
-                   <div className="grid grid-cols-3 gap-3">
-                     <div>
-                       <Label>Date</Label>
-                       <Popover>
-                         <PopoverTrigger asChild>
-                           <Button
-                             variant="outline"
-                             className={cn(
-                               "w-full justify-center text-center font-normal",
-                               !bookingDetails.date && "text-muted-foreground"
-                             )}
-                           >
-                             <CalendarIcon className="mr-2 h-4 w-4" />
-                             {bookingDetails.date ? (
-                               format(bookingDetails.date, "MMM d, yyyy")
-                             ) : (
-                               <span>Pick a date</span>
-                             )}
-                           </Button>
-                         </PopoverTrigger>
-                         <PopoverContent className="w-auto p-0" align="start">
-                           <CalendarComponent
-                             mode="single"
-                             selected={bookingDetails.date}
-                             onSelect={handleDateChange}
-                             disabled={(date) => date < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())}
-                             initialFocus
-                             className={cn("p-3 pointer-events-auto")}
-                           />
-                         </PopoverContent>
-                       </Popover>
-                     </div>
-                      <div>
-                        <Label>Start Time</Label>
-                        <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
-                          <SelectTrigger className="w-full">
-                            <div className="flex items-center">
-                              <ClockIcon className="mr-2 h-4 w-4" />
-                              <SelectValue placeholder="Select time" />
-                            </div>
-                          </SelectTrigger>
+                   // Hourly pricing interface with multi-day support
+                   <div className="space-y-4">
+                     {/* Start Date & Time Row */}
+                     <div className="grid grid-cols-2 gap-3">
+                       <div>
+                         <Label>Start Date</Label>
+                         <Popover>
+                           <PopoverTrigger asChild>
+                             <Button
+                               variant="outline"
+                               className={cn(
+                                 "w-full justify-center text-center font-normal",
+                                 !bookingDetails.date && "text-muted-foreground"
+                               )}
+                             >
+                               <CalendarIcon className="mr-2 h-4 w-4" />
+                               {bookingDetails.date ? (
+                                 format(bookingDetails.date, "MMM d, yyyy")
+                               ) : (
+                                 <span>Pick a date</span>
+                               )}
+                             </Button>
+                           </PopoverTrigger>
+                           <PopoverContent className="w-auto p-0" align="start">
+                             <CalendarComponent
+                               mode="single"
+                               selected={bookingDetails.date}
+                               onSelect={handleDateChange}
+                               disabled={(date) => date < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())}
+                               initialFocus
+                               className={cn("p-3 pointer-events-auto")}
+                             />
+                           </PopoverContent>
+                         </Popover>
+                       </div>
+                       <div>
+                         <Label>Start Time</Label>
+                         <Select value={bookingDetails.startTime} onValueChange={(value) => handleTimeChange('startTime', value)}>
+                           <SelectTrigger className="w-full">
+                             <div className="flex items-center">
+                               <ClockIcon className="mr-2 h-4 w-4" />
+                               <SelectValue placeholder="Select time" />
+                             </div>
+                           </SelectTrigger>
                            <SelectContent className="max-h-[300px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                              {slotsLoading ? (
                                <SelectItem value="loading" disabled>Loading available times...</SelectItem>
@@ -810,53 +869,86 @@ const BookSpot = () => {
                                      : "No times available for this date";
                                  })()}
                                </SelectItem>
-                                ) : (
-                                 startTimeOptions.map((option) => {
-                                       // Find corresponding slot data - option.value is already in correct format with leading zeros
-                                       const slotData = timeSlots.find(slot => slot.time === option.value);
-                                       const isAvailable = slotData ? slotData.isAvailable : true;
-                                      
-                                      return (
-                                        <SelectItem 
-                                          key={option.value} 
-                                          value={option.value}
-                                          disabled={!isAvailable}
-                                          className={
-                                            isAvailable 
-                                              ? "text-green-700" 
-                                              : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
-                                          }
-                                        >
-                                          <div className="flex items-center justify-between w-full">
-                                            <span>{option.label}</span>
-                                            {!isAvailable && (
-                                              <span className="text-xs ml-2 text-red-600 font-semibold">
-                                                Unavailable
-                                              </span>
-                                            )}
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })
-                              )}
+                             ) : (
+                               startTimeOptions.map((option) => {
+                                 const slotData = timeSlots.find(slot => slot.time === option.value);
+                                 const isAvailable = slotData ? slotData.isAvailable : true;
+                                
+                                 return (
+                                   <SelectItem 
+                                     key={option.value} 
+                                     value={option.value}
+                                     disabled={!isAvailable}
+                                     className={
+                                       isAvailable 
+                                         ? "text-green-700" 
+                                         : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
+                                     }
+                                   >
+                                     <div className="flex items-center justify-between w-full">
+                                       <span>{option.label}</span>
+                                       {!isAvailable && (
+                                         <span className="text-xs ml-2 text-red-600 font-semibold">
+                                           Unavailable
+                                         </span>
+                                       )}
+                                     </div>
+                                   </SelectItem>
+                                 );
+                               })
+                             )}
                            </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>End Time</Label>
-                        <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
-                          <SelectTrigger className="w-full">
-                            <div className="flex items-center">
-                              <ClockIcon className="mr-2 h-4 w-4" />
-                              <SelectValue placeholder="Select time" />
-                            </div>
-                          </SelectTrigger>
+                         </Select>
+                       </div>
+                     </div>
+                     
+                     {/* End Date & Time Row */}
+                     <div className="grid grid-cols-2 gap-3">
+                       <div>
+                         <Label>End Date</Label>
+                         <Popover>
+                           <PopoverTrigger asChild>
+                             <Button
+                               variant="outline"
+                               className={cn(
+                                 "w-full justify-center text-center font-normal",
+                                 !bookingDetails.endDate && "text-muted-foreground"
+                               )}
+                             >
+                               <CalendarIcon className="mr-2 h-4 w-4" />
+                               {bookingDetails.endDate ? (
+                                 format(bookingDetails.endDate, "MMM d, yyyy")
+                               ) : (
+                                 <span>Pick a date</span>
+                               )}
+                             </Button>
+                           </PopoverTrigger>
+                           <PopoverContent className="w-auto p-0" align="start">
+                             <CalendarComponent
+                               mode="single"
+                               selected={bookingDetails.endDate}
+                               onSelect={handleEndDateChange}
+                               disabled={(date) => date < bookingDetails.date}
+                               initialFocus
+                               className={cn("p-3 pointer-events-auto")}
+                             />
+                           </PopoverContent>
+                         </Popover>
+                       </div>
+                       <div>
+                         <Label>End Time</Label>
+                         <Select value={bookingDetails.endTime} onValueChange={(value) => handleTimeChange('endTime', value)}>
+                           <SelectTrigger className="w-full">
+                             <div className="flex items-center">
+                               <ClockIcon className="mr-2 h-4 w-4" />
+                               <SelectValue placeholder="Select time" />
+                             </div>
+                           </SelectTrigger>
                            <SelectContent className="max-h-[200px]">
                              {endTimeOptions.map((option) => {
-                                // Find corresponding slot data - option.value is already in correct format with leading zeros
-                                const slotData = timeSlots.find(slot => slot.time === option.value);
-                                const isAvailable = slotData ? slotData.isAvailable : true;
-                               
+                               const slotData = timeSlots.find(slot => slot.time === option.value);
+                               const isAvailable = slotData ? slotData.isAvailable : true;
+                              
                                return (
                                  <SelectItem 
                                    key={option.value} 
@@ -879,9 +971,10 @@ const BookSpot = () => {
                                  </SelectItem>
                                );
                              })}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
                    </div>
                  )}
                  
@@ -890,7 +983,15 @@ const BookSpot = () => {
                      ? `Duration: ${bookingDetails.numberOfDays} day${bookingDetails.numberOfDays !== 1 ? 's' : ''} (starts at ${new Date(`2000-01-01T${bookingDetails.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })})`
                      : isPricingMonthly
                      ? `Duration: ${bookingDetails.numberOfMonths || 1} month${(bookingDetails.numberOfMonths || 1) !== 1 ? 's' : ''} (starts on ${format(bookingDetails.date, "MMM d, yyyy")})`
-                     : `Duration: ${bookingDetails.duration} hours`
+                     : (() => {
+                         const isSameDay = bookingDetails.date.toDateString() === bookingDetails.endDate.toDateString();
+                         const hours = Math.round(bookingDetails.duration * 100) / 100;
+                         if (isSameDay) {
+                           return `Duration: ${hours} hour${hours !== 1 ? 's' : ''}`;
+                         } else {
+                           return `Duration: ${hours} hours (${format(bookingDetails.date, "MMM d")} to ${format(bookingDetails.endDate, "MMM d")})`;
+                         }
+                       })()
                    }
                  </div>
               </CardContent>
