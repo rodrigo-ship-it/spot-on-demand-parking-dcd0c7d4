@@ -8,6 +8,7 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import rivoLogo from "@/assets/rivo-logo.png";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -117,8 +118,8 @@ const ResetPassword = () => {
             </div>
             <div className="flex items-center">
               <img 
-                src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                alt="Arriv Logo" 
+                src={rivoLogo} 
+                alt="Rivo Logo" 
                 className="w-16 h-16"
               />
             </div>

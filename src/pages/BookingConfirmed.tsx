@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import rivoLogo from "@/assets/rivo-logo.png";
 
 const BookingConfirmed = () => {
   const location = useLocation();
@@ -412,8 +413,8 @@ const BookingConfirmed = () => {
             <div className="flex items-center">
               <Link to="/" className="hover:scale-105 transition-transform duration-200">
                 <img 
-                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                  alt="Arriv Logo" 
+                  src={rivoLogo} 
+                  alt="Rivo Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
