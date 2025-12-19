@@ -21,7 +21,7 @@ import LiveAvailabilityBadge from "@/components/LiveAvailabilityBadge";
 import FeaturedSpotsCarousel from "@/components/FeaturedSpotsCarousel";
 import HowItWorksTimeline from "@/components/HowItWorksTimeline";
 import FAQAccordion from "@/components/FAQAccordion";
-import CityGrid from "@/components/CityGrid";
+
 import { Hero3D } from "@/components/Hero3D";
 import { TypewriterText } from "@/components/TypewriterText";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
@@ -920,8 +920,6 @@ const Index = () => {
       {/* FAQ Accordion */}
       <FAQAccordion />
 
-      {/* City Grid */}
-      <CityGrid />
 
       {/* Enhanced CTA Section */}
       <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
