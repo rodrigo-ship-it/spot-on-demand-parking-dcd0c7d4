@@ -86,7 +86,8 @@ const Bookings = () => {
               daily_price,
               monthly_price,
               pricing_type,
-              owner_id
+              owner_id,
+              timezone
             )
           `)
           .eq('renter_id', user.id)
@@ -99,16 +100,31 @@ const Bookings = () => {
         // Transform data to match UI expectations
         const transformedBookings = await Promise.all(data?.map(async booking => {
           try {
-            // Parse dates as local times - ensure consistent local time interpretation
-            const startDate = booking.start_time ? new Date(booking.start_time) : null;
-            const endDate = booking.end_time ? new Date(booking.end_time) : null;
+            // Get the spot's timezone - default to user's timezone if not set
+            const spotTimezone = booking.spot_timezone || booking.parking_spots?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
             
-            console.log('📅 [RAW_BOOKING_DATA]', {
+            // Get current time in the SPOT's timezone (same pattern as BookSpot.tsx)
+            const now = new Date();
+            const spotNow = new Date(now.toLocaleString('en-US', { timeZone: spotTimezone }));
+            
+            // Parse the stored times as local times in the spot's timezone
+            // The database stores times like "2024-01-15 09:00:00" without timezone info
+            // These represent the LOCAL time at the spot
+            const startTimeStr = booking.start_time;
+            const endTimeStr = booking.end_time;
+            
+            // Parse the date/time strings - they're stored as local times
+            const startDate = new Date(startTimeStr);
+            const endDate = new Date(endTimeStr);
+            
+            console.log('📅 [TIMEZONE_STATUS_DEBUG]', {
               id: booking.id.substring(0, 8),
-              start_time_raw: booking.start_time,
-              end_time_raw: booking.end_time,
-              startDate: startDate?.toString(),
-              endDate: endDate?.toString()
+              spotTimezone,
+              spotNowLocal: spotNow.toLocaleString(),
+              start_time_raw: startTimeStr,
+              end_time_raw: endTimeStr,
+              startDate: startDate.toLocaleString(),
+              endDate: endDate.toLocaleString()
             });
             
             // Check if dates are valid
@@ -122,59 +138,56 @@ const Bookings = () => {
                 startDateValid: isStartDateValid,
                 endDateValid: isEndDateValid
               });
-              // Skip this booking
               return null;
             }
             
             const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
             const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
             
-            // Determine status based on times first, then booking status
+            // Determine status based on spot's local time
             let status = 'Upcoming';
-            const now = new Date();
-            const nowTime = now.getTime();
+            
+            // Use the spot's current time for comparison
+            const spotNowTime = spotNow.getTime();
             const startTime = startDate.getTime();
             const endTime = endDate.getTime();
             
-            // Debug logging to see what's happening
-            console.log('🕐 [BOOKING_STATUS_DEBUG]', {
+            console.log('🕐 [SPOT_TIMEZONE_STATUS]', {
               bookingId: booking.id.substring(0, 8),
-              now: now.toLocaleString(),
+              spotTimezone,
+              spotNow: spotNow.toLocaleString(),
               startDate: startDate.toLocaleString(),
               endDate: endDate.toLocaleString(),
-              nowTime,
+              spotNowTime,
               startTime,
               endTime,
-              dbStatus: booking.status,
-              startTimeStr: booking.start_time,
-              endTimeStr: booking.end_time
+              dbStatus: booking.status
             });
             
-            // Determine status with consistent timezone handling
+            // Determine status with spot's timezone
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
               console.log('❌ [STATUS] Setting as Cancelled - booking was cancelled');
             } else if (booking.status === 'completed') {
-              // Trust database completion status - backend may have processed this with different timezone
               status = 'Completed';
-              console.log('✅ [STATUS] Setting as Completed - database shows completed (backend processed)');
-            } else if (nowTime >= startTime && nowTime <= endTime) {
+              console.log('✅ [STATUS] Setting as Completed - database shows completed');
+            } else if (spotNowTime >= startTime && spotNowTime <= endTime) {
               status = 'Active';
-              console.log('🟢 [STATUS] Setting as Active - current time is between start and end');
-            } else if (nowTime < startTime) {
+              console.log('🟢 [STATUS] Setting as Active - spot\'s current time is between start and end');
+            } else if (spotNowTime < startTime) {
               status = 'Upcoming';
-              console.log('🟡 [STATUS] Setting as Upcoming - current time is before start time');
-            } else if (nowTime > endTime) {
-              // Past end time but not marked completed - still in grace period
+              console.log('🟡 [STATUS] Setting as Upcoming - spot\'s current time is before start time');
+            } else if (spotNowTime > endTime) {
+              // Past end time but not marked completed - check grace period
               const gracePeriodHours = 3;
               const gracePeriodEndTime = endTime + (gracePeriodHours * 60 * 60 * 1000);
               
-              if (nowTime <= gracePeriodEndTime) {
+              if (spotNowTime <= gracePeriodEndTime) {
                 status = 'Active';
-                console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period');
+                console.log('🟡 [STATUS] Setting as Active - past end time but within 3-hour grace period (spot timezone)');
               } else {
                 status = 'Completed';
-                console.log('🔴 [STATUS] Setting as Completed - past grace period, should be auto-completed soon');
+                console.log('🔴 [STATUS] Setting as Completed - past grace period in spot timezone');
               }
             } else {
               status = 'Completed';
