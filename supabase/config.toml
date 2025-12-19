@@ -80,3 +80,9 @@ verify_jwt = true
 
 [functions.send-refund-request]
 verify_jwt = true
+
+[functions.get-timezone]
+verify_jwt = false
+
+[functions.backfill-spot-timezones]
+verify_jwt = false

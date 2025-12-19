@@ -353,11 +353,25 @@ serve(async (req) => {
         // Create booking
         console.log(`🏗️ [BOOKING_CREATE] Creating booking for spot: ${metadata.spot_id}, user: ${metadata.user_id || 'guest'}`);
         
+        // Calculate UTC times based on spot's timezone
+        const spotTimezone = spot.timezone || 'America/New_York';
+        console.log(`🌍 [TIMEZONE] Using spot timezone: ${spotTimezone}`);
+        
+        // Create proper UTC timestamps from local times
+        // Start time in spot's timezone -> UTC
+        const startTimeUTC = convertLocalToUTC(startTimeStr, spotTimezone);
+        const endTimeUTC = convertLocalToUTC(endTimeStr, spotTimezone);
+        
+        console.log(`🌍 [UTC_TIMES] Start UTC: ${startTimeUTC}, End UTC: ${endTimeUTC}`);
+        
         const bookingData = {
           spot_id: metadata.spot_id,
           renter_id: metadata.user_id || null,
           start_time: startTimeStr,
           end_time: endTimeStr,
+          start_time_utc: startTimeUTC,
+          end_time_utc: endTimeUTC,
+          spot_timezone: spotTimezone,
           total_amount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'confirmed',
           payment_intent_id: session.payment_intent?.toString(),
@@ -761,3 +775,93 @@ serve(async (req) => {
     });
   }
 });
+
+// Helper function to convert local time in a timezone to UTC
+function convertLocalToUTC(localTimeStr: string, timezone: string): string {
+  try {
+    // Parse the local time string (format: "YYYY-MM-DD HH:MM:SS")
+    const [datePart, timePart] = localTimeStr.split(' ');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes, seconds] = timePart.split(':').map(Number);
+    
+    // Create a date in the local timezone
+    // We'll use the timezone offset to calculate UTC
+    const localDate = new Date(year, month - 1, day, hours, minutes, seconds || 0);
+    
+    // Get the UTC offset for this timezone at this time
+    // This is a simplified approach - for production, consider using a library like luxon
+    const tzOffsets: Record<string, number> = {
+      'America/New_York': -5,
+      'America/Chicago': -6,
+      'America/Denver': -7,
+      'America/Los_Angeles': -8,
+      'America/Anchorage': -9,
+      'America/Halifax': -4,
+      'Pacific/Honolulu': -10,
+      'America/Phoenix': -7,
+      'America/Detroit': -5,
+      'America/Indiana/Indianapolis': -5,
+      'America/Kentucky/Louisville': -5,
+      'America/Boise': -7,
+      'Europe/London': 0,
+      'Europe/Paris': 1,
+      'Europe/Berlin': 1,
+      'Asia/Tokyo': 9,
+      'Asia/Shanghai': 8,
+      'Australia/Sydney': 10,
+    };
+    
+    // Get offset, default to -5 (EST) if unknown
+    let offset = tzOffsets[timezone];
+    if (offset === undefined) {
+      console.warn(`Unknown timezone: ${timezone}, defaulting to America/New_York`);
+      offset = -5;
+    }
+    
+    // Check if DST applies (simplified check for US timezones)
+    // DST runs from second Sunday in March to first Sunday in November
+    const isDST = checkDST(localDate, timezone);
+    if (isDST && !['America/Phoenix', 'Pacific/Honolulu'].includes(timezone)) {
+      offset += 1; // Add 1 hour for DST
+    }
+    
+    // Convert to UTC by subtracting the offset
+    const utcDate = new Date(localDate.getTime() - (offset * 60 * 60 * 1000));
+    
+    return utcDate.toISOString();
+  } catch (error) {
+    console.error('Error converting to UTC:', error);
+    // Fallback: treat as if it's already in the server's timezone
+    const localDate = new Date(localTimeStr.replace(' ', 'T') + 'Z');
+    return localDate.toISOString();
+  }
+}
+
+// Check if DST is in effect for US timezones
+function checkDST(date: Date, timezone: string): boolean {
+  // Only apply DST logic for US timezones
+  if (!timezone.startsWith('America/')) return false;
+  
+  const month = date.getMonth() + 1; // 1-indexed
+  const day = date.getDate();
+  const dayOfWeek = date.getDay(); // 0 = Sunday
+  
+  // DST starts second Sunday in March
+  // DST ends first Sunday in November
+  if (month < 3 || month > 11) return false;
+  if (month > 3 && month < 11) return true;
+  
+  if (month === 3) {
+    // Second Sunday in March
+    const secondSunday = 14 - new Date(date.getFullYear(), 2, 1).getDay();
+    return day >= secondSunday;
+  }
+  
+  if (month === 11) {
+    // First Sunday in November
+    const firstSunday = 7 - new Date(date.getFullYear(), 10, 1).getDay();
+    return day < firstSunday;
+  }
+  
+  return false;
+}

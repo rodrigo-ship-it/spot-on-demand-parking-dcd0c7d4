@@ -37,6 +37,7 @@ const ListSpot = () => {
     address: "",
     latitude: null as number | null,
     longitude: null as number | null,
+    timezone: null as string | null, // Timezone of the spot's location
     city: "",
     state: "",
     zipCode: "",
@@ -77,6 +78,18 @@ const ListSpot = () => {
     "Gated Entry", "Well Lit", "Wheelchair Accessible", "Car Wash Available",
     "Bigger Parking Spots", "Compound Spots"
   ];
+
+  // Fallback timezone estimation based on longitude
+  const getFallbackTimezone = (longitude: number): string => {
+    if (longitude >= -67.5 && longitude < -52.5) return 'America/Halifax';
+    if (longitude >= -82.5 && longitude < -67.5) return 'America/New_York';
+    if (longitude >= -97.5 && longitude < -82.5) return 'America/Chicago';
+    if (longitude >= -112.5 && longitude < -97.5) return 'America/Denver';
+    if (longitude >= -127.5 && longitude < -112.5) return 'America/Los_Angeles';
+    if (longitude >= -142.5 && longitude < -127.5) return 'America/Anchorage';
+    if (longitude >= -157.5 && longitude < -142.5) return 'Pacific/Honolulu';
+    return 'America/New_York';
+  };
 
   // Load existing spot data when in edit mode
   useEffect(() => {
@@ -120,6 +133,7 @@ const ListSpot = () => {
           address: data.address || '',
           latitude: data.latitude || null,
           longitude: data.longitude || null,
+          timezone: data.timezone || null,
           city: city,
           state: state,
           zipCode: zipCode,
@@ -280,6 +294,7 @@ const ListSpot = () => {
         address: fullAddress,
         latitude: formData.latitude,
         longitude: formData.longitude,
+        timezone: formData.timezone, // Store the detected timezone
         spot_type: spotType,
         pricing_type: formData.pricingType,
         price_per_hour: formData.pricingType === 'hourly' ? parseFloat(formData.pricePerHour) : 
@@ -419,13 +434,43 @@ const ListSpot = () => {
               <GooglePlacesAutocomplete
                 value={formData.address}
                 onChange={(value) => setFormData({...formData, address: value})}
-                onLocationSelect={(location) => {
-                  setFormData({
-                    ...formData,
+                onLocationSelect={async (location) => {
+                  // First update with the location data
+                  setFormData(prev => ({
+                    ...prev,
                     address: location.description,
                     latitude: location.latitude,
                     longitude: location.longitude
-                  });
+                  }));
+                  
+                  // Then fetch timezone for this location
+                  try {
+                    console.log('🌍 Fetching timezone for coordinates:', location.latitude, location.longitude);
+                    const { data: timezoneData, error } = await supabase.functions.invoke('get-timezone', {
+                      body: { 
+                        latitude: location.latitude, 
+                        longitude: location.longitude 
+                      }
+                    });
+                    
+                    if (error) {
+                      console.error('Error fetching timezone:', error);
+                      // Use fallback based on longitude
+                      const fallbackTz = getFallbackTimezone(location.longitude);
+                      setFormData(prev => ({ ...prev, timezone: fallbackTz }));
+                      console.log('Using fallback timezone:', fallbackTz);
+                    } else if (timezoneData?.timezone) {
+                      console.log('✅ Timezone detected:', timezoneData.timezone);
+                      setFormData(prev => ({ ...prev, timezone: timezoneData.timezone }));
+                    } else if (timezoneData?.fallbackTimezone) {
+                      console.log('Using API fallback timezone:', timezoneData.fallbackTimezone);
+                      setFormData(prev => ({ ...prev, timezone: timezoneData.fallbackTimezone }));
+                    }
+                  } catch (err) {
+                    console.error('Error calling timezone function:', err);
+                    const fallbackTz = getFallbackTimezone(location.longitude);
+                    setFormData(prev => ({ ...prev, timezone: fallbackTz }));
+                  }
                 }}
                 placeholder="Search for the parking spot address..."
                 className="w-full"
@@ -433,6 +478,11 @@ const ListSpot = () => {
               <p className="text-sm text-gray-600 mt-1">
                 Use the search to select your exact address for accurate map positioning
               </p>
+              {formData.timezone && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Timezone detected: {formData.timezone}
+                </p>
+              )}
             </div>
           </div>
         );
