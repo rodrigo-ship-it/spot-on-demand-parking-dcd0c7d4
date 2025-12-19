@@ -12,7 +12,7 @@ interface MarketplacePaymentProps {
     user: any;
     isQRCodeBooking: boolean;
     guestDetails: any;
-    timeOptions: any[];
+    startTimeOptions: any[];
     isPricingDaily: boolean;
   };
   totalAmount: number;
