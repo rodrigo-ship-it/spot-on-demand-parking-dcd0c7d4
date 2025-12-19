@@ -116,10 +116,22 @@ const Bookings = () => {
             const endTimeStr = booking.end_time;
             
             // Parse the stored time strings into Date objects
-            // The key insight: these times are ALREADY in the spot's local timezone
-            // So we parse them and compare against spotNow (which is also in spot's timezone)
-            const startDate = parse(startTimeStr, 'yyyy-MM-dd HH:mm:ss', new Date());
-            const endDate = parse(endTimeStr, 'yyyy-MM-dd HH:mm:ss', new Date());
+            // The stored times can be in different formats:
+            // - ISO format with T: "2025-09-01T14:30:00"
+            // - Space-separated: "2025-09-01 14:30:00"
+            // Try ISO format first, then fallback to space-separated
+            const parseTimeString = (timeStr: string) => {
+              // First try native Date parsing (handles ISO format)
+              const nativeDate = new Date(timeStr);
+              if (!isNaN(nativeDate.getTime())) {
+                return nativeDate;
+              }
+              // Fallback to date-fns parse for space-separated format
+              return parse(timeStr, 'yyyy-MM-dd HH:mm:ss', new Date());
+            };
+            
+            const startDate = parseTimeString(startTimeStr);
+            const endDate = parseTimeString(endTimeStr);
             
             console.log('📅 [TIMEZONE_STATUS_DEBUG]', {
               id: booking.id.substring(0, 8),
