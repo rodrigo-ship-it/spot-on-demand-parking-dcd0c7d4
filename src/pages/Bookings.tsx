@@ -551,7 +551,6 @@ const Bookings = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => handleManageTime(reservation.id)}
                                 className="text-blue-600 hover:text-blue-700"
                               >
                                 <Clock className="w-3 h-3 mr-1" />
@@ -587,6 +586,47 @@ const Bookings = () => {
                                 userViolations={userViolations}
                                 accountStatus="good"
                                 isActive={reservation.status === "Active"}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                        {reservation.status === "Late" && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-orange-600 hover:text-orange-700"
+                              >
+                                <Clock className="w-3 h-3 mr-1" />
+                                Manage Time
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>Time Management - {reservation.id}</DialogTitle>
+                              </DialogHeader>
+                              <TimeManagement
+                                bookingId={reservation.id}
+                                spotId={reservation.spotId || ""}
+                                endTime={(() => {
+                                  try {
+                                    if (!reservation.date || !reservation.endTime) {
+                                      return new Date().toISOString();
+                                    }
+                                    const endDate = new Date(`${reservation.date}T${reservation.endTime}`);
+                                    if (isNaN(endDate.getTime())) {
+                                      return new Date().toISOString();
+                                    }
+                                    return endDate.toISOString();
+                                  } catch (error) {
+                                    return new Date().toISOString();
+                                  }
+                                })()}
+                                pricePerHour={reservation.pricePerHour}
+                                userViolations={userViolations}
+                                accountStatus="good"
+                                isActive={true}
                               />
                             </DialogContent>
                           </Dialog>
