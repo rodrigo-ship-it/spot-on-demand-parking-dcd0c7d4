@@ -64,6 +64,7 @@ export type Database = {
           display_end_time: string | null
           display_start_time: string | null
           end_time: string
+          end_time_utc: string | null
           id: string
           owner_payout_amount: number | null
           payment_intent_id: string | null
@@ -71,7 +72,9 @@ export type Database = {
           qr_code_used: boolean | null
           renter_id: string
           spot_id: string
+          spot_timezone: string | null
           start_time: string
+          start_time_utc: string | null
           status: string
           stripe_transfer_id: string | null
           total_amount: number
@@ -91,6 +94,7 @@ export type Database = {
           display_end_time?: string | null
           display_start_time?: string | null
           end_time: string
+          end_time_utc?: string | null
           id?: string
           owner_payout_amount?: number | null
           payment_intent_id?: string | null
@@ -98,7 +102,9 @@ export type Database = {
           qr_code_used?: boolean | null
           renter_id: string
           spot_id: string
+          spot_timezone?: string | null
           start_time: string
+          start_time_utc?: string | null
           status?: string
           stripe_transfer_id?: string | null
           total_amount: number
@@ -118,6 +124,7 @@ export type Database = {
           display_end_time?: string | null
           display_start_time?: string | null
           end_time?: string
+          end_time_utc?: string | null
           id?: string
           owner_payout_amount?: number | null
           payment_intent_id?: string | null
@@ -125,7 +132,9 @@ export type Database = {
           qr_code_used?: boolean | null
           renter_id?: string
           spot_id?: string
+          spot_timezone?: string | null
           start_time?: string
+          start_time_utc?: string | null
           status?: string
           stripe_transfer_id?: string | null
           total_amount?: number
@@ -484,6 +493,7 @@ export type Database = {
           pricing_type: string
           rating: number | null
           spot_type: string
+          timezone: string | null
           title: string
           total_reviews: number | null
           total_spots: number | null
@@ -511,6 +521,7 @@ export type Database = {
           pricing_type?: string
           rating?: number | null
           spot_type: string
+          timezone?: string | null
           title: string
           total_reviews?: number | null
           total_spots?: number | null
@@ -538,6 +549,7 @@ export type Database = {
           pricing_type?: string
           rating?: number | null
           spot_type?: string
+          timezone?: string | null
           title?: string
           total_reviews?: number | null
           total_spots?: number | null

@@ -28,10 +28,11 @@ serve(async (req) => {
     );
 
     const now = new Date();
+    const nowUTC = now.toISOString();
     const currentTimeForDB = now.toISOString().slice(0, 19).replace('T', ' ');
     
     logStep("Current time", { 
-      timestamp: now.toISOString(),
+      timestamp: nowUTC,
       currentTimeForDB: currentTimeForDB
     });
 
@@ -39,42 +40,78 @@ serve(async (req) => {
     let results = [];
 
     // 1. Update confirmed bookings to active when their start time has arrived
+    // Use UTC times if available, otherwise fall back to local times
     const { data: confirmedBookings, error: confirmedError } = await supabaseService
       .from('bookings')
-      .select('id, start_time, end_time, status')
-      .eq('status', 'confirmed')
-      .lte('start_time', currentTimeForDB)
-      .gt('end_time', currentTimeForDB); // Still within booking period
+      .select('id, start_time, end_time, start_time_utc, end_time_utc, spot_timezone, status')
+      .eq('status', 'confirmed');
 
     if (confirmedError) {
       logStep("Error fetching confirmed bookings", { error: confirmedError });
     } else if (confirmedBookings && confirmedBookings.length > 0) {
-      logStep("Found confirmed bookings to activate", { count: confirmedBookings.length });
+      logStep("Found confirmed bookings to check", { count: confirmedBookings.length });
       
       for (const booking of confirmedBookings) {
-        const { error: updateError } = await supabaseService
-          .from('bookings')
-          .update({ 
-            status: 'active',
-            updated_at: now.toISOString()
-          })
-          .eq('id', booking.id);
-
-        if (updateError) {
-          logStep("Error activating booking", { bookingId: booking.id, error: updateError });
-        } else {
-          logStep("Booking activated", { 
-            bookingId: booking.id, 
-            startTime: booking.start_time,
-            endTime: booking.end_time
-          });
-          updatedCount++;
-          results.push({
+        // Determine if booking should be active
+        let shouldActivate = false;
+        let shouldStillBeActive = false;
+        
+        if (booking.start_time_utc && booking.end_time_utc) {
+          // Use UTC times for comparison
+          const startUTC = new Date(booking.start_time_utc);
+          const endUTC = new Date(booking.end_time_utc);
+          shouldActivate = now >= startUTC;
+          shouldStillBeActive = now < endUTC;
+          
+          logStep("Checking booking with UTC times", { 
             bookingId: booking.id,
-            action: 'activated',
-            fromStatus: 'confirmed',
-            toStatus: 'active'
+            startUTC: booking.start_time_utc,
+            endUTC: booking.end_time_utc,
+            nowUTC,
+            shouldActivate,
+            shouldStillBeActive
           });
+        } else {
+          // Fall back to local times (legacy bookings)
+          shouldActivate = booking.start_time <= currentTimeForDB;
+          shouldStillBeActive = booking.end_time > currentTimeForDB;
+          
+          logStep("Checking booking with local times (legacy)", { 
+            bookingId: booking.id,
+            startTime: booking.start_time,
+            endTime: booking.end_time,
+            currentTimeForDB,
+            shouldActivate,
+            shouldStillBeActive
+          });
+        }
+        
+        if (shouldActivate && shouldStillBeActive) {
+          const { error: updateError } = await supabaseService
+            .from('bookings')
+            .update({ 
+              status: 'active',
+              updated_at: nowUTC
+            })
+            .eq('id', booking.id);
+
+          if (updateError) {
+            logStep("Error activating booking", { bookingId: booking.id, error: updateError });
+          } else {
+            logStep("Booking activated", { 
+              bookingId: booking.id, 
+              startTime: booking.start_time,
+              endTime: booking.end_time,
+              usedUTC: !!booking.start_time_utc
+            });
+            updatedCount++;
+            results.push({
+              bookingId: booking.id,
+              action: 'activated',
+              fromStatus: 'confirmed',
+              toStatus: 'active'
+            });
+          }
         }
       }
     }
@@ -82,28 +119,53 @@ serve(async (req) => {
     // 2. Mark active bookings as completed when they've naturally ended (no penalty)
     const { data: activeBookings, error: activeError } = await supabaseService
       .from('bookings')
-      .select('id, start_time, end_time, status')
-      .eq('status', 'active')
-      .lt('end_time', currentTimeForDB); // Past end time
+      .select('id, start_time, end_time, start_time_utc, end_time_utc, spot_timezone, status')
+      .eq('status', 'active');
 
     if (activeError) {
       logStep("Error fetching active bookings", { error: activeError });
     } else if (activeBookings && activeBookings.length > 0) {
-      logStep("Found active bookings to complete", { count: activeBookings.length });
+      logStep("Found active bookings to check for completion", { count: activeBookings.length });
       
-      // Calculate grace period time (15 minutes after end time)
-      const gracePeriodMinutes = 15;
-      const gracePeriodTime = new Date(now.getTime() - (gracePeriodMinutes * 60 * 1000));
+      // Grace period: 15 minutes
+      const gracePeriodMs = 15 * 60 * 1000;
+      const gracePeriodTime = new Date(now.getTime() - gracePeriodMs);
       const gracePeriodTimeForDB = gracePeriodTime.toISOString().slice(0, 19).replace('T', ' ');
       
       for (const booking of activeBookings) {
-        // Only complete bookings that are past the grace period
-        if (booking.end_time <= gracePeriodTimeForDB) {
+        let shouldComplete = false;
+        
+        if (booking.end_time_utc) {
+          // Use UTC times for comparison
+          const endUTC = new Date(booking.end_time_utc);
+          const endPlusGrace = new Date(endUTC.getTime() + gracePeriodMs);
+          shouldComplete = now >= endPlusGrace;
+          
+          logStep("Checking active booking with UTC times", { 
+            bookingId: booking.id,
+            endUTC: booking.end_time_utc,
+            endPlusGrace: endPlusGrace.toISOString(),
+            nowUTC,
+            shouldComplete
+          });
+        } else {
+          // Fall back to local times (legacy bookings)
+          shouldComplete = booking.end_time <= gracePeriodTimeForDB;
+          
+          logStep("Checking active booking with local times (legacy)", { 
+            bookingId: booking.id,
+            endTime: booking.end_time,
+            gracePeriodTimeForDB,
+            shouldComplete
+          });
+        }
+        
+        if (shouldComplete) {
           const { error: updateError } = await supabaseService
             .from('bookings')
             .update({ 
               status: 'completed',
-              updated_at: now.toISOString()
+              updated_at: nowUTC
             })
             .eq('id', booking.id);
 
@@ -113,7 +175,8 @@ serve(async (req) => {
             logStep("Booking completed naturally", { 
               bookingId: booking.id, 
               endTime: booking.end_time,
-              gracePeriodUsed: `${gracePeriodMinutes} minutes`
+              usedUTC: !!booking.end_time_utc,
+              gracePeriodUsed: '15 minutes'
             });
             updatedCount++;
             results.push({
@@ -123,8 +186,8 @@ serve(async (req) => {
               toStatus: 'completed'
             });
           }
-        } else {
-          logStep("Booking in grace period, not completing yet", {
+        } else if (!booking.end_time_utc) {
+          logStep("Booking in grace period, not completing yet (legacy)", {
             bookingId: booking.id,
             endTime: booking.end_time,
             gracePeriodEndsAt: gracePeriodTimeForDB
