@@ -38,9 +38,11 @@ export const LenientPenaltySystem = ({
   const [selectedCredit, setSelectedCredit] = useState<PenaltyCredit | null>(null);
 
   // Calculate actual total from active credits instead of relying on stored profile value
-  const totalCredits = recentCredits
-    .filter(credit => credit.status === 'active')
-    .reduce((sum, credit) => sum + credit.amount, 0);
+  const totalCredits = Math.round(
+    recentCredits
+      .filter(credit => credit.status === 'active')
+      .reduce((sum, credit) => sum + credit.amount, 0) * 100
+  ) / 100;
 
   const getStatusBadge = () => {
     if (totalCredits === 0) return { label: "Perfect Parker", icon: Trophy, color: "bg-gradient-primary" };
