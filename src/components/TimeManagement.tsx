@@ -245,7 +245,14 @@ export const TimeManagement = ({
         </TabsList>
 
         <TabsContent value="active" className="space-y-4">
-          {isActive && !checkOutCompleted && (
+          {checkOutCompleted ? (
+            <Card>
+              <CardContent className="p-6 text-center text-green-600">
+                <div className="text-lg font-medium">Check-out completed successfully!</div>
+                <div className="text-sm text-gray-500 mt-2">This parking session has ended.</div>
+              </CardContent>
+            </Card>
+          ) : isActive ? (
             <>
               <ExtensionSystem
                 bookingId={bookingId}
@@ -263,9 +270,7 @@ export const TimeManagement = ({
                 isOvertime={false} // Will be calculated dynamically based on start time + duration
               />
             </>
-          )}
-          
-          {!isActive && (
+          ) : (
             <Card>
               <CardContent className="p-6 text-center text-gray-500">
                 No active parking session
