@@ -25,7 +25,6 @@ export const PenaltySystemTest = () => {
   const handleCalculateTest = () => {
     const result = calculatePenalty(
       testData.minutesLate, 
-      testData.isFirstOffense, 
       testData.spotPricePerHour
     );
     setCalculationResult(result);

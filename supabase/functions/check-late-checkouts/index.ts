@@ -127,24 +127,23 @@ serve(async (req) => {
           .eq('user_id', booking.renter_id)
           .maybeSingle();
 
-        // Calculate penalty
+        // Calculate penalty - $20 base for 120+ min, hourly overage for FULL late time
         const basePenalty = 20.00;
         const hourlyRate = booking.parking_spots?.price_per_hour || 6.00;
-        const additionalHours = Math.ceil((minutesLate - 180) / 60);
-        const hourlyOverage = additionalHours * hourlyRate;
+        const hoursLate = Math.ceil(minutesLate / 60); // FULL late time, rounded up
+        const hourlyOverage = hoursLate * hourlyRate;
         
-        // Fee structure
+        // Fee structure - platform gets 7% of hourly overage
         const platformFee = Math.round(hourlyOverage * 0.07 * 100) / 100;
         const stripeFee = Math.round(((hourlyOverage + basePenalty) * 0.029 + 0.30) * 100) / 100;
         const taxRate = 0.085;
         const totalOverageWithFees = Math.round((hourlyOverage + platformFee + stripeFee) * (1 + taxRate) * 100) / 100;
-        const ownerPayout = Math.round(hourlyOverage * 0.93 * 100) / 100;
         
         // Total capped at $70
         let totalCharge = basePenalty + totalOverageWithFees;
         if (totalCharge > 70) totalCharge = 70;
         
-        const description = `Auto-close: $${basePenalty} penalty + $${hourlyOverage} overage (${additionalHours}hr @ $${hourlyRate}/hr)`;
+        const description = `Auto-close: $${basePenalty} penalty + $${hourlyOverage.toFixed(2)} overage (${hoursLate}hr @ $${hourlyRate}/hr)`;
         
         logStep("Penalty calculation", { 
           bookingId: booking.id,

@@ -175,9 +175,8 @@ export const TimeManagement = ({
         return;
       }
 
-      const isFirstOffense = penaltyProfile?.failed_checkouts === 0;
       const spotPricePerHour = bookingData?.parking_spots?.pricing_type === 'hourly' ? Number(bookingData.parking_spots.price_per_hour) : undefined;
-      const penaltyCalculation = calculatePenalty(minutesOver, isFirstOffense, spotPricePerHour);
+      const penaltyCalculation = calculatePenalty(minutesOver, spotPricePerHour);
       
       let penaltyDescription = '';
       if (penaltyCalculation.penaltyFee > 0 && penaltyCalculation.hourlyCharge > 0) {
