@@ -274,9 +274,28 @@ serve(async (req) => {
             
             endTimeStr = `${endYear}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')} ${bookingDetails.startTime}:00`;
           } else {
-            // For hourly: use start and end times exactly as provided
+            // For hourly: use start date for start time, and end date for end time
             startTimeStr = `${dateStr} ${bookingDetails.startTime}:00`;
-            endTimeStr = `${dateStr} ${bookingDetails.endTime}:00`;
+            
+            // Get end date - use endDate if provided, otherwise check if end time is before start time (midnight crossing)
+            let endDateStr = dateStr;
+            if (bookingDetails.endDate) {
+              endDateStr = bookingDetails.endDate.split('T')[0];
+            } else {
+              // If no endDate but end time is earlier than start time, it means we're crossing midnight
+              const [startHour, startMin] = bookingDetails.startTime.split(':').map(Number);
+              const [endHour, endMin] = bookingDetails.endTime.split(':').map(Number);
+              const startMinutes = startHour * 60 + startMin;
+              const endMinutes = endHour * 60 + endMin;
+              
+              if (endMinutes <= startMinutes) {
+                // End time is earlier or equal, means next day
+                const nextDay = new Date(year, month - 1, day + 1);
+                endDateStr = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+              }
+            }
+            
+            endTimeStr = `${endDateStr} ${bookingDetails.endTime}:00`;
           }
           
           console.log(`📅 [DATE_SUCCESS] Start: ${startTimeStr}, End: ${endTimeStr}, Pricing: ${spot.pricing_type}`);
