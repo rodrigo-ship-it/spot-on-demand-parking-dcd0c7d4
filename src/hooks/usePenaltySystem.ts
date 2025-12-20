@@ -66,10 +66,12 @@ export const usePenaltySystem = (userId: string) => {
     else basePenalty = 20;
 
     // Calculate hourly charge for the FULL late time (not just beyond a threshold)
+    // Include 7% platform fee + 8.75% tax (same as booking/extension charges)
     let hourlyCharge = 0;
     if (spotPricePerHour && spotPricePerHour > 0) {
       const hoursLate = Math.ceil(minutesLate / 60); // Round up to full hours
-      hourlyCharge = hoursLate * spotPricePerHour;
+      const rateWithFees = spotPricePerHour * 1.07 * 1.0875; // 7% platform fee + 8.75% tax
+      hourlyCharge = hoursLate * rateWithFees;
     }
 
     const penaltyFee = Math.round(basePenalty * 100) / 100;
