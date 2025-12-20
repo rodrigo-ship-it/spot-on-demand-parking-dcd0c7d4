@@ -56,27 +56,20 @@ export const usePenaltySystem = (userId: string) => {
     }
   };
 
-  const calculatePenalty = (minutesLate: number, isFirstOffense: boolean, spotPricePerHour?: number): { penaltyFee: number; hourlyCharge: number; totalAmount: number } => {
+  const calculatePenalty = (minutesLate: number, spotPricePerHour?: number): { penaltyFee: number; hourlyCharge: number; totalAmount: number } => {
     if (minutesLate <= 30) return { penaltyFee: 0, hourlyCharge: 0, totalAmount: 0 }; // Grace period
 
+    // Tiered penalty - only highest tier applies (NOT cumulative)
     let basePenalty = 0;
     if (minutesLate <= 60) basePenalty = 8;
     else if (minutesLate <= 120) basePenalty = 12;
     else basePenalty = 20;
 
-    // First offense leniency (20% reduction)
-    if (isFirstOffense) basePenalty *= 0.8;
-
-    // Calculate hourly charge for extra time (if it's an hourly spot)
+    // Calculate hourly charge for the FULL late time (not just beyond a threshold)
     let hourlyCharge = 0;
     if (spotPricePerHour && spotPricePerHour > 0) {
-      const hoursLate = minutesLate / 60;
+      const hoursLate = Math.ceil(minutesLate / 60); // Round up to full hours
       hourlyCharge = hoursLate * spotPricePerHour;
-      
-      // Cap hourly charges to prevent excessive fees
-      // Maximum of 3 hours worth of charges, regardless of how late they are
-      const maxHourlyCharge = 3 * spotPricePerHour;
-      hourlyCharge = Math.min(hourlyCharge, maxHourlyCharge);
     }
 
     const penaltyFee = Math.round(basePenalty * 100) / 100;
