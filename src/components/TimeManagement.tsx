@@ -81,7 +81,9 @@ export const TimeManagement = ({
         // Use the actual end_time from database, not the display field
         setCurrentEndTime(booking.end_time);
         
-        if (booking.status === 'completed') {
+        // Only set checkOutCompleted if the user explicitly checked out (via checkout_verification_method)
+        // Not just based on status, since status may have been set by mass updates
+        if (booking.status === 'completed' && booking.checkout_verification_method) {
           setCheckOutCompleted(true);
         }
       }
