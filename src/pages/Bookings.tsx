@@ -545,91 +545,16 @@ const Bookings = () => {
                             />
                           )}
                         </div>
-                        {reservation.status === "Active" && (
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="text-blue-600 hover:text-blue-700"
-                              >
-                                <Clock className="w-3 h-3 mr-1" />
-                                Manage Time
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Time Management - {reservation.id}</DialogTitle>
-                              </DialogHeader>
-                              <TimeManagement
-                                bookingId={reservation.id}
-                                spotId={reservation.spotId || ""}
-                                endTime={(() => {
-                                  try {
-                                    // Safely construct the end time
-                                    if (!reservation.date || !reservation.endTime) {
-                                      console.error("Missing date/endTime for reservation:", reservation.id);
-                                      return new Date().toISOString();
-                                    }
-                                    const endDate = new Date(`${reservation.date}T${reservation.endTime}`);
-                                    if (isNaN(endDate.getTime())) {
-                                      console.error("Invalid date format:", reservation.date, reservation.endTime);
-                                      return new Date().toISOString();
-                                    }
-                                    return endDate.toISOString();
-                                  } catch (error) {
-                                    console.error("Error constructing endTime:", error);
-                                    return new Date().toISOString();
-                                  }
-                                })()}
-                                pricePerHour={reservation.pricePerHour}
-                                userViolations={userViolations}
-                                accountStatus="good"
-                                isActive={reservation.status === "Active"}
-                              />
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                        {reservation.status === "Late" && (
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="text-orange-600 hover:text-orange-700"
-                              >
-                                <Clock className="w-3 h-3 mr-1" />
-                                Manage Time
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Time Management - {reservation.id}</DialogTitle>
-                              </DialogHeader>
-                              <TimeManagement
-                                bookingId={reservation.id}
-                                spotId={reservation.spotId || ""}
-                                endTime={(() => {
-                                  try {
-                                    if (!reservation.date || !reservation.endTime) {
-                                      return new Date().toISOString();
-                                    }
-                                    const endDate = new Date(`${reservation.date}T${reservation.endTime}`);
-                                    if (isNaN(endDate.getTime())) {
-                                      return new Date().toISOString();
-                                    }
-                                    return endDate.toISOString();
-                                  } catch (error) {
-                                    return new Date().toISOString();
-                                  }
-                                })()}
-                                pricePerHour={reservation.pricePerHour}
-                                userViolations={userViolations}
-                                accountStatus="good"
-                                isActive={true}
-                              />
-                            </DialogContent>
-                          </Dialog>
+                        {(reservation.status === "Active" || reservation.status === "Late") && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleManageTime(reservation.id)}
+                            className={reservation.status === "Late" ? "text-orange-600 hover:text-orange-700" : "text-blue-600 hover:text-blue-700"}
+                          >
+                            <Clock className="w-3 h-3 mr-1" />
+                            Manage Time
+                          </Button>
                         )}
                         {reservation.status === "Completed" && (
                           existingReviews.has(reservation.id) ? (
@@ -783,6 +708,44 @@ const Bookings = () => {
         onPhotoTaken={handlePhotoTaken}
       />
 
+      {/* Controlled Time Management Dialog */}
+      <Dialog open={timeManagementDialog.isOpen} onOpenChange={(open) => !open && closeTimeManagementDialog()}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Time Management - {timeManagementDialog.bookingId}</DialogTitle>
+          </DialogHeader>
+          {timeManagementDialog.bookingId && (() => {
+            const reservation = bookings.find(b => b.id === timeManagementDialog.bookingId);
+            if (!reservation) return <p>Booking not found</p>;
+            
+            return (
+              <TimeManagement
+                bookingId={reservation.id}
+                spotId={reservation.spotId || ""}
+                endTime={(() => {
+                  try {
+                    if (!reservation.date || !reservation.endTime) {
+                      return new Date().toISOString();
+                    }
+                    const endDate = new Date(`${reservation.date}T${reservation.endTime}`);
+                    if (isNaN(endDate.getTime())) {
+                      return new Date().toISOString();
+                    }
+                    return endDate.toISOString();
+                  } catch (error) {
+                    return new Date().toISOString();
+                  }
+                })()}
+                pricePerHour={reservation.pricePerHour}
+                userViolations={userViolations}
+                accountStatus="good"
+                isActive={reservation.status === "Active" || reservation.status === "Late"}
+              />
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       <RefundRequestDialog
         isOpen={refundDialog.isOpen}
         onClose={() => setRefundDialog({ isOpen: false, booking: null })}
@@ -794,9 +757,7 @@ const Bookings = () => {
         onClose={() => setCancellationDialog({ isOpen: false, booking: null })}
         booking={cancellationDialog.booking}
         onCancellationSuccess={() => {
-          // Close the dialog and refresh bookings data
           setCancellationDialog({ isOpen: false, booking: null });
-          // Refresh the bookings data without full page reload
           loadBookings();
         }}
       />
