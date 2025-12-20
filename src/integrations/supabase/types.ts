@@ -54,6 +54,7 @@ export type Database = {
         Row: {
           auto_extend_enabled: boolean | null
           checkout_location_verified: boolean | null
+          checkout_photo_url: string | null
           checkout_photo_verified: boolean | null
           checkout_timestamp_verified: boolean | null
           checkout_verification_method: string | null
@@ -84,6 +85,7 @@ export type Database = {
         Insert: {
           auto_extend_enabled?: boolean | null
           checkout_location_verified?: boolean | null
+          checkout_photo_url?: string | null
           checkout_photo_verified?: boolean | null
           checkout_timestamp_verified?: boolean | null
           checkout_verification_method?: string | null
@@ -114,6 +116,7 @@ export type Database = {
         Update: {
           auto_extend_enabled?: boolean | null
           checkout_location_verified?: boolean | null
+          checkout_photo_url?: string | null
           checkout_photo_verified?: boolean | null
           checkout_timestamp_verified?: boolean | null
           checkout_verification_method?: string | null
@@ -499,6 +502,11 @@ export type Database = {
           total_reviews: number | null
           total_spots: number | null
           updated_at: string
+          verification_documents: string[] | null
+          verification_notes: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           access_instructions?: string | null
@@ -528,6 +536,11 @@ export type Database = {
           total_reviews?: number | null
           total_spots?: number | null
           updated_at?: string
+          verification_documents?: string[] | null
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           access_instructions?: string | null
@@ -557,6 +570,11 @@ export type Database = {
           total_reviews?: number | null
           total_spots?: number | null
           updated_at?: string
+          verification_documents?: string[] | null
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }

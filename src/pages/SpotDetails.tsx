@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, MapPin, Star, Clock, Shield, Car, Calendar, DollarSign, User, Phone, Mail, MessageSquare, Flag, Camera, Timer, CheckCircle, XCircle, AlertCircle, Eye, Edit, MoreHorizontal, TrendingUp, BarChart3, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RatingSystem } from "@/components/RatingSystem";
 import { ReviewDialog } from "@/components/ReviewDialog";
@@ -414,9 +415,13 @@ const SpotDetails = () => {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <CardTitle className="text-2xl">{spotData.title}</CardTitle>
                       {isOwnerPremium && <PremiumBadge size="md" />}
+                      <VerificationBadge 
+                        status={spotData.verification_status || 'unverified'} 
+                        size="sm" 
+                      />
                     </div>
                     <div className="flex items-center text-gray-600 mb-2">
                       <MapPin className="w-4 h-4 mr-2" />

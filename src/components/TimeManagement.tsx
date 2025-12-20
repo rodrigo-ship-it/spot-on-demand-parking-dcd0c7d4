@@ -23,6 +23,7 @@ interface TimeManagementProps {
 
 interface VerificationData {
   photo: string;
+  photoUrl?: string; // URL in storage for admin review
   timestamp: string;
   locationVerified: boolean;
   photoVerified: boolean;
@@ -156,7 +157,7 @@ export const TimeManagement = ({
       // Calculate how late the user is checking out
       const minutesOver = Math.floor((checkOutTime.getTime() - endTime.getTime()) / (1000 * 60));
       
-      // Update booking with verification details
+      // Update booking with verification details and checkout photo URL
       const { error: bookingError } = await supabase
         .from('bookings')
         .update({ 
@@ -165,7 +166,8 @@ export const TimeManagement = ({
           checkout_location_verified: verificationData.locationVerified,
           checkout_photo_verified: verificationData.photoVerified,
           checkout_timestamp_verified: verificationData.timestampVerified,
-          verification_score: verificationData.verificationScore
+          verification_score: verificationData.verificationScore,
+          checkout_photo_url: verificationData.photoUrl || null
         })
         .eq('id', bookingId);
 
