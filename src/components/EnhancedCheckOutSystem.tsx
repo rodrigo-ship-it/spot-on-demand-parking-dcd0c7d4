@@ -43,6 +43,7 @@ export const EnhancedCheckOutSystem = ({
   const [currentLocation, setCurrentLocation] = useState<Position | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [verificationLevel, setVerificationLevel] = useState<'basic' | 'standard' | 'enhanced'>('standard');
+  const [spotHourlyRate, setSpotHourlyRate] = useState<number>(6);
 
   useEffect(() => {
     // Set verification level to standard for all users
@@ -63,7 +64,20 @@ export const EnhancedCheckOutSystem = ({
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
-  }, []);
+
+    // Fetch spot's hourly rate for fee calculation
+    const fetchSpotRate = async () => {
+      const { data } = await supabase
+        .from('parking_spots')
+        .select('price_per_hour')
+        .eq('id', spotId)
+        .single();
+      if (data?.price_per_hour) {
+        setSpotHourlyRate(data.price_per_hour);
+      }
+    };
+    fetchSpotRate();
+  }, [spotId]);
 
   const recordVerificationAttempt = async (attemptType: string, success: boolean, failureReason?: string, data?: any) => {
     await supabase.from('verification_attempts').insert({
@@ -294,9 +308,9 @@ export const EnhancedCheckOutSystem = ({
     const minutesOver = Math.floor(timeDiff / (1000 * 60));
     const hoursLate = Math.ceil(minutesOver / 60);
     
-    // Assume $6/hr default rate for overage calculation (actual rate applied at checkout)
-    const hourlyRate = 6;
-    const hourlyOverage = hoursLate > 0 ? hoursLate * hourlyRate : 0;
+    // Apply 7% platform fee + 8.75% tax to spot rate (same formula as booking/extension)
+    const rateWithFees = Math.round((spotHourlyRate * 1.07 * 1.0875) * 100) / 100;
+    const hourlyOverage = hoursLate > 0 ? Math.round(hoursLate * rateWithFees * 100) / 100 : 0;
 
     if (minutesOver <= 0) {
       return { status: 'on-time', message: 'Perfect timing!', color: 'text-green-600', penalty: 0, hourlyOverage: 0, hoursLate: 0 };
@@ -368,9 +382,9 @@ export const EnhancedCheckOutSystem = ({
                 <ul className="text-sm list-disc list-inside space-y-0.5">
                   <li>Convenience fee: ${timeStatus.penalty}</li>
                   {timeStatus.hourlyOverage > 0 && (
-                    <li>Hourly overage: ${timeStatus.hourlyOverage} ({timeStatus.hoursLate}hr × spot rate)</li>
+                    <li>Hourly overage: ${timeStatus.hourlyOverage.toFixed(2)} ({timeStatus.hoursLate}hr × ${(spotHourlyRate * 1.07 * 1.0875).toFixed(2)}/hr incl. fees)</li>
                   )}
-                  <li className="font-medium">Total: ${timeStatus.penalty + timeStatus.hourlyOverage}</li>
+                  <li className="font-medium">Total: ${(timeStatus.penalty + timeStatus.hourlyOverage).toFixed(2)}</li>
                 </ul>
               </div>
             </AlertDescription>
