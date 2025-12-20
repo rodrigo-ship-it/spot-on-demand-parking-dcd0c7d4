@@ -36,12 +36,16 @@ export const usePenaltySystem = (userId: string) => {
 
       if (profileError) throw profileError;
 
-      // Fetch active penalty credits
+      // Fetch active penalty credits from the past 30 days only
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       const { data: credits, error: creditsError } = await supabase
         .from('penalty_credits')
         .select('*')
         .eq('user_id', userId)
         .eq('status', 'active')
+        .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: false });
 
       if (creditsError) throw creditsError;
