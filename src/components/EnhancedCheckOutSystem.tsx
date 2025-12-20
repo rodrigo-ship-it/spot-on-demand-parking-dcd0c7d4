@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Camera, MapPin, Clock, CheckCircle, AlertTriangle, Shield, Zap } from "lucide-react";
+import { Camera, MapPin, Clock, CheckCircle, AlertTriangle, Shield, Zap, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +17,7 @@ interface EnhancedCheckOutSystemProps {
 
 interface VerificationData {
   photo: string;
+  photoUrl?: string; // URL in storage for admin review
   timestamp: string;
   locationVerified: boolean;
   photoVerified: boolean;
@@ -30,6 +31,17 @@ interface Position {
   longitude: number;
 }
 
+// Helper function to convert base64 to blob
+const base64ToBlob = (base64: string, mimeType: string): Blob => {
+  const byteCharacters = atob(base64.split(',')[1]);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+};
+
 export const EnhancedCheckOutSystem = ({ 
   bookingId, 
   spotId, 
@@ -38,6 +50,7 @@ export const EnhancedCheckOutSystem = ({
   isOvertime
 }: EnhancedCheckOutSystemProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [isCheckedOut, setIsCheckedOut] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Position | null>(null);
@@ -78,6 +91,43 @@ export const EnhancedCheckOutSystem = ({
     };
     fetchSpotRate();
   }, [spotId]);
+
+  // Upload photo to Supabase Storage
+  const uploadCheckoutPhoto = async (photoData: string): Promise<string | null> => {
+    try {
+      setIsUploading(true);
+      
+      // Convert base64 to blob
+      const blob = base64ToBlob(photoData, 'image/jpeg');
+      
+      // Generate unique filename
+      const fileName = `checkout-photos/${bookingId}-${Date.now()}.jpg`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('parking-images')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Error uploading checkout photo:', error);
+        // Don't fail the checkout if upload fails - just log it
+        return null;
+      }
+
+      // Store the path (not the full URL since bucket is private)
+      console.log('✅ Checkout photo uploaded:', data.path);
+      return data.path;
+
+    } catch (error) {
+      console.error('Error in uploadCheckoutPhoto:', error);
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const recordVerificationAttempt = async (attemptType: string, success: boolean, failureReason?: string, data?: any) => {
     await supabase.from('verification_attempts').insert({
@@ -237,8 +287,12 @@ export const EnhancedCheckOutSystem = ({
         // Timestamp is always server-verified
         timestampVerified = true;
 
+        // Upload photo to storage for admin review (24-hour retention)
+        const photoUrl = await uploadCheckoutPhoto(photoData);
+
         const verificationData: VerificationData = {
           photo: photoData,
+          photoUrl: photoUrl || undefined,
           timestamp: serverTimestamp,
           locationVerified,
           photoVerified,

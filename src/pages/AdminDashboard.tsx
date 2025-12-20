@@ -40,6 +40,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
+import { AdminVerificationReview } from "@/components/AdminVerificationReview";
 import { PenaltySystemTest } from "@/components/PenaltySystemTest";
 import { PenaltyTestHelper } from "@/components/PenaltyTestHelper";
 import { PenaltyTestReal } from "@/components/PenaltyTestReal";

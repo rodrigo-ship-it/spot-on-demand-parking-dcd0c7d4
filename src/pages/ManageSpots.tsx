@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink, Star } from "lucide-react";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink, Star, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
@@ -15,6 +15,7 @@ import { StripeConnectOnboarding } from "@/components/StripeConnectOnboarding";
 import { ContactButtons } from "@/components/ContactButtons";
 import { PremiumSubscriptionDialog } from "@/components/PremiumSubscriptionDialog";
 import { PremiumBadge } from "@/components/PremiumBadge";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,6 +113,7 @@ const ManageSpots = () => {
                  Number(spot.one_time_price),
           pricingType: spot.pricing_type,
           status: spot.is_active ? "Active" : "Paused",
+          verificationStatus: spot.verification_status || 'unverified',
           totalBookings: spot.bookings?.length || 0,
           monthlyEarnings: thisMonthEarnings,
           lastMonthEarnings: lastMonthEarnings,
@@ -720,11 +722,15 @@ const ManageSpots = () => {
               <TableBody>
                 {filteredSpots.map((spot) => (
                   <TableRow key={spot.id}>
-                     <TableCell>
+                   <TableCell>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium">{spot.title}</p>
                           {isPremium && <PremiumBadge size="sm" />}
+                          <VerificationBadge 
+                            status={spot.verificationStatus} 
+                            size="sm" 
+                          />
                         </div>
                         <p className="text-sm text-gray-600 flex items-center">
                           <MapPin className="w-3 h-3 mr-1" />

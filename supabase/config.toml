@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.backfill-spot-timezones]
 verify_jwt = false
+
+[functions.cleanup-checkout-photos]
+verify_jwt = false
