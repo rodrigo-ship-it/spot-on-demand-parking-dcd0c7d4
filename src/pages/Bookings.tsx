@@ -168,7 +168,11 @@ const Bookings = () => {
               parseInt(endParts[3]), parseInt(endParts[4]), parseInt(endParts[5] || '0')
             );
             
-            const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
+            // Calculate duration in hours, handling edge cases
+            const durationMs = endDate.getTime() - startDate.getTime();
+            const durationHours = durationMs / (1000 * 60 * 60);
+            // Use Math.round for more accurate display, minimum of 1 hour for very short bookings
+            const duration = durationHours <= 0 ? 1 : Math.max(1, Math.round(durationHours));
             const isMonthly = booking.parking_spots?.pricing_type === 'monthly';
 
             // Get owner profile using secure function
