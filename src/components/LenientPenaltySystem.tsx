@@ -82,9 +82,6 @@ export const LenientPenaltySystem = ({
     }
   };
 
-  const handlePayCredits = () => {
-    toast.success("Payment feature coming soon! Credits can be paid or resolved through good behavior.");
-  };
 
   const statusBadge = getStatusBadge();
   const creditStatus = getCreditStatus();
@@ -178,13 +175,8 @@ export const LenientPenaltySystem = ({
                 </div>
               ))}
 
-              <div className="flex space-x-2 mt-4">
-                <Button onClick={handlePayCredits} className="flex-1">
-                  Pay Credits
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  Payment Plan
-                </Button>
+              <div className="text-xs text-muted-foreground mt-3 p-2 bg-muted rounded">
+                Penalty charges are automatically processed to your payment method on file.
               </div>
             </div>
           )}
