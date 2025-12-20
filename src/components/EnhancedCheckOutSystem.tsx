@@ -276,7 +276,7 @@ export const EnhancedCheckOutSystem = ({
     // Validate endTime before processing
     if (!endTime) {
       console.error("No endTime provided for time calculation");
-      return { message: "No time limit set", color: "text-gray-600" };
+      return { message: "No time limit set", color: "text-gray-600", penalty: 0, hourlyOverage: 0, hoursLate: 0 };
     }
 
     const now = new Date();
@@ -285,24 +285,29 @@ export const EnhancedCheckOutSystem = ({
     // Validate the end date
     if (isNaN(end.getTime())) {
       console.error("Invalid endTime format:", endTime);
-      return { message: "Invalid time format", color: "text-red-600" };
+      return { message: "Invalid time format", color: "text-red-600", penalty: 0, hourlyOverage: 0, hoursLate: 0 };
     }
     
     // For 24-hour bookings, calculate based on duration rather than just end time
     // This handles cases where start and end dates are the same for 24-hour periods
     const timeDiff = now.getTime() - end.getTime();
     const minutesOver = Math.floor(timeDiff / (1000 * 60));
+    const hoursLate = Math.ceil(minutesOver / 60);
+    
+    // Assume $6/hr default rate for overage calculation (actual rate applied at checkout)
+    const hourlyRate = 6;
+    const hourlyOverage = hoursLate > 0 ? hoursLate * hourlyRate : 0;
 
     if (minutesOver <= 0) {
-      return { status: 'on-time', message: 'Perfect timing!', color: 'text-green-600', penalty: 0 };
+      return { status: 'on-time', message: 'Perfect timing!', color: 'text-green-600', penalty: 0, hourlyOverage: 0, hoursLate: 0 };
     } else if (minutesOver <= 30) {
-      return { status: 'grace', message: `${minutesOver} min over (Grace period - No fee)`, color: 'text-blue-600', penalty: 0 };
+      return { status: 'grace', message: `${minutesOver} min over (Grace period - No fee)`, color: 'text-blue-600', penalty: 0, hourlyOverage: 0, hoursLate: 0 };
     } else if (minutesOver <= 60) {
-      return { status: 'warning', message: `${minutesOver} min over ($8 convenience fee)`, color: 'text-yellow-600', penalty: 8 };
+      return { status: 'warning', message: `${minutesOver} min over ($8 convenience fee)`, color: 'text-yellow-600', penalty: 8, hourlyOverage, hoursLate };
     } else if (minutesOver <= 120) {
-      return { status: 'moderate', message: `${minutesOver} min over ($12 moderate fee)`, color: 'text-orange-600', penalty: 12 };
+      return { status: 'moderate', message: `${minutesOver} min over ($12 moderate fee)`, color: 'text-orange-600', penalty: 12, hourlyOverage, hoursLate };
     } else {
-      return { status: 'overtime', message: `${minutesOver} min over ($20 overtime fee)`, color: 'text-red-600', penalty: 20 };
+      return { status: 'overtime', message: `${minutesOver} min over ($20 overtime fee)`, color: 'text-red-600', penalty: 20, hourlyOverage, hoursLate };
     }
   };
 
@@ -358,7 +363,16 @@ export const EnhancedCheckOutSystem = ({
           <Alert>
             <AlertTriangle className="w-4 h-4" />
             <AlertDescription>
-              A ${timeStatus.penalty} fee will be added to your account credits for late parking.
+              <div className="space-y-1">
+                <p className="font-medium">Late checkout fees will be charged to your card:</p>
+                <ul className="text-sm list-disc list-inside space-y-0.5">
+                  <li>Convenience fee: ${timeStatus.penalty}</li>
+                  {timeStatus.hourlyOverage > 0 && (
+                    <li>Hourly overage: ${timeStatus.hourlyOverage} ({timeStatus.hoursLate}hr × spot rate)</li>
+                  )}
+                  <li className="font-medium">Total: ${timeStatus.penalty + timeStatus.hourlyOverage}</li>
+                </ul>
+              </div>
             </AlertDescription>
           </Alert>
         )}
