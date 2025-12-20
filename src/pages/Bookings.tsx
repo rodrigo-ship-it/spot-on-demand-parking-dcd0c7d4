@@ -136,15 +136,14 @@ const Bookings = () => {
               gracePeriodEnd
             });
             
-            // DETERMINE STATUS - Respect database status first, then time comparison
+            // DETERMINE STATUS - Respect user checkout, then time comparison
             // Flow: Upcoming → Active → Late → Completed
             let status = 'Upcoming';
             
-            // First, respect explicit database statuses
             if (booking.status === 'cancelled') {
               status = 'Cancelled';
-            } else if (booking.status === 'completed') {
-              // If database says completed (user checked out), respect that
+            } else if (booking.status === 'completed' && booking.checkout_verification_method) {
+              // Only show Completed if user explicitly checked out (has verification method)
               status = 'Completed';
             } else if (currentTimeAtSpot < startTimeStr) {
               status = 'Upcoming';
