@@ -479,7 +479,7 @@ serve(async (req) => {
                 body: emailPayload
               });
               
-              console.log(`✅ [EMAIL_SUCCESS] Confirmation email sent successfully`);
+              console.log(`✅ [EMAIL_SUCCESS] Confirmation email sent successfully to renter`);
             } else {
               console.log(`⚠️ [EMAIL_SKIP] No email found for user profile`);
             }
@@ -489,8 +489,74 @@ serve(async (req) => {
             // Don't fail the webhook if email fails
           }
         } else {
-          console.log(`ℹ️ [EMAIL_SKIP] No user_id provided, skipping email`);
+          console.log(`ℹ️ [EMAIL_SKIP] No user_id provided, skipping renter email`);
         }
+        
+        // Send notification email to spot owner
+        try {
+          console.log(`📧 [OWNER_EMAIL_START] Attempting to send owner notification for spot owner: ${spot.owner_id}`);
+          
+          const { data: ownerProfile } = await supabaseService
+            .from('profiles')
+            .select('*')
+            .eq('user_id', spot.owner_id)
+            .single();
+
+          console.log(`👤 [OWNER_PROFILE_FOUND] Owner profile found: ${ownerProfile ? 'Yes' : 'No'}, Email: ${ownerProfile?.email ? 'Yes' : 'No'}`);
+
+          if (ownerProfile?.email) {
+            console.log(`📨 [OWNER_EMAIL_SENDING] Sending owner notification email to: ${ownerProfile.email}`);
+            
+            // Get renter name from profile or guest details
+            const { data: renterProfile } = metadata.user_id ? await supabaseService
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', metadata.user_id)
+              .single() : { data: null };
+            
+            const renterName = renterProfile?.full_name || guestDetails?.name || 'Guest';
+            
+            const ownerEmailPayload = {
+              email: ownerProfile.email,
+              owner: {
+                full_name: ownerProfile.full_name || 'Spot Owner'
+              },
+              booking: {
+                id: booking.id,
+                total_amount: booking.total_amount,
+                owner_payout_amount: booking.owner_payout_amount,
+                confirmation_number: booking.id.slice(0, 8).toUpperCase(),
+                display_date: booking.display_date,
+                display_start_time: booking.display_start_time,
+                display_end_time: booking.display_end_time,
+                display_duration_text: durationText,
+                is_daily: isPricingDaily,
+                is_monthly: isPricingMonthly
+              },
+              spot: {
+                title: spot.title,
+                address: spot.address,
+                pricing_type: spot.pricing_type
+              },
+              renter: {
+                full_name: renterName
+              }
+            };
+            
+            await supabaseService.functions.invoke('send-owner-booking-notification', {
+              body: ownerEmailPayload
+            });
+            
+            console.log(`✅ [OWNER_EMAIL_SUCCESS] Owner notification email sent successfully`);
+          } else {
+            console.log(`⚠️ [OWNER_EMAIL_SKIP] No email found for spot owner profile`);
+          }
+        } catch (ownerEmailError) {
+          console.error("❌ [OWNER_EMAIL_ERROR] Error sending owner notification email:", ownerEmailError);
+          console.error("🔍 [OWNER_EMAIL_ERROR_DETAILS] Owner email error details:", JSON.stringify(ownerEmailError, null, 2));
+          // Don't fail the webhook if email fails
+        }
+        
         break;
       }
 

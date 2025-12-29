@@ -51,6 +51,9 @@ verify_jwt = false
 [functions.send-booking-confirmation]
 verify_jwt = true
 
+[functions.send-owner-booking-notification]
+verify_jwt = false
+
 [functions.send-dispute-notification]
 verify_jwt = true
 
