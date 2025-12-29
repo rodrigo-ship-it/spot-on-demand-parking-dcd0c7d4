@@ -870,32 +870,41 @@ const BookSpot = () => {
                                  })()}
                                </SelectItem>
                              ) : (
-                               startTimeOptions.map((option) => {
-                                 const slotData = timeSlots.find(slot => slot.time === option.value);
-                                 const isAvailable = slotData ? slotData.isAvailable : true;
-                                
-                                 return (
-                                   <SelectItem 
-                                     key={option.value} 
-                                     value={option.value}
-                                     disabled={!isAvailable}
-                                     className={
-                                       isAvailable 
-                                         ? "text-green-700" 
-                                         : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
-                                     }
-                                   >
-                                     <div className="flex items-center justify-between w-full">
-                                       <span>{option.label}</span>
-                                       {!isAvailable && (
-                                         <span className="text-xs ml-2 text-red-600 font-semibold">
-                                           Unavailable
-                                         </span>
-                                       )}
-                                     </div>
-                                   </SelectItem>
-                                 );
-                               })
+                                startTimeOptions.map((option) => {
+                                  const slotData = timeSlots.find(slot => slot.time === option.value);
+                                  const isAvailable = slotData ? slotData.isAvailable : true;
+                                  const totalSpots = spotData?.total_spots || 1;
+                                  const isPartiallyAvailable = isAvailable && slotData && slotData.available < totalSpots;
+                                 
+                                  return (
+                                    <SelectItem 
+                                      key={option.value} 
+                                      value={option.value}
+                                      disabled={!isAvailable}
+                                      className={
+                                        !isAvailable 
+                                          ? "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
+                                          : isPartiallyAvailable
+                                          ? "text-yellow-700 bg-yellow-50" 
+                                          : "text-green-700"
+                                      }
+                                    >
+                                      <div className="flex items-center justify-between w-full">
+                                        <span>{option.label}</span>
+                                        {!isAvailable && (
+                                          <span className="text-xs ml-2 text-red-600 font-semibold">
+                                            Unavailable
+                                          </span>
+                                        )}
+                                        {isPartiallyAvailable && (
+                                          <span className="text-xs ml-2 text-yellow-700 font-semibold">
+                                            ({slotData.available} left)
+                                          </span>
+                                        )}
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                })
                              )}
                            </SelectContent>
                          </Select>
@@ -945,32 +954,41 @@ const BookSpot = () => {
                              </div>
                            </SelectTrigger>
                            <SelectContent className="max-h-[200px]">
-                             {endTimeOptions.map((option) => {
-                               const slotData = timeSlots.find(slot => slot.time === option.value);
-                               const isAvailable = slotData ? slotData.isAvailable : true;
-                              
-                               return (
-                                 <SelectItem 
-                                   key={option.value} 
-                                   value={option.value}
-                                   disabled={!isAvailable}
-                                   className={
-                                     isAvailable 
-                                       ? "text-green-700" 
-                                       : "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
-                                   }
-                                 >
-                                   <div className="flex items-center justify-between w-full">
-                                     <span>{option.label}</span>
-                                     {!isAvailable && (
-                                       <span className="text-xs ml-2 text-red-600 font-semibold">
-                                         Unavailable
-                                       </span>
-                                     )}
-                                   </div>
-                                 </SelectItem>
-                               );
-                             })}
+                              {endTimeOptions.map((option) => {
+                                const slotData = timeSlots.find(slot => slot.time === option.value);
+                                const isAvailable = slotData ? slotData.isAvailable : true;
+                                const totalSpots = spotData?.total_spots || 1;
+                                const isPartiallyAvailable = isAvailable && slotData && slotData.available < totalSpots;
+                               
+                                return (
+                                  <SelectItem 
+                                    key={option.value} 
+                                    value={option.value}
+                                    disabled={!isAvailable}
+                                    className={
+                                      !isAvailable 
+                                        ? "text-red-600 bg-red-50 cursor-not-allowed opacity-50"
+                                        : isPartiallyAvailable
+                                        ? "text-yellow-700 bg-yellow-50" 
+                                        : "text-green-700"
+                                    }
+                                  >
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{option.label}</span>
+                                      {!isAvailable && (
+                                        <span className="text-xs ml-2 text-red-600 font-semibold">
+                                          Unavailable
+                                        </span>
+                                      )}
+                                      {isPartiallyAvailable && (
+                                        <span className="text-xs ml-2 text-yellow-700 font-semibold">
+                                          ({slotData.available} left)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
                            </SelectContent>
                          </Select>
                        </div>
