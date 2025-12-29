@@ -190,12 +190,21 @@ const handler = async (req: Request): Promise<Response> => {
                             </div>
                           </div>
                         </div>
-                        <div>
+                        <div style="margin-bottom: 12px;">
                           <div style="display: flex; align-items: flex-start;">
                             <div style="width: 24px; height: 24px; background-color: #dbeafe; color: #1d4ed8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">3</div>
                             <div>
                               <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Relax & enjoy</p>
                               <p style="margin: 0; color: #666; font-size: 12px;">Remember to return by your end time</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <div style="display: flex; align-items: flex-start;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; color: #1d4ed8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">4</div>
+                            <div>
+                              <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Check out when leaving</p>
+                              <p style="margin: 0; color: #666; font-size: 12px;">Go to <strong>My Bookings</strong> → <strong>Manage Time</strong> → <strong>Checkout</strong> and take a photo of the empty spot</p>
                             </div>
                           </div>
                         </div>
