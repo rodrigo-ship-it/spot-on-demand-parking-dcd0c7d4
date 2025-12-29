@@ -341,12 +341,18 @@ serve(async (req) => {
 
         console.log(`📅 [TIME_FINAL] Database times (as entered): Start: ${startTimeStr}, End: ${endTimeStr}`);
 
-        // Get display time labels
-        const startOption = timeOptions.find(opt => opt.value === bookingDetails.startTime);
-        const endOption = timeOptions.find(opt => opt.value === (isPricingDaily ? bookingDetails.startTime : bookingDetails.endTime));
+        // Helper function to convert 24-hour time to 12-hour format
+        const formatTo12Hour = (time24: string): string => {
+          if (!time24) return 'Time not available';
+          const [hours, minutes] = time24.split(':').map(Number);
+          const period = hours >= 12 ? 'PM' : 'AM';
+          const hours12 = hours % 12 || 12;
+          return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+        };
         
-        const displayStartTime = startOption ? startOption.label : bookingDetails.startTime;
-        const displayEndTime = endOption ? endOption.label : (isPricingDaily ? displayStartTime : bookingDetails.endTime);
+        // Get display time labels - always use 12-hour format
+        const displayStartTime = formatTo12Hour(bookingDetails.startTime);
+        const displayEndTime = isPricingDaily ? displayStartTime : formatTo12Hour(bookingDetails.endTime);
         
         // Format display date from the booking date
         const bookingDate = new Date(bookingDetails.date);
