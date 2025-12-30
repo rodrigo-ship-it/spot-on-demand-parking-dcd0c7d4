@@ -33,9 +33,10 @@ interface SearchResultsMapProps {
   allSpots: ParkingSpot[];
   filteredSpots: ParkingSpot[];
   onSpotSelect: (spotId: string | number) => void;
+  hasActiveFilters?: boolean; // True when type or time filters are applied
 }
 
-const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, allSpots, filteredSpots, onSpotSelect }) => {
+const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, allSpots, filteredSpots, onSpotSelect, hasActiveFilters = false }) => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -136,9 +137,10 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         <MapLegend />
       </div>
       
-      {/* Pass ALL spots to the map so users can zoom out and see all locations */}
+      {/* When filters are active (type/time), only show filtered spots on map. 
+          Otherwise show all spots so users can zoom out and explore. */}
       <MapComponent 
-        spots={allSpotsWithDistance.map(spot => ({
+        spots={(hasActiveFilters ? filteredSpotsWithDistance : allSpotsWithDistance).map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,

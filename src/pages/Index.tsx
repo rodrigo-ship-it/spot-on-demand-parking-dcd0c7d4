@@ -82,6 +82,60 @@ const Index = () => {
     return R * c;
   };
 
+  // Check if a spot is available at a given time filter
+  const isSpotAvailableAtTime = (spot: any, timeFilter: string): boolean => {
+    // If no time filter or "anytime", always available
+    if (!timeFilter || timeFilter === 'anytime') return true;
+    
+    const schedule = spot.availabilitySchedule;
+    
+    // If no schedule defined, assume always available (24/7)
+    if (!schedule) return true;
+    
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const currentHour = now.getHours();
+    
+    // Helper to check if current time falls within schedule
+    const checkScheduleForDay = (daySchedule: any): boolean => {
+      if (!daySchedule || !daySchedule.enabled) return false;
+      if (!daySchedule.start || !daySchedule.end) return true; // If no times, assume all day
+      
+      const startHour = parseInt(daySchedule.start.split(':')[0], 10);
+      const endHour = parseInt(daySchedule.end.split(':')[0], 10);
+      
+      return currentHour >= startHour && currentHour < endHour;
+    };
+    
+    switch (timeFilter) {
+      case 'now':
+        // Check if available right now
+        const todaySchedule = schedule[currentDay];
+        return checkScheduleForDay(todaySchedule);
+        
+      case 'today':
+        // Check if spot has any availability today
+        const todayData = schedule[currentDay];
+        return todayData?.enabled !== false;
+        
+      case 'tomorrow':
+        // Check if spot has any availability tomorrow
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowDay = tomorrow.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const tomorrowData = schedule[tomorrowDay];
+        return tomorrowData?.enabled !== false;
+        
+      case 'this_week':
+        // Check if spot has any availability this week
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return days.some(day => schedule[day]?.enabled !== false);
+        
+      default:
+        return true;
+    }
+  };
+
   // Transform spots and fetch premium status when parking spots change
   useEffect(() => {
     const transformSpots = async () => {
@@ -148,6 +202,7 @@ const Index = () => {
           spotType: spot.spot_type,
           totalSpots: spot.total_spots || 1,
           available: "24/7", // This would come from availability_schedule
+          availabilitySchedule: spot.availability_schedule,
           image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
           latitude: Number(spot.latitude) || 40.7589,
           longitude: Number(spot.longitude) || -73.9851,
@@ -211,6 +266,12 @@ const Index = () => {
       console.log("Filtering by pricing type:", searchPricingType);
     }
 
+    // Apply time filter if selected
+    if (searchTimeFilter && searchTimeFilter !== 'anytime') {
+      filtered = filtered.filter(spot => isSpotAvailableAtTime(spot, searchTimeFilter));
+      console.log("Filtering by time:", searchTimeFilter);
+    }
+
     setFilteredSpots(filtered);
     setHasSearched(true);
     
@@ -250,6 +311,11 @@ const Index = () => {
     // Apply pricing type filter if selected
     if (searchPricingType) {
       filtered = filtered.filter(spot => spot.pricingType === searchPricingType);
+    }
+
+    // Apply time filter if selected
+    if (searchTimeFilter && searchTimeFilter !== 'anytime') {
+      filtered = filtered.filter(spot => isSpotAvailableAtTime(spot, searchTimeFilter));
     }
 
     setFilteredSpots(filtered);
@@ -733,6 +799,7 @@ const Index = () => {
           allSpots={transformedSpots}
           filteredSpots={filteredSpots}
           onSpotSelect={handleBookNow}
+          hasActiveFilters={!!searchPricingType || (!!searchTimeFilter && searchTimeFilter !== 'anytime')}
         />
       )}
 
