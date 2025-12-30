@@ -262,57 +262,17 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               
               // Create marker element
               const isPremiumMarker = primarySpot.isPremiumLister || false;
-              let marker;
               
-              if (isPremiumMarker) {
-                // Create custom HTML marker for premium spots with gold border
-                const el = document.createElement('div');
-                el.className = 'premium-marker';
-                el.style.cssText = `
-                  width: 34px;
-                  height: 34px;
-                  border-radius: 50%;
-                  border: 3px solid #d4af37;
-                  background-color: ${getPinColor(primarySpot, isMultipleSpots)};
-                  cursor: pointer;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  color: white;
-                  font-weight: bold;
-                  font-size: ${isMultipleSpots ? '12px' : '0'};
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                  transform: scale(${getPinScale(primarySpot, isMultipleSpots)});
-                  transition: transform 0.2s ease;
-                `;
-                if (isMultipleSpots) {
-                  el.textContent = group.spots.length.toString();
-                }
-                el.addEventListener('mouseenter', () => {
-                  el.style.transform = `scale(${getPinScale(primarySpot, isMultipleSpots) + 0.15})`;
-                });
-                el.addEventListener('mouseleave', () => {
-                  el.style.transform = `scale(${getPinScale(primarySpot, isMultipleSpots)})`;
-                });
-                
-                marker = new mapboxgl.Marker({ element: el })
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
-                  .addTo(map.current!);
-              } else {
-                // Use default Mapbox pin marker for non-premium spots
-                marker = new mapboxgl.Marker({
-                  color: getPinColor(primarySpot, isMultipleSpots),
-                  scale: getPinScale(primarySpot, isMultipleSpots),
-                })
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
-                  .addTo(map.current!);
-              }
+              // Use default Mapbox pin marker for all spots
+              const marker = new mapboxgl.Marker({
+                color: isPremiumMarker ? '#d4af37' : getPinColor(primarySpot, isMultipleSpots), // Gold for premium
+                scale: getPinScale(primarySpot, isMultipleSpots),
+              })
+                .setLngLat([group.longitude, group.latitude])
+                .setPopup(
+                  new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                )
+                .addTo(map.current!);
 
               // Track current spot index for this marker
               let currentSpotIndex = 0;
@@ -542,58 +502,17 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         `;
       };
       
-      // Create marker - use custom element for premium, default Mapbox pin for others
+      // Use default Mapbox pin marker for all spots
       const isPremiumMarker = primarySpot.isPremiumLister || false;
-      let marker;
-      
-      if (isPremiumMarker) {
-        const el = document.createElement('div');
-        el.className = 'premium-marker';
-        el.style.cssText = `
-          width: 34px;
-          height: 34px;
-          border-radius: 50%;
-          border: 3px solid #d4af37;
-          background-color: ${getPinColor(primarySpot, isMultipleSpots)};
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: ${isMultipleSpots ? '12px' : '0'};
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          transform: scale(${getPinScale(primarySpot, isMultipleSpots)});
-          transition: transform 0.2s ease;
-        `;
-        if (isMultipleSpots) {
-          el.textContent = group.spots.length.toString();
-        }
-        el.addEventListener('mouseenter', () => {
-          el.style.transform = `scale(${getPinScale(primarySpot, isMultipleSpots) + 0.15})`;
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.transform = `scale(${getPinScale(primarySpot, isMultipleSpots)})`;
-        });
-        
-        marker = new mapboxgl.Marker({ element: el })
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
-          .addTo(map.current!);
-      } else {
-        // Use default Mapbox pin marker
-        marker = new mapboxgl.Marker({
-          color: getPinColor(primarySpot, isMultipleSpots),
-          scale: getPinScale(primarySpot, isMultipleSpots),
-        })
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
-          .addTo(map.current!);
-      }
+      const marker = new mapboxgl.Marker({
+        color: isPremiumMarker ? '#d4af37' : getPinColor(primarySpot, isMultipleSpots), // Gold for premium
+        scale: getPinScale(primarySpot, isMultipleSpots),
+      })
+        .setLngLat([group.longitude, group.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+        )
+        .addTo(map.current!);
 
       // Track current spot index for this marker
       let currentSpotIndex = 0;
