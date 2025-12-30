@@ -262,17 +262,43 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               
               // Create marker element
               const isPremiumMarker = primarySpot.isPremiumLister || false;
+              let marker;
               
-              // Use default Mapbox pin marker for all spots
-              const marker = new mapboxgl.Marker({
-                color: isPremiumMarker ? '#d4af37' : getPinColor(primarySpot, isMultipleSpots), // Gold for premium
-                scale: getPinScale(primarySpot, isMultipleSpots),
-              })
-                .setLngLat([group.longitude, group.latitude])
-                .setPopup(
-                  new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                )
-                .addTo(map.current!);
+              if (isPremiumMarker) {
+                // Create custom SVG pin marker with gold border for premium spots
+                const el = document.createElement('div');
+                el.className = 'premium-pin-marker';
+                const pinColor = getPinColor(primarySpot, isMultipleSpots);
+                const scale = getPinScale(primarySpot, isMultipleSpots);
+                el.innerHTML = `
+                  <svg width="${27 * scale}" height="${41 * scale}" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 0C6.044 0 0 6.044 0 13.5C0 23.625 13.5 41 13.5 41S27 23.625 27 13.5C27 6.044 20.956 0 13.5 0Z" 
+                          fill="${pinColor}" 
+                          stroke="#d4af37" 
+                          stroke-width="3"/>
+                    <circle cx="13.5" cy="13.5" r="5" fill="white"/>
+                  </svg>
+                `;
+                el.style.cssText = `cursor: pointer; transform: translate(-50%, -100%);`;
+                
+                marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+                  .setLngLat([group.longitude, group.latitude])
+                  .setPopup(
+                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                  )
+                  .addTo(map.current!);
+              } else {
+                // Use default Mapbox pin marker for non-premium spots
+                marker = new mapboxgl.Marker({
+                  color: getPinColor(primarySpot, isMultipleSpots),
+                  scale: getPinScale(primarySpot, isMultipleSpots),
+                })
+                  .setLngLat([group.longitude, group.latitude])
+                  .setPopup(
+                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                  )
+                  .addTo(map.current!);
+              }
 
               // Track current spot index for this marker
               let currentSpotIndex = 0;
@@ -502,17 +528,45 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         `;
       };
       
-      // Use default Mapbox pin marker for all spots
+      // Create marker based on premium status
       const isPremiumMarker = primarySpot.isPremiumLister || false;
-      const marker = new mapboxgl.Marker({
-        color: isPremiumMarker ? '#d4af37' : getPinColor(primarySpot, isMultipleSpots), // Gold for premium
-        scale: getPinScale(primarySpot, isMultipleSpots),
-      })
-        .setLngLat([group.longitude, group.latitude])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-        )
-        .addTo(map.current!);
+      let marker;
+      
+      if (isPremiumMarker) {
+        // Create custom SVG pin marker with gold border for premium spots
+        const el = document.createElement('div');
+        el.className = 'premium-pin-marker';
+        const pinColor = getPinColor(primarySpot, isMultipleSpots);
+        const scale = getPinScale(primarySpot, isMultipleSpots);
+        el.innerHTML = `
+          <svg width="${27 * scale}" height="${41 * scale}" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.5 0C6.044 0 0 6.044 0 13.5C0 23.625 13.5 41 13.5 41S27 23.625 27 13.5C27 6.044 20.956 0 13.5 0Z" 
+                  fill="${pinColor}" 
+                  stroke="#d4af37" 
+                  stroke-width="3"/>
+            <circle cx="13.5" cy="13.5" r="5" fill="white"/>
+          </svg>
+        `;
+        el.style.cssText = `cursor: pointer; transform: translate(-50%, -100%);`;
+        
+        marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([group.longitude, group.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+          )
+          .addTo(map.current!);
+      } else {
+        // Use default Mapbox pin marker for non-premium spots
+        marker = new mapboxgl.Marker({
+          color: getPinColor(primarySpot, isMultipleSpots),
+          scale: getPinScale(primarySpot, isMultipleSpots),
+        })
+          .setLngLat([group.longitude, group.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+          )
+          .addTo(map.current!);
+      }
 
       // Track current spot index for this marker
       let currentSpotIndex = 0;
