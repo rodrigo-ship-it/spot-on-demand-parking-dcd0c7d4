@@ -231,24 +231,32 @@ serve(async (req) => {
     
     console.log("📝 Premium status:", { isListerPremium, isRenterPremium });
     
-    // Platform fee: 5% for premium lister, 7% for regular lister
-    const platformFeeRate = isListerPremium ? 0.05 : 0.07;
-    const platformFee = Math.round(baseSpotPrice * platformFeeRate);
+    // Platform fee from lister: 5% for premium lister, 7% for regular lister
+    const listerPlatformFeeRate = isListerPremium ? 0.05 : 0.07;
+    const listerPlatformFee = Math.round(baseSpotPrice * listerPlatformFeeRate);
     
-    // Stripe processing fee: reduced by 50% for premium renters
-    const baseProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30;
-    const stripeProcessingFee = isRenterPremium ? Math.round(baseProcessingFee * 0.5) : baseProcessingFee;
+    // Platform fee from renter: 5% for premium renter, 7% for regular renter
+    const renterPlatformFeeRate = isRenterPremium ? 0.05 : 0.07;
+    const renterPlatformFee = Math.round(baseSpotPrice * renterPlatformFeeRate);
+    
+    // Total platform fee (for logging)
+    const platformFee = listerPlatformFee + renterPlatformFee;
+    
+    // Stripe processing fee (standard rate)
+    const stripeProcessingFee = Math.round((baseSpotPrice + renterPlatformFee) * 0.029) + 30;
     
     // Lister gets base price minus their platform fee (premium listers keep more)
-    const listerAmount = Math.round(baseSpotPrice * (1 - platformFeeRate));
+    const listerAmount = Math.round(baseSpotPrice * (1 - listerPlatformFeeRate));
     
     console.log("📝 Fee breakdown:", { 
       baseSpotPrice, 
+      listerPlatformFee,
+      renterPlatformFee,
       platformFee, 
-      baseProcessingFee, 
       stripeProcessingFee, 
       listerAmount,
-      savings: isRenterPremium ? baseProcessingFee - stripeProcessingFee : 0
+      isListerPremium,
+      isRenterPremium
     });
 
     console.log("📝 Creating Stripe checkout session...");

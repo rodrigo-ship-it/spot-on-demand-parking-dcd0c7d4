@@ -114,15 +114,18 @@ serve(async (req) => {
     // Use the exact same calculation as frontend - baseAmount is the final total the customer should pay
     const totalAmount = Math.round(baseAmount * 100); // Customer pays exactly what frontend calculated
     
-    // Platform fee: 5% for premium lister, 7% for regular lister
-    const platformFeeRate = isListerPremium ? 0.05 : 0.07;
+    // Platform fee from lister: 5% for premium lister, 7% for regular lister
+    const listerPlatformFeeRate = isListerPremium ? 0.05 : 0.07;
+    
+    // Platform fee from renter: 5% for premium renter, 7% for regular renter
+    const renterPlatformFeeRate = isRenterPremium ? 0.05 : 0.07;
     
     // Work backwards to calculate what goes to the lister
     // Frontend: total = (subtotal + platformFee) + tax
     // Frontend: tax = (subtotal + platformFee) * 0.0875
-    // So: total = (subtotal * (1 + platformFeeRate)) * 1.0875
-    const subtotalBeforeFees = totalAmount / ((1 + platformFeeRate) * 1.0875);
-    const platformFeeFromLister = Math.round(subtotalBeforeFees * platformFeeRate);
+    // So: total = (subtotal * (1 + renterPlatformFeeRate)) * 1.0875
+    const subtotalBeforeFees = totalAmount / ((1 + renterPlatformFeeRate) * 1.0875);
+    const platformFeeFromLister = Math.round(subtotalBeforeFees * listerPlatformFeeRate);
     const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + $0.30 of total charge
     
     // Lister gets subtotal minus their platform fee minus stripe fee
