@@ -107,30 +107,58 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Calculate extension pricing using the SAME structure as manual extensions
+    // Check premium status for both renter and lister
+    const { data: renterPremium } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id, current_period_end')
+      .eq('user_id', booking.renter_id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    const { data: listerPremium } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id, current_period_end')
+      .eq('user_id', booking.parking_spots.owner_id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    const isRenterPremium = renterPremium && new Date(renterPremium.current_period_end) > new Date();
+    const isListerPremium = listerPremium && new Date(listerPremium.current_period_end) > new Date();
+    
+    logStep("Premium status for auto-extension", { isRenterPremium, isListerPremium });
+    
+    // Calculate extension pricing with premium-aware rates
     const pricePerHour = booking.parking_spots.price_per_hour || 6;
     const basePrice = pricePerHour * autoExtensionHours;
     
-    // Use the exact same pricing formula as ExtensionSystem.tsx
-    const totalAmount = Math.round((basePrice * 1.07 * 1.0875) * 100) / 100;
+    // Platform fee rates: 5% for premium, 7% for regular
+    const renterPlatformFeeRate = isRenterPremium ? 0.05 : 0.07;
+    const listerPlatformFeeRate = isListerPremium ? 0.05 : 0.07;
     
-    // Calculate breakdown for platform fees (matching create-payment logic)
-    const platformFeeFromRenter = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
+    // Use dynamic platform fee rate for renter
+    const totalAmount = Math.round((basePrice * (1 + renterPlatformFeeRate) * 1.0875) * 100) / 100;
+    
+    // Calculate breakdown for platform fees
+    const platformFeeFromRenter = Math.round(basePrice * renterPlatformFeeRate * 100) / 100;
     const subtotalWithPlatformFee = basePrice + platformFeeFromRenter;
     const taxAmount = Math.round(subtotalWithPlatformFee * 0.0875 * 100) / 100; // 8.75% tax
     const estimatedProcessingFee = Math.round(totalAmount * 0.029 * 100) / 100 + 0.30; // 2.9% + $0.30
     
-    // Calculate platform fees for payout (same structure as create-payment)
-    const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
-    const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% from lister
-    const totalPlatformFee = platformFeeFromRenter + (platformFeeFromLister / 100);
+    // Calculate platform fees for payout
+    const platformFeeFromLister = Math.round(basePrice * listerPlatformFeeRate * 100) / 100;
+    const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
 
     logStep("Extension pricing calculated", {
       basePrice,
       totalAmount,
+      renterPlatformFeeRate,
+      listerPlatformFeeRate,
       platformFeeFromRenter,
+      platformFeeFromLister,
       estimatedProcessingFee,
-      autoExtensionHours
+      autoExtensionHours,
+      isRenterPremium,
+      isListerPremium
     });
 
     // Create payment intent for auto-extension (immediate charge)

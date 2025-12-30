@@ -98,6 +98,26 @@ serve(async (req) => {
       });
     }
 
+    // Check premium status for both renter and lister
+    const { data: renterPremium } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id, current_period_end')
+      .eq('user_id', authData.user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    const { data: listerPremium } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id, current_period_end')
+      .eq('user_id', booking.parking_spots.owner_id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    const isRenterPremium = renterPremium && new Date(renterPremium.current_period_end) > new Date();
+    const isListerPremium = listerPremium && new Date(listerPremium.current_period_end) > new Date();
+    
+    console.log("📝 Premium status for extension:", { isRenterPremium, isListerPremium });
+
     // Check availability for extension period - calculate in local timezone
     const currentEndTime = new Date(booking.end_time.replace(' ', 'T'));
     const newEndTime = new Date(currentEndTime.getTime() + (extensionHours * 60 * 60 * 1000));
@@ -145,28 +165,35 @@ serve(async (req) => {
       });
     }
 
-    // Calculate exact fees like regular bookings
+    // Calculate exact fees with premium-aware rates
     const totalAmountCents = Math.round(totalAmount * 100);
     const basePriceCents = Math.round(basePrice * 100);
     
-    // Platform fees: 7% from renter + 7% from lister = 14% total
-    const platformFeeFromRenter = Math.round(basePriceCents * 0.07);
-    const platformFeeFromLister = Math.round(basePriceCents * 0.07);
+    // Platform fees: 5% for premium, 7% for regular (independent for renter and lister)
+    const renterPlatformFeeRate = isRenterPremium ? 0.05 : 0.07;
+    const listerPlatformFeeRate = isListerPremium ? 0.05 : 0.07;
+    
+    const platformFeeFromRenter = Math.round(basePriceCents * renterPlatformFeeRate);
+    const platformFeeFromLister = Math.round(basePriceCents * listerPlatformFeeRate);
     const totalPlatformFee = platformFeeFromRenter + platformFeeFromLister;
     
     // Stripe processing fee (2.9% + $0.30)
     const stripeProcessingFee = Math.round(totalAmountCents * 0.029) + 30;
     
-    // Amount that goes to spot owner (base price - platform fee - processing fee)
+    // Amount that goes to spot owner (base price - lister's platform fee - processing fee)
     const listerAmount = basePriceCents - platformFeeFromLister - stripeProcessingFee;
     
     console.log("💰 Extension fee breakdown:", {
       basePriceCents,
+      renterPlatformFeeRate,
+      listerPlatformFeeRate,
       platformFeeFromRenter,
       platformFeeFromLister,
       stripeProcessingFee,
       listerAmount,
-      totalAmountCents
+      totalAmountCents,
+      isRenterPremium,
+      isListerPremium
     });
     // Initialize Stripe
     console.log("💳 Initializing Stripe...");

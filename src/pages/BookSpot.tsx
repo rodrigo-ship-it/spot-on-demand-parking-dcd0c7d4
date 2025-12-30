@@ -23,6 +23,7 @@ import { PaymentMethodDialog } from "@/components/PaymentMethodDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 const BookSpot = () => {
   console.log('🔥 BookSpot component is loading!');
@@ -194,7 +195,10 @@ const BookSpot = () => {
     loadData();
   }, [id, user, navigate]);
 
-  // Pricing calculation - 7% upcharge for renters, 7% deduction for listers
+  // Get premium status for the current user (renter)
+  const { isPremium: isRenterPremium } = usePremiumStatus();
+  
+  // Pricing calculation - 5% for premium renters, 7% for regular renters
   const isPricingHourly = spotData?.pricing_type === 'hourly';
   const isPricingDaily = spotData?.pricing_type === 'daily';
   const isPricingMonthly = spotData?.pricing_type === 'monthly';
@@ -228,9 +232,11 @@ const BookSpot = () => {
     : (spotData?.one_time_price || 25);
   const duration = isPricingDaily ? bookingDetails.numberOfDays : isPricingMonthly ? bookingDetails.numberOfMonths : bookingDetails.duration;
   const subtotal = (isPricingHourly || isPricingDaily || isPricingMonthly) ? basePrice * duration : basePrice;
-  const platformFee = Math.round(subtotal * 0.07 * 100) / 100; // 7% platform fee
-  const renterTotal = Math.round((subtotal + platformFee) * 100) / 100; // Renter pays 7% more
-  const ownerPayout = Math.round((subtotal - platformFee) * 100) / 100; // Owner gets 7% less
+  
+  // Platform fee: 5% for premium renters, 7% for regular renters
+  const platformFeeRate = isRenterPremium ? 0.05 : 0.07;
+  const platformFee = Math.round(subtotal * platformFeeRate * 100) / 100;
+  const renterTotal = Math.round((subtotal + platformFee) * 100) / 100;
   const tax = Math.round(renterTotal * 0.0875 * 100) / 100; // 8.75% tax on total amount
   const total = Math.round((renterTotal + tax) * 100) / 100; // Final total rounded to nearest cent
 
@@ -1137,7 +1143,7 @@ const BookSpot = () => {
                      <span>${subtotal.toFixed(2)}</span>
                    </div>
                  <div className="flex justify-between text-sm text-gray-600">
-                   <span>Platform fee</span>
+                   <span>Platform fee {isRenterPremium && <span className="text-green-600">(Premium 5%)</span>}</span>
                    <span>${platformFee.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between text-sm text-gray-600">
