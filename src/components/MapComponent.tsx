@@ -19,6 +19,7 @@ interface ParkingSpot {
   distance?: string;
   owner_id?: string;
   isPremiumLister?: boolean;
+  totalReviews?: number;
 }
 
 interface MapComponentProps {
@@ -145,132 +146,101 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Group spots by location (within ~50 meters)
-            const groupedSpots = new Map();
-            const tolerance = 0.0005; // ~50 meters
+            // Track positions to offset overlapping spots
+            const usedPositions: { lat: number; lng: number }[] = [];
+            const tolerance = 0.0003; // ~30 meters
             
-            spots.forEach((spot) => {
+            // Create individual markers for each spot
+            spots.forEach((spot, index) => {
               if (!spot.latitude || !spot.longitude) {
                 console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
                 return;
               }
               
-              // Check if there's already a group for this location
-              let foundGroup = false;
-              for (const [key, group] of groupedSpots) {
-                const [groupLat, groupLng] = key.split(',').map(Number);
+              // Check if position overlaps with existing markers and offset if needed
+              let spotLng = spot.longitude;
+              let spotLat = spot.latitude;
+              
+              // Check for overlaps and apply offset
+              let overlapCount = 0;
+              for (const pos of usedPositions) {
                 const distance = Math.sqrt(
-                  Math.pow(spot.longitude - groupLng, 2) + 
-                  Math.pow(spot.latitude - groupLat, 2)
+                  Math.pow(spotLng - pos.lng, 2) + 
+                  Math.pow(spotLat - pos.lat, 2)
                 );
-                
                 if (distance < tolerance) {
-                  group.spots.push(spot);
-                  foundGroup = true;
-                  break;
+                  overlapCount++;
                 }
               }
               
-              if (!foundGroup) {
-                // If spot is very close to search location, offset it slightly
-                let spotLng = spot.longitude;
-                let spotLat = spot.latitude;
-                
-                if (centerLocation) {
-                  const distance = Math.sqrt(
-                    Math.pow(spot.longitude - centerLocation.longitude, 2) + 
-                    Math.pow(spot.latitude - centerLocation.latitude, 2)
-                  );
-                  
-                  if (distance < tolerance) {
-                    spotLng += 0.0002;
-                    spotLat += 0.0001;
-                  }
-                }
-                
-                groupedSpots.set(`${spotLat},${spotLng}`, {
-                  latitude: spotLat,
-                  longitude: spotLng,
-                  spots: [spot]
-                });
+              // Apply spiral offset for overlapping spots
+              if (overlapCount > 0) {
+                const angle = (overlapCount * 45) * (Math.PI / 180); // 45 degree increments
+                const offsetDistance = 0.0003 * overlapCount; // Increase offset with each overlap
+                spotLng += Math.cos(angle) * offsetDistance;
+                spotLat += Math.sin(angle) * offsetDistance;
               }
-            });
-            
-            // Create markers for each group
-            groupedSpots.forEach((group) => {
-              const isMultipleSpots = group.spots.length > 1;
-              const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
               
-              // Create popup content
-              const createPopupContent = (currentIndex = 0) => {
-                const spot = group.spots[currentIndex];
-                const isMultiple = group.spots.length > 1;
-                const isPremium = spot.isPremiumLister || false;
-                
-                return `
-                  <div class="p-2" style="min-width: 200px;">
-                    ${isMultiple ? `
-                      <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
-                        <div class="flex gap-1">
-                          <button 
-                            id="prev-btn-${group.latitude}-${group.longitude}" 
-                            class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
-                            ${currentIndex === 0 ? 'disabled style="opacity: 0.5;"' : ''}
-                          >←</button>
-                          <button 
-                            id="next-btn-${group.latitude}-${group.longitude}" 
-                            class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
-                            ${currentIndex === group.spots.length - 1 ? 'disabled style="opacity: 0.5;"' : ''}
-                          >→</button>
-                        </div>
-                      </div>
+              // Also check if too close to search location
+              if (centerLocation) {
+                const distToCenter = Math.sqrt(
+                  Math.pow(spotLng - centerLocation.longitude, 2) + 
+                  Math.pow(spotLat - centerLocation.latitude, 2)
+                );
+                if (distToCenter < tolerance) {
+                  spotLng += 0.0003;
+                  spotLat += 0.0002;
+                }
+              }
+              
+              usedPositions.push({ lat: spotLat, lng: spotLng });
+              
+              const isPremium = spot.isPremiumLister || false;
+              
+              // Create popup content for this spot
+              const popupContent = `
+                <div class="p-2" style="min-width: 200px;">
+                  <div class="flex items-center justify-between mb-1">
+                    <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
+                    ${isPremium ? `
+                      <svg class="shrink-0 text-amber-600 fill-amber-600" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
+                      </svg>
                     ` : ''}
-                    <div class="flex items-center justify-between mb-1">
-                      <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
-                      ${isPremium ? `
-                        <svg class="shrink-0 text-amber-600 fill-amber-600" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                          <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
-                        </svg>
-                      ` : ''}
-                     </div>
-                     <p class="text-xs text-gray-600">${spot.address}</p>
-                     <div class="flex justify-between items-center mb-2">
-                       <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
-                       ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
-                     </div>
-                     ${spot.rating > 0 ? `
-                       <div class="flex items-center mb-2">
-                         <svg class="w-3 h-3 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
-                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                         </svg>
-                         <span class="text-xs font-medium">${spot.rating}</span>
-                         <span class="text-xs text-gray-500 ml-1">(${spot.totalReviews || 0} reviews)</span>
-                       </div>
-                     ` : `
-                       <div class="text-xs text-gray-400 mb-2">No rating yet</div>
-                     `}
-                    <button 
-                      id="book-btn-${spot.id}" 
-                      class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
-                    >
-                      Book Now
-                    </button>
                   </div>
-                `;
-              };
+                  <p class="text-xs text-gray-600">${spot.address}</p>
+                  <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
+                    ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+                  </div>
+                  ${spot.rating > 0 ? `
+                    <div class="flex items-center mb-2">
+                      <svg class="w-3 h-3 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      <span class="text-xs font-medium">${spot.rating}</span>
+                      <span class="text-xs text-gray-500 ml-1">(${spot.totalReviews || 0} reviews)</span>
+                    </div>
+                  ` : `
+                    <div class="text-xs text-gray-400 mb-2">No rating yet</div>
+                  `}
+                  <button 
+                    id="book-btn-${spot.id}" 
+                    class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+                  >
+                    Book Now
+                  </button>
+                </div>
+              `;
               
-              // Create marker element
-              const isPremiumMarker = primarySpot.isPremiumLister || false;
               let marker;
+              const scale = getPinScale(spot);
               
-              if (isPremiumMarker) {
+              if (isPremium) {
                 // Create custom SVG pin marker with gold border for premium spots
                 const el = document.createElement('div');
                 el.className = 'premium-pin-marker';
-                const pinColor = getPinColor(primarySpot, isMultipleSpots);
-                const scale = getPinScale(primarySpot, isMultipleSpots);
-                // Expanded viewBox to prevent stroke clipping (added 3px padding for stroke)
+                const pinColor = getPinColor(spot);
                 el.innerHTML = `
                   <svg width="${33 * scale}" height="${47 * scale}" viewBox="0 0 33 47" xmlns="http://www.w3.org/2000/svg">
                     <path d="M16.5 3C9.044 3 3 9.044 3 16.5C3 26.625 16.5 44 16.5 44S30 26.625 30 16.5C30 9.044 23.956 3 16.5 3Z" 
@@ -283,76 +253,32 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 el.style.cssText = `cursor: pointer;`;
                 
                 marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
+                  .setLngLat([spotLng, spotLat])
+                  .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
                   .addTo(map.current!);
               } else {
                 // Use default Mapbox pin marker for non-premium spots
                 marker = new mapboxgl.Marker({
-                  color: getPinColor(primarySpot, isMultipleSpots),
-                  scale: getPinScale(primarySpot, isMultipleSpots),
+                  color: getPinColor(spot),
+                  scale: scale,
                 })
-                  .setLngLat([group.longitude, group.latitude])
-                  .setPopup(
-                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                  )
+                  .setLngLat([spotLng, spotLat])
+                  .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
                   .addTo(map.current!);
               }
-
-              // Track current spot index for this marker
-              let currentSpotIndex = 0;
               
-              // Function to attach event listeners
-              const attachEventListeners = () => {
-                const currentSpot = group.spots[currentSpotIndex];
-                
-                // Book button event
-                const bookBtn = document.getElementById(`book-btn-${currentSpot.id}`);
-                if (bookBtn) {
-                  bookBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onSpotSelectRef.current(currentSpot.id);
-                  });
-                }
-                
-                // Navigation buttons for multiple spots
-                if (group.spots.length > 1) {
-                  const prevBtn = document.getElementById(`prev-btn-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
-                  const nextBtn = document.getElementById(`next-btn-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
-                  
-                  if (prevBtn) {
-                    prevBtn.addEventListener('click', (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (currentSpotIndex > 0) {
-                        currentSpotIndex--;
-                        marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
-                        setTimeout(attachEventListeners, 100);
-                      }
-                    });
-                  }
-                  
-                  if (nextBtn) {
-                    nextBtn.addEventListener('click', (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (currentSpotIndex < group.spots.length - 1) {
-                        currentSpotIndex++;
-                        marker.getPopup().setHTML(createPopupContent(currentSpotIndex));
-                        setTimeout(attachEventListeners, 100);
-                      }
-                    });
-                  }
-                }
-              };
-              
-              // Add click event listeners when popup opens
+              // Add click event listener when popup opens
               marker.getPopup().on('open', () => {
-                currentSpotIndex = 0; // Reset to first spot
-                setTimeout(attachEventListeners, 150);
+                setTimeout(() => {
+                  const bookBtn = document.getElementById(`book-btn-${spot.id}`);
+                  if (bookBtn) {
+                    bookBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSpotSelectRef.current(spot.id);
+                    });
+                  }
+                }, 150);
               });
             });
 
@@ -414,132 +340,101 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         .addTo(map.current!);
     }
     
-    // Group spots by location (within ~50 meters) - same logic as initialization
-    const groupedSpots = new Map();
-    const tolerance = 0.0005;
+    // Track positions to offset overlapping spots
+    const usedPositions: { lat: number; lng: number }[] = [];
+    const tolerance = 0.0003; // ~30 meters
     
-    spots.forEach((spot) => {
+    // Create individual markers for each spot
+    spots.forEach((spot, index) => {
       if (!spot.latitude || !spot.longitude) {
         console.warn(`Skipping spot ${spot.id} - missing coordinates:`, { lat: spot.latitude, lng: spot.longitude });
         return;
       }
       
-      // Check if there's already a group for this location
-      let foundGroup = false;
-      for (const [key, group] of groupedSpots) {
-        const [groupLat, groupLng] = key.split(',').map(Number);
+      // Check if position overlaps with existing markers and offset if needed
+      let spotLng = spot.longitude;
+      let spotLat = spot.latitude;
+      
+      // Check for overlaps and apply offset
+      let overlapCount = 0;
+      for (const pos of usedPositions) {
         const distance = Math.sqrt(
-          Math.pow(spot.longitude - groupLng, 2) + 
-          Math.pow(spot.latitude - groupLat, 2)
+          Math.pow(spotLng - pos.lng, 2) + 
+          Math.pow(spotLat - pos.lat, 2)
         );
-        
         if (distance < tolerance) {
-          group.spots.push(spot);
-          foundGroup = true;
-          break;
+          overlapCount++;
         }
       }
       
-      if (!foundGroup) {
-        // If spot is very close to search location, offset it slightly
-        let spotLng = spot.longitude;
-        let spotLat = spot.latitude;
-        
-        if (centerLocation) {
-          const distance = Math.sqrt(
-            Math.pow(spot.longitude - centerLocation.longitude, 2) + 
-            Math.pow(spot.latitude - centerLocation.latitude, 2)
-          );
-          
-          if (distance < tolerance) {
-            spotLng += 0.0002;
-            spotLat += 0.0001;
-          }
-        }
-        
-        groupedSpots.set(`${spotLat},${spotLng}`, {
-          latitude: spotLat,
-          longitude: spotLng,
-          spots: [spot]
-        });
+      // Apply spiral offset for overlapping spots
+      if (overlapCount > 0) {
+        const angle = (overlapCount * 45) * (Math.PI / 180);
+        const offsetDistance = 0.0003 * overlapCount;
+        spotLng += Math.cos(angle) * offsetDistance;
+        spotLat += Math.sin(angle) * offsetDistance;
       }
-    });
-    
-    // Create markers for each group
-    groupedSpots.forEach((group) => {
-      const isMultipleSpots = group.spots.length > 1;
-      const primarySpot = group.spots[0]; // Use first spot for color/scale decisions
       
-      // Create popup content
-      const createPopupContent = (currentIndex = 0) => {
-        const spot = group.spots[currentIndex];
-        const isMultiple = group.spots.length > 1;
-        const isPremium = spot.isPremiumLister || false;
-        
-        return `
-          <div class="p-2" style="min-width: 200px;">
-            ${isMultiple ? `
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-xs text-gray-500">${currentIndex + 1} of ${group.spots.length} spots</span>
-                <div class="flex gap-1">
-                  <button 
-                    id="prev-btn-update-${group.latitude}-${group.longitude}" 
-                    class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
-                    ${currentIndex === 0 ? 'disabled style="opacity: 0.5;"' : ''}
-                  >←</button>
-                  <button 
-                    id="next-btn-update-${group.latitude}-${group.longitude}" 
-                    class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
-                    ${currentIndex === group.spots.length - 1 ? 'disabled style="opacity: 0.5;"' : ''}
-                  >→</button>
-                </div>
-              </div>
+      // Also check if too close to search location
+      if (centerLocation) {
+        const distToCenter = Math.sqrt(
+          Math.pow(spotLng - centerLocation.longitude, 2) + 
+          Math.pow(spotLat - centerLocation.latitude, 2)
+        );
+        if (distToCenter < tolerance) {
+          spotLng += 0.0003;
+          spotLat += 0.0002;
+        }
+      }
+      
+      usedPositions.push({ lat: spotLat, lng: spotLng });
+      
+      const isPremium = spot.isPremiumLister || false;
+      
+      // Create popup content for this spot
+      const popupContent = `
+        <div class="p-2" style="min-width: 200px;">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
+            ${isPremium ? `
+              <svg class="shrink-0 text-amber-600 fill-amber-600" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
+              </svg>
             ` : ''}
-            <div class="flex items-center justify-between mb-1">
-              <h3 class="font-bold text-sm mr-2 flex-1">${spot.title}</h3>
-              ${isPremium ? `
-                <svg class="shrink-0 text-amber-600 fill-amber-600" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M3 10l2-5 4 3 3-4 3 4 4-3 2 5v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z"/>
-                </svg>
-              ` : ''}
-            </div>
-             <p class="text-xs text-gray-600">${spot.address}</p>
-             <div class="flex justify-between items-center mb-2">
-               <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
-               ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
-             </div>
-             ${spot.rating > 0 ? `
-               <div class="flex items-center mb-2">
-                 <svg class="w-3 h-3 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
-                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                 </svg>
-                 <span class="text-xs font-medium">${spot.rating}</span>
-                 <span class="text-xs text-gray-500 ml-1">(${spot.totalReviews || 0} reviews)</span>
-               </div>
-             ` : `
-               <div class="text-xs text-gray-400 mb-2">No rating yet</div>
-             `}
-            <button 
-              id="book-btn-update-${spot.id}"
-              class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
-            >
-              Book Now
-            </button>
           </div>
-        `;
-      };
+          <p class="text-xs text-gray-600">${spot.address}</p>
+          <div class="flex justify-between items-center mb-2">
+            <p class="text-sm font-semibold">$${spot.price}${spot.pricingType === 'hourly' ? '/hr' : spot.pricingType === 'daily' ? '/day' : spot.pricingType === 'monthly' ? '/mo' : ''}</p>
+            ${spot.distance ? `<p class="text-xs text-gray-500">${spot.distance}</p>` : ''}
+          </div>
+          ${spot.rating > 0 ? `
+            <div class="flex items-center mb-2">
+              <svg class="w-3 h-3 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <span class="text-xs font-medium">${spot.rating}</span>
+              <span class="text-xs text-gray-500 ml-1">(${spot.totalReviews || 0} reviews)</span>
+            </div>
+          ` : `
+            <div class="text-xs text-gray-400 mb-2">No rating yet</div>
+          `}
+          <button 
+            id="book-btn-update-${spot.id}" 
+            class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 w-full"
+          >
+            Book Now
+          </button>
+        </div>
+      `;
       
-      // Create marker based on premium status
-      const isPremiumMarker = primarySpot.isPremiumLister || false;
       let marker;
+      const scale = getPinScale(spot);
       
-      if (isPremiumMarker) {
+      if (isPremium) {
         // Create custom SVG pin marker with gold border for premium spots
         const el = document.createElement('div');
         el.className = 'premium-pin-marker';
-        const pinColor = getPinColor(primarySpot, isMultipleSpots);
-        const scale = getPinScale(primarySpot, isMultipleSpots);
-        // Expanded viewBox to prevent stroke clipping (added 3px padding for stroke)
+        const pinColor = getPinColor(spot);
         el.innerHTML = `
           <svg width="${33 * scale}" height="${47 * scale}" viewBox="0 0 33 47" xmlns="http://www.w3.org/2000/svg">
             <path d="M16.5 3C9.044 3 3 9.044 3 16.5C3 26.625 16.5 44 16.5 44S30 26.625 30 16.5C30 9.044 23.956 3 16.5 3Z" 
@@ -552,85 +447,32 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         el.style.cssText = `cursor: pointer;`;
         
         marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
+          .setLngLat([spotLng, spotLat])
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
           .addTo(map.current!);
       } else {
         // Use default Mapbox pin marker for non-premium spots
         marker = new mapboxgl.Marker({
-          color: getPinColor(primarySpot, isMultipleSpots),
-          scale: getPinScale(primarySpot, isMultipleSpots),
+          color: getPinColor(spot),
+          scale: scale,
         })
-          .setLngLat([group.longitude, group.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-          )
+          .setLngLat([spotLng, spotLat])
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
           .addTo(map.current!);
       }
-
-      // Track current spot index for this marker
-      let currentSpotIndex = 0;
       
-      // Function to update popup content and reattach listeners
-      const updatePopupContent = (newIndex) => {
-        currentSpotIndex = newIndex;
-        const newContent = createPopupContent(currentSpotIndex);
-        marker.getPopup().setHTML(newContent);
-        
-        // Reattach event listeners after content update
-        setTimeout(() => {
-          attachEventListeners();
-        }, 50);
-      };
-      
-      // Function to attach event listeners
-      const attachEventListeners = () => {
-        const currentSpot = group.spots[currentSpotIndex];
-        
-        // Book button event
-        const bookBtn = document.getElementById(`book-btn-update-${currentSpot.id}`);
-        if (bookBtn) {
-          bookBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onSpotSelectRef.current(currentSpot.id);
-          });
-        }
-        
-        // Navigation buttons for multiple spots
-        if (group.spots.length > 1) {
-          const prevBtn = document.getElementById(`prev-btn-update-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
-          const nextBtn = document.getElementById(`next-btn-update-${group.latitude}-${group.longitude}`) as HTMLButtonElement;
-          
-          if (prevBtn && !prevBtn.disabled) {
-            prevBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (currentSpotIndex > 0) {
-                updatePopupContent(currentSpotIndex - 1);
-              }
-            });
-          }
-          
-          if (nextBtn && !nextBtn.disabled) {
-            nextBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (currentSpotIndex < group.spots.length - 1) {
-                updatePopupContent(currentSpotIndex + 1);
-              }
-            });
-          }
-        }
-      };
-      
-      // Add click event listeners when popup opens
+      // Add click event listener when popup opens
       marker.getPopup().on('open', () => {
         setTimeout(() => {
-          attachEventListeners();
-        }, 100);
+          const bookBtn = document.getElementById(`book-btn-update-${spot.id}`);
+          if (bookBtn) {
+            bookBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSpotSelectRef.current(spot.id);
+            });
+          }
+        }, 150);
       });
     });
   }, [spots, centerLocation, isInitialized]);

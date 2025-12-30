@@ -136,9 +136,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         <MapLegend />
       </div>
       
-      {/* Pass ALL spots to the map so pins are visible when zooming out */}
+      {/* Pass FILTERED spots to the map so only matching spots show */}
       <MapComponent 
-        spots={allSpotsWithDistance.map(spot => ({
+        spots={filteredSpotsWithDistance.map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,
