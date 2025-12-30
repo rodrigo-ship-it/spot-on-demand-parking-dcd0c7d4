@@ -27,11 +27,28 @@ import { TypewriterText } from "@/components/TypewriterText";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
+// Helper function to extract city from address
+const extractCityFromAddress = (address: string): string => {
+  if (!address) return '';
+  const parts = address.split(',').map(p => p.trim());
+  if (parts.length >= 2) {
+    const potentialCity = parts[parts.length - 2] || parts[parts.length - 1];
+    const cityClean = potentialCity.replace(/\b[A-Z]{2}\b\s*\d{5}(-\d{4})?/g, '').trim();
+    if (cityClean) return cityClean.toLowerCase();
+  }
+  const stateMatch = address.match(/([^,]+),?\s*[A-Z]{2}\s*\d{5}/);
+  if (stateMatch) {
+    return stateMatch[1].trim().toLowerCase();
+  }
+  return parts[0]?.toLowerCase() || '';
+};
+
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [userCity, setUserCity] = useState<string>("");
   const [searchPricingType, setSearchPricingType] = useState("");
   const [searchTimeFilter, setSearchTimeFilter] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
@@ -43,16 +60,34 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  // Get user's current location on component mount
+  // Get user's current location and city on component mount
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           console.log("User location obtained:", position.coords);
           setUserLocation({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           });
+          
+          // Reverse geocode to get user's city
+          try {
+            const { data: tokenData } = await supabase.functions.invoke('get-mapbox-token');
+            if (tokenData?.token) {
+              const response = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?types=place&access_token=${tokenData.token}`
+              );
+              const data = await response.json();
+              if (data.features?.[0]?.text) {
+                const city = data.features[0].text.toLowerCase();
+                console.log("User city detected:", city);
+                setUserCity(city);
+              }
+            }
+          } catch (error) {
+            console.log("Could not reverse geocode user location:", error);
+          }
         },
         (error) => {
           console.log("User denied location access or location unavailable:", error);
@@ -796,54 +831,88 @@ const Index = () => {
       {!hasSearched && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                  Available Parking Spots
-                </h2>
-                <p className="text-gray-600">
-                  Find the perfect spot for your needs
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
-                >
-                  <Grid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+            {(() => {
+              // Filter spots by user's city if available, limit to 9, prioritize premium
+              let displaySpots = transformedSpots;
+              
+              if (userCity) {
+                // Filter to spots in the user's city
+                const citySpots = transformedSpots.filter(spot => {
+                  const spotCity = extractCityFromAddress(spot.address);
+                  return spotCity === userCity;
+                });
+                // If we have spots in the city, use those; otherwise fall back to all spots
+                displaySpots = citySpots.length > 0 ? citySpots : transformedSpots;
+              }
+              
+              // Sort: premium first, then by rating
+              displaySpots = [...displaySpots].sort((a, b) => {
+                if (a.isPremiumLister && !b.isPremiumLister) return -1;
+                if (!a.isPremiumLister && b.isPremiumLister) return 1;
+                return (b.rating || 0) - (a.rating || 0);
+              });
+              
+              // Limit to 9 spots max
+              displaySpots = displaySpots.slice(0, 9);
+              
+              return (
+                <>
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                        {userCity 
+                          ? `Available Parking in ${userCity.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`
+                          : 'Available Parking Spots'
+                        }
+                      </h2>
+                      <p className="text-gray-600">
+                        {userCity 
+                          ? `${displaySpots.length} spots near you`
+                          : 'Find the perfect spot for your needs'
+                        }
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant={viewMode === "grid" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode("grid")}
+                        className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
+                      >
+                        <Grid className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant={viewMode === "list" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode("list")}
+                        className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
+                      >
+                        <List className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
 
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading parking spots...</p>
-              </div>
-            ) : transformedSpots.length === 0 ? (
-              <div className="text-center py-12">
-                <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No parking spots available yet</h3>
-                <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
-                <Link to="/list-spot">
-                  <Button className="bg-primary hover:bg-secondary text-primary-foreground">
-                    List Your First Spot
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-              {transformedSpots.map((spot, index) => (
+                  {loading ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-4 text-gray-600">Loading parking spots...</p>
+                    </div>
+                  ) : displaySpots.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        {userCity ? `No parking spots in ${userCity} yet` : 'No parking spots available yet'}
+                      </h3>
+                      <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
+                      <Link to="/list-spot">
+                        <Button className="bg-primary hover:bg-secondary text-primary-foreground">
+                          List Your First Spot
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+                    {displaySpots.map((spot, index) => (
                 <ScrollReveal key={spot.id} delay={index * 0.1}>
                   <motion.div
                     whileHover={{ y: -8 }}
@@ -925,10 +994,13 @@ const Index = () => {
                   </motion.div>
                 </ScrollReveal>
               ))}
-            </div>
-          )}
-        </div>
-      </section>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </section>
       )}
 
       {/* FAQ Accordion */}

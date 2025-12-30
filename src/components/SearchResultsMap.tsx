@@ -136,8 +136,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         <MapLegend />
       </div>
       
+      {/* Pass ALL spots to the map so pins are visible when zooming out */}
       <MapComponent 
-        spots={filteredSpotsWithDistance.map(spot => ({
+        spots={allSpotsWithDistance.map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,
@@ -145,7 +146,6 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         onSpotSelect={onSpotSelect}
         centerLocation={searchCoordinates}
       />
-
       {/* Quick Spot Cards - only show filtered spots (nearby ones) */}
       {hasSpots && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
