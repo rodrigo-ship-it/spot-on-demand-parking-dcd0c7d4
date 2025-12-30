@@ -173,8 +173,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               
               // Apply spiral offset for overlapping spots (starting from the 2nd spot at same location)
               if (placedCount > 0) {
-                const angle = (placedCount * 90) * (Math.PI / 180); // 90 degrees apart
-                const offsetDistance = 0.0004 * Math.ceil(placedCount / 4); // Increase distance for each ring
+                const angle = (placedCount * 120) * (Math.PI / 180); // 120 degrees apart (triangle pattern)
+                const offsetDistance = 0.00012; // Very small offset - just enough to see pins
                 spotLng += Math.cos(angle) * offsetDistance;
                 spotLat += Math.sin(angle) * offsetDistance;
               }
@@ -364,8 +364,8 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       
       // Apply spiral offset for overlapping spots (starting from the 2nd spot at same location)
       if (placedCount > 0) {
-        const angle = (placedCount * 90) * (Math.PI / 180); // 90 degrees apart
-        const offsetDistance = 0.0004 * Math.ceil(placedCount / 4); // Increase distance for each ring
+        const angle = (placedCount * 120) * (Math.PI / 180); // 120 degrees apart (triangle pattern)
+        const offsetDistance = 0.00012; // Very small offset - just enough to see pins
         spotLng += Math.cos(angle) * offsetDistance;
         spotLat += Math.sin(angle) * offsetDistance;
       }
