@@ -65,54 +65,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     return isEntireSpace ? baseScale + 0.2 : baseScale;
   };
 
-  // Create a custom pin marker element (no circle shadow)
-  const createCustomPinElement = (color: string, scale: number, isPremium: boolean = false, spotCount?: number) => {
-    const el = document.createElement('div');
-    el.className = 'custom-pin-marker';
-    
-    const size = 32 * scale;
-    const pinSvg = `
-      <svg width="${size}" height="${size * 1.3}" viewBox="0 0 24 31" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.373 0 0 5.373 0 12c0 8.25 12 19 12 19s12-10.75 12-19c0-6.627-5.373-12-12-12z" fill="${color}" ${isPremium ? 'stroke="#d4af37" stroke-width="2"' : ''}/>
-        <circle cx="12" cy="12" r="5" fill="white" fill-opacity="0.9"/>
-        ${spotCount ? `<text x="12" y="15" text-anchor="middle" fill="${color}" font-size="8" font-weight="bold">${spotCount}</text>` : ''}
-      </svg>
-    `;
-    
-    el.innerHTML = pinSvg;
-    el.style.cssText = `
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    `;
-    
-    el.addEventListener('mouseenter', () => {
-      el.style.transform = 'scale(1.15)';
-    });
-    el.addEventListener('mouseleave', () => {
-      el.style.transform = 'scale(1)';
-    });
-    
-    return el;
-  };
-
-  // Create a custom search location pin element
-  const createSearchPinElement = () => {
-    const el = document.createElement('div');
-    el.className = 'search-pin-marker';
-    
-    const pinSvg = `
-      <svg width="28" height="36" viewBox="0 0 24 31" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.373 0 0 5.373 0 12c0 8.25 12 19 12 19s12-10.75 12-19c0-6.627-5.373-12-12-12z" fill="#ef4444"/>
-        <circle cx="12" cy="12" r="5" fill="white" fill-opacity="0.9"/>
-      </svg>
-    `;
-    
-    el.innerHTML = pinSvg;
-    el.style.cssText = 'cursor: pointer;';
-    
-    return el;
-  };
-
   // Premium statuses are already fetched and set on spots by the parent component
   // No need to fetch again - just use the isPremiumLister property
 
@@ -167,19 +119,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             logoPosition: 'bottom-right'
           });
 
-          // Hide default POI markers from the base map style
-          map.current.on('style.load', () => {
-            const layers = map.current!.getStyle().layers;
-            if (layers) {
-              layers.forEach((layer) => {
-                // Hide POI labels and icons that show default markers
-                if (layer.id.includes('poi') && (layer.id.includes('label') || layer.type === 'symbol')) {
-                  map.current!.setLayoutProperty(layer.id, 'visibility', 'none');
-                }
-              });
-            }
-          });
-
           console.log('Map instance created');
 
           map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -190,8 +129,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             
             // Add search location marker first (so it appears below parking spots)
             if (centerLocation) {
-              const searchEl = createSearchPinElement();
-              new mapboxgl.Marker({ element: searchEl, anchor: 'bottom' })
+              new mapboxgl.Marker({
+                color: '#ef4444',
+                scale: 0.8, // Make search marker slightly smaller
+              })
                 .setLngLat([centerLocation.longitude, centerLocation.latitude])
                 .setPopup(
                   new mapboxgl.Popup({ offset: 25 }).setHTML(`
@@ -319,20 +260,59 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 `;
               };
               
-              // Create marker element - always use custom pins (no circle shadow)
+              // Create marker element
               const isPremiumMarker = primarySpot.isPremiumLister || false;
-              const pinColor = getPinColor(primarySpot, isMultipleSpots);
-              const pinScale = getPinScale(primarySpot, isMultipleSpots);
-              const spotCount = isMultipleSpots ? group.spots.length : undefined;
+              let marker;
               
-              const el = createCustomPinElement(pinColor, pinScale, isPremiumMarker, spotCount);
-              
-              const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-                .setLngLat([group.longitude, group.latitude])
-                .setPopup(
-                  new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
-                )
-                .addTo(map.current!);
+              if (isPremiumMarker) {
+                // Create custom HTML marker for premium spots with gold border
+                const el = document.createElement('div');
+                el.className = 'custom-marker';
+                el.style.cssText = `
+                  width: 34px;
+                  height: 34px;
+                  border-radius: 50%;
+                  border: 3px solid #d4af37;
+                  background-color: ${getPinColor(primarySpot, isMultipleSpots)};
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: white;
+                  font-weight: bold;
+                  font-size: ${isMultipleSpots ? '12px' : '0'};
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                  transform: scale(${getPinScale(primarySpot, isMultipleSpots)});
+                  transition: transform 0.2s ease;
+                `;
+                if (isMultipleSpots) {
+                  el.textContent = group.spots.length.toString();
+                }
+                el.addEventListener('mouseenter', () => {
+                  el.style.transform = `scale(${getPinScale(primarySpot, isMultipleSpots) + 0.15})`;
+                });
+                el.addEventListener('mouseleave', () => {
+                  el.style.transform = `scale(${getPinScale(primarySpot, isMultipleSpots)})`;
+                });
+                
+                marker = new mapboxgl.Marker({ element: el })
+                  .setLngLat([group.longitude, group.latitude])
+                  .setPopup(
+                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                  )
+                  .addTo(map.current!);
+              } else {
+                // Use default Mapbox marker for non-premium spots
+                marker = new mapboxgl.Marker({
+                  color: getPinColor(primarySpot, isMultipleSpots),
+                  scale: getPinScale(primarySpot, isMultipleSpots),
+                })
+                  .setLngLat([group.longitude, group.latitude])
+                  .setPopup(
+                    new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
+                  )
+                  .addTo(map.current!);
+              }
 
               // Track current spot index for this marker
               let currentSpotIndex = 0;
@@ -431,8 +411,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       // Update map center
       map.current.setCenter([centerLocation.longitude, centerLocation.latitude]);
       
-      const searchEl = createSearchPinElement();
-      new mapboxgl.Marker({ element: searchEl, anchor: 'bottom' })
+      new mapboxgl.Marker({
+        color: '#ef4444',
+        scale: 0.8,
+      })
         .setLngLat([centerLocation.longitude, centerLocation.latitude])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 }).setHTML(`
@@ -560,15 +542,10 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         `;
       };
       
-      // Create custom pin element (no circle shadow)
-      const isPremiumMarker = primarySpot.isPremiumLister || false;
-      const pinColor = getPinColor(primarySpot, isMultipleSpots);
-      const pinScale = getPinScale(primarySpot, isMultipleSpots);
-      const spotCount = isMultipleSpots ? group.spots.length : undefined;
-      
-      const el = createCustomPinElement(pinColor, pinScale, isPremiumMarker, spotCount);
-      
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      const marker = new mapboxgl.Marker({
+        color: getPinColor(primarySpot, isMultipleSpots),
+        scale: getPinScale(primarySpot, isMultipleSpots),
+      })
         .setLngLat([group.longitude, group.latitude])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 }).setHTML(createPopupContent(0))
