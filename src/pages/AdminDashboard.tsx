@@ -58,7 +58,11 @@ interface DashboardStats {
   totalSpots: number;
   totalBookings: number;
   totalRevenue: number;
+  platformRevenue: number;
   activeBookings: number;
+  completedBookings: number;
+  cancelledBookings: number;
+  pendingBookings: number;
   pendingDisputes: number;
   pendingRefunds: number;
   supportTickets: number;
@@ -104,13 +108,16 @@ interface Booking {
   id: string;
   status: string;
   total_amount: number;
+  platform_fee_amount?: number;
+  owner_payout_amount?: number;
+  payment_intent_id?: string;
   start_time: string;
   end_time: string;
   created_at: string;
   renter_id: string;
   spot_id: string;
   parking_spots?: { title: string; address: string };
-  profiles?: { full_name?: string };
+  renter_profile?: { full_name?: string; email?: string };
 }
 
 interface Dispute {
@@ -152,7 +159,11 @@ export default function AdminDashboard() {
     totalSpots: 0,
     totalBookings: 0,
     totalRevenue: 0,
+    platformRevenue: 0,
     activeBookings: 0,
+    completedBookings: 0,
+    cancelledBookings: 0,
+    pendingBookings: 0,
     pendingDisputes: 0,
     pendingRefunds: 0,
     supportTickets: 0,
@@ -164,13 +175,15 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [spots, setSpots] = useState<ParkingSpot[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [activeBookingsList, setActiveBookingsList] = useState<Booking[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [spotSearchTerm, setSpotSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [spotFilterStatus, setSpotFilterStatus] = useState("all");
+  const [bookingFilterStatus, setBookingFilterStatus] = useState("all");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
   const [userOwnedSpots, setUserOwnedSpots] = useState<ParkingSpot[]>([]);
@@ -207,11 +220,29 @@ export default function AdminDashboard() {
         supabase.from('security_audit_log').select('*').order('created_at', { ascending: false }).limit(10)
       ]);
 
-      const totalRevenue = bookingsData?.reduce((sum, booking) => 
-        sum + Number(booking.total_amount), 0) || 0;
+      // Only count completed and active bookings for revenue (not cancelled/pending)
+      const validBookings = bookingsData?.filter(booking => 
+        ['completed', 'active', 'confirmed'].includes(booking.status)
+      ) || [];
+      
+      const totalRevenue = validBookings.reduce((sum, booking) => 
+        sum + Number(booking.total_amount), 0);
+      
+      // Platform revenue is the sum of platform fees
+      const platformRevenue = validBookings.reduce((sum, booking) => 
+        sum + Number(booking.platform_fee_amount || 0), 0);
       
       const activeBookings = bookingsData?.filter(booking => 
         booking.status === 'active').length || 0;
+      
+      const completedBookings = bookingsData?.filter(booking => 
+        booking.status === 'completed').length || 0;
+      
+      const cancelledBookings = bookingsData?.filter(booking => 
+        booking.status === 'cancelled').length || 0;
+      
+      const pendingBookings = bookingsData?.filter(booking => 
+        ['pending', 'confirmed'].includes(booking.status)).length || 0;
 
       // Calculate additional stats
       const oneMonthAgo = new Date();
@@ -220,15 +251,16 @@ export default function AdminDashboard() {
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-      const monthlyRevenue = bookingsData?.filter(booking => 
+      // Monthly revenue only from valid bookings
+      const monthlyRevenue = validBookings.filter(booking => 
         new Date(booking.created_at) >= oneMonthAgo
-      ).reduce((sum, booking) => sum + Number(booking.total_amount), 0) || 0;
+      ).reduce((sum, booking) => sum + Number(booking.total_amount), 0);
 
       const weeklySignups = profilesData?.filter(profile => 
         new Date(profile.created_at) >= oneWeekAgo
       ).length || 0;
 
-      const averageBookingValue = bookingsData?.length ? totalRevenue / bookingsData.length : 0;
+      const averageBookingValue = validBookings.length ? totalRevenue / validBookings.length : 0;
       
       const totalAvailableSpots = spotsData?.reduce((sum, spot) => sum + spot.available_spots, 0) || 0;
       const totalSpots = spotsData?.reduce((sum, spot) => sum + spot.total_spots, 0) || 0;
@@ -239,7 +271,11 @@ export default function AdminDashboard() {
         totalSpots: spotsData?.length || 0,
         totalBookings: bookingsData?.length || 0,
         totalRevenue,
+        platformRevenue,
         activeBookings,
+        completedBookings,
+        cancelledBookings,
+        pendingBookings,
         pendingDisputes: disputesData?.length || 0,
         pendingRefunds: refundsData?.length || 0,
         supportTickets: supportTicketsData?.length || 0,
@@ -269,6 +305,7 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
         .limit(50);
 
+      // Get all bookings with details (increased limit for better overview)
       const { data: bookingsWithDetails } = await supabase
         .from('bookings')
         .select(`
@@ -276,7 +313,23 @@ export default function AdminDashboard() {
           parking_spots(title, address)
         `)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
+
+      // Fetch renter profiles for bookings
+      const renterIds = [...new Set(bookingsWithDetails?.map(b => b.renter_id) || [])];
+      const { data: renterProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', renterIds);
+
+      // Map renter profiles to bookings
+      const bookingsWithRenters = bookingsWithDetails?.map(booking => ({
+        ...booking,
+        renter_profile: renterProfiles?.find(p => p.user_id === booking.renter_id)
+      })) || [];
+
+      // Get active bookings separately for the monitoring card
+      const activeBookingsData = bookingsWithRenters.filter(b => b.status === 'active');
 
       const { data: disputesWithDetails } = await supabase
         .from('disputes')
@@ -292,7 +345,8 @@ export default function AdminDashboard() {
 
       setUsers(usersWithProfiles || []);
       setSpots(spotsWithOwners as any || []);
-      setBookings(bookingsWithDetails as any || []);
+      setBookings(bookingsWithRenters as any || []);
+      setActiveBookingsList(activeBookingsData as any || []);
       setDisputes(disputesWithDetails as any || []);
       setSupportTickets(supportTicketsWithDetails as any || []);
       setSecurityLogs((securityLogsData as any) || []);
@@ -1002,26 +1056,34 @@ Check browser console for detailed ID analysis.
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">Gross Bookings</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">
-                ${stats.monthlyRevenue.toFixed(2)} this month
+                Platform: <span className="font-semibold text-green-600">${stats.platformRevenue.toFixed(2)}</span>
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={stats.activeBookings > 0 ? "border-green-500 border-2" : ""}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Bookings</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                Active Bookings
+                {stats.activeBookings > 0 && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                )}
+              </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeBookings}</div>
+              <div className="text-2xl font-bold text-green-600">{stats.activeBookings}</div>
               <p className="text-xs text-muted-foreground">
-                of {stats.totalBookings} total
+                {stats.completedBookings} completed • {stats.cancelledBookings} cancelled
               </p>
             </CardContent>
           </Card>
@@ -1093,6 +1155,90 @@ Check browser console for detailed ID analysis.
             </CardContent>
           </Card>
         </div>
+
+        {/* Active Bookings Monitoring Section */}
+        {activeBookingsList.length > 0 && (
+          <Card className="mb-8 border-green-500 border-2 bg-green-50/50 dark:bg-green-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                Live Active Bookings ({activeBookingsList.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {activeBookingsList.map((booking) => {
+                  const endTime = new Date(booking.end_time);
+                  const now = new Date();
+                  const minutesRemaining = Math.round((endTime.getTime() - now.getTime()) / (1000 * 60));
+                  const isOverdue = minutesRemaining < 0;
+                  
+                  return (
+                    <div 
+                      key={booking.id} 
+                      className={`flex items-center justify-between p-4 rounded-lg border ${
+                        isOverdue 
+                          ? 'bg-red-50 border-red-300 dark:bg-red-950/30 dark:border-red-800' 
+                          : 'bg-background border-green-200 dark:border-green-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          isOverdue ? 'bg-red-100' : 'bg-green-100'
+                        }`}>
+                          <Car className={`w-5 h-5 ${isOverdue ? 'text-red-600' : 'text-green-600'}`} />
+                        </div>
+                        <div>
+                          <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Renter: {booking.renter_profile?.full_name || booking.renter_profile?.email || 'Unknown'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(booking.start_time), 'MMM dd, HH:mm')} - {format(endTime, 'HH:mm')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className={`text-sm font-semibold ${isOverdue ? 'text-red-600' : 'text-green-600'}`}>
+                            {isOverdue 
+                              ? `${Math.abs(minutesRemaining)} min overdue` 
+                              : `${minutesRemaining} min remaining`
+                            }
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            ${Number(booking.total_amount).toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateBookingStatus(booking.id, 'completed')}
+                            className="bg-background"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            className="bg-background text-red-600"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Comprehensive Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
@@ -1253,7 +1399,7 @@ Check browser console for detailed ID analysis.
                     <Download className="w-4 h-4 mr-2" />
                     Export Spots
                   </Button>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <Select value={spotFilterStatus} onValueChange={setSpotFilterStatus}>
                     <SelectTrigger className="w-32 bg-background">
                       <SelectValue placeholder="Filter" />
                     </SelectTrigger>
@@ -1288,9 +1434,9 @@ Check browser console for detailed ID analysis.
                         const matchesSearch = !spotSearchTerm || 
                           spot.title.toLowerCase().includes(spotSearchTerm.toLowerCase()) ||
                           spot.address.toLowerCase().includes(spotSearchTerm.toLowerCase());
-                        const matchesStatus = filterStatus === 'all' || 
-                          (filterStatus === 'active' && spot.is_active) ||
-                          (filterStatus === 'inactive' && !spot.is_active);
+                        const matchesStatus = spotFilterStatus === 'all' || 
+                          (spotFilterStatus === 'active' && spot.is_active) ||
+                          (spotFilterStatus === 'inactive' && !spot.is_active);
                         return matchesSearch && matchesStatus;
                       })
                       .map((spot) => (
@@ -1382,15 +1528,16 @@ Check browser console for detailed ID analysis.
                     <Download className="w-4 h-4 mr-2" />
                     Export Bookings
                   </Button>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-32 bg-background">
+                  <Select value={bookingFilterStatus} onValueChange={setBookingFilterStatus}>
+                    <SelectTrigger className="w-40 bg-background">
                       <SelectValue placeholder="Filter" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border shadow-lg">
-                      <SelectItem value="all">All Bookings</SelectItem>
-                      <SelectItem value="active">Active Only</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="all">All ({stats.totalBookings})</SelectItem>
+                      <SelectItem value="active">Active ({stats.activeBookings})</SelectItem>
+                      <SelectItem value="completed">Completed ({stats.completedBookings})</SelectItem>
+                      <SelectItem value="cancelled">Cancelled ({stats.cancelledBookings})</SelectItem>
+                      <SelectItem value="pending">Pending ({stats.pendingBookings})</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1405,28 +1552,67 @@ Check browser console for detailed ID analysis.
                     </div>
                   ) : (
                     bookings
-                      .filter(booking => 
-                        filterStatus === 'all' || booking.status === filterStatus
-                      )
+                      .filter(booking => {
+                        if (bookingFilterStatus === 'all') return true;
+                        if (bookingFilterStatus === 'pending') {
+                          return ['pending', 'confirmed'].includes(booking.status);
+                        }
+                        return booking.status === bookingFilterStatus;
+                      })
                       .map((booking) => (
-                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
+                        <div key={booking.id} className={`flex items-center justify-between p-4 border rounded-lg ${
+                          booking.status === 'active' 
+                            ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                            : 'bg-background/50'
+                        }`}>
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                <Car className="w-5 h-5 text-purple-600" />
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                booking.status === 'active' 
+                                  ? 'bg-green-100' 
+                                  : booking.status === 'completed' 
+                                    ? 'bg-blue-100' 
+                                    : booking.status === 'cancelled' 
+                                      ? 'bg-red-100' 
+                                      : 'bg-purple-100'
+                              }`}>
+                                <Car className={`w-5 h-5 ${
+                                  booking.status === 'active' 
+                                    ? 'text-green-600' 
+                                    : booking.status === 'completed' 
+                                      ? 'text-blue-600' 
+                                      : booking.status === 'cancelled' 
+                                        ? 'text-red-600' 
+                                        : 'text-purple-600'
+                                }`} />
                               </div>
                               <div>
-                                <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
-                                <p className="text-sm text-muted-foreground">{booking.parking_spots?.address}</p>
-                                <div className="flex items-center gap-4 mt-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{booking.parking_spots?.title || 'Unknown Spot'}</p>
+                                  {booking.status === 'active' && (
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Renter: {booking.renter_profile?.full_name || booking.renter_profile?.email || 'Unknown'}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1 flex-wrap">
                                   <span className="text-xs text-muted-foreground">
-                                    ID: {booking.id.slice(0, 8)}...
+                                    {format(new Date(booking.start_time), 'MMM dd, HH:mm')} - {format(new Date(booking.end_time), 'HH:mm')}
                                   </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    • {format(new Date(booking.start_time), 'MMM dd, HH:mm')} - {format(new Date(booking.end_time), 'HH:mm')}
+                                  <span className="text-xs font-medium">
+                                    ${Number(booking.total_amount).toFixed(2)}
                                   </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    • ${Number(booking.total_amount).toFixed(2)}
+                                  {booking.platform_fee_amount && Number(booking.platform_fee_amount) > 0 && (
+                                    <span className="text-xs text-green-600">
+                                      Fee: ${Number(booking.platform_fee_amount).toFixed(2)}
+                                    </span>
+                                  )}
+                                  <span className="text-xs text-muted-foreground font-mono">
+                                    {booking.id.slice(0, 8)}
                                   </span>
                                 </div>
                               </div>
@@ -1435,11 +1621,12 @@ Check browser console for detailed ID analysis.
                           <div className="flex items-center gap-2">
                             <Badge 
                               variant={
-                                booking.status === 'confirmed' ? 'default' :
                                 booking.status === 'active' ? 'default' :
+                                booking.status === 'confirmed' ? 'outline' :
                                 booking.status === 'completed' ? 'secondary' :
                                 'destructive'
                               }
+                              className={booking.status === 'active' ? 'bg-green-500' : ''}
                             >
                               {booking.status}
                             </Badge>
