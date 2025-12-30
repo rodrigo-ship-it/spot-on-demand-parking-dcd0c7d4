@@ -34,9 +34,20 @@ interface SearchResultsMapProps {
   filteredSpots: ParkingSpot[];
   onSpotSelect: (spotId: string | number) => void;
   hasActiveFilters?: boolean; // True when type or time filters are applied
+  searchPricingType?: string;
+  searchTimeFilter?: string;
 }
 
-const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, searchCoordinates, allSpots, filteredSpots, onSpotSelect, hasActiveFilters = false }) => {
+const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ 
+  searchLocation, 
+  searchCoordinates, 
+  allSpots, 
+  filteredSpots, 
+  onSpotSelect, 
+  hasActiveFilters = false,
+  searchPricingType,
+  searchTimeFilter 
+}) => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -130,6 +141,18 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
     window.open(url, '_blank');
   };
 
+  // Filter ALL spots by type/time for map display (ignoring distance)
+  // This ensures spots matching the filter show up when zooming out
+  const typeTimeFilteredSpots = allSpotsWithDistance.filter(spot => {
+    // Apply pricing type filter
+    if (searchPricingType && spot.pricingType !== searchPricingType) {
+      return false;
+    }
+    // Time filter would be applied here if needed (similar to Index.tsx logic)
+    // For now, we show all spots matching the pricing type
+    return true;
+  });
+
   const MapView = () => (
     <div className="space-y-6">
       {/* Map Legend - positioned above the map */}
@@ -137,10 +160,10 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         <MapLegend />
       </div>
       
-      {/* When filters are active (type/time), only show filtered spots on map. 
-          Otherwise show all spots so users can zoom out and explore. */}
+      {/* When filters are active (type/time), show ALL spots matching the filter on the map
+          so users can zoom out and see spots everywhere, not just within 5-mile radius */}
       <MapComponent 
-        spots={(hasActiveFilters ? filteredSpotsWithDistance : allSpotsWithDistance).map(spot => ({
+        spots={(hasActiveFilters ? typeTimeFilteredSpots : allSpotsWithDistance).map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,

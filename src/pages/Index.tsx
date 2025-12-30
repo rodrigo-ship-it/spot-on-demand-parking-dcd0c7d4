@@ -800,6 +800,8 @@ const Index = () => {
           filteredSpots={filteredSpots}
           onSpotSelect={handleBookNow}
           hasActiveFilters={!!searchPricingType || (!!searchTimeFilter && searchTimeFilter !== 'anytime')}
+          searchPricingType={searchPricingType}
+          searchTimeFilter={searchTimeFilter}
         />
       )}
 
