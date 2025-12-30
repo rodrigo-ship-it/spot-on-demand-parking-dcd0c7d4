@@ -332,3 +332,18 @@
     @apply hover:shadow-button active:shadow-none active:scale-95 smooth-transition;
   }
 }
+
+/* Hide circle shadow under Mapbox markers - keep only the pin */
+.mapboxgl-marker svg g[fill="#3FB1CE"] {
+  display: none !important;
+}
+
+/* Alternative: Hide the ellipse/circle shadow element in Mapbox markers */
+.mapboxgl-marker svg ellipse {
+  display: none !important;
+}
+
+/* Backup: Target any circle elements that might be shadows */
+.mapboxgl-marker svg circle[fill-opacity] {
+  display: none !important;
+}
