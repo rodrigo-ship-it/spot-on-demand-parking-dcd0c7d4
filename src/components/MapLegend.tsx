@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Crown, ChevronDown, ChevronUp, MapPin, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -64,20 +64,10 @@ export const MapLegend = () => {
               </div>
               
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent/30 transition-colors">
-                <Crown className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
-                <span className="text-xs text-foreground whitespace-nowrap">Premium Spots</span>
+                <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0 shadow-sm ring-2 ring-amber-500" />
+                <span className="text-xs text-foreground whitespace-nowrap">Premium Spot</span>
               </div>
             </div>
-          </div>
-
-          <Separator orientation="vertical" className="h-auto self-stretch" />
-
-          {/* Info */}
-          <div className="flex items-start gap-1.5 px-2 py-1 rounded-md bg-muted/30 max-w-[200px]">
-            <Info className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Larger markers = multiple spots
-            </p>
           </div>
         </div>
       </div>
