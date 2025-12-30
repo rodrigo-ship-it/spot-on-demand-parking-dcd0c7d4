@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Target, TrendingUp, DollarSign, MapPin, Lightbulb, ArrowUp, ArrowDown } from "lucide-react";
+import { Target, TrendingUp, DollarSign, MapPin, Lightbulb, ArrowUp, ArrowDown, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
@@ -17,6 +17,9 @@ interface PricingSuggestion {
   reason: string;
   potentialIncrease: number;
   confidence: 'low' | 'medium' | 'high';
+  city: string;
+  pricingType: string;
+  competitorCount: number;
 }
 
 interface MarketData {
@@ -24,7 +27,32 @@ interface MarketData {
   totalNearbySpots: number;
   yourRank: number;
   competitorPrices: number[];
+  citySummary: Record<string, { count: number; avgPrice: number }>;
 }
+
+// Extract city from address - looks for common patterns
+const extractCityFromAddress = (address: string): string => {
+  if (!address) return 'Unknown';
+  
+  // Common patterns: "123 Main St, Dallas, TX 75201" or "Dallas, TX" or "Dallas TX"
+  const parts = address.split(',').map(p => p.trim());
+  
+  if (parts.length >= 2) {
+    // Usually city is second to last or before state/zip
+    const potentialCity = parts[parts.length - 2] || parts[parts.length - 1];
+    // Remove state abbreviation and zip if present
+    const cityClean = potentialCity.replace(/\b[A-Z]{2}\b\s*\d{5}(-\d{4})?/g, '').trim();
+    if (cityClean) return cityClean;
+  }
+  
+  // Fallback: try to find city before state abbreviation
+  const stateMatch = address.match(/([^,]+),?\s*[A-Z]{2}\s*\d{5}/);
+  if (stateMatch) {
+    return stateMatch[1].trim();
+  }
+  
+  return parts[0] || 'Unknown';
+};
 
 const SmartPricingTools = () => {
   const { user } = useAuth();
@@ -61,7 +89,13 @@ const SmartPricingTools = () => {
         return;
       }
 
-      // Generate pricing suggestions based on various factors
+      // Fetch ALL active spots for comparison (we'll filter by city + type)
+      const { data: allSpots } = await supabase
+        .from('parking_spots')
+        .select('id, address, pricing_type, price_per_hour, daily_price, monthly_price, one_time_price')
+        .eq('is_active', true)
+        .neq('owner_id', user.id);
+
       const suggestions: PricingSuggestion[] = [];
 
       for (const spot of spots) {
@@ -72,18 +106,19 @@ const SmartPricingTools = () => {
           .eq('spot_id', spot.id)
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
-          .limit(10);
-
-        // Fetch nearby spots for comparison (simplified approach)
-        const { data: nearbySpots } = await supabase
-          .from('parking_spots')
-          .select('price_per_hour, latitude, longitude')
-          .eq('is_active', true)
-          .neq('owner_id', user.id)
-          .not('price_per_hour', 'is', null)
           .limit(20);
 
-        const suggestion = generatePricingSuggestion(spot, bookings || [], nearbySpots || []);
+        // Filter competitors by SAME CITY and SAME PRICING TYPE
+        const spotCity = extractCityFromAddress(spot.address);
+        const spotPricingType = spot.pricing_type || 'hourly';
+        
+        const matchingSpots = (allSpots || []).filter(s => {
+          const sCity = extractCityFromAddress(s.address);
+          const sPricingType = s.pricing_type || 'hourly';
+          return sCity.toLowerCase() === spotCity.toLowerCase() && sPricingType === spotPricingType;
+        });
+
+        const suggestion = generatePricingSuggestion(spot, bookings || [], matchingSpots, spotCity, spotPricingType);
         if (suggestion) {
           suggestions.push(suggestion);
         }
@@ -102,52 +137,113 @@ const SmartPricingTools = () => {
     if (!user) return;
     
     try {
-      // Fetch all user's spots to calculate market position
+      // Fetch all user's spots
       const { data: userSpots } = await supabase
         .from('parking_spots')
-        .select('price_per_hour, latitude, longitude')
+        .select('price_per_hour, daily_price, monthly_price, one_time_price, pricing_type, address')
         .eq('owner_id', user.id)
         .eq('is_active', true);
 
       if (!userSpots || userSpots.length === 0) return;
 
-      // Calculate average user price
-      const avgUserPrice = userSpots.reduce((sum, spot) => sum + (spot.price_per_hour || 0), 0) / userSpots.length;
+      // Get user's cities
+      const userCities = [...new Set(userSpots.map(s => extractCityFromAddress(s.address).toLowerCase()))];
 
-      // Fetch nearby competitor prices (simplified approach)
+      // Fetch all competitor spots
       const { data: allSpots } = await supabase
         .from('parking_spots')
-        .select('price_per_hour')
+        .select('price_per_hour, daily_price, monthly_price, one_time_price, pricing_type, address')
         .neq('owner_id', user.id)
-        .eq('is_active', true)
-        .not('price_per_hour', 'is', null);
+        .eq('is_active', true);
 
-      if (allSpots) {
-        const competitorPrices = allSpots.map(spot => spot.price_per_hour).sort((a, b) => a - b);
-        const avgPriceNearby = competitorPrices.reduce((sum, price) => sum + price, 0) / competitorPrices.length;
-        
-        // Calculate user's ranking
-        const allPrices = [...competitorPrices, avgUserPrice].sort((a, b) => a - b);
-        const yourRank = allPrices.indexOf(avgUserPrice) + 1;
+      if (!allSpots) return;
 
-        setMarketData({
-          avgPriceNearby,
-          totalNearbySpots: competitorPrices.length,
-          yourRank,
-          competitorPrices: competitorPrices.slice(0, 10) // Top 10 for display
-        });
-      }
+      // Group by city for summary
+      const citySummary: Record<string, { count: number; avgPrice: number; totalPrice: number }> = {};
+      
+      allSpots.forEach(spot => {
+        const city = extractCityFromAddress(spot.address);
+        if (!citySummary[city]) {
+          citySummary[city] = { count: 0, avgPrice: 0, totalPrice: 0 };
+        }
+        const price = spot.price_per_hour || spot.daily_price || spot.monthly_price || 0;
+        citySummary[city].count++;
+        citySummary[city].totalPrice += price;
+      });
+
+      // Calculate averages
+      Object.keys(citySummary).forEach(city => {
+        citySummary[city].avgPrice = citySummary[city].totalPrice / citySummary[city].count;
+      });
+
+      // Filter to spots in user's cities for ranking
+      const relevantSpots = allSpots.filter(s => 
+        userCities.includes(extractCityFromAddress(s.address).toLowerCase())
+      );
+
+      const competitorPrices = relevantSpots
+        .map(spot => spot.price_per_hour || spot.daily_price || 0)
+        .filter(p => p > 0)
+        .sort((a, b) => a - b);
+
+      const avgUserPrice = userSpots.reduce((sum, spot) => 
+        sum + (spot.price_per_hour || spot.daily_price || 0), 0
+      ) / userSpots.length;
+
+      const avgPriceNearby = competitorPrices.length > 0
+        ? competitorPrices.reduce((sum, price) => sum + price, 0) / competitorPrices.length
+        : avgUserPrice;
+
+      const allPrices = [...competitorPrices, avgUserPrice].sort((a, b) => a - b);
+      const yourRank = allPrices.indexOf(avgUserPrice) + 1;
+
+      setMarketData({
+        avgPriceNearby,
+        totalNearbySpots: relevantSpots.length,
+        yourRank,
+        competitorPrices: competitorPrices.slice(0, 10),
+        citySummary
+      });
     } catch (error) {
       console.error('Error fetching market data:', error);
     }
   };
 
-  const generatePricingSuggestion = (spot: any, bookings: any[], nearbySpots: any[]): PricingSuggestion | null => {
-    const currentPrice = spot.price_per_hour || 0;
+  const generatePricingSuggestion = (
+    spot: any, 
+    bookings: any[], 
+    matchingSpots: any[],
+    city: string,
+    pricingType: string
+  ): PricingSuggestion | null => {
+    // Get the appropriate price based on pricing type
+    let currentPrice = 0;
+    let priceField = 'price_per_hour';
+    
+    switch (pricingType) {
+      case 'hourly':
+        currentPrice = spot.price_per_hour || 0;
+        priceField = 'price_per_hour';
+        break;
+      case 'daily':
+        currentPrice = spot.daily_price || 0;
+        priceField = 'daily_price';
+        break;
+      case 'monthly':
+        currentPrice = spot.monthly_price || 0;
+        priceField = 'monthly_price';
+        break;
+      case 'one_time':
+        currentPrice = spot.one_time_price || 0;
+        priceField = 'one_time_price';
+        break;
+      default:
+        currentPrice = spot.price_per_hour || 0;
+    }
     
     if (currentPrice === 0) return null;
 
-    // Calculate demand score based on recent bookings
+    // Calculate demand score based on recent bookings (last 30 days)
     const recentBookings = bookings.filter(booking => {
       const bookingDate = new Date(booking.created_at);
       const thirtyDaysAgo = new Date();
@@ -157,41 +253,52 @@ const SmartPricingTools = () => {
 
     const demandScore = Math.min(recentBookings.length / 5, 1); // Normalize to 0-1
 
-    // Calculate market position
-    const nearbyPrices = nearbySpots
-      .filter(s => s.price_per_hour && s.price_per_hour > 0)
-      .map(s => s.price_per_hour);
+    // Calculate market position using ONLY spots in same city with same pricing type
+    const matchingPrices = matchingSpots
+      .map(s => {
+        switch (pricingType) {
+          case 'hourly': return s.price_per_hour;
+          case 'daily': return s.daily_price;
+          case 'monthly': return s.monthly_price;
+          case 'one_time': return s.one_time_price;
+          default: return s.price_per_hour;
+        }
+      })
+      .filter(p => p && p > 0);
     
-    const avgNearbyPrice = nearbyPrices.length > 0 
-      ? nearbyPrices.reduce((sum, price) => sum + price, 0) / nearbyPrices.length 
+    const avgMarketPrice = matchingPrices.length > 0 
+      ? matchingPrices.reduce((sum, price) => sum + price, 0) / matchingPrices.length 
       : currentPrice;
 
     let suggestedPrice = currentPrice;
     let reason = '';
     let confidence: 'low' | 'medium' | 'high' = 'medium';
 
-    // High demand, price below market
-    if (demandScore > 0.7 && currentPrice < avgNearbyPrice * 0.9) {
-      suggestedPrice = Math.min(avgNearbyPrice, currentPrice * 1.2);
-      reason = 'High demand detected. You can increase prices to match market rates.';
+    const competitorCount = matchingSpots.length;
+
+    if (competitorCount === 0) {
+      // No competitors in same city with same type
+      reason = `No ${pricingType} competitors found in ${city}. Your pricing stands alone in this market.`;
+      confidence = 'low';
+    } else if (demandScore > 0.7 && currentPrice < avgMarketPrice * 0.9) {
+      // High demand, price below market
+      suggestedPrice = Math.min(avgMarketPrice, currentPrice * 1.2);
+      reason = `High demand in ${city}! You can increase your ${pricingType} price to match ${competitorCount} similar spots.`;
       confidence = 'high';
-    }
-    // Low demand, price above market
-    else if (demandScore < 0.3 && currentPrice > avgNearbyPrice * 1.1) {
-      suggestedPrice = Math.max(avgNearbyPrice * 0.95, currentPrice * 0.9);
-      reason = 'Low demand. Consider reducing price to attract more bookings.';
+    } else if (demandScore < 0.3 && currentPrice > avgMarketPrice * 1.1) {
+      // Low demand, price above market
+      suggestedPrice = Math.max(avgMarketPrice * 0.95, currentPrice * 0.9);
+      reason = `Low demand. Your ${pricingType} price is above ${competitorCount} competitors in ${city}.`;
       confidence = 'medium';
-    }
-    // Market alignment
-    else if (Math.abs(currentPrice - avgNearbyPrice) > avgNearbyPrice * 0.15) {
-      suggestedPrice = avgNearbyPrice;
-      reason = 'Align with market average for optimal bookings.';
+    } else if (Math.abs(currentPrice - avgMarketPrice) > avgMarketPrice * 0.15) {
+      // Market alignment needed
+      suggestedPrice = avgMarketPrice;
+      reason = `Align with ${city}'s ${pricingType} market average (${competitorCount} spots analyzed).`;
       confidence = 'medium';
-    }
-    // No significant change needed
-    else {
+    } else {
+      // Well positioned
       suggestedPrice = currentPrice;
-      reason = 'Current pricing is well-positioned for market conditions.';
+      reason = `Well-positioned for ${pricingType} spots in ${city} (${competitorCount} competitors).`;
       confidence = 'low';
     }
 
@@ -204,24 +311,44 @@ const SmartPricingTools = () => {
       suggestedPrice: Math.round(suggestedPrice * 100) / 100,
       reason,
       potentialIncrease,
-      confidence
+      confidence,
+      city,
+      pricingType,
+      competitorCount
     };
   };
 
-  const updateSpotPrice = async (spotId: string, newPrice: number) => {
+  const updateSpotPrice = async (spotId: string, newPrice: number, pricingType: string) => {
     try {
       setUpdatingPrices(prev => new Set(prev).add(spotId));
       
+      // Update the correct price field based on pricing type
+      let updateField = {};
+      switch (pricingType) {
+        case 'hourly':
+          updateField = { price_per_hour: newPrice };
+          break;
+        case 'daily':
+          updateField = { daily_price: newPrice };
+          break;
+        case 'monthly':
+          updateField = { monthly_price: newPrice };
+          break;
+        case 'one_time':
+          updateField = { one_time_price: newPrice };
+          break;
+        default:
+          updateField = { price_per_hour: newPrice };
+      }
+
       const { error } = await supabase
         .from('parking_spots')
-        .update({ price_per_hour: newPrice })
+        .update(updateField)
         .eq('id', spotId);
 
       if (error) throw error;
 
       toast.success('Price updated successfully!');
-      
-      // Refresh suggestions
       await fetchPricingSuggestions();
     } catch (error) {
       console.error('Error updating price:', error);
@@ -232,6 +359,16 @@ const SmartPricingTools = () => {
         next.delete(spotId);
         return next;
       });
+    }
+  };
+
+  const getPricingTypeLabel = (type: string) => {
+    switch (type) {
+      case 'hourly': return '/hr';
+      case 'daily': return '/day';
+      case 'monthly': return '/mo';
+      case 'one_time': return ' flat';
+      default: return '/hr';
     }
   };
 
@@ -276,7 +413,7 @@ const SmartPricingTools = () => {
             Smart Pricing Tools
           </CardTitle>
           <CardDescription>
-            AI-powered pricing recommendations to maximize your earnings
+            AI-powered pricing recommendations comparing spots in the same city with the same pricing type
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -287,9 +424,9 @@ const SmartPricingTools = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Market Average</p>
+                      <p className="text-sm text-gray-600">Local Market Avg</p>
                       <p className="text-2xl font-bold text-blue-600">
-                        ${marketData.avgPriceNearby.toFixed(2)}/hr
+                        ${marketData.avgPriceNearby.toFixed(2)}
                       </p>
                     </div>
                     <MapPin className="w-8 h-8 text-blue-600" />
@@ -315,12 +452,12 @@ const SmartPricingTools = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Competitors</p>
+                      <p className="text-sm text-gray-600">Local Competitors</p>
                       <p className="text-2xl font-bold text-purple-600">
                         {marketData.totalNearbySpots}
                       </p>
                     </div>
-                    <DollarSign className="w-8 h-8 text-purple-600" />
+                    <Building2 className="w-8 h-8 text-purple-600" />
                   </div>
                 </CardContent>
               </Card>
@@ -340,14 +477,22 @@ const SmartPricingTools = () => {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold mb-1">{suggestion.spotTitle}</h4>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold">{suggestion.spotTitle}</h4>
+                          <Badge variant="outline" className="text-xs">
+                            {suggestion.city}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {suggestion.pricingType}
+                          </Badge>
+                        </div>
                         <p className="text-sm text-gray-600 mb-3">{suggestion.reason}</p>
                         
                         <div className="flex items-center space-x-4 mb-3">
                           <div className="text-center">
                             <p className="text-sm text-gray-500">Current</p>
                             <p className="text-lg font-semibold">
-                              ${suggestion.currentPrice.toFixed(2)}
+                              ${suggestion.currentPrice.toFixed(2)}{getPricingTypeLabel(suggestion.pricingType)}
                             </p>
                           </div>
                           
@@ -362,7 +507,7 @@ const SmartPricingTools = () => {
                           <div className="text-center">
                             <p className="text-sm text-gray-500">Suggested</p>
                             <p className="text-lg font-semibold text-blue-600">
-                              ${suggestion.suggestedPrice.toFixed(2)}
+                              ${suggestion.suggestedPrice.toFixed(2)}{getPricingTypeLabel(suggestion.pricingType)}
                             </p>
                           </div>
                           
@@ -393,13 +538,16 @@ const SmartPricingTools = () => {
                           >
                             {suggestion.confidence} confidence
                           </Badge>
+                          <span className="text-xs text-gray-500">
+                            Based on {suggestion.competitorCount} {suggestion.pricingType} spots in {suggestion.city}
+                          </span>
                         </div>
                       </div>
                       
                       <div className="ml-4">
                         {suggestion.currentPrice !== suggestion.suggestedPrice && (
                           <Button
-                            onClick={() => updateSpotPrice(suggestion.spotId, suggestion.suggestedPrice)}
+                            onClick={() => updateSpotPrice(suggestion.spotId, suggestion.suggestedPrice, suggestion.pricingType)}
                             disabled={updatingPrices.has(suggestion.spotId)}
                             size="sm"
                             className="bg-blue-600 hover:bg-blue-700"
