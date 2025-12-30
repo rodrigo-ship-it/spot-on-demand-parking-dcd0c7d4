@@ -19,73 +19,43 @@ interface FeaturedSpot {
   one_time_price: number;
   pricing_type: string;
   owner_id: string;
+  latitude: number;
+  longitude: number;
   is_premium?: boolean;
 }
 
-// Helper function to extract city from address
-const extractCityFromAddress = (address: string): string => {
-  if (!address) return '';
-  const parts = address.split(',').map(p => p.trim());
-  
-  // For addresses like "4700 Byron Cir, Irving, TX 75038, USA"
-  // City is typically the 2nd part (index 1)
-  // For "Irving, TX, USA" or "San Francisco, CA, USA", city is first part
-  
-  // Check if second part exists and is not a state code or zip
-  if (parts.length >= 3) {
-    // Look for the part that's just before "STATE ZIP" pattern
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      const nextPart = parts[i + 1] || '';
-      // If next part looks like "TX 75038" or "TX", this part is likely the city
-      if (/^[A-Z]{2}(\s+\d{5})?/.test(nextPart)) {
-        return part.toLowerCase();
-      }
-    }
-  }
-  
-  // For simple "City, State, Country" format
-  if (parts.length >= 2) {
-    const firstPart = parts[0];
-    // If first part doesn't look like a street address (no numbers at start)
-    if (!/^\d+\s/.test(firstPart)) {
-      return firstPart.toLowerCase();
-    }
-    // Otherwise return second part
-    return parts[1]?.toLowerCase() || firstPart.toLowerCase();
-  }
-  
-  return parts[0]?.toLowerCase() || '';
+// Calculate distance between two coordinates using Haversine formula
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 };
 
 const FeaturedSpotsCarousel = () => {
   const [spots, setSpots] = useState<FeaturedSpot[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [userCity, setUserCity] = useState<string>("");
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const navigate = useNavigate();
 
-  // Get user's city on mount
+  // Get user's location on mount
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { data: tokenData } = await supabase.functions.invoke('get-mapbox-token');
-            if (tokenData?.token) {
-              const response = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?types=place&access_token=${tokenData.token}`
-              );
-              const data = await response.json();
-              if (data.features?.[0]?.text) {
-                setUserCity(data.features[0].text.toLowerCase());
-              }
-            }
-          } catch (error) {
-            console.log("Could not reverse geocode user location:", error);
-          }
+        (position) => {
+          console.log("FeaturedSpotsCarousel: User location obtained:", position.coords.latitude, position.coords.longitude);
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
         },
         (error) => {
-          console.log("User denied location access:", error);
+          console.log("FeaturedSpotsCarousel: User denied location access:", error);
         },
         { timeout: 10000, enableHighAccuracy: false }
       );
@@ -101,15 +71,22 @@ const FeaturedSpotsCarousel = () => {
         .order("rating", { ascending: false });
 
       if (data && !error) {
-        // Filter by user's city if available
+        // Filter by distance (within 15 miles) if user location is available
         let filteredData = data;
-        if (userCity) {
-          const citySpots = data.filter(spot => {
-            const spotCity = extractCityFromAddress(spot.address);
-            return spotCity === userCity;
+        if (userLocation) {
+          const nearbySpots = data.filter(spot => {
+            if (!spot.latitude || !spot.longitude) return false;
+            const distance = calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              Number(spot.latitude),
+              Number(spot.longitude)
+            );
+            return distance <= 15; // Within 15 miles
           });
-          // Use city spots if we have any, otherwise fall back to all spots
-          filteredData = citySpots.length > 0 ? citySpots : data;
+          // Use nearby spots if we have any, otherwise fall back to all spots
+          filteredData = nearbySpots.length > 0 ? nearbySpots : data;
+          console.log(`FeaturedSpotsCarousel: Found ${nearbySpots.length} spots within 15 miles`);
         }
 
         // Take top 6 highest rated
@@ -130,7 +107,7 @@ const FeaturedSpotsCarousel = () => {
     };
 
     fetchFeaturedSpots();
-  }, [userCity]);
+  }, [userLocation]);
 
   const next = () => {
     setCurrentIndex((prev) => (prev + 1) % Math.max(1, spots.length - 2));
