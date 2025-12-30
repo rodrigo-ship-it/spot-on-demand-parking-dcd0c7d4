@@ -31,15 +31,35 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 const extractCityFromAddress = (address: string): string => {
   if (!address) return '';
   const parts = address.split(',').map(p => p.trim());
+  
+  // For addresses like "4700 Byron Cir, Irving, TX 75038, USA"
+  // City is typically the 2nd part (index 1)
+  // For "Irving, TX, USA" or "San Francisco, CA, USA", city is first part
+  
+  // Check if second part exists and is not a state code or zip
+  if (parts.length >= 3) {
+    // Look for the part that's just before "STATE ZIP" pattern
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      const nextPart = parts[i + 1] || '';
+      // If next part looks like "TX 75038" or "TX", this part is likely the city
+      if (/^[A-Z]{2}(\s+\d{5})?/.test(nextPart)) {
+        return part.toLowerCase();
+      }
+    }
+  }
+  
+  // For simple "City, State, Country" format
   if (parts.length >= 2) {
-    const potentialCity = parts[parts.length - 2] || parts[parts.length - 1];
-    const cityClean = potentialCity.replace(/\b[A-Z]{2}\b\s*\d{5}(-\d{4})?/g, '').trim();
-    if (cityClean) return cityClean.toLowerCase();
+    const firstPart = parts[0];
+    // If first part doesn't look like a street address (no numbers at start)
+    if (!/^\d+\s/.test(firstPart)) {
+      return firstPart.toLowerCase();
+    }
+    // Otherwise return second part
+    return parts[1]?.toLowerCase() || firstPart.toLowerCase();
   }
-  const stateMatch = address.match(/([^,]+),?\s*[A-Z]{2}\s*\d{5}/);
-  if (stateMatch) {
-    return stateMatch[1].trim().toLowerCase();
-  }
+  
   return parts[0]?.toLowerCase() || '';
 };
 
