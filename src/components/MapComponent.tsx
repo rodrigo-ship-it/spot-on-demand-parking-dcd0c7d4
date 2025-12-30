@@ -270,16 +270,17 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 el.className = 'premium-pin-marker';
                 const pinColor = getPinColor(primarySpot, isMultipleSpots);
                 const scale = getPinScale(primarySpot, isMultipleSpots);
+                // Expanded viewBox to prevent stroke clipping (added 3px padding for stroke)
                 el.innerHTML = `
-                  <svg width="${27 * scale}" height="${41 * scale}" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13.5 0C6.044 0 0 6.044 0 13.5C0 23.625 13.5 41 13.5 41S27 23.625 27 13.5C27 6.044 20.956 0 13.5 0Z" 
+                  <svg width="${33 * scale}" height="${47 * scale}" viewBox="0 0 33 47" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16.5 3C9.044 3 3 9.044 3 16.5C3 26.625 16.5 44 16.5 44S30 26.625 30 16.5C30 9.044 23.956 3 16.5 3Z" 
                           fill="${pinColor}" 
                           stroke="#d4af37" 
-                          stroke-width="3"/>
-                    <circle cx="13.5" cy="13.5" r="5" fill="white"/>
+                          stroke-width="2.5"/>
+                    <circle cx="16.5" cy="16.5" r="5" fill="white"/>
                   </svg>
                 `;
-                el.style.cssText = `cursor: pointer; transform: translate(-50%, -100%);`;
+                el.style.cssText = `cursor: pointer;`;
                 
                 marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
                   .setLngLat([group.longitude, group.latitude])
@@ -538,16 +539,17 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         el.className = 'premium-pin-marker';
         const pinColor = getPinColor(primarySpot, isMultipleSpots);
         const scale = getPinScale(primarySpot, isMultipleSpots);
+        // Expanded viewBox to prevent stroke clipping (added 3px padding for stroke)
         el.innerHTML = `
-          <svg width="${27 * scale}" height="${41 * scale}" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13.5 0C6.044 0 0 6.044 0 13.5C0 23.625 13.5 41 13.5 41S27 23.625 27 13.5C27 6.044 20.956 0 13.5 0Z" 
+          <svg width="${33 * scale}" height="${47 * scale}" viewBox="0 0 33 47" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.5 3C9.044 3 3 9.044 3 16.5C3 26.625 16.5 44 16.5 44S30 26.625 30 16.5C30 9.044 23.956 3 16.5 3Z" 
                   fill="${pinColor}" 
                   stroke="#d4af37" 
-                  stroke-width="3"/>
-            <circle cx="13.5" cy="13.5" r="5" fill="white"/>
+                  stroke-width="2.5"/>
+            <circle cx="16.5" cy="16.5" r="5" fill="white"/>
           </svg>
         `;
-        el.style.cssText = `cursor: pointer; transform: translate(-50%, -100%);`;
+        el.style.cssText = `cursor: pointer;`;
         
         marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
           .setLngLat([group.longitude, group.latitude])
