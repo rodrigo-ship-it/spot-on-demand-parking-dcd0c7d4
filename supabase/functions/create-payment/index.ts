@@ -67,6 +67,33 @@ serve(async (req) => {
       .eq("user_id", parkingSpot.owner_id)
       .maybeSingle();
 
+    // Check if lister has premium subscription
+    const { data: listerPremiumSubscription } = await supabaseService
+      .from('premium_subscriptions')
+      .select('id')
+      .eq('user_id', parkingSpot.owner_id)
+      .eq('status', 'active')
+      .gt('current_period_end', new Date().toISOString())
+      .maybeSingle();
+    
+    // Check if renter has premium subscription (if authenticated)
+    let renterPremiumSubscription = null;
+    if (user?.id) {
+      const { data: renterPremium } = await supabaseService
+        .from('premium_subscriptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .gt('current_period_end', new Date().toISOString())
+        .maybeSingle();
+      renterPremiumSubscription = renterPremium;
+    }
+    
+    const isListerPremium = !!listerPremiumSubscription;
+    const isRenterPremium = !!renterPremiumSubscription;
+    
+    console.log("📝 Premium status:", { isListerPremium, isRenterPremium });
+
     // Use provided email or user email or default
     const email = customerEmail || user?.email || "guest@example.com";
 
@@ -87,16 +114,19 @@ serve(async (req) => {
     // Use the exact same calculation as frontend - baseAmount is the final total the customer should pay
     const totalAmount = Math.round(baseAmount * 100); // Customer pays exactly what frontend calculated
     
-    // Work backwards to calculate what goes to the lister (same as frontend logic)
+    // Platform fee: 5% for premium lister, 7% for regular lister
+    const platformFeeRate = isListerPremium ? 0.05 : 0.07;
+    
+    // Work backwards to calculate what goes to the lister
     // Frontend: total = (subtotal + platformFee) + tax
     // Frontend: tax = (subtotal + platformFee) * 0.0875
-    // Frontend: platformFee = subtotal * 0.07
-    // So: total = (subtotal * 1.07) * 1.0875
-    // Therefore: subtotal = total / (1.07 * 1.0875)
-    const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
-    const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% platform fee from subtotal
+    // So: total = (subtotal * (1 + platformFeeRate)) * 1.0875
+    const subtotalBeforeFees = totalAmount / ((1 + platformFeeRate) * 1.0875);
+    const platformFeeFromLister = Math.round(subtotalBeforeFees * platformFeeRate);
     const stripeProcessingFee = Math.round(totalAmount * 0.029) + 30; // 2.9% + $0.30 of total charge
-    const listerAmount = Math.round(subtotalBeforeFees) - platformFeeFromLister - stripeProcessingFee; // Subtotal minus platform fee minus stripe fee
+    
+    // Lister gets subtotal minus their platform fee minus stripe fee
+    const listerAmount = Math.round(subtotalBeforeFees) - platformFeeFromLister - stripeProcessingFee;
 
     // Create payment session config
     const sessionConfig = {

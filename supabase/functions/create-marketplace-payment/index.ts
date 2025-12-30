@@ -239,7 +239,8 @@ serve(async (req) => {
     const baseProcessingFee = Math.round((baseSpotPrice + platformFee) * 0.029) + 30;
     const stripeProcessingFee = isRenterPremium ? Math.round(baseProcessingFee * 0.5) : baseProcessingFee;
     
-    const listerAmount = Math.round(baseSpotPrice * 0.93); // Owner gets 93% of base price
+    // Lister gets base price minus their platform fee (premium listers keep more)
+    const listerAmount = Math.round(baseSpotPrice * (1 - platformFeeRate));
     
     console.log("📝 Fee breakdown:", { 
       baseSpotPrice, 
