@@ -52,8 +52,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
     }
   };
 
-  // Fixed scale for all pins - consistent size
-  const PIN_SCALE = 1.0;
 
   // Premium statuses are already fetched and set on spots by the parent component
   // No need to fetch again - just use the isPremiumLister property
@@ -135,9 +133,28 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 .addTo(map.current!);
             }
             
-            // Track positions to offset overlapping spots
-            const usedPositions: { lat: number; lng: number }[] = [];
-            const tolerance = 0.0003; // ~30 meters
+            // Track ORIGINAL positions to detect overlaps (not offset positions)
+            const originalPositions: { lat: number; lng: number; count: number }[] = [];
+            const tolerance = 0.0001; // ~10 meters - tighter tolerance for exact matches
+            
+            // First pass: count how many spots are at each location
+            spots.forEach((spot) => {
+              if (!spot.latitude || !spot.longitude) return;
+              
+              const existing = originalPositions.find(pos => 
+                Math.abs(pos.lat - spot.latitude!) < tolerance && 
+                Math.abs(pos.lng - spot.longitude!) < tolerance
+              );
+              
+              if (existing) {
+                existing.count++;
+              } else {
+                originalPositions.push({ lat: spot.latitude, lng: spot.longitude, count: 1 });
+              }
+            });
+            
+            // Track how many we've placed at each position for offset calculation
+            const placedAtPosition: Map<string, number> = new Map();
             
             // Create individual markers for each spot
             spots.forEach((spot, index) => {
@@ -146,26 +163,18 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 return;
               }
               
-              // Check if position overlaps with existing markers and offset if needed
+              // Find which original position this spot belongs to
+              const posKey = `${spot.latitude.toFixed(5)},${spot.longitude.toFixed(5)}`;
+              const placedCount = placedAtPosition.get(posKey) || 0;
+              placedAtPosition.set(posKey, placedCount + 1);
+              
               let spotLng = spot.longitude;
               let spotLat = spot.latitude;
               
-              // Check for overlaps and apply offset
-              let overlapCount = 0;
-              for (const pos of usedPositions) {
-                const distance = Math.sqrt(
-                  Math.pow(spotLng - pos.lng, 2) + 
-                  Math.pow(spotLat - pos.lat, 2)
-                );
-                if (distance < tolerance) {
-                  overlapCount++;
-                }
-              }
-              
-              // Apply spiral offset for overlapping spots
-              if (overlapCount > 0) {
-                const angle = (overlapCount * 45) * (Math.PI / 180); // 45 degree increments
-                const offsetDistance = 0.0003 * overlapCount; // Increase offset with each overlap
+              // Apply spiral offset for overlapping spots (starting from the 2nd spot at same location)
+              if (placedCount > 0) {
+                const angle = (placedCount * 90) * (Math.PI / 180); // 90 degrees apart
+                const offsetDistance = 0.0004 * Math.ceil(placedCount / 4); // Increase distance for each ring
                 spotLng += Math.cos(angle) * offsetDistance;
                 spotLat += Math.sin(angle) * offsetDistance;
               }
@@ -181,8 +190,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                   spotLat += 0.0002;
                 }
               }
-              
-              usedPositions.push({ lat: spotLat, lng: spotLng });
               
               const isPremium = spot.isPremiumLister || false;
               
@@ -222,39 +229,27 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
                 </div>
               `;
               
-              let marker;
-              const scale = PIN_SCALE;
+              // Create custom SVG marker for ALL spots (consistent shape/size)
+              const el = document.createElement('div');
+              el.className = isPremium ? 'premium-pin-marker' : 'pin-marker';
+              const pinColor = getPinColor(spot);
               
-              if (isPremium) {
-                // Create custom SVG pin marker with gold border for premium spots
-                const el = document.createElement('div');
-                el.className = 'premium-pin-marker';
-                const pinColor = getPinColor(spot);
-                el.innerHTML = `
-                  <svg width="${33 * scale}" height="${47 * scale}" viewBox="0 0 33 47" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.5 3C9.044 3 3 9.044 3 16.5C3 26.625 16.5 44 16.5 44S30 26.625 30 16.5C30 9.044 23.956 3 16.5 3Z" 
-                          fill="${pinColor}" 
-                          stroke="#d4af37" 
-                          stroke-width="2.5"/>
-                    <circle cx="16.5" cy="16.5" r="5" fill="white"/>
-                  </svg>
-                `;
-                el.style.cssText = `cursor: pointer;`;
-                
-                marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-                  .setLngLat([spotLng, spotLat])
-                  .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
-                  .addTo(map.current!);
-              } else {
-                // Use default Mapbox pin marker for non-premium spots
-                marker = new mapboxgl.Marker({
-                  color: getPinColor(spot),
-                  scale: scale,
-                })
-                  .setLngLat([spotLng, spotLat])
-                  .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
-                  .addTo(map.current!);
-              }
+              // Use same SVG for both premium and non-premium - only difference is the gold stroke
+              el.innerHTML = `
+                <svg width="27" height="41" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.5 1C6.596 1 1 6.596 1 13.5C1 23 13.5 40 13.5 40S26 23 26 13.5C26 6.596 20.404 1 13.5 1Z" 
+                        fill="${pinColor}" 
+                        stroke="${isPremium ? '#d4af37' : pinColor}" 
+                        stroke-width="${isPremium ? '2' : '0.5'}"/>
+                  <circle cx="13.5" cy="13.5" r="4" fill="white"/>
+                </svg>
+              `;
+              el.style.cssText = `cursor: pointer;`;
+              
+              const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+                .setLngLat([spotLng, spotLat])
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
+                .addTo(map.current!);
               
               // Add click event listener when popup opens
               marker.getPopup().on('open', () => {
@@ -329,9 +324,28 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         .addTo(map.current!);
     }
     
-    // Track positions to offset overlapping spots
-    const usedPositions: { lat: number; lng: number }[] = [];
-    const tolerance = 0.0003; // ~30 meters
+    // Track ORIGINAL positions to detect overlaps (not offset positions)
+    const originalPositions: { lat: number; lng: number; count: number }[] = [];
+    const tolerance = 0.0001; // ~10 meters - tighter tolerance for exact matches
+    
+    // First pass: count how many spots are at each location
+    spots.forEach((spot) => {
+      if (!spot.latitude || !spot.longitude) return;
+      
+      const existing = originalPositions.find(pos => 
+        Math.abs(pos.lat - spot.latitude!) < tolerance && 
+        Math.abs(pos.lng - spot.longitude!) < tolerance
+      );
+      
+      if (existing) {
+        existing.count++;
+      } else {
+        originalPositions.push({ lat: spot.latitude, lng: spot.longitude, count: 1 });
+      }
+    });
+    
+    // Track how many we've placed at each position for offset calculation
+    const placedAtPosition: Map<string, number> = new Map();
     
     // Create individual markers for each spot
     spots.forEach((spot, index) => {
@@ -340,26 +354,18 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         return;
       }
       
-      // Check if position overlaps with existing markers and offset if needed
+      // Find which original position this spot belongs to
+      const posKey = `${spot.latitude.toFixed(5)},${spot.longitude.toFixed(5)}`;
+      const placedCount = placedAtPosition.get(posKey) || 0;
+      placedAtPosition.set(posKey, placedCount + 1);
+      
       let spotLng = spot.longitude;
       let spotLat = spot.latitude;
       
-      // Check for overlaps and apply offset
-      let overlapCount = 0;
-      for (const pos of usedPositions) {
-        const distance = Math.sqrt(
-          Math.pow(spotLng - pos.lng, 2) + 
-          Math.pow(spotLat - pos.lat, 2)
-        );
-        if (distance < tolerance) {
-          overlapCount++;
-        }
-      }
-      
-      // Apply spiral offset for overlapping spots
-      if (overlapCount > 0) {
-        const angle = (overlapCount * 45) * (Math.PI / 180);
-        const offsetDistance = 0.0003 * overlapCount;
+      // Apply spiral offset for overlapping spots (starting from the 2nd spot at same location)
+      if (placedCount > 0) {
+        const angle = (placedCount * 90) * (Math.PI / 180); // 90 degrees apart
+        const offsetDistance = 0.0004 * Math.ceil(placedCount / 4); // Increase distance for each ring
         spotLng += Math.cos(angle) * offsetDistance;
         spotLat += Math.sin(angle) * offsetDistance;
       }
@@ -375,8 +381,6 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
           spotLat += 0.0002;
         }
       }
-      
-      usedPositions.push({ lat: spotLat, lng: spotLng });
       
       const isPremium = spot.isPremiumLister || false;
       
@@ -416,39 +420,27 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
         </div>
       `;
       
-      let marker;
-      const scale = PIN_SCALE;
+      // Create custom SVG marker for ALL spots (consistent shape/size)
+      const el = document.createElement('div');
+      el.className = isPremium ? 'premium-pin-marker' : 'pin-marker';
+      const pinColor = getPinColor(spot);
       
-      if (isPremium) {
-        // Create custom SVG pin marker with gold border for premium spots
-        const el = document.createElement('div');
-        el.className = 'premium-pin-marker';
-        const pinColor = getPinColor(spot);
-        el.innerHTML = `
-          <svg width="${33 * scale}" height="${47 * scale}" viewBox="0 0 33 47" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16.5 3C9.044 3 3 9.044 3 16.5C3 26.625 16.5 44 16.5 44S30 26.625 30 16.5C30 9.044 23.956 3 16.5 3Z" 
-                  fill="${pinColor}" 
-                  stroke="#d4af37" 
-                  stroke-width="2.5"/>
-            <circle cx="16.5" cy="16.5" r="5" fill="white"/>
-          </svg>
-        `;
-        el.style.cssText = `cursor: pointer;`;
-        
-        marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-          .setLngLat([spotLng, spotLat])
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
-          .addTo(map.current!);
-      } else {
-        // Use default Mapbox pin marker for non-premium spots
-        marker = new mapboxgl.Marker({
-          color: getPinColor(spot),
-          scale: scale,
-        })
-          .setLngLat([spotLng, spotLat])
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
-          .addTo(map.current!);
-      }
+      // Use same SVG for both premium and non-premium - only difference is the gold stroke
+      el.innerHTML = `
+        <svg width="27" height="41" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13.5 1C6.596 1 1 6.596 1 13.5C1 23 13.5 40 13.5 40S26 23 26 13.5C26 6.596 20.404 1 13.5 1Z" 
+                fill="${pinColor}" 
+                stroke="${isPremium ? '#d4af37' : pinColor}" 
+                stroke-width="${isPremium ? '2' : '0.5'}"/>
+          <circle cx="13.5" cy="13.5" r="4" fill="white"/>
+        </svg>
+      `;
+      el.style.cssText = `cursor: pointer;`;
+      
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([spotLng, spotLat])
+        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
+        .addTo(map.current!);
       
       // Add click event listener when popup opens
       marker.getPopup().on('open', () => {
