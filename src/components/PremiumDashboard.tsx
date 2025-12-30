@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PremiumBadge } from "@/components/PremiumBadge";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { PremiumSubscriptionDialog } from "@/components/PremiumSubscriptionDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   Crown, 
   TrendingUp, 
@@ -13,11 +15,49 @@ import {
   DollarSign, 
   Settings,
   Target,
-  BarChart3
+  BarChart3,
+  Loader2
 } from "lucide-react";
 
 const PremiumDashboard = () => {
   const { isPremium, loading } = usePremiumStatus();
+  const [managingSubscription, setManagingSubscription] = useState(false);
+
+  const handleManageSubscription = async () => {
+    try {
+      setManagingSubscription(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please sign in to manage your subscription');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('premium-portal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Error opening billing portal:', error);
+        toast.error('Failed to open subscription management. Please try again.');
+        return;
+      }
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Opening Stripe billing portal...');
+      } else {
+        toast.error('Unable to create billing portal session');
+      }
+    } catch (error) {
+      console.error('Error managing subscription:', error);
+      toast.error('Failed to open subscription management');
+    } finally {
+      setManagingSubscription(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -146,12 +186,27 @@ const PremiumDashboard = () => {
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold text-blue-800 mb-1">Coming Soon</h4>
-                <p className="text-sm text-blue-600">More premium features are being developed. Stay tuned!</p>
+                <h4 className="font-semibold text-blue-800 mb-1">Subscription Management</h4>
+                <p className="text-sm text-blue-600">Update payment method, view billing history, or cancel anytime.</p>
               </div>
-              <Button variant="outline" size="sm" className="border-blue-200 text-blue-700 hover:bg-blue-50">
-                <Settings className="w-4 h-4 mr-2" />
-                Manage Subscription
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={handleManageSubscription}
+                disabled={managingSubscription}
+              >
+                {managingSubscription ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Subscription
+                  </>
+                )}
               </Button>
             </div>
           </div>
