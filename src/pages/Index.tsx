@@ -96,6 +96,21 @@ const Index = () => {
       
       const secureSpots = spotData || [];
       
+      // Fetch premium status for all spot owners
+      const ownerIds = [...new Set(secureSpots.map(spot => spot.owner_id).filter(Boolean))];
+      let premiumStatusMap: Record<string, boolean> = {};
+      
+      if (ownerIds.length > 0) {
+        const { data: premiumData } = await supabase
+          .rpc("get_premium_status_for_owners", { owner_ids: ownerIds });
+        
+        if (premiumData) {
+          premiumData.forEach((p: { user_id: string; is_premium: boolean }) => {
+            premiumStatusMap[p.user_id] = p.is_premium;
+          });
+        }
+      }
+      
       const newTransformedSpots = secureSpots.map(spot => {
         // Calculate distance using search coordinates or user location as reference
         let calculatedDistance = "Unknown distance";
@@ -133,8 +148,7 @@ const Index = () => {
           image: spot.images?.[0] || `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&crop=center`,
           latitude: Number(spot.latitude) || 40.7589,
           longitude: Number(spot.longitude) || -73.9851,
-          // Note: owner_id removed for security - no longer exposed to public
-          isPremiumLister: false // We'll fetch this separately
+          isPremiumLister: spot.owner_id ? premiumStatusMap[spot.owner_id] || false : false
         };
       });
 
@@ -835,7 +849,7 @@ const Index = () => {
                     whileHover={{ y: -8 }}
                     className="h-full"
                   >
-                    <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 flex flex-col h-full overflow-hidden bg-card/50 backdrop-blur-sm">
+                    <Card className={`group shadow-lg hover:shadow-2xl transition-all duration-500 flex flex-col h-full overflow-hidden bg-card/50 backdrop-blur-sm ${spot.isPremiumLister ? 'border-2 border-amber-400' : 'border-0'}`}>
                       <div className="relative overflow-hidden">
                         <motion.img 
                           whileHover={{ scale: 1.1 }}
