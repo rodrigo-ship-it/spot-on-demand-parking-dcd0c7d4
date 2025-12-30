@@ -119,6 +119,19 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
             logoPosition: 'bottom-right'
           });
 
+          // Hide default POI markers from the base map style
+          map.current.on('style.load', () => {
+            const layers = map.current!.getStyle().layers;
+            if (layers) {
+              layers.forEach((layer) => {
+                // Hide POI labels and icons that show default markers
+                if (layer.id.includes('poi') && (layer.id.includes('label') || layer.type === 'symbol')) {
+                  map.current!.setLayoutProperty(layer.id, 'visibility', 'none');
+                }
+              });
+            }
+          });
+
           console.log('Map instance created');
 
           map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
