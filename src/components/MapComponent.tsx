@@ -35,36 +35,25 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
   const onSpotSelectRef = useRef(onSpotSelect);
   const [premiumStatuses, setPremiumStatuses] = useState<Record<string, boolean>>({});
 
-  // Get pin color based on pricing type and spot type
-  const getPinColor = (spot: ParkingSpot, isMultiple: boolean = false) => {
-    // If it's a clustered location, use a darker shade
-    const opacity = isMultiple ? '1' : '0.9';
-    
+  // Get pin color based on pricing type
+  const getPinColor = (spot: ParkingSpot) => {
     // Color by pricing type
     switch (spot.pricingType) {
       case 'hourly':
-        return `rgba(59, 130, 246, ${opacity})`; // Blue
+        return '#3b82f6'; // Blue
       case 'daily':
-        return `rgba(34, 197, 94, ${opacity})`; // Green
+        return '#22c55e'; // Green
       case 'monthly':
-        return `rgba(168, 85, 247, ${opacity})`; // Purple
+        return '#a855f7'; // Purple
       case 'one_time':
-        return `rgba(249, 115, 22, ${opacity})`; // Orange
+        return '#f97316'; // Orange
       default:
-        return `rgba(107, 114, 128, ${opacity})`; // Gray
+        return '#6b7280'; // Gray
     }
   };
 
-  // Get additional styling for entire lots/garages
-  const getPinScale = (spot: ParkingSpot, isMultiple: boolean = false) => {
-    const baseScale = isMultiple ? 1.3 : 1.1;
-    // Make entire garages/lots slightly larger
-    const isEntireSpace = spot.type?.toLowerCase().includes('garage') || 
-                         spot.type?.toLowerCase().includes('lot') ||
-                         spot.spotType?.includes('garage') ||
-                         spot.spotType?.includes('lot');
-    return isEntireSpace ? baseScale + 0.2 : baseScale;
-  };
+  // Fixed scale for all pins - consistent size
+  const PIN_SCALE = 1.0;
 
   // Premium statuses are already fetched and set on spots by the parent component
   // No need to fetch again - just use the isPremiumLister property
@@ -234,7 +223,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
               `;
               
               let marker;
-              const scale = getPinScale(spot);
+              const scale = PIN_SCALE;
               
               if (isPremium) {
                 // Create custom SVG pin marker with gold border for premium spots
@@ -428,7 +417,7 @@ export const MapComponent = ({ spots, onSpotSelect, centerLocation }: MapCompone
       `;
       
       let marker;
-      const scale = getPinScale(spot);
+      const scale = PIN_SCALE;
       
       if (isPremium) {
         // Create custom SVG pin marker with gold border for premium spots

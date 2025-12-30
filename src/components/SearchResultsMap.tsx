@@ -136,9 +136,9 @@ const SearchResultsMap: React.FC<SearchResultsMapProps> = ({ searchLocation, sea
         <MapLegend />
       </div>
       
-      {/* Pass FILTERED spots to the map so only matching spots show */}
+      {/* Pass ALL spots to the map so users can zoom out and see all locations */}
       <MapComponent 
-        spots={filteredSpotsWithDistance.map(spot => ({
+        spots={allSpotsWithDistance.map(spot => ({
           ...spot,
           latitude: spot.lat,
           longitude: spot.lng,
