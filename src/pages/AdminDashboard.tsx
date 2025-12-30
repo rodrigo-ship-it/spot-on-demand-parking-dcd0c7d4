@@ -41,14 +41,8 @@ import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
 import { AdminVerificationReview } from "@/components/AdminVerificationReview";
-import { PenaltySystemTest } from "@/components/PenaltySystemTest";
-import { PenaltyTestHelper } from "@/components/PenaltyTestHelper";
-import { PenaltyTestReal } from "@/components/PenaltyTestReal";
-import { LateChargeTestSystem } from "@/components/LateChargeTestSystem";
-import { LateCheckoutTrigger } from "@/components/LateCheckoutTrigger";
-import { ManualPenaltyCharge } from "@/components/ManualPenaltyCharge";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
-import { format } from "date-fns";
+import { format, subDays, subMonths, subWeeks, subYears, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -184,6 +178,7 @@ export default function AdminDashboard() {
   const [spotSearchTerm, setSpotSearchTerm] = useState("");
   const [spotFilterStatus, setSpotFilterStatus] = useState("all");
   const [bookingFilterStatus, setBookingFilterStatus] = useState("all");
+  const [reservationPeriod, setReservationPeriod] = useState<"day" | "week" | "month" | "year">("week");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
   const [userOwnedSpots, setUserOwnedSpots] = useState<ParkingSpot[]>([]);
@@ -1241,21 +1236,220 @@ Check browser console for detailed ID analysis.
         )}
 
         {/* Comprehensive Admin Tabs */}
-        <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+        <Tabs defaultValue="reservations" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsTrigger value="reservations">Reservations</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="spots">Spots</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="bookings">All Bookings</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
-            <TabsTrigger value="penalty-test">Penalty Test</TabsTrigger>
-            <TabsTrigger value="penalties">Penalties</TabsTrigger>
-            <TabsTrigger value="manual-charge">Manual Charge</TabsTrigger>
             <TabsTrigger value="support">Support</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="roles">User Roles</TabsTrigger>
-          <TabsTrigger value="monitoring">Security Monitoring</TabsTrigger>
-        </TabsList>
+            <TabsTrigger value="security">Security</TabsTrigger>
+          </TabsList>
+
+          {/* Reservations Tab - Time-based booking analytics */}
+          <TabsContent value="reservations">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Reservations Overview
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      View and analyze booking data by time period
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant={reservationPeriod === 'day' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setReservationPeriod('day')}
+                    >
+                      Today
+                    </Button>
+                    <Button 
+                      variant={reservationPeriod === 'week' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setReservationPeriod('week')}
+                    >
+                      This Week
+                    </Button>
+                    <Button 
+                      variant={reservationPeriod === 'month' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setReservationPeriod('month')}
+                    >
+                      This Month
+                    </Button>
+                    <Button 
+                      variant={reservationPeriod === 'year' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setReservationPeriod('year')}
+                    >
+                      This Year
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const now = new Date();
+                  let periodStart: Date;
+                  let periodEnd: Date;
+                  let periodLabel: string;
+                  
+                  switch (reservationPeriod) {
+                    case 'day':
+                      periodStart = startOfDay(now);
+                      periodEnd = endOfDay(now);
+                      periodLabel = 'Today';
+                      break;
+                    case 'week':
+                      periodStart = startOfWeek(now, { weekStartsOn: 0 });
+                      periodEnd = endOfWeek(now, { weekStartsOn: 0 });
+                      periodLabel = 'This Week';
+                      break;
+                    case 'month':
+                      periodStart = startOfMonth(now);
+                      periodEnd = endOfMonth(now);
+                      periodLabel = 'This Month';
+                      break;
+                    case 'year':
+                      periodStart = startOfYear(now);
+                      periodEnd = endOfYear(now);
+                      periodLabel = 'This Year';
+                      break;
+                  }
+                  
+                  const periodBookings = bookings.filter(booking => {
+                    const bookingDate = new Date(booking.created_at);
+                    return bookingDate >= periodStart && bookingDate <= periodEnd;
+                  });
+                  
+                  const periodRevenue = periodBookings
+                    .filter(b => ['completed', 'active', 'confirmed'].includes(b.status))
+                    .reduce((sum, b) => sum + Number(b.total_amount), 0);
+                  
+                  const periodPlatformFees = periodBookings
+                    .filter(b => ['completed', 'active', 'confirmed'].includes(b.status))
+                    .reduce((sum, b) => sum + Number(b.platform_fee_amount || 0), 0);
+                  
+                  const periodCompleted = periodBookings.filter(b => b.status === 'completed').length;
+                  const periodActive = periodBookings.filter(b => b.status === 'active').length;
+                  const periodCancelled = periodBookings.filter(b => b.status === 'cancelled').length;
+                  const periodPending = periodBookings.filter(b => ['pending', 'confirmed'].includes(b.status)).length;
+                  
+                  return (
+                    <>
+                      {/* Period Stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-sm text-blue-600 dark:text-blue-400">Total Bookings</p>
+                          <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{periodBookings.length}</p>
+                        </div>
+                        <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                          <p className="text-sm text-green-600 dark:text-green-400">Gross Revenue</p>
+                          <p className="text-2xl font-bold text-green-700 dark:text-green-300">${periodRevenue.toFixed(2)}</p>
+                        </div>
+                        <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                          <p className="text-sm text-amber-600 dark:text-amber-400">Platform Fees</p>
+                          <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">${periodPlatformFees.toFixed(2)}</p>
+                        </div>
+                        <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <p className="text-sm text-purple-600 dark:text-purple-400">Avg Booking</p>
+                          <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                            ${periodBookings.length > 0 ? (periodRevenue / periodBookings.length).toFixed(2) : '0.00'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Status Breakdown */}
+                      <div className="grid grid-cols-4 gap-2 mb-6">
+                        <div className="text-center p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <p className="text-lg font-bold text-green-700 dark:text-green-400">{periodCompleted}</p>
+                          <p className="text-xs text-green-600 dark:text-green-500">Completed</p>
+                        </div>
+                        <div className="text-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                          <p className="text-lg font-bold text-blue-700 dark:text-blue-400">{periodActive}</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-500">Active</p>
+                        </div>
+                        <div className="text-center p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                          <p className="text-lg font-bold text-yellow-700 dark:text-yellow-400">{periodPending}</p>
+                          <p className="text-xs text-yellow-600 dark:text-yellow-500">Pending</p>
+                        </div>
+                        <div className="text-center p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                          <p className="text-lg font-bold text-red-700 dark:text-red-400">{periodCancelled}</p>
+                          <p className="text-xs text-red-600 dark:text-red-500">Cancelled</p>
+                        </div>
+                      </div>
+                      
+                      {/* Period Bookings List */}
+                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                        <h4 className="font-medium text-sm text-muted-foreground mb-3">{periodLabel} Bookings ({periodBookings.length})</h4>
+                        {periodBookings.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No bookings for {periodLabel.toLowerCase()}</p>
+                          </div>
+                        ) : (
+                          periodBookings.map((booking) => (
+                            <div key={booking.id} className={`flex items-center justify-between p-3 rounded-lg border ${
+                              booking.status === 'active' 
+                                ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20' 
+                                : booking.status === 'cancelled'
+                                  ? 'bg-red-50/50 border-red-200 dark:bg-red-950/20'
+                                  : 'bg-background/50'
+                            }`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  booking.status === 'active' ? 'bg-green-100' :
+                                  booking.status === 'completed' ? 'bg-blue-100' :
+                                  booking.status === 'cancelled' ? 'bg-red-100' :
+                                  'bg-gray-100'
+                                }`}>
+                                  <Car className={`w-4 h-4 ${
+                                    booking.status === 'active' ? 'text-green-600' :
+                                    booking.status === 'completed' ? 'text-blue-600' :
+                                    booking.status === 'cancelled' ? 'text-red-600' :
+                                    'text-gray-600'
+                                  }`} />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm">{booking.parking_spots?.title || 'Unknown'}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {booking.renter_profile?.full_name || booking.renter_profile?.email || 'Unknown renter'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <p className="font-medium text-sm">${Number(booking.total_amount).toFixed(2)}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(booking.created_at), 'MMM dd, HH:mm')}
+                                  </p>
+                                </div>
+                                <Badge variant={
+                                  booking.status === 'active' ? 'default' :
+                                  booking.status === 'completed' ? 'secondary' :
+                                  booking.status === 'cancelled' ? 'destructive' :
+                                  'outline'
+                                } className={booking.status === 'active' ? 'bg-green-500' : ''}>
+                                  {booking.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="users">
             <Card>
@@ -1732,38 +1926,6 @@ Check browser console for detailed ID analysis.
 
           <TabsContent value="refunds">
             <AdminRefundManager />
-          </TabsContent>
-
-          <TabsContent value="penalty-test">
-            <div className="space-y-6">
-              <PenaltySystemTest />
-              <PenaltyTestHelper />
-              <PenaltyTestReal />
-              <LateCheckoutTrigger />
-              <ManualPenaltyCharge />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="penalties">
-            <Card>
-              <CardHeader>
-                <CardTitle>Penalty Management & Testing</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <LateChargeTestSystem />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="manual-charge">
-            <Card>
-              <CardHeader>
-                <CardTitle>Manual Penalty Charge</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ManualPenaltyCharge />
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="support">
