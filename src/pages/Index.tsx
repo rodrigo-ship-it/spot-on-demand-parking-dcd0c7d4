@@ -27,48 +27,14 @@ import { TypewriterText } from "@/components/TypewriterText";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
-// Helper function to extract city from address
-const extractCityFromAddress = (address: string): string => {
-  if (!address) return '';
-  const parts = address.split(',').map(p => p.trim());
-  
-  // For addresses like "4700 Byron Cir, Irving, TX 75038, USA"
-  // City is typically the 2nd part (index 1)
-  // For "Irving, TX, USA" or "San Francisco, CA, USA", city is first part
-  
-  // Check if second part exists and is not a state code or zip
-  if (parts.length >= 3) {
-    // Look for the part that's just before "STATE ZIP" pattern
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      const nextPart = parts[i + 1] || '';
-      // If next part looks like "TX 75038" or "TX", this part is likely the city
-      if (/^[A-Z]{2}(\s+\d{5})?/.test(nextPart)) {
-        return part.toLowerCase();
-      }
-    }
-  }
-  
-  // For simple "City, State, Country" format
-  if (parts.length >= 2) {
-    const firstPart = parts[0];
-    // If first part doesn't look like a street address (no numbers at start)
-    if (!/^\d+\s/.test(firstPart)) {
-      return firstPart.toLowerCase();
-    }
-    // Otherwise return second part
-    return parts[1]?.toLowerCase() || firstPart.toLowerCase();
-  }
-  
-  return parts[0]?.toLowerCase() || '';
-};
+// Distance radius for filtering spots (in miles)
+const NEARBY_RADIUS_MILES = 15;
 
 const Index = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCoordinates, setSearchCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [userCity, setUserCity] = useState<string>("");
   const [searchPricingType, setSearchPricingType] = useState("");
   const [searchTimeFilter, setSearchTimeFilter] = useState("");
   const [filteredSpots, setFilteredSpots] = useState([]);
@@ -80,34 +46,16 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
-  // Get user's current location and city on component mount
+  // Get user's current location on component mount
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          console.log("User location obtained:", position.coords);
+        (position) => {
+          console.log("User location obtained:", position.coords.latitude, position.coords.longitude);
           setUserLocation({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           });
-          
-          // Reverse geocode to get user's city
-          try {
-            const { data: tokenData } = await supabase.functions.invoke('get-mapbox-token');
-            if (tokenData?.token) {
-              const response = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?types=place&access_token=${tokenData.token}`
-              );
-              const data = await response.json();
-              if (data.features?.[0]?.text) {
-                const city = data.features[0].text.toLowerCase();
-                console.log("User city detected:", city);
-                setUserCity(city);
-              }
-            }
-          } catch (error) {
-            console.log("Could not reverse geocode user location:", error);
-          }
         },
         (error) => {
           console.log("User denied location access or location unavailable:", error);
@@ -115,7 +63,7 @@ const Index = () => {
         },
         {
           timeout: 10000,
-          enableHighAccuracy: false
+          enableHighAccuracy: true
         }
       );
     }
@@ -852,17 +800,24 @@ const Index = () => {
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {(() => {
-              // Filter spots by user's city if available, limit to 9, prioritize premium
+              // Filter spots by distance (within 15 miles) if user location is available
               let displaySpots = transformedSpots;
               
-              if (userCity) {
-                // Filter to spots in the user's city
-                const citySpots = transformedSpots.filter(spot => {
-                  const spotCity = extractCityFromAddress(spot.address);
-                  return spotCity === userCity;
+              if (userLocation) {
+                // Filter to spots within 15 miles of user
+                const nearbySpots = transformedSpots.filter(spot => {
+                  if (!spot.latitude || !spot.longitude) return false;
+                  const distance = calculateDistance(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    spot.latitude,
+                    spot.longitude
+                  );
+                  return distance <= NEARBY_RADIUS_MILES;
                 });
-                // If we have spots in the city, use those; otherwise fall back to all spots
-                displaySpots = citySpots.length > 0 ? citySpots : transformedSpots;
+                // If we have nearby spots, use those; otherwise fall back to all spots
+                displaySpots = nearbySpots.length > 0 ? nearbySpots : transformedSpots;
+                console.log(`Found ${nearbySpots.length} spots within ${NEARBY_RADIUS_MILES} miles`);
               }
               
               // Sort: premium first, then by rating
@@ -915,7 +870,7 @@ const Index = () => {
                     <div className="text-center py-12">
                       <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        {userCity ? `No parking spots in ${userCity} yet` : 'No parking spots available yet'}
+                        {userLocation ? 'No parking spots within 15 miles' : 'Enable location to see nearby spots'}
                       </h3>
                       <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
                       <Link to="/list-spot">
