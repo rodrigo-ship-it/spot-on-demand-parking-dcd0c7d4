@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, DollarSign, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 interface ExtensionSystemProps {
   bookingId: string;
@@ -25,6 +26,12 @@ export const ExtensionSystem = ({
   const [showExtensionOptions, setShowExtensionOptions] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  
+  // Get premium status for the current user (renter)
+  const { isPremium: isRenterPremium } = usePremiumStatus();
+  
+  // Platform fee rate: 5% for premium renters, 7% for regular renters
+  const platformFeeRate = isRenterPremium ? 0.05 : 0.07;
 
   useEffect(() => {
     const updateTimeStatus = () => {
@@ -165,24 +172,24 @@ export const ExtensionSystem = ({
     console.log('✅ Extension availability confirmed');
     
     // Calculate cost using the SAME pricing structure as regular bookings
-    // Use the exact formula from create-payment: total = (subtotal * 1.07) * 1.0875
+    // Use dynamic platform fee rate: 5% for premium, 7% for regular
     const basePrice = pricePerHour * hours;
-    const totalAmount = Math.round((basePrice * 1.07 * 1.0875) * 100) / 100;
+    const totalAmount = Math.round((basePrice * (1 + platformFeeRate) * 1.0875) * 100) / 100;
     
     // Calculate breakdown for display (matching create-payment logic)
-    const platformFeeFromRenter = Math.round(basePrice * 0.07 * 100) / 100; // 7% platform fee
+    const platformFeeFromRenter = Math.round(basePrice * platformFeeRate * 100) / 100;
     const subtotalWithPlatformFee = basePrice + platformFeeFromRenter;
     const taxAmount = Math.round(subtotalWithPlatformFee * 0.0875 * 100) / 100; // 8.75% tax
     const estimatedProcessingFee = Math.round(totalAmount * 0.029 * 100) / 100 + 0.30; // 2.9% + $0.30
     
-    // Calculate platform fees for backend (same structure as create-payment)
-    const subtotalBeforeFees = totalAmount / (1.07 * 1.0875);
-    const platformFeeFromLister = Math.round(subtotalBeforeFees * 0.07); // 7% from lister
-    const totalPlatformFee = platformFeeFromRenter + (platformFeeFromLister / 100);
+    // Calculate platform fees for backend (lister fee is calculated on backend based on lister's premium status)
+    const totalPlatformFee = platformFeeFromRenter;
     
     console.log('💰 Extension pricing breakdown:', {
       basePrice,
       platformFeeFromRenter,
+      platformFeeRate,
+      isRenterPremium,
       estimatedProcessingFee,
       totalAmount,
       hours
@@ -284,9 +291,9 @@ export const ExtensionSystem = ({
             )}
             <div className="grid grid-cols-2 gap-2">
               {[1, 2].map(hour => {
-                // Use the exact same calculation as the handleExtension function
+                // Use the exact same calculation as the handleExtension function with dynamic fee rate
                 const basePrice = pricePerHour * hour;
-                const totalCost = Math.round((basePrice * 1.07 * 1.0875) * 100) / 100;
+                const totalCost = Math.round((basePrice * (1 + platformFeeRate) * 1.0875) * 100) / 100;
                 
                 return (
                   <Button
@@ -300,6 +307,7 @@ export const ExtensionSystem = ({
                     <span className="text-sm flex items-center">
                       <DollarSign className="w-3 h-3" />
                       {totalCost.toFixed(2)}
+                      {isRenterPremium && <span className="ml-1 text-xs text-green-600">(Premium)</span>}
                     </span>
                   </Button>
                 );
