@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, ExternalLink, Settings } from "lucide-react";
+import { CheckCircle, AlertCircle, ExternalLink, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -68,7 +68,7 @@ export const StripeConnectOnboarding = () => {
       }
       
       window.open(data.url, '_blank');
-      toast.success('Opening payout settings...');
+      toast.success('Opening Stripe Dashboard...');
     } catch (error) {
       console.error('Error opening Connect portal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -191,8 +191,8 @@ export const StripeConnectOnboarding = () => {
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Button onClick={openConnectPortal} disabled={loading} className="flex-1">
-                  {loading ? 'Opening...' : 'Manage Payout Settings'}
-                  <Settings className="w-4 h-4 ml-2" />
+                  {loading ? 'Opening...' : 'View Balance & Payouts'}
+                  <Wallet className="w-4 h-4 ml-2" />
                 </Button>
                 <Button onClick={checkStatus} variant="outline" disabled={checking}>
                   {checking ? 'Checking...' : 'Refresh'}
@@ -202,7 +202,7 @@ export const StripeConnectOnboarding = () => {
                 ✅ Ready to receive payouts! Payments will be automatically transferred to your account.
               </p>
               <p className="text-xs text-muted-foreground text-center">
-                Use "Manage Payout Settings" to update your bank account, tax info, or payout schedule.
+                View your earnings, payout history, and request instant payouts from your Stripe Dashboard.
               </p>
             </div>
           )}
