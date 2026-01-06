@@ -657,7 +657,7 @@ const Index = () => {
       </nav>
 
       {/* Revolutionary Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
+      <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-orange-100 via-amber-100 to-yellow-100" role="banner">
         {/* Subtle Dot Grid Pattern */}
         <div 
           className="absolute inset-0 opacity-[0.15]"
