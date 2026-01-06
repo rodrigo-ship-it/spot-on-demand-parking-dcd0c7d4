@@ -637,7 +637,25 @@ const Bookings = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{reservation.id}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-1">
+                        <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
+                          {reservation.id.substring(0, 8).toUpperCase()}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => {
+                            navigator.clipboard.writeText(reservation.id);
+                            toast.success("Reservation ID copied!");
+                          }}
+                        >
+                          <span className="sr-only">Copy ID</span>
+                          📋
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{reservation.spotTitle}</div>
