@@ -704,7 +704,7 @@ const Index = () => {
                 className="font-black leading-tight tracking-tighter px-4"
               >
                 <span className="block text-7xl md:text-9xl lg:text-[11rem] text-foreground drop-shadow-2xl">
-                  Arriv
+                  Settld
                 </span>
                 <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[8rem] md:min-h-[12rem] lg:min-h-[14rem]">
                 <TypewriterText 
@@ -824,7 +824,7 @@ const Index = () => {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold mb-4"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>Why Choose Arriv</span>
+                <span>Why Choose Settld</span>
               </motion.div>
               <h2 className="text-4xl md:text-6xl font-bold mb-4">
                 Parking <span className="text-primary">Reimagined</span>
