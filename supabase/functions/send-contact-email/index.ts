@@ -30,8 +30,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to support team
     const supportEmailResponse = await resend.emails.send({
-      from: "Arriv Support <rodrigo@arrivparking.com>",
-      to: ["service@arrivparking.com"],
+      from: "Settld Support <support@settld.com>",
+      to: ["service@settld.com"],
       subject: `[${type.toUpperCase()}] ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <div style="margin-top: 20px; padding: 15px; background-color: #e7f3ff; border-radius: 8px;">
             <p style="margin: 0; font-size: 14px; color: #666;">
-              This message was sent from the Arriv contact form. Please respond to ${email} directly.
+              This message was sent from the Settld contact form. Please respond to ${email} directly.
             </p>
           </div>
         </div>
@@ -65,13 +65,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to user
     const confirmationEmailResponse = await resend.emails.send({
-      from: "Arriv Support <rodrigo@arrivparking.com>",
+      from: "Settld Support <support@settld.com>",
       to: [email],
-      subject: "We received your message - Arriv Support",
+      subject: "We received your message - Settld Support",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #0066cc; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">
-            Thank you for contacting Arriv!
+            Thank you for contacting Settld!
           </h2>
           
           <div style="padding: 20px 0;">
@@ -86,15 +86,15 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
             </div>
             
-            <p>If you have any urgent issues, you can also reach us at service@arrivparking.com.</p>
+            <p>If you have any urgent issues, you can also reach us at service@settld.com.</p>
             
             <p>Best regards,<br>
-            The Arriv Support Team</p>
+            The Settld Support Team</p>
           </div>
           
           <div style="margin-top: 30px; padding: 15px; background-color: #e7f3ff; border-radius: 8px; text-align: center;">
             <p style="margin: 0; font-size: 14px; color: #666;">
-              This is an automated confirmation email from Arriv.
+              This is an automated confirmation email from Settld.
             </p>
           </div>
         </div>

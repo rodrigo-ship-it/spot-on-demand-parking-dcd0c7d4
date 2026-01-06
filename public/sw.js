@@ -24,7 +24,7 @@ self.addEventListener('push', function(event) {
   };
 
   event.waitUntil(
-    self.registration.showNotification('Arriv', options)
+    self.registration.showNotification('Settld', options)
   );
 });
 

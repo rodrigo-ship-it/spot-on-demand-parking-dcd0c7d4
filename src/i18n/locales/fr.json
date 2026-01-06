@@ -8,7 +8,7 @@
     "signOut": "Se Déconnecter"
   },
   "hero": {
-    "title": "Trouvez-le. Réservez-le. Arriv",
+    "title": "Trouvez-le. Réservez-le. Settld",
     "subtitle": "Découvrez des places de parking pratiques ou gagnez de l'argent en listant votre espace inutilisé. Rejoignez des milliers de conducteurs et propriétaires.",
     "searchPlaceholder": "Où avez-vous besoin de parking?",
     "duration": "Durée",
@@ -36,12 +36,12 @@
   },
   "cta": {
     "title": "Transformez Votre Espace en Revenus",
-    "subtitle": "Vous avez un espace de parking inutilisé? Listez-le sur Arriv et commencez à gagner de l'argent aujourd'hui.",
+    "subtitle": "Vous avez un espace de parking inutilisé? Listez-le sur Settld et commencez à gagner de l'argent aujourd'hui.",
     "startEarning": "Commencer à Gagner Maintenant"
   },
   "explore": {
     "title": "Explorer Plus",
-    "subtitle": "Tout ce dont vous avez besoin pour commencer avec Arriv"
+    "subtitle": "Tout ce dont vous avez besoin pour commencer avec Settld"
   },
   "search": {
     "needLocation": "Veuillez entrer un emplacement pour rechercher un parking",

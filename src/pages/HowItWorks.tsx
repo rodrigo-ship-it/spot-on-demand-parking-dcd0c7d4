@@ -16,7 +16,7 @@ const HowItWorks = () => {
               <Link to="/" className="hover:scale-105 transition-transform duration-200">
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                  alt="Arriv Logo" 
+                  alt="Settld Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>

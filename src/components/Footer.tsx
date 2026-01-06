@@ -14,11 +14,11 @@ const Footer = () => {
             <Link to="/" className="flex items-center gap-2">
               <img 
                 src="/lovable-uploads/arriv-steering-wheel.png" 
-                alt="Arriv" 
+                alt="Settld" 
                 className="h-10 w-10"
               />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
-                Arriv
+                Settld
               </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -76,8 +76,8 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Mail className="w-4 h-4 text-primary" />
-                <a href="mailto:support@arriv.com" className="hover:text-primary transition-colors">
-                  support@arriv.com
+                <a href="mailto:support@settld.com" className="hover:text-primary transition-colors">
+                  support@settld.com
                 </a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -91,7 +91,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border/50">
           <p className="text-muted-foreground text-sm text-center md:text-left">
-            © {new Date().getFullYear()} Arriv. All rights reserved.
+            © {new Date().getFullYear()} Settld. All rights reserved.
           </p>
         </div>
       </div>

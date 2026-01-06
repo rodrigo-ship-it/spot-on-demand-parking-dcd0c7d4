@@ -44,13 +44,13 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <img 
               src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-              alt="Arriv Logo" 
+              alt="Settld Logo" 
               className="w-12 h-12"
             />
             <CardTitle className="text-2xl font-bold">Terms and Conditions</CardTitle>
           </div>
           <p className="text-muted-foreground">
-            Please read and accept our terms and conditions to continue using Arriv
+            Please read and accept our terms and conditions to continue using Settld
           </p>
         </CardHeader>
         <CardContent>
@@ -292,15 +292,15 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">11. INTELLECTUAL PROPERTY RIGHTS</h3>
                 <p className="mb-3">
-                  The Service and its entire contents, features, and functionality are owned by Arriv and are protected by United States 
+                  The Service and its entire contents, features, and functionality are owned by Settld and are protected by United States 
                   and international copyright, trademark, patent, trade secret, and other intellectual property laws.
                 </p>
                 <p className="mb-3">
-                  <strong>User Content License:</strong> By posting content on the Service, you grant Arriv a worldwide, non-exclusive, 
+                  <strong>User Content License:</strong> By posting content on the Service, you grant Settld a worldwide, non-exclusive, 
                   royalty-free license to use, reproduce, modify, adapt, publish, translate, and distribute such content in any media.
                 </p>
                 <p className="mb-3">
-                  <strong>Trademark Rights:</strong> Arriv trademarks, logos, and service marks are proprietary to Arriv. 
+                  <strong>Trademark Rights:</strong> Settld trademarks, logos, and service marks are proprietary to Settld. 
                   You may not use these marks without prior written permission.
                 </p>
               </section>
@@ -692,8 +692,8 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                   legal compliance, user responsibilities, and liability protections.
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  By using Arriv, you acknowledge that you have read, understood, and agree to be bound by these comprehensive Terms and Conditions. 
-                  These Terms constitute a legally binding agreement between you and Arriv Inc. and supersede all previous versions.
+                  By using Settld, you acknowledge that you have read, understood, and agree to be bound by these comprehensive Terms and Conditions. 
+                  These Terms constitute a legally binding agreement between you and Settld Inc. and supersede all previous versions.
                 </p>
               </section>
             </div>

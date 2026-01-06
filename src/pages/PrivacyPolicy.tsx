@@ -156,7 +156,7 @@ export default function PrivacyPolicy() {
                 <h3 className="text-lg font-semibold mb-3">12. Contact Us</h3>
                 <p>If you have any questions about this privacy policy or our data practices, please contact us at:</p>
                 <div className="mt-2 p-4 bg-muted rounded-lg">
-                  <p><strong>Email:</strong> support@arriv.com</p>
+                  <p><strong>Email:</strong> support@settld.com</p>
                 </div>
               </section>
             </CardContent>
