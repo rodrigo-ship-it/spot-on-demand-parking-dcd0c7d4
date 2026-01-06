@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { MapPin, Mail } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -81,10 +81,6 @@ const Footer = () => {
                 </a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Phone className="w-4 h-4 text-primary" />
-                <span>1-800-ARRIV</span>
-              </li>
-              <li className="flex items-center gap-2 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4 text-primary" />
                 <span>Available Nationwide</span>
               </li>
@@ -94,16 +90,9 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border/50">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-muted-foreground text-sm">
-              © {new Date().getFullYear()} Arriv. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6">
-              <span className="text-muted-foreground text-xs">
-                Made with ❤️ for easier parking
-              </span>
-            </div>
-          </div>
+          <p className="text-muted-foreground text-sm text-center md:text-left">
+            © {new Date().getFullYear()} Arriv. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
