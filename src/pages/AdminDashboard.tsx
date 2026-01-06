@@ -1422,6 +1422,9 @@ Check browser console for detailed ID analysis.
                                   <p className="text-xs text-muted-foreground">
                                     {booking.renter_profile?.full_name || booking.renter_profile?.email || 'Unknown renter'}
                                   </p>
+                                  <p className="text-xs text-muted-foreground font-mono">
+                                    ID: {booking.id.slice(0, 8)}
+                                  </p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
