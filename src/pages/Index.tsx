@@ -707,7 +707,7 @@ const Index = () => {
                       "From search to Settld.",
                       "Get it Settld before you arrive."
                     ]}
-                    className="text-2xl md:text-4xl lg:text-5xl tracking-tight bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent text-center leading-relaxed"
+                    className="text-2xl md:text-4xl lg:text-5xl tracking-tight bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent text-center"
                   />
                 </span>
               </motion.h1>
