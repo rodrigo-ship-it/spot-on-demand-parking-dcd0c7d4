@@ -700,7 +700,13 @@ const Index = () => {
                 </span>
                 <span className="block mt-2 min-h-[4rem] md:min-h-[6rem] lg:min-h-[8rem] overflow-visible pb-4">
                   <TypewriterText 
-                    words={["Park Smarter.", "Park Faster.", "Park Better."]}
+                    words={[
+                      "Because parking shouldn't be this stressful.",
+                      "Find it. Book it. Park it. Settld.",
+                      "Your parking, Settld.",
+                      "From search to Settld.",
+                      "Get it Settld before you arrive."
+                    ]}
                     className="bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent inline-block"
                   />
                 </span>
