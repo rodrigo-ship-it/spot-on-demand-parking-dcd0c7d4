@@ -28,6 +28,7 @@ import { Hero3D } from "@/components/Hero3D";
 import { TypewriterText } from "@/components/TypewriterText";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { HeroIllustration } from "@/components/HeroIllustration";
 
 // Distance radius for filtering spots (in miles)
 const NEARBY_RADIUS_MILES = 15;
@@ -658,6 +659,8 @@ const Index = () => {
 
       {/* Revolutionary Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
+        {/* Animated Illustration Background */}
+        <HeroIllustration />
         {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/30"></div>
         
