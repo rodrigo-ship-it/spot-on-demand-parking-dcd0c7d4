@@ -396,7 +396,7 @@ const SpotDetails = () => {
                   <Calendar className="w-5 h-5 text-primary mr-3" />
                   <div>
                     <h3 className="font-semibold text-primary">Quick Rental Available!</h3>
-                    <p className="text-sm text-gray-600">Book this parking spot instantly - no account required</p>
+                    <p className="text-sm text-gray-600">Book this parking spot instantly with a quick sign-in</p>
                   </div>
                 </div>
                 <Button onClick={handleContinueToBook} size="lg" className="ml-4">

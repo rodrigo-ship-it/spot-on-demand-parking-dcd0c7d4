@@ -94,7 +94,7 @@ const PremiumDashboard = () => {
     {
       icon: <DollarSign className="w-5 h-5" />,
       title: "Reduced Fees",
-      description: "Pay lower platform fees as a lister AND lower processing fees as a renter",
+      description: "Pay only 5% platform fee instead of 7% - as both a lister and renter",
       status: isPremium ? "active" : "locked"
     },
   ];
