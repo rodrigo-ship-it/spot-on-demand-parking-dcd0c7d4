@@ -26,14 +26,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${type} email to:`, email);
 
-    const subject = type === 'signup' ? 'Confirm Your Arriv Account' : 'Reset Your Password';
+    const subject = type === 'signup' ? 'Confirm Your Settld Account' : 'Reset Your Password';
     const actionText = type === 'signup' ? 'Confirm Account' : 'Reset Password';
     const messageText = type === 'signup' 
-      ? 'Welcome to Arriv! Please confirm your email address to complete your registration.'
+      ? 'Welcome to Settld! Please confirm your email address to complete your registration.'
       : 'You requested to reset your password. Click the button below to create a new password.';
 
     const emailResponse = await resend.emails.send({
-      from: "Arriv Parking <service@arrivparking.com>",
+      from: "Settld Parking <service@settld.com>",
       to: [email],
       subject: subject,
       html: `
@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <tr>
                     <td style="padding: 40px 30px; text-align: center;">
                       <h1 style="margin: 0 0 24px; color: #1a1a1a; font-size: 28px; font-weight: 600;">
-                        🅿️ Arriv
+                        🅿️ Settld
                       </h1>
                       <h2 style="margin: 0 0 16px; color: #333; font-size: 22px; font-weight: 500;">
                         ${subject}

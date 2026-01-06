@@ -8,7 +8,7 @@
     "signOut": "Sign Out"
   },
   "hero": {
-    "title": "Find it. Book it. Arriv",
+    "title": "Find it. Book it. Settld",
     "subtitle": "Discover convenient parking spots or earn money by listing your unused space. Join thousands of drivers and property owners.",
     "searchPlaceholder": "Where do you need parking?",
     "duration": "Duration",
@@ -36,12 +36,12 @@
   },
   "cta": {
     "title": "Turn Your Space Into Income",
-    "subtitle": "Have an unused parking space? List it on Arriv and start earning money today.",
+    "subtitle": "Have an unused parking space? List it on Settld and start earning money today.",
     "startEarning": "Start Earning Now"
   },
   "explore": {
     "title": "Explore More",
-    "subtitle": "Everything you need to get started with Arriv"
+    "subtitle": "Everything you need to get started with Settld"
   },
   "search": {
     "needLocation": "Please enter a location to search for parking",

@@ -104,8 +104,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to support
     const emailResponse = await resend.emails.send({
-      from: "ArrivParking <service@arrivparking.com>",
-      to: ["service@arrivparking.com"],
+      from: "Settld Parking <service@settld.com>",
+      to: ["service@settld.com"],
       subject: `Manual Refund Request - Booking ${booking_id.slice(0, 8)}`,
       html: `
         <h2>Manual Refund Request</h2>
@@ -135,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p>Once processed, please update the booking status and notify the customer.</p>
         
         <hr>
-        <p><em>This is an automated message from the ArrivParking refund system.</em></p>
+        <p><em>This is an automated message from the Settld Parking refund system.</em></p>
       `,
     });
 

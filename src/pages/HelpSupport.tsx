@@ -47,7 +47,7 @@ const HelpSupport = () => {
       console.log("Contact form submitted successfully:", data);
     } catch (error: any) {
       console.error("Failed to send contact form:", error);
-      toast.error("Failed to send message. Please try again or email us directly at service@arrivparking.com");
+      toast.error("Failed to send message. Please try again or email us directly at service@settld.com");
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ const HelpSupport = () => {
         </Button>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Help & Support</h1>
-          <p className="text-gray-600">Get help with your Arriv parking experience</p>
+          <p className="text-gray-600">Get help with your Settld parking experience</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

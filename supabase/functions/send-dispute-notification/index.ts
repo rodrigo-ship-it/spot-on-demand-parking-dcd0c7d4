@@ -119,15 +119,15 @@ const handler = async (req: Request): Promise<Response> => {
 
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
         <p style="color: #666; font-size: 12px;">
-          This is an automated notification from ArrivParking dispute system.<br>
+          This is an automated notification from Settld Parking dispute system.<br>
           Please do not reply to this email. Contact the customer directly using the provided email address.
         </p>
       </div>
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "ArrivParking <notifications@resend.dev>",
-      to: ["service@arrivparking.com"],
+      from: "Settld Parking <notifications@resend.dev>",
+      to: ["service@settld.com"],
       subject: `🚨 Dispute Report: ${disputeTypeText} - ${spot.title}`,
       html: emailHtml,
     });

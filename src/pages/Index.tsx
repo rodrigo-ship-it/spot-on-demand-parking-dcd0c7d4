@@ -364,7 +364,7 @@ const Index = () => {
               <Link to="/" className="interactive">
                 <img 
                   src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                  alt="Arriv Logo" 
+                  alt="Settld Logo" 
                   className="w-16 h-16 hover:drop-shadow-lg transition-all duration-300"
                 />
               </Link>
@@ -691,7 +691,7 @@ const Index = () => {
                 >
                   <img 
                     src="/lovable-uploads/arriv-steering-wheel.png" 
-                    alt="Arriv Steering Wheel Logo" 
+                    alt="Settld Steering Wheel Logo" 
                     className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
                   />
                 </motion.div>
@@ -1061,8 +1061,8 @@ const Index = () => {
               Turn Your Space Into Income
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Have an unused parking space? List it on Arriv and start earning money today. 
-              Join members of the Arriv community already making extra income.
+              Have an unused parking space? List it on Settld and start earning money today. 
+              Join members of the Settld community already making extra income.
             </p>
             <Link to="/list-spot">
               <Button variant="glass" size="xl" className="shadow-glow">
@@ -1079,7 +1079,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore More</h2>
-            <p className="text-lg text-gray-600">Everything you need to get started with Arriv</p>
+            <p className="text-lg text-gray-600">Everything you need to get started with Settld</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">

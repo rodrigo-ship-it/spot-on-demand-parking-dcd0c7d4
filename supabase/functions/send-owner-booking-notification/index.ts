@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       : `${booking.display_date}<br>${booking.display_start_time || ''} - ${booking.display_end_time || ''}`;
 
     const emailResponse = await resend.emails.send({
-      from: "Arriv Parking <service@arrivparking.com>",
+      from: "Settld Parking <service@settld.com>",
       to: [email],
       subject: `New Booking! Your spot "${spot.title}" has been reserved`,
       html: `
@@ -71,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <tr>
                     <td style="padding: 40px 30px; text-align: center;">
                       <h1 style="margin: 0 0 24px; color: #1a1a1a; font-size: 28px; font-weight: 600;">
-                        🅿️ Arriv
+                        🅿️ Settld
                       </h1>
                       <div style="margin: 0 0 24px;">
                         <span style="display: inline-block; width: 64px; height: 64px; background-color: #10b981; border-radius: 50%; color: white; font-size: 32px; line-height: 64px;">💰</span>
@@ -162,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
                       <p style="margin: 24px 0 0; color: #999; font-size: 14px; line-height: 1.4;">
                         Need help? Reply to this email or contact our support team.
                         <br><br>
-                        Thank you for hosting with Arriv!
+                        Thank you for hosting with Settld!
                       </p>
                     </td>
                   </tr>

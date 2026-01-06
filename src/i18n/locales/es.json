@@ -8,7 +8,7 @@
     "signOut": "Cerrar Sesión"
   },
   "hero": {
-    "title": "Encuéntralo. Resérvalo. Arriv",
+    "title": "Encuéntralo. Resérvalo. Settld",
     "subtitle": "Descubre espacios de estacionamiento convenientes o gana dinero listando tu espacio sin usar. Únete a miles de conductores y propietarios.",
     "searchPlaceholder": "¿Dónde necesitas estacionar?",
     "duration": "Duración",
@@ -36,12 +36,12 @@
   },
   "cta": {
     "title": "Convierte Tu Espacio en Ingresos",
-    "subtitle": "¿Tienes un espacio de estacionamiento sin usar? Listalo en Arriv y comienza a ganar dinero hoy.",
+    "subtitle": "¿Tienes un espacio de estacionamiento sin usar? Listalo en Settld y comienza a ganar dinero hoy.",
     "startEarning": "Comenzar a Ganar Ahora"
   },
   "explore": {
     "title": "Explorar Más",
-    "subtitle": "Todo lo que necesitas para comenzar con Arriv"
+    "subtitle": "Todo lo que necesitas para comenzar con Settld"
   },
   "search": {
     "needLocation": "Por favor ingresa una ubicación para buscar estacionamiento",

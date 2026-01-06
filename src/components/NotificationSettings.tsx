@@ -82,7 +82,7 @@ export const NotificationSettings = () => {
 
   const testNotification = async () => {
     await notificationService.showNotification(
-      'Arriv Test Notification',
+      'Settld Test Notification',
       {
         body: 'This is a test notification to verify your settings.',
         icon: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png'

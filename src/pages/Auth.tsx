@@ -184,10 +184,10 @@ const Auth = () => {
               <ArrowLeft className="w-5 h-5 text-gray-600" />
               <img 
                 src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
-                alt="Arriv Logo" 
+                alt="Settld Logo" 
                 className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
               />
-              <h1 className="text-xl font-bold text-gray-900">Arriv</h1>
+              <h1 className="text-xl font-bold text-gray-900">Settld</h1>
             </Link>
           </div>
         </div>
@@ -197,7 +197,7 @@ const Auth = () => {
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">Welcome to Arriv</CardTitle>
+            <CardTitle className="text-2xl font-bold">Welcome to Settld</CardTitle>
             <CardDescription>
               Sign in to your account or create a new one
             </CardDescription>

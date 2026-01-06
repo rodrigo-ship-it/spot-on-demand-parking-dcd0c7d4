@@ -165,7 +165,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       toast({
         title: "Call Setup Complete",
-        description: `Call ${data.proxyNumber} to connect privately. Both numbers will show "Arriv Parking" as caller ID.`,
+        description: `Call ${data.proxyNumber} to connect privately. Both numbers will show "Settld Parking" as caller ID.`,
         duration: 10000,
       });
 
