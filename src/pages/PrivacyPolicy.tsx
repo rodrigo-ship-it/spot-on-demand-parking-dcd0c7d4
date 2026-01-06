@@ -157,8 +157,6 @@ export default function PrivacyPolicy() {
                 <p>If you have any questions about this privacy policy or our data practices, please contact us at:</p>
                 <div className="mt-2 p-4 bg-muted rounded-lg">
                   <p><strong>Email:</strong> support@arriv.com</p>
-                  <p><strong>Address:</strong> Arriv Technologies Inc.</p>
-                  <p><strong>Phone:</strong> 1-800-ARRIV-1 (1-800-277-481)</p>
                 </div>
               </section>
             </CardContent>
