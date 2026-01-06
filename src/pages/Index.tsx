@@ -712,14 +712,6 @@ const Index = () => {
                 </span>
               </motion.h1>
               
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium"
-              >
-                The future of parking is here. Find spots instantly or earn from your space.
-              </motion.p>
             </div>
             
             {/* Futuristic Search Card */}
