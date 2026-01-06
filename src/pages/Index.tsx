@@ -703,7 +703,7 @@ const Index = () => {
                 transition={{ delay: 0.3, duration: 0.8 }}
                 className="font-black leading-tight tracking-tighter px-4"
               >
-                <span className="block text-8xl md:text-[10rem] lg:text-[14rem] text-foreground drop-shadow-2xl">
+                <span className="block text-7xl md:text-9xl lg:text-[11rem] text-foreground drop-shadow-2xl">
                   Arriv
                 </span>
                 <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[8rem] md:min-h-[12rem] lg:min-h-[14rem]">
