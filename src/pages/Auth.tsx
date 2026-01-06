@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { validatePassword } from '@/lib/security';
 import { SecurityEnhancedForm } from '@/components/SecurityEnhancedForm';
+import Footer from "@/components/Footer";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -408,6 +409,8 @@ const Auth = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

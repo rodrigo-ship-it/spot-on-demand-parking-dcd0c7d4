@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ContactButtons } from "@/components/ContactButtons";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1080,6 +1081,8 @@ const SpotDetails = () => {
         spotTitle={spotData?.title || "Parking Spot"}
         spotAddress={spotData?.address || "Unknown Address"}
       />
+      
+      <Footer />
     </div>
   );
 };

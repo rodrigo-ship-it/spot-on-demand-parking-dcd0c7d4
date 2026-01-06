@@ -21,6 +21,8 @@ import LiveAvailabilityBadge from "@/components/LiveAvailabilityBadge";
 import FeaturedSpotsCarousel from "@/components/FeaturedSpotsCarousel";
 import HowItWorksTimeline from "@/components/HowItWorksTimeline";
 import FAQAccordion from "@/components/FAQAccordion";
+import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 
 import { Hero3D } from "@/components/Hero3D";
 import { TypewriterText } from "@/components/TypewriterText";
@@ -1134,6 +1136,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
+      
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
       </div>
   );
 };
