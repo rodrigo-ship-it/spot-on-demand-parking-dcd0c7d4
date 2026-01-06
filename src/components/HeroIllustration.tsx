@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 export const HeroIllustration = () => {
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-background/0 via-background/50 to-background" />
       
