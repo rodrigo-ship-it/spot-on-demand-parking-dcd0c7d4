@@ -28,7 +28,6 @@ import { Hero3D } from "@/components/Hero3D";
 import { TypewriterText } from "@/components/TypewriterText";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import heroParkingBg from "@/assets/hero-parking-bg.jpg";
 
 // Distance radius for filtering spots (in miles)
 const NEARBY_RADIUS_MILES = 15;
@@ -658,21 +657,11 @@ const Index = () => {
       </nav>
 
       {/* Revolutionary Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-visible" role="banner">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={heroParkingBg} 
-            alt="" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        {/* Dark Overlay for text readability */}
-        <div className="absolute inset-0 bg-black/50 z-[1]"></div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 z-[2]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/30"></div>
         
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-20 flex items-center justify-center min-h-screen">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 flex items-center justify-center min-h-screen">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
