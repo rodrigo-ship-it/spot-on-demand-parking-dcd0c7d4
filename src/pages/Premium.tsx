@@ -7,6 +7,7 @@ import PremiumDashboard from "@/components/PremiumDashboard";
 import PremiumAnalytics from "@/components/PremiumAnalytics";
 import SmartPricingTools from "@/components/SmartPricingTools";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
+import Footer from "@/components/Footer";
 
 const Premium = () => {
   const { isPremium, loading } = usePremiumStatus();
@@ -129,6 +130,8 @@ const Premium = () => {
           </Card>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };
