@@ -701,7 +701,6 @@ const Index = () => {
                 <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[8rem] md:min-h-[12rem] lg:min-h-[14rem]">
                   <TypewriterText 
                     words={[
-                      "Because parking shouldn't be this stressful.",
                       "Find it. Book it. Park it. Settld.",
                       "Your parking, Settld.",
                       "From search to Settld.",
