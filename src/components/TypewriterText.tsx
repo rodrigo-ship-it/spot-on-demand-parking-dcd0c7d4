@@ -33,9 +33,9 @@ export const TypewriterText = ({ words, className = "" }: TypewriterTextProps) =
   }, [currentText, isDeleting, currentWordIndex, words]);
 
   return (
-    <span className={className}>
+    <div className={`${className} pb-2`}>
       {currentText}
       <span className="animate-pulse text-primary">|</span>
-    </span>
+    </div>
   );
 };
