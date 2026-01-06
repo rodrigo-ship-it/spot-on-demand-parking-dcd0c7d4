@@ -698,7 +698,7 @@ const Index = () => {
                 <span className="block text-foreground drop-shadow-2xl">
                   Arriv
                 </span>
-                <span className="flex items-start justify-center -mt-2 md:-mt-4 h-[4rem] md:h-[5rem] lg:h-[6rem] overflow-visible pb-4">
+                <span className="flex items-start justify-center mt-2 md:mt-4 h-[4rem] md:h-[5rem] lg:h-[6rem] overflow-visible pb-4">
                   <TypewriterText 
                     words={[
                       "Because parking shouldn't be this stressful.",
