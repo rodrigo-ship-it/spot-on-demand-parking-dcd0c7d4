@@ -698,7 +698,7 @@ const Index = () => {
                 <span className="block text-foreground drop-shadow-2xl">
                   Arriv
                 </span>
-                <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[5rem] md:min-h-[6rem] lg:min-h-[7rem] overflow-visible pb-6">
+                <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[5rem] md:min-h-[6rem] lg:min-h-[7rem]">
                   <TypewriterText 
                     words={[
                       "Because parking shouldn't be this stressful.",
@@ -707,7 +707,7 @@ const Index = () => {
                       "From search to Settld.",
                       "Get it Settld before you arrive."
                     ]}
-                    className="text-2xl md:text-4xl lg:text-5xl tracking-tight bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent text-center"
+                    className="text-2xl md:text-4xl lg:text-5xl tracking-tight bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent text-center leading-relaxed"
                   />
                 </span>
               </motion.h1>
