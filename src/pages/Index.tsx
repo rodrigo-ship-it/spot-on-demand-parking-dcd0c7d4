@@ -807,11 +807,8 @@ const Index = () => {
         />
       )}
 
-      {/* Section Divider */}
-      <div className="section-divider-wave" />
-
       {/* Revolutionary Features Section */}
-      <section className="py-24 bg-white section-spacing">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
             <div className="text-center mb-20">
@@ -863,20 +860,11 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Section Divider */}
-      <div className="section-divider" />
-
       {/* Featured Spots Carousel */}
       <FeaturedSpotsCarousel />
 
-      {/* Section Divider */}
-      <div className="section-divider-wave" />
-
       {/* How It Works Timeline */}
       <HowItWorksTimeline />
-
-      {/* Section Divider */}
-      <div className="section-divider" />
 
       {/* Parking Spots - Only show when no search has been made */}
       {!hasSearched && (
@@ -1055,14 +1043,9 @@ const Index = () => {
         </section>
       )}
 
-      {/* Section Divider */}
-      <div className="section-divider-wave" />
-
       {/* FAQ Accordion */}
       <FAQAccordion />
 
-      {/* Section Divider */}
-      <div className="section-divider" />
 
       {/* Enhanced CTA Section */}
       <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
