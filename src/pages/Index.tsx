@@ -699,14 +699,14 @@ const Index = () => {
                   Arriv
                 </span>
                 <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[8rem] md:min-h-[12rem] lg:min-h-[14rem]">
-                  <TypewriterText 
+                <TypewriterText 
                     words={[
                       "Find it. Book it. Park it. Settld.",
                       "Your parking, Settld.",
                       "From search to Settld.",
                       "Get it Settld before you arrive."
                     ]}
-                    className="text-5xl md:text-7xl lg:text-8xl tracking-tight text-muted-foreground text-center"
+                    className="text-5xl md:text-7xl lg:text-8xl tracking-tight text-foreground text-center"
                   />
                 </span>
               </motion.h1>
