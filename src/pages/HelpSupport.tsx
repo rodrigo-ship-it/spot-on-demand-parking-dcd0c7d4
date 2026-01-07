@@ -304,14 +304,14 @@ const HelpSupport = () => {
                   <AccordionItem value="mobile-app">
                     <AccordionTrigger>Is there a mobile app?</AccordionTrigger>
                     <AccordionContent>
-                      Currently, Arriv is a responsive web application that works great on all devices. A dedicated mobile app is in development and will be available soon.
+                      Currently, Settld is a responsive web application that works great on all devices. A dedicated mobile app is in development and will be available soon.
                     </AccordionContent>
                   </AccordionItem>
 
                   <AccordionItem value="emergency">
                     <AccordionTrigger>What if I have an emergency during my booking?</AccordionTrigger>
                     <AccordionContent>
-                      Contact our support team immediately through the app or email service@arrivparking.com. For vehicle-related emergencies, contact local authorities first, then notify us.
+                      Contact our support team immediately through the app or email service@settld.com. For vehicle-related emergencies, contact local authorities first, then notify us.
                     </AccordionContent>
                   </AccordionItem>
 
