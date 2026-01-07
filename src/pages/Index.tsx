@@ -690,8 +690,8 @@ const Index = () => {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <img 
-                    src="/lovable-uploads/arriv-steering-wheel.png" 
-                    alt="Settld Steering Wheel Logo" 
+                    src="/lovable-uploads/settld-logo.png" 
+                    alt="Settld Logo"
                     className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
                   />
                 </motion.div>
