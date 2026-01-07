@@ -126,8 +126,8 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Settld Parking <notifications@resend.dev>",
-      to: ["service@settld.com"],
+      from: "Settld Parking <notifications@settldparking.com>",
+      to: ["service@settldparking.com"],
       subject: `🚨 Dispute Report: ${disputeTypeText} - ${spot.title}`,
       html: emailHtml,
     });

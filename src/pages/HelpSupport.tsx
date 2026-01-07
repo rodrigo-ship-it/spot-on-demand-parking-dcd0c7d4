@@ -342,7 +342,7 @@ const HelpSupport = () => {
                   <Mail className="w-5 h-5 mr-3 text-blue-500" />
                   <div>
                     <p className="font-medium">Email Support</p>
-                    <p className="text-sm text-gray-600">service@arrivparking.com</p>
+                    <p className="text-sm text-gray-600">service@settldparking.com</p>
                   </div>
                 </div>
                 <div className="flex items-center">

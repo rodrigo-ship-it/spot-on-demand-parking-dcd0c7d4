@@ -63,8 +63,8 @@ export const useSecurityHeaders = () => {
     
     validateOrigin: (origin: string) => {
       const allowedOrigins = [
-        'https://arrivparking.com',
-        'https://www.arrivparking.com',
+        'https://settldparking.com',
+        'https://www.settldparking.com',
         window.location.origin
       ];
       return allowedOrigins.includes(origin);

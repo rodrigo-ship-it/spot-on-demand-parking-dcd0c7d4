@@ -1,7 +1,7 @@
 // Domain configuration for QR codes and links
 export const DOMAIN_CONFIG = {
   // Your custom domain
-  customDomain: "https://arrivparking.com",
+  customDomain: "https://settldparking.com",
   
   // Helper function to get the correct domain for QR codes
   getQRCodeDomain: () => {

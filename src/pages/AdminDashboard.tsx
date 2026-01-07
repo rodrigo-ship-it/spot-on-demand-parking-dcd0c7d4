@@ -184,7 +184,7 @@ export default function AdminDashboard() {
   const [userOwnedSpots, setUserOwnedSpots] = useState<ParkingSpot[]>([]);
 
   // Simple admin check - replace with your actual admin email
-  const isAdmin = user?.email === 'rodrigo@arrivparking.com';
+  const isAdmin = user?.email === 'rodrigo@settldparking.com';
 
   useEffect(() => {
     if (isAdmin) {
