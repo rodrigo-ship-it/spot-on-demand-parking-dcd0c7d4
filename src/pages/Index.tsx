@@ -391,7 +391,7 @@ const Index = () => {
                     <Crown className="w-4 h-4 mr-2" />
                     Premium
                   </Button>
-                  {user.email === 'rodrigo@arrivparking.com' && (
+                  {user.email === 'rodrigo@settldparking.com' && (
                     <Link to="/admin">
                       <Button variant="warning" size="sm" className="text-sm">
                         Admin
@@ -563,7 +563,7 @@ const Index = () => {
                     </Button>
                     
                     <div className="border-t pt-4 flex flex-col space-y-3">
-                      {user?.email === 'rodrigo@arrivparking.com' && (
+                      {user?.email === 'rodrigo@settldparking.com' && (
                         <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full">
                           <Button variant="outline" className="w-full justify-start h-12 border-orange-200 hover:bg-orange-50 text-orange-600">
                             Admin
