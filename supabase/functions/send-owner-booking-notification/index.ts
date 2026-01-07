@@ -143,8 +143,8 @@ const handler = async (req: Request): Promise<Response> => {
                           <div style="display: flex; align-items: flex-start;">
                             <div style="width: 24px; height: 24px; background-color: #dbeafe; color: #1d4ed8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">3</div>
                             <div>
-                              <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Get paid after checkout</p>
-                              <p style="margin: 0; color: #666; font-size: 12px;">Your payout will be transferred to your bank after the renter checks out (typically within a few business days)</p>
+                              <p style="margin: 0 0 4px; color: #333; font-size: 14px; font-weight: 500;">Manage your payouts</p>
+                              <p style="margin: 0; color: #666; font-size: 12px;">Your payout will be transferred after the renter checks out. To manage your payout schedule or view earnings, visit your Stripe Dashboard from your Profile page.</p>
                             </div>
                           </div>
                         </div>
