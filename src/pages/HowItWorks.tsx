@@ -15,9 +15,9 @@ const HowItWorks = () => {
             <div className="flex items-center space-x-4">
               <Link to="/" className="hover:scale-105 transition-transform duration-200">
                 <img 
-                  src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                  src="/lovable-uploads/settld-logo-with-text.png" 
                   alt="Settld Logo" 
-                  className="w-16 h-16 hover:drop-shadow-lg transition-all duration-200"
+                  className="h-14 w-auto hover:drop-shadow-lg transition-all duration-200"
                 />
               </Link>
               <div className="hidden md:flex items-center space-x-6">

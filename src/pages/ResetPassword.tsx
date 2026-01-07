@@ -117,9 +117,9 @@ const ResetPassword = () => {
             </div>
             <div className="flex items-center">
               <img 
-                src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+                src="/lovable-uploads/settld-logo-with-text.png" 
                 alt="Settld Logo" 
-                className="w-16 h-16"
+                className="h-14 w-auto"
               />
             </div>
           </div>

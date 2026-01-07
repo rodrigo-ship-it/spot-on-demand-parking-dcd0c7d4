@@ -11,15 +11,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Column */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="inline-block">
               <img 
-                src="/lovable-uploads/arriv-steering-wheel.png" 
+                src="/lovable-uploads/settld-logo-with-text.png" 
                 alt="Settld" 
-                className="h-10 w-10"
+                className="h-12 w-auto"
               />
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
-                Settld
-              </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Find and rent parking spots from your neighbors. The smarter way to park.

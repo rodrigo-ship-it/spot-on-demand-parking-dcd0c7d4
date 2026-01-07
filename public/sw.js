@@ -2,8 +2,8 @@
 self.addEventListener('push', function(event) {
   const options = {
     body: event.data ? event.data.text() : 'You have a new notification!',
-    icon: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png',
-    badge: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png',
+    icon: '/lovable-uploads/settld-logo.png',
+    badge: '/lovable-uploads/settld-logo.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -13,12 +13,12 @@ self.addEventListener('push', function(event) {
       {
         action: 'explore',
         title: 'View Details',
-        icon: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png'
+        icon: '/lovable-uploads/settld-logo.png'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png'
+        icon: '/lovable-uploads/settld-logo.png'
       }
     ]
   };

@@ -27,7 +27,7 @@ const mockSpots: ParkingSpot[] = [
     id: "1",
     title: "Downtown Business District",
     location: "123 Main St, Downtown",
-    image: "/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png",
+    image: "/lovable-uploads/settld-logo.png",
     description: "Secure covered parking in the heart of downtown",
     hourlyRate: 8,
     timeOptions: ["1 hour", "2 hours", "4 hours", "8 hours"],

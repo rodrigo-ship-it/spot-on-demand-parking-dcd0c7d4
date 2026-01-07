@@ -43,9 +43,9 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img 
-              src="/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png" 
+              src="/lovable-uploads/settld-logo-with-text.png" 
               alt="Settld Logo" 
-              className="w-12 h-12"
+              className="h-10 w-auto"
             />
             <CardTitle className="text-2xl font-bold">Terms and Conditions</CardTitle>
           </div>

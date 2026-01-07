@@ -110,8 +110,8 @@ class NotificationService {
         const registration = await navigator.serviceWorker.getRegistration();
         if (registration) {
           await registration.showNotification(title, {
-            icon: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png',
-            badge: '/lovable-uploads/1c19d464-39d1-4918-840a-eed4bc867edd.png',
+            icon: '/lovable-uploads/settld-logo.png',
+            badge: '/lovable-uploads/settld-logo.png',
             ...options
           });
           return;
