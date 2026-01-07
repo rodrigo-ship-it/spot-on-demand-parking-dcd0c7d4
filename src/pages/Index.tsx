@@ -687,7 +687,7 @@ const Index = () => {
               >
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 >
                   <img 
                     src="/lovable-uploads/settld-logo.png" 
@@ -705,7 +705,7 @@ const Index = () => {
               >
                 <motion.span 
                   animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                   className="block text-7xl md:text-9xl lg:text-[11rem] text-black drop-shadow-2xl"
                 >
                   settld
