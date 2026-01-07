@@ -227,7 +227,7 @@ const HelpSupport = () => {
                   <AccordionItem value="get-paid">
                     <AccordionTrigger>How do I get paid as a spot owner?</AccordionTrigger>
                     <AccordionContent>
-                      Connect your Stripe account through your profile to receive payments. Earnings are processed automatically after each completed booking.
+                      Connect your Stripe account through your Profile page to receive payments. Earnings are transferred after each completed booking. To manage your payout schedule, view earnings, or update bank details, visit your Stripe Dashboard directly from your Profile page.
                     </AccordionContent>
                   </AccordionItem>
 
