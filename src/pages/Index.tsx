@@ -692,7 +692,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/settld-logo.png" 
                     alt="Settld Logo"
-                    className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
+                    className="w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-2xl"
                   />
                 </motion.div>
               </motion.div>
