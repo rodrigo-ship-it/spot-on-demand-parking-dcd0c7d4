@@ -47,7 +47,7 @@ const HelpSupport = () => {
       console.log("Contact form submitted successfully:", data);
     } catch (error: any) {
       console.error("Failed to send contact form:", error);
-      toast.error("Failed to send message. Please try again or email us directly at service@settld.com");
+      toast.error("Failed to send message. Please try again or email us directly at support@settldparking.com");
     } finally {
       setLoading(false);
     }
@@ -311,7 +311,7 @@ const HelpSupport = () => {
                   <AccordionItem value="emergency">
                     <AccordionTrigger>What if I have an emergency during my booking?</AccordionTrigger>
                     <AccordionContent>
-                      Contact our support team immediately through the app or email service@settld.com. For vehicle-related emergencies, contact local authorities first, then notify us.
+                      Contact our support team immediately through the app or email support@settldparking.com. For vehicle-related emergencies, contact local authorities first, then notify us.
                     </AccordionContent>
                   </AccordionItem>
 
@@ -342,7 +342,7 @@ const HelpSupport = () => {
                   <Mail className="w-5 h-5 mr-3 text-blue-500" />
                   <div>
                     <p className="font-medium">Email Support</p>
-                    <p className="text-sm text-gray-600">service@settldparking.com</p>
+                    <p className="text-sm text-gray-600">support@settldparking.com</p>
                   </div>
                 </div>
                 <div className="flex items-center">
