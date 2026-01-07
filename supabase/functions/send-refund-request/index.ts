@@ -104,8 +104,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to support
     const emailResponse = await resend.emails.send({
-      from: "Settld Parking <service@settld.com>",
-      to: ["service@settld.com"],
+      from: "Settld Parking <support@settldparking.com>",
+      to: ["support@settldparking.com"],
       subject: `Manual Refund Request - Booking ${booking_id.slice(0, 8)}`,
       html: `
         <h2>Manual Refund Request</h2>

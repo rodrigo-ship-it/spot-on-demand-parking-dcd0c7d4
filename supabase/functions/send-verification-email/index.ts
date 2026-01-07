@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
       : 'You requested to reset your password. Click the button below to create a new password.';
 
     const emailResponse = await resend.emails.send({
-      from: "Settld Parking <service@settld.com>",
+      from: "Settld Parking <support@settldparking.com>",
       to: [email],
       subject: subject,
       html: `
