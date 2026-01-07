@@ -690,9 +690,9 @@ const Index = () => {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <img 
-                    src="/lovable-uploads/settld-logo.png" 
+                    src="/lovable-uploads/settld-hero-logo.png" 
                     alt="Settld Logo"
-                    className="w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-2xl"
+                    className="w-64 h-auto md:w-80 lg:w-96 object-contain drop-shadow-2xl"
                   />
                 </motion.div>
               </motion.div>
@@ -703,9 +703,6 @@ const Index = () => {
                 transition={{ delay: 0.3, duration: 0.8 }}
                 className="font-black leading-tight tracking-tighter px-4"
               >
-                <span className="block text-7xl md:text-9xl lg:text-[11rem] text-foreground drop-shadow-2xl">
-                  Settld
-                </span>
                 <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[8rem] md:min-h-[12rem] lg:min-h-[14rem]">
                 <TypewriterText 
                     words={[
