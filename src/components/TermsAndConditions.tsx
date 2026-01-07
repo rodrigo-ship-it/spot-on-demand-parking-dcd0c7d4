@@ -150,7 +150,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 <p className="mb-3">
                   <strong>Taxes:</strong> Users are responsible for determining and paying all applicable local, state, and federal taxes 
                   related to their use of the Service. Hosts are responsible for reporting and paying taxes on rental income. 
-                  Arriv may provide tax reporting documents as required by law.
+                  Settld may provide tax reporting documents as required by law.
                 </p>
                 <p className="mb-3">
                   <strong>Currency and Pricing:</strong> All prices are displayed and processed in US Dollars (USD) unless otherwise specified. 
@@ -542,14 +542,14 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 <h3 className="font-semibold text-sm mb-2">31. INSURANCE AND COVERAGE REQUIREMENTS</h3>
                 <p className="mb-3">
                   <strong>Host Insurance:</strong> Hosts must maintain appropriate property and liability insurance coverage. 
-                  Arriv does not provide insurance coverage for Host properties or incidents occurring on Host premises.
+                  Settld does not provide insurance coverage for Host properties or incidents occurring on Host premises.
                 </p>
                 <p className="mb-3">
                   <strong>Renter Insurance:</strong> Renters must maintain valid automotive insurance meeting applicable minimum requirements. 
                   Your personal insurance is primary coverage for any incidents involving your vehicle.
                 </p>
                 <p className="mb-3">
-                  <strong>No Platform Coverage:</strong> Arriv does not provide insurance coverage for users and is not an insurance company. 
+                  <strong>No Platform Coverage:</strong> Settld does not provide insurance coverage for users and is not an insurance company. 
                   Users are responsible for their own insurance needs.
                 </p>
               </section>
@@ -572,7 +572,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                   These integrations are subject to the third parties' own terms of service and privacy policies.
                 </p>
                 <p className="mb-3">
-                  Any use of Arriv APIs or developer tools is subject to separate API terms and conditions. 
+                  Any use of Settld APIs or developer tools is subject to separate API terms and conditions. 
                   Unauthorized access to our systems or APIs is strictly prohibited.
                 </p>
               </section>
@@ -595,7 +595,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                   Hosts are responsible for determining and obtaining all required licenses and permits.
                 </p>
                 <p className="mb-3">
-                  Arriv does not verify professional licensing or qualifications and is not responsible for Host compliance with licensing requirements.
+                  Settld does not verify professional licensing or qualifications and is not responsible for Host compliance with licensing requirements.
                 </p>
               </section>
 
@@ -707,7 +707,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                   Legal Protection Notice
                 </p>
                 <p className="text-blue-700 mt-1">
-                  These terms are designed to protect both users and Arriv. Please read carefully and ensure you understand your responsibilities.
+                  These terms are designed to protect both users and Settld. Please read carefully and ensure you understand your responsibilities.
                 </p>
               </div>
             </div>
