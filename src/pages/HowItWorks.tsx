@@ -49,11 +49,11 @@ const HowItWorks = () => {
         {/* Enhanced Header with SEO */}
         <header className="text-center mb-16" role="banner">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 animate-fade-in">
-            How Arriv <span className="gradient-text">Works</span>
+            How Settld <span className="gradient-text">Works</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-slide-up">
             Whether you're looking for convenient parking or wanting to earn money from your unused space, 
-            Arriv makes it simple, secure, and profitable for everyone.
+            Settld makes it simple, secure, and profitable for everyone.
           </p>
         </header>
 
@@ -194,7 +194,7 @@ const HowItWorks = () => {
         {/* Benefits */}
         <section className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Arriv?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Settld?</h2>
             <p className="text-lg text-gray-600">Built with trust, security, and convenience in mind</p>
           </div>
           
@@ -239,7 +239,7 @@ const HowItWorks = () => {
             Ready to Get Started?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join thousands of verified users who trust Arriv for their parking needs. 
+            Join thousands of verified users who trust Settld for their parking needs. 
             Start saving time and money today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

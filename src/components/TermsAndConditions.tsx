@@ -60,9 +60,9 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
           >
             <div className="space-y-6 text-xs">
               <section>
-                <h3 className="font-semibold text-base mb-3">ARRIV TERMS OF SERVICE AND USER AGREEMENT</h3>
+                <h3 className="font-semibold text-base mb-3">SETTLD TERMS OF SERVICE AND USER AGREEMENT</h3>
                 <p className="italic mb-4">
-                  PLEASE READ THESE TERMS CAREFULLY BEFORE USING THE ARRIV SERVICE. BY ACCESSING OR USING OUR SERVICE, 
+                  PLEASE READ THESE TERMS CAREFULLY BEFORE USING THE SETTLD SERVICE. BY ACCESSING OR USING OUR SERVICE, 
                   YOU AGREE TO BE BOUND BY THESE TERMS AND ALL APPLICABLE LAWS AND REGULATIONS.
                 </p>
               </section>
@@ -71,7 +71,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 <h3 className="font-semibold text-sm mb-2">1. ACCEPTANCE OF TERMS</h3>
                 <p className="mb-3">
                   These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") 
-                  and Arriv Inc. ("Arriv," "we," "us," or "our") governing your access to and use of the Arriv platform, 
+                  and Settld Inc. ("Settld," "we," "us," or "our") governing your access to and use of the Settld platform, 
                   mobile application, website, and all related services (collectively, the "Service"). By creating an account, 
                   accessing, browsing, or using any portion of the Service, you acknowledge that you have read, understood, 
                   and agree to be bound by these Terms, our Privacy Policy, and all applicable laws and regulations. 
@@ -87,15 +87,15 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">2. SERVICE DESCRIPTION AND PLATFORM ROLE</h3>
                 <p className="mb-3">
-                  Arriv operates as an online marketplace platform that facilitates connections between individuals who have 
+                  Settld operates as an online marketplace platform that facilitates connections between individuals who have 
                   available parking spaces ("Hosts") and individuals seeking parking accommodations ("Renters"). We act 
-                  solely as an intermediary platform and technology service provider. Arriv does not own, operate, manage, 
+                  solely as an intermediary platform and technology service provider. Settld does not own, operate, manage, 
                   control, or maintain any parking spaces, properties, or venues listed on our platform.
                 </p>
                 <p className="mb-3">
                   The Service enables Hosts to list their available parking spaces and Renters to discover, book, and pay 
                   for parking accommodations. All parking arrangements, transactions, and interactions are conducted directly 
-                  between Hosts and Renters. Arriv is not a party to any rental agreements, leases, or contracts between users.
+                  between Hosts and Renters. Settld is not a party to any rental agreements, leases, or contracts between users.
                 </p>
                 <p className="mb-3">
                   Our platform provides various tools and features including but not limited to: listing creation and management, 
@@ -133,7 +133,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                   </div>
                 </div>
                 <p className="mb-3">
-                  <strong>Service Fee Structure:</strong> Arriv charges a seven percent (7%) service fee to both Hosts and Renters 
+                  <strong>Service Fee Structure:</strong> Settld charges a seven percent (7%) service fee to both Hosts and Renters 
                   on each successful transaction. This means:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 mb-3">
@@ -144,8 +144,8 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 </ul>
                 <p className="mb-3">
                   <strong>Payment Processing:</strong> All payments are processed through secure third-party payment providers. 
-                  Arriv does not store payment card information. Payment processing fees charged by third-party providers 
-                  are separate from Arriv's service fees and are deducted from Host payouts.
+                  Settld does not store payment card information. Payment processing fees charged by third-party providers 
+                  are separate from Settld's service fees and are deducted from Host payouts.
                 </p>
                 <p className="mb-3">
                   <strong>Taxes:</strong> Users are responsible for determining and paying all applicable local, state, and federal taxes 
@@ -208,7 +208,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 <h3 className="font-semibold text-sm mb-2">7. BOOKING, CANCELLATION, AND REFUND POLICIES</h3>
                 <p className="mb-3">
                   <strong>Booking Process:</strong> When a Renter makes a booking request, they enter into a direct agreement with the Host. 
-                  Arriv facilitates the transaction but is not a party to the rental agreement.
+                  Settld facilitates the transaction but is not a party to the rental agreement.
                 </p>
                 <p className="mb-3">
                   <strong>Cancellation by Renters:</strong> Renters may cancel bookings subject to the cancellation policy specified 
@@ -238,19 +238,19 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                   <strong>TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW:</strong>
                 </p>
                 <ul className="list-disc pl-6 space-y-2 mb-3">
-                  <li>ARRIV IS NOT LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE</li>
-                  <li>ARRIV IS NOT LIABLE FOR ANY VEHICLE DAMAGE, THEFT, VANDALISM, ACCIDENTS, INJURIES, OR PROPERTY LOSS OCCURRING ON ANY LISTED PARKING PROPERTY</li>
-                  <li>ARRIV IS NOT LIABLE FOR THE ACTIONS, OMISSIONS, ERRORS, OR NEGLIGENCE OF HOSTS, RENTERS, OR THIRD PARTIES</li>
-                  <li>ARRIV IS NOT LIABLE FOR ANY INTERRUPTION, SUSPENSION, OR TERMINATION OF SERVICE ACCESS</li>
-                  <li>ARRIV IS NOT LIABLE FOR ANY ERRORS, INACCURACIES, OR OMISSIONS IN LISTING INFORMATION OR PLATFORM CONTENT</li>
-                  <li>ARRIV'S TOTAL LIABILITY FOR ANY CLAIMS SHALL NOT EXCEED THE AMOUNT OF SERVICE FEES PAID BY YOU IN THE 12 MONTHS PRECEDING THE CLAIM</li>
+                  <li>SETTLD IS NOT LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE</li>
+                  <li>SETTLD IS NOT LIABLE FOR ANY VEHICLE DAMAGE, THEFT, VANDALISM, ACCIDENTS, INJURIES, OR PROPERTY LOSS OCCURRING ON ANY LISTED PARKING PROPERTY</li>
+                  <li>SETTLD IS NOT LIABLE FOR THE ACTIONS, OMISSIONS, ERRORS, OR NEGLIGENCE OF HOSTS, RENTERS, OR THIRD PARTIES</li>
+                  <li>SETTLD IS NOT LIABLE FOR ANY INTERRUPTION, SUSPENSION, OR TERMINATION OF SERVICE ACCESS</li>
+                  <li>SETTLD IS NOT LIABLE FOR ANY ERRORS, INACCURACIES, OR OMISSIONS IN LISTING INFORMATION OR PLATFORM CONTENT</li>
+                  <li>SETTLD'S TOTAL LIABILITY FOR ANY CLAIMS SHALL NOT EXCEED THE AMOUNT OF SERVICE FEES PAID BY YOU IN THE 12 MONTHS PRECEDING THE CLAIM</li>
                 </ul>
                 <p className="mb-3">
                   <strong>Assumption of Risk:</strong> You acknowledge and agree that the use of parking facilities involves inherent risks 
                   including but not limited to vehicle damage, theft, personal injury, and property damage. You voluntarily assume all such risks.
                 </p>
                 <p className="mb-3">
-                  <strong>Third-Party Property:</strong> All parking spaces are owned or controlled by third parties. Arriv has no control 
+                  <strong>Third-Party Property:</strong> All parking spaces are owned or controlled by third parties. Settld has no control 
                   over the condition, safety, legality, or suitability of any parking space listed on the platform.
                 </p>
               </section>
@@ -258,7 +258,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">9. INDEMNIFICATION</h3>
                 <p className="mb-3">
-                  You agree to defend, indemnify, and hold harmless Arriv, its parent company, subsidiaries, affiliates, officers, 
+                  You agree to defend, indemnify, and hold harmless Settld, its parent company, subsidiaries, affiliates, officers, 
                   directors, employees, agents, partners, and licensors from and against any and all claims, damages, obligations, 
                   losses, liabilities, costs, debt, and expenses (including but not limited to attorney's fees) arising from:
                 </p>
@@ -342,12 +342,12 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">14. WARRANTIES AND DISCLAIMERS</h3>
                 <p className="mb-3">
-                  THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. ARRIV MAKES NO REPRESENTATIONS OR WARRANTIES 
+                  THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. SETTLD MAKES NO REPRESENTATIONS OR WARRANTIES 
                   OF ANY KIND, EXPRESS OR IMPLIED, AS TO THE OPERATION OF THE SERVICE OR THE INFORMATION, CONTENT, OR MATERIALS 
                   INCLUDED THEREIN.
                 </p>
                 <p className="mb-3">
-                  TO THE FULLEST EXTENT PERMITTED BY LAW, ARRIV DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+                  TO THE FULLEST EXTENT PERMITTED BY LAW, SETTLD DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 mb-3">
                   <li>IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</li>
@@ -360,8 +360,8 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">15. FORCE MAJEURE</h3>
                 <p className="mb-3">
-                  Arriv shall not be liable for any failure or delay in performance under these Terms which is due to fire, flood, 
-                  earthquake, pandemic, governmental acts, war, terrorism, or other causes beyond Arriv's reasonable control.
+                  Settld shall not be liable for any failure or delay in performance under these Terms which is due to fire, flood, 
+                  earthquake, pandemic, governmental acts, war, terrorism, or other causes beyond Settld's reasonable control.
                 </p>
               </section>
 
@@ -400,7 +400,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
                 <h3 className="font-semibold text-sm mb-2">19. ENTIRE AGREEMENT</h3>
                 <p className="mb-3">
                   These Terms, together with our Privacy Policy and any other agreements expressly incorporated by reference, 
-                  constitute the sole and entire agreement between you and Arriv regarding the Service and supersede all prior 
+                  constitute the sole and entire agreement between you and Settld regarding the Service and supersede all prior 
                   and contemporaneous understandings, agreements, representations, and warranties.
                 </p>
               </section>
@@ -408,7 +408,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">20. CONTACT INFORMATION</h3>
                 <p className="mb-3">
-                  If you have any questions about these Terms, please contact us at legal@arriv.com or through our customer support channels.
+                  If you have any questions about these Terms, please contact us at legal@settld.com or through our customer support channels.
                 </p>
               </section>
 
@@ -423,7 +423,7 @@ export const TermsAndConditions = ({ onAccept }: TermsAndConditionsProps) => {
               <section>
                 <h3 className="font-semibold text-sm mb-2">22. EMERGENCY PROCEDURES</h3>
                 <p className="mb-3">
-                  In case of emergency situations involving safety, security, or legal violations, Arriv reserves the right to 
+                  In case of emergency situations involving safety, security, or legal violations, Settld reserves the right to 
                   take immediate action including account suspension, law enforcement notification, and cooperation with authorities.
                 </p>
               </section>
