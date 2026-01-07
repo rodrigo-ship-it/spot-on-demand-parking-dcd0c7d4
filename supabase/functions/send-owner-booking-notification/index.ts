@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       : `${booking.display_date}<br>${booking.display_start_time || ''} - ${booking.display_end_time || ''}`;
 
     const emailResponse = await resend.emails.send({
-      from: "Settld Parking <service@settld.com>",
+      from: "Settld Parking <support@settldparking.com>",
       to: [email],
       subject: `New Booking! Your spot "${spot.title}" has been reserved`,
       html: `

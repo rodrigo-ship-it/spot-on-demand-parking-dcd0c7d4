@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
       : { label: 'Date & Time', value: `${startDate}<br>${startTime} - ${endTime}` };
 
     const emailResponse = await resend.emails.send({
-      from: "Settld Parking <service@settld.com>",
+      from: "Settld Parking <support@settldparking.com>",
       to: [email],
       subject: "Booking Confirmed - Your Parking Spot is Reserved!",
       html: `
