@@ -34,7 +34,7 @@ const FAQAccordion = () => {
     },
     {
       question: "How do hosts get paid?",
-      answer: "Hosts receive payments directly to their bank account via Stripe Connect. Payouts are processed after the booking is completed, minus a small platform fee.",
+      answer: "Hosts receive payments directly to their bank account via Stripe Connect. Payouts are processed after the booking is completed, minus a small platform fee. To manage your payout schedule, view earnings, or update bank details, visit your Stripe Dashboard from your Profile page.",
     },
     {
       question: "What happens if there's a dispute?",
