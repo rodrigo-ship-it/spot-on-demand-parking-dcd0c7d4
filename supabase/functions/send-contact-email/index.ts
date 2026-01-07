@@ -30,8 +30,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to support team
     const supportEmailResponse = await resend.emails.send({
-      from: "Settld Support <support@settld.com>",
-      to: ["service@settld.com"],
+      from: "Settld Parking <support@settldparking.com>",
+      to: ["support@settldparking.com"],
       subject: `[${type.toUpperCase()}] ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -65,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to user
     const confirmationEmailResponse = await resend.emails.send({
-      from: "Settld Support <support@settld.com>",
+      from: "Settld Parking <support@settldparking.com>",
       to: [email],
       subject: "We received your message - Settld Support",
       html: `
@@ -86,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
             </div>
             
-            <p>If you have any urgent issues, you can also reach us at service@settld.com.</p>
+            <p>If you have any urgent issues, you can also reach us at support@settldparking.com.</p>
             
             <p>Best regards,<br>
             The Settld Support Team</p>
