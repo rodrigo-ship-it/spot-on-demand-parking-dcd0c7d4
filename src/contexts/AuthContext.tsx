@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanupAuthState } from '@/lib/auth-cleanup';
+import { DOMAIN_CONFIG } from '@/config/domain';
 import { toast } from 'sonner';
 import { logLoginAttempt } from '@/lib/securityMonitoring';
 import { auditLog } from '@/lib/security';
@@ -128,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clean up existing state first
       cleanupAuthState();
 
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${DOMAIN_CONFIG.customDomain}/`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -185,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     try {
       // Use hash-based redirect for better token preservation
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      const redirectUrl = `${DOMAIN_CONFIG.customDomain}/reset-password`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
