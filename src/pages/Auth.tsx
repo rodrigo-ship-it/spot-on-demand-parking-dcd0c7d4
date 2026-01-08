@@ -167,7 +167,8 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
-        toast.success('Account created! Please check your email for confirmation. After verifying your email, you\'ll need to accept our terms and conditions.');
+        // Navigate to email confirmation page
+        navigate('/email-confirmation');
       }
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again.');

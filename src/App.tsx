@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import BookSpot from "./pages/BookSpot";
 import RentQR from "./pages/RentQR";
 import Auth from "./pages/Auth";
+import EmailConfirmation from "./pages/EmailConfirmation";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/AdminDashboard";
 import ResetPassword from "./pages/ResetPassword";
@@ -63,6 +64,7 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/terms" element={<TermsRoute />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/email-confirmation" element={<EmailConfirmation />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/list-spot" element={<ProtectedRoute><ProtectedListSpot /></ProtectedRoute>} />
                 <Route path="/how-it-works" element={<ProtectedRoute><HowItWorks /></ProtectedRoute>} />
