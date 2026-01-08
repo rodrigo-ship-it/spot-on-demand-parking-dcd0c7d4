@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink, Star, Shield } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MapPin, DollarSign, Clock, Car, Edit, Eye, MoreHorizontal, ArrowLeft, Search, Plus, Calendar, User, Phone, Mail, QrCode, Filter, Trash2, Crown, ExternalLink, Star, Shield, FileCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { BookingDetailsDialog } from "@/components/BookingDetailsDialog";
@@ -16,6 +17,7 @@ import { ContactButtons } from "@/components/ContactButtons";
 import { PremiumSubscriptionDialog } from "@/components/PremiumSubscriptionDialog";
 import { PremiumBadge } from "@/components/PremiumBadge";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { VerificationDocumentUpload } from "@/components/VerificationDocumentUpload";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +37,7 @@ const ManageSpots = () => {
   const [parkingSpots, setParkingSpots] = useState<any[]>([]);
   const [upcomingReservations, setUpcomingReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSpotForVerification, setSelectedSpotForVerification] = useState<any | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -114,6 +117,7 @@ const ManageSpots = () => {
           pricingType: spot.pricing_type,
           status: spot.is_active ? "Active" : "Paused",
           verificationStatus: spot.verification_status || 'unverified',
+          verificationDocuments: spot.verification_documents || [],
           totalBookings: spot.bookings?.length || 0,
           monthlyEarnings: thisMonthEarnings,
           lastMonthEarnings: lastMonthEarnings,
@@ -795,6 +799,17 @@ const ManageSpots = () => {
                         >
                           <QrCode className="w-4 h-4" />
                         </Button>
+                        {spot.verificationStatus !== 'verified' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedSpotForVerification(spot)}
+                            className="text-blue-600 hover:text-blue-700"
+                            title="Verify Ownership"
+                          >
+                            <FileCheck className="w-4 h-4" />
+                          </Button>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
@@ -943,6 +958,35 @@ const ManageSpots = () => {
           onApplyFilters={setFilterOptions}
           currentFilters={filterOptions}
         />
+
+        {/* Verification Upload Dialog */}
+        <Dialog open={!!selectedSpotForVerification} onOpenChange={() => setSelectedSpotForVerification(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Verify Ownership: {selectedSpotForVerification?.title}</DialogTitle>
+              <DialogDescription>
+                Upload documents to prove you own or manage this parking spot
+              </DialogDescription>
+            </DialogHeader>
+            {selectedSpotForVerification && user && (
+              <VerificationDocumentUpload
+                spotId={selectedSpotForVerification.id}
+                userId={user.id}
+                currentStatus={selectedSpotForVerification.verificationStatus}
+                existingDocuments={selectedSpotForVerification.verificationDocuments}
+                onStatusChange={(status) => {
+                  // Update local state
+                  setParkingSpots(prev => prev.map(s => 
+                    s.id === selectedSpotForVerification.id 
+                      ? { ...s, verificationStatus: status }
+                      : s
+                  ));
+                  setSelectedSpotForVerification(null);
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

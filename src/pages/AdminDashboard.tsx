@@ -33,7 +33,10 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
-  Home
+  Home,
+  Camera,
+  Image as ImageIcon,
+  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -110,6 +113,9 @@ interface Booking {
   created_at: string;
   renter_id: string;
   spot_id: string;
+  checkout_photo_url?: string;
+  checkout_timestamp_verified?: boolean;
+  verification_score?: number;
   parking_spots?: { title: string; address: string };
   renter_profile?: { full_name?: string; email?: string };
 }
@@ -182,6 +188,9 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
   const [userOwnedSpots, setUserOwnedSpots] = useState<ParkingSpot[]>([]);
+  const [selectedBookingForPhoto, setSelectedBookingForPhoto] = useState<Booking | null>(null);
+  const [checkoutPhotoUrl, setCheckoutPhotoUrl] = useState<string | null>(null);
+  const [loadingPhoto, setLoadingPhoto] = useState(false);
 
   // Simple admin check - replace with your actual admin email
   const isAdmin = user?.email === 'rodrigo@settldparking.com';
@@ -404,6 +413,34 @@ export default function AdminDashboard() {
       channels.forEach(channel => supabase.removeChannel(channel));
     };
   }, [isAdmin]);
+
+  // Fetch checkout photo for a booking
+  const viewCheckoutPhoto = async (booking: Booking) => {
+    if (!booking.checkout_photo_url) {
+      toast.error('No checkout photo available for this booking');
+      return;
+    }
+
+    setSelectedBookingForPhoto(booking);
+    setLoadingPhoto(true);
+    
+    try {
+      const { data } = await supabase.storage
+        .from('parking-images')
+        .createSignedUrl(booking.checkout_photo_url, 3600); // 1 hour expiry
+      
+      if (data?.signedUrl) {
+        setCheckoutPhotoUrl(data.signedUrl);
+      } else {
+        toast.error('Failed to load checkout photo');
+      }
+    } catch (error) {
+      console.error('Error fetching checkout photo:', error);
+      toast.error('Failed to load checkout photo');
+    } finally {
+      setLoadingPhoto(false);
+    }
+  };
 
   // Advanced user management functions
   const banUser = async (userId: string) => {
@@ -1237,11 +1274,12 @@ Check browser console for detailed ID analysis.
 
         {/* Comprehensive Admin Tabs */}
         <Tabs defaultValue="reservations" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9">
             <TabsTrigger value="reservations">Reservations</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="spots">Spots</TabsTrigger>
             <TabsTrigger value="bookings">All Bookings</TabsTrigger>
+            <TabsTrigger value="verification">Verification</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
             <TabsTrigger value="support">Support</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -1811,6 +1849,12 @@ Check browser console for detailed ID analysis.
                                   <span className="text-xs text-muted-foreground font-mono">
                                     {booking.id.slice(0, 8)}
                                   </span>
+                                  {booking.checkout_photo_url && (
+                                    <span className="text-xs text-blue-600 flex items-center gap-1">
+                                      <Camera className="w-3 h-3" />
+                                      Photo
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1839,6 +1883,15 @@ Check browser console for detailed ID analysis.
                                   <Eye className="w-4 h-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
+                                {booking.checkout_photo_url && (
+                                  <DropdownMenuItem 
+                                    onClick={() => viewCheckoutPhoto(booking)}
+                                    className="text-blue-600 hover:bg-blue-50"
+                                  >
+                                    <Camera className="w-4 h-4 mr-2" />
+                                    View Checkout Photo
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem 
                                   onClick={() => updateBookingStatus(booking.id, 'cancelled')}
                                   className="text-red-600 hover:bg-red-50"
@@ -1862,6 +1915,11 @@ Check browser console for detailed ID analysis.
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Verification Tab */}
+          <TabsContent value="verification">
+            <AdminVerificationReview />
           </TabsContent>
 
           <TabsContent value="disputes">
@@ -2416,6 +2474,81 @@ Check browser console for detailed ID analysis.
                     </Button>
                   </div>
                 </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Checkout Photo Dialog */}
+        <Dialog 
+          open={!!selectedBookingForPhoto} 
+          onOpenChange={() => {
+            setSelectedBookingForPhoto(null);
+            setCheckoutPhotoUrl(null);
+          }}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Checkout Photo
+              </DialogTitle>
+            </DialogHeader>
+            {selectedBookingForPhoto && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="font-medium text-muted-foreground">Spot</p>
+                    <p>{selectedBookingForPhoto.parking_spots?.title || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Status</p>
+                    <Badge variant={selectedBookingForPhoto.status === 'completed' ? 'secondary' : 'default'}>
+                      {selectedBookingForPhoto.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Booking Time</p>
+                    <p>
+                      {format(new Date(selectedBookingForPhoto.start_time), 'MMM dd, HH:mm')} - {format(new Date(selectedBookingForPhoto.end_time), 'HH:mm')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Amount</p>
+                    <p className="font-semibold">${Number(selectedBookingForPhoto.total_amount).toFixed(2)}</p>
+                  </div>
+                  {selectedBookingForPhoto.verification_score !== undefined && (
+                    <div>
+                      <p className="font-medium text-muted-foreground">Verification Score</p>
+                      <p className={selectedBookingForPhoto.verification_score >= 70 ? 'text-green-600' : 'text-yellow-600'}>
+                        {selectedBookingForPhoto.verification_score}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border rounded-lg overflow-hidden bg-muted">
+                  {loadingPhoto ? (
+                    <div className="flex items-center justify-center h-64">
+                      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : checkoutPhotoUrl ? (
+                    <img 
+                      src={checkoutPhotoUrl} 
+                      alt="Checkout photo"
+                      className="w-full h-auto max-h-96 object-contain"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
+                      <p>Photo could not be loaded</p>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  Checkout photos are retained for 24 hours after booking completion for dispute resolution.
+                </p>
               </div>
             )}
           </DialogContent>
