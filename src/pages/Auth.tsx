@@ -137,17 +137,30 @@ const Auth = () => {
       const { error } = await signUp(email, password, fullName, phone);
       
       if (error) {
-        if (error.message.includes('User already registered')) {
+        // Check for existing account - handle multiple error message variations
+        const isExistingUser = 
+          error.message.includes('User already registered') ||
+          error.message.includes('already been registered') ||
+          error.message.includes('already exists') ||
+          error.message.toLowerCase().includes('duplicate');
+        
+        if (isExistingUser) {
           // Clear password fields and switch to sign-in tab
           setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
           setActiveTab("signin");
-          toast.error('An account with this email already exists. Please sign in instead.', {
-            duration: 5000,
-            action: {
-              label: 'Sign In',
-              onClick: () => setActiveTab("signin")
+          toast.error(
+            'An account with this email already exists. Please sign in or reset your password if you forgot it.',
+            {
+              duration: 8000,
+              action: {
+                label: 'Forgot Password?',
+                onClick: () => {
+                  setActiveTab("signin");
+                  setIsResetMode(true);
+                }
+              }
             }
-          });
+          );
         } else if (error.message.includes('Password should be at least 6 characters')) {
           toast.error('Password must be at least 6 characters long');
         } else {
