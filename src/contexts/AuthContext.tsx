@@ -152,14 +152,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         // Handle case where user already exists but is unconfirmed
         if (error.message.includes('User already registered')) {
-          toast.error('An account with this email already exists. Please check your email for confirmation or try signing in.');
-          return { error };
+          return { error: { message: 'User already registered' } };
         }
         throw error;
       }
 
-      if (data.user) {
-        // Create profile with phone number
+      // Check if user already exists - Supabase returns user with empty identities array
+      // This is a security feature to prevent email enumeration, but we need to handle it
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        return { error: { message: 'User already registered' } };
+      }
+
+      if (data.user && data.user.identities && data.user.identities.length > 0) {
+        // Create profile with phone number - only for new users
         await supabase.from('profiles').insert([
           {
             user_id: data.user.id,
