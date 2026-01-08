@@ -48,6 +48,16 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
+  // Redirect logged-in users who haven't accepted terms
+  useEffect(() => {
+    if (user) {
+      const termsAccepted = localStorage.getItem('termsAccepted');
+      if (termsAccepted !== 'true') {
+        navigate('/terms');
+      }
+    }
+  }, [user, navigate]);
+
   // Get user's current location on component mount
   useEffect(() => {
     if (navigator.geolocation) {
