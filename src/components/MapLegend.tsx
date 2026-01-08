@@ -64,7 +64,7 @@ export const MapLegend = () => {
               </div>
               
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent/30 transition-colors">
-                <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0 shadow-sm ring-2 ring-amber-500" />
+                <div className="w-3 h-3 rounded-full bg-background flex-shrink-0 shadow-sm ring-2 ring-amber-500" />
                 <span className="text-xs text-foreground whitespace-nowrap">Premium Spot</span>
               </div>
             </div>
