@@ -189,9 +189,9 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-lg border-b border-white/20">
+      <nav className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-4">
@@ -208,7 +208,7 @@ const Auth = () => {
 
       {/* Auth Form */}
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md shadow-xl border-0">
+        <Card className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-100">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">Welcome to Settld</CardTitle>
             <CardDescription>
@@ -237,7 +237,7 @@ const Auth = () => {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg py-3" disabled={isLoading}>
                       {isLoading ? 'Sending reset email...' : 'Send Reset Email'}
                     </Button>
                     <Button
@@ -290,7 +290,7 @@ const Auth = () => {
                         </Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg py-3" disabled={isLoading}>
                       {isLoading ? 'Signing in...' : 'Sign In'}
                     </Button>
                     <div className="text-center">
@@ -409,9 +409,9 @@ const Auth = () => {
                       required
                     />
                   </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+                    <Button
+                      type="submit"
+                      className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg py-3"
                       disabled={isLoading || !passwordValidation.isValid || formData.password !== formData.confirmPassword}
                     >
                       {isLoading ? 'Creating account...' : 'Create Account'}

@@ -507,9 +507,9 @@ const BookSpot = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0EA5E9] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading booking details...</p>
         </div>
       </div>
@@ -518,7 +518,7 @@ const BookSpot = () => {
 
   if (!spotData || !userProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Unable to load booking details</p>
           <Button onClick={() => navigate('/')} className="mt-4">
@@ -530,9 +530,9 @@ const BookSpot = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-white/20">
+      <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center">
           <Button 
             variant="ghost" 

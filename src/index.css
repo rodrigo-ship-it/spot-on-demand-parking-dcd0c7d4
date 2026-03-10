@@ -153,7 +153,8 @@
   }
 
   body {
-    @apply text-foreground font-sans bg-gradient-to-br from-red-50 via-orange-50 to-amber-50;
+    @apply text-foreground font-sans;
+    background-color: #F8FAFC;
     min-height: 100vh;
   }
   
@@ -207,29 +208,25 @@
   }
 
   .glass-card {
-    background: var(--gradient-glass);
-    @apply backdrop-blur-xl border border-white/10 shadow-glass;
+    @apply bg-white border border-slate-100 shadow-sm;
   }
 
   /* Premium cards */
   .premium-card {
-    background: var(--gradient-card);
-    @apply shadow-premium border border-white/20 hover-lift;
+    @apply bg-white shadow-lg border border-slate-100 hover-lift;
   }
 
   .surface-card {
-    background: var(--gradient-surface);
-    @apply shadow-card border border-gray-200/50;
+    @apply bg-slate-50 shadow-sm border border-slate-200;
   }
 
   /* Enhanced buttons */
   .btn-premium {
-    background: var(--gradient-primary);
-    @apply text-white shadow-button hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-300;
+    @apply bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
   }
 
   .btn-glass {
-    @apply glass-effect text-white hover:bg-white/20 shadow-glass;
+    @apply bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-lg;
   }
 
   /* Typography enhancements */
@@ -375,4 +372,29 @@
 
 .section-spacing-sm {
   @apply py-12 md:py-16;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Primary CTA button */
+.btn-primary {
+  @apply bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg px-6 py-3 transition-colors duration-200;
 }

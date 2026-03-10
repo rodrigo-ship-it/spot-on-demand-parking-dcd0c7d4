@@ -346,7 +346,7 @@ const SpotDetails = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-white/20">
+      <nav className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -464,9 +464,9 @@ const SpotDetails = () => {
                     <h3 className="font-semibold mb-2">Amenities</h3>
                     <div className="flex flex-wrap gap-2">
                       {spotData.amenities.map((amenity: string, index: number) => (
-                        <Badge key={index} variant="outline">
+                        <span key={index} className="bg-slate-100 text-slate-700 rounded-lg px-3 py-1 text-sm font-medium">
                           {amenity}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -751,7 +751,7 @@ const SpotDetails = () => {
                 <CardContent className="space-y-4">
                   {/* Base Price Display */}
                   <div className="text-center space-y-2">
-                     <div className="text-3xl font-bold text-gray-900">
+                     <div className="text-3xl font-bold text-slate-900">
                        ${spotData.pricing_type === 'hourly' 
                          ? Number(spotData.price_per_hour).toFixed(2)
                          : spotData.pricing_type === 'daily'
@@ -829,7 +829,7 @@ const SpotDetails = () => {
                     <span className="font-medium">{spotData.available_spots}/{spotData.total_spots} spots</span>
                   </div>
                   
-                  <Button onClick={handleContinueToBook} className="w-full" size="lg">
+                  <Button onClick={handleContinueToBook} className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg" size="lg">
                     <Calendar className="w-4 h-4 mr-2" />
                     Book Now
                   </Button>
@@ -854,8 +854,8 @@ const SpotDetails = () => {
                 <CardContent>
                   <div className="text-center space-y-4">
                     <div>
-                      <div className="text-3xl font-bold text-gray-900">
-                        ${spotData.pricing_type === 'hourly' 
+                      <div className="text-3xl font-bold text-slate-900">
+                        ${spotData.pricing_type === 'hourly'
                           ? Number(spotData.price_per_hour).toFixed(2)
                           : spotData.pricing_type === 'daily'
                           ? Number(spotData.daily_price).toFixed(2)
@@ -916,7 +916,7 @@ const SpotDetails = () => {
                   <CardTitle>Book This Spot</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={handleContinueToBook} className="w-full" size="lg">
+                  <Button onClick={handleContinueToBook} className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg" size="lg">
                     <Calendar className="w-4 h-4 mr-2" />
                     Continue to Book
                   </Button>

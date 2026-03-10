@@ -365,9 +365,9 @@ const Index = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+    <div className="min-h-screen bg-slate-50">
       {/* Modern Navigation with Glass Effect */}
-      <nav className="glass-card border-0 border-b border-white/10 sticky top-0 z-50">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto container-padding">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-3">
@@ -667,7 +667,7 @@ const Index = () => {
       </nav>
 
       {/* Revolutionary Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-red-50 via-orange-50 to-amber-50" role="banner">
+      <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-[#0F172A]" role="banner">
         {/* Subtle Dot Grid Pattern */}
         <div 
           className="absolute inset-0 opacity-[0.15]"
@@ -742,10 +742,10 @@ const Index = () => {
               className="max-w-4xl mx-auto mt-16"
             >
               <div className="relative group">
-                {/* Glow Effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 via-blue-500 to-slate-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                
-                <div className="relative bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 border-2 border-slate-200 shadow-2xl backdrop-blur-sm">
+                {/* Subtle glow */}
+                <div className="absolute -inset-1 bg-slate-700 rounded-3xl blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+
+                <div className="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-1">
                       <GooglePlacesAutocomplete
@@ -781,7 +781,7 @@ const Index = () => {
                     </Select>
                     <Button 
                       size="lg" 
-                      className="h-14 rounded-2xl font-bold bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-400 hover:to-blue-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-105 transition-all" 
+                      className="h-14 rounded-lg font-bold bg-[#0EA5E9] hover:bg-[#0284C7] text-white shadow-lg hover:shadow-xl transition-all duration-200"
                       onClick={handleSearch}
                     >
                       <Search className="w-5 h-5 mr-2" />
@@ -859,10 +859,7 @@ const Index = () => {
                   whileHover={{ y: -10, scale: 1.02 }}
                   className="relative group"
                 >
-                  {/* Glow effect on hover */}
-                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${feature.gradient} rounded-3xl blur opacity-0 group-hover:opacity-30 transition duration-500`}></div>
-                  
-                  <Card className="relative border-2 h-full bg-card/50 backdrop-blur-sm">
+                  <Card className="relative border border-slate-100 h-full bg-white shadow-sm hover:shadow-lg transition-shadow duration-200">
                     <CardHeader className="text-center pb-4">
                       <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform duration-300`}>
                         <feature.icon className="w-10 h-10 text-white" />
@@ -976,7 +973,7 @@ const Index = () => {
                     whileHover={{ y: -8 }}
                     className="h-full"
                   >
-                    <Card className={`group shadow-lg hover:shadow-2xl transition-all duration-500 flex flex-col h-full overflow-hidden bg-card/50 backdrop-blur-sm ${spot.isPremiumLister ? 'border-2 border-amber-400' : 'border-0'}`}>
+                    <Card className={`group hover:shadow-lg transition-shadow duration-200 flex flex-col h-full overflow-hidden bg-white ${spot.isPremiumLister ? 'border-2 border-amber-400' : 'border border-slate-100 shadow-sm'}`}>
                       <div className="relative overflow-hidden">
                         <motion.img 
                           whileHover={{ scale: 1.1 }}
@@ -1011,7 +1008,7 @@ const Index = () => {
                               </CardDescription>
                             </div>
                            <div className="text-right flex-shrink-0">
-                             <div className="text-2xl font-bold text-primary">${spot.price}</div>
+                             <div className="text-lg font-semibold text-slate-900">${spot.price}</div>
                              <div className="text-xs text-muted-foreground">
                                {spot.pricingType === 'hourly' ? 'per hour' : 
                                 spot.pricingType === 'daily' ? 'per day' : 
@@ -1041,7 +1038,7 @@ const Index = () => {
                             totalSpots={spot.totalSpots || 1}
                           />
                           <Button 
-                            className="w-full mt-3 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 font-semibold shadow-lg hover:shadow-xl transition-all" 
+                            className="w-full mt-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg transition-colors duration-200"
                             onClick={() => handleBookNow(spot.id)}
                           >
                             Book Now
@@ -1066,19 +1063,18 @@ const Index = () => {
 
 
       {/* Enhanced CTA Section */}
-      <section className="py-20 bg-gradient-hero relative overflow-hidden" aria-labelledby="cta-heading">
-        <div className="absolute inset-0 opacity-20"></div>
+      <section className="py-20 bg-[#0F172A] relative overflow-hidden" aria-labelledby="cta-heading">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-fade-in">
             <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
               Turn Your Space Into Income
             </h2>
-            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Have an unused parking space? List it on Settld and start earning money today. 
+            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Have an unused parking space? List it on Settld and start earning money today.
               Join members of the Settld community already making extra income.
             </p>
             <Link to="/list-spot">
-              <Button variant="glass" size="xl" className="shadow-glow">
+              <Button size="xl" className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg px-8 py-3">
                 <DollarSign className="w-5 h-5 mr-2" />
                 Start Earning Now
               </Button>
@@ -1095,9 +1091,9 @@ const Index = () => {
             <p className="text-lg text-gray-600">Everything you need to get started with Settld</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">How It Works</CardTitle>
@@ -1107,16 +1103,16 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/how-it-works">
-                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                  <Button className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-lg">
                     Learn More
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Car className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">My Spots</CardTitle>
@@ -1126,16 +1122,16 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/manage-spots">
-                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                  <Button className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-lg">
                     Manage Spots
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg shadow-gray-900/5 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
                   <Clock className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-xl">My Bookings</CardTitle>
@@ -1145,7 +1141,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/bookings">
-                  <Button className="w-full bg-primary hover:bg-secondary text-primary-foreground">
+                  <Button className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-lg">
                     View Bookings
                   </Button>
                 </Link>

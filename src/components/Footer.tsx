@@ -3,9 +3,9 @@ import { MapPin, Mail } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="relative bg-gradient-to-b from-background to-muted/30 border-t border-border/50">
-      {/* Gradient accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-400 to-primary" />
+    <footer className="relative bg-white border-t border-slate-200">
+      {/* Accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-[#0EA5E9]" />
       
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
