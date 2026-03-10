@@ -41,7 +41,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import AdminRefundManager from "@/components/AdminRefundManager";
 import { AdminVerificationReview } from "@/components/AdminVerificationReview";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
@@ -154,6 +154,7 @@ interface SecurityLog {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalSpots: 0,
@@ -191,9 +192,28 @@ export default function AdminDashboard() {
   const [selectedBookingForPhoto, setSelectedBookingForPhoto] = useState<Booking | null>(null);
   const [checkoutPhotoUrl, setCheckoutPhotoUrl] = useState<string | null>(null);
   const [loadingPhoto, setLoadingPhoto] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckDone, setAdminCheckDone] = useState(false);
 
-  // Simple admin check - replace with your actual admin email
-  const isAdmin = user?.email === 'rodrigo@settldparking.com';
+  useEffect(() => {
+    if (!user) return;
+    const checkAdminRole = async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (data) {
+        setIsAdmin(true);
+      } else {
+        toast.error('Access denied - Admin privileges required');
+        navigate('/');
+      }
+      setAdminCheckDone(true);
+    };
+    checkAdminRole();
+  }, [user]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -1037,6 +1057,14 @@ Check browser console for detailed ID analysis.
       toast.error('Failed to update spot status');
     }
   };
+
+  if (!adminCheckDone) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return <Navigate to="/" replace />;

@@ -26,20 +26,14 @@ import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 const BookSpot = () => {
-  console.log('🔥 BookSpot component is loading!');
-  
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   
-  console.log('🔥 BookSpot params:', { id, pathname: location.pathname, search: location.search });
-  
   // Check if this is a QR code scan
   const urlParams = new URLSearchParams(location.search);
   const isQRCodeBooking = urlParams.get('qr') === 'true';
-  
-  console.log('🔥 BookSpot QR check:', { isQRCodeBooking, urlParams: location.search });
   
   const [spotData, setSpotData] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -80,8 +74,6 @@ const BookSpot = () => {
   // Load spot data and user profile
   useEffect(() => {
     const loadData = async () => {
-      console.log('BookSpot - Loading data:', { id, isQRCodeBooking, user: !!user });
-      
       // For QR code bookings, allow guest users (don't redirect to auth)
       if (!user && !isQRCodeBooking) {
         navigate('/auth');
@@ -97,14 +89,11 @@ const BookSpot = () => {
 
       try {
         // Load parking spot data
-        console.log('BookSpot - Attempting to load spot with ID:', id);
         const { data: spot, error: spotError } = await supabase
           .from('parking_spots')
           .select('*')
           .eq('id', id)
           .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
-
-        console.log('BookSpot - Supabase response:', { spot, spotError });
 
         if (spotError) {
           console.error('BookSpot - Error loading spot:', spotError);
@@ -120,7 +109,6 @@ const BookSpot = () => {
           return;
         }
 
-        console.log('BookSpot - Spot loaded successfully:', spot);
         setSpotData(spot);
 
         // Load user profile and vehicles (only if user is logged in)
@@ -301,16 +289,6 @@ const BookSpot = () => {
     if (date) {
       // Ensure we use the date as-is without any time component conversion
       const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      console.log('🗓️ [DATE_CHANGE] Selected date:', {
-        originalDate: date,
-        originalToString: date.toString(),
-        localDate: localDate,
-        localToString: localDate.toString(),
-        year: date.getFullYear(),
-        month: date.getMonth(),
-        day: date.getDate()
-      });
-      
       setBookingDetails(prev => {
         const newDetails = { ...prev, date: localDate };
         
@@ -379,20 +357,8 @@ const BookSpot = () => {
     // Always use 15-minute increments for start time
     const timeIncrement = 15;
     
-    // Debug logging
-    console.log('🕐 [START_TIME_OPTIONS] Spot timezone filtering:', {
-      spotTimezone,
-      spotCurrentHour,
-      spotCurrentMinute,
-      isToday,
-      isPastDate,
-      minimumBookingHours,
-      timeIncrement
-    });
-    
     // Don't show any times for past dates
     if (isPastDate) {
-      console.log('🕐 [START_TIME_OPTIONS] Returning empty array - past date detected');
       return [];
     }
     
@@ -416,7 +382,6 @@ const BookSpot = () => {
       }
     }
     
-    console.log('🕐 [START_TIME_OPTIONS] Generated options count:', options.length, 'first option:', options[0]?.value);
     return options;
   };
 
@@ -451,27 +416,12 @@ const BookSpot = () => {
       }
     }
     
-    console.log('🕐 [END_TIME_OPTIONS] Generated options:', {
-      startTime: bookingDetails.startTime,
-      minimumBookingHours,
-      isSameDay,
-      optionsCount: options.length,
-      firstOption: options[0]?.value
-    });
-    
     return options;
   };
 
   const startTimeOptions = generateStartTimeOptions();
   const endTimeOptions = generateEndTimeOptions();
   
-  console.log('🔧 [COMPONENT] timeOptions after generation:', {
-    startTimeOptionsLength: startTimeOptions.length,
-    endTimeOptionsLength: endTimeOptions.length,
-    bookingDate: bookingDetails.date,
-    dateString: bookingDetails.date.toString()
-  });
-
   // Get available time slots
   const selectedDateString = format(bookingDetails.date, 'yyyy-MM-dd');
   const currentDuration = isPricingDaily ? bookingDetails.numberOfDays * 24 : bookingDetails.duration;
@@ -480,14 +430,6 @@ const BookSpot = () => {
     selectedDateString, 
     Math.ceil(currentDuration)
   );
-
-  // Debug logging for time slot filtering
-  console.log('🔍 Debug time slots:', {
-    timeSlots: timeSlots.slice(0, 5), // First 5 slots
-    startTimeOptionsFirst5: startTimeOptions.slice(0, 5).map(opt => opt.value),
-    selectedDate: selectedDateString,
-    duration: Math.ceil(currentDuration)
-  });
 
   const handleBooking = async () => {
     if (!spotData) {
@@ -550,8 +492,6 @@ const BookSpot = () => {
   const handlePaymentSuccess = async (sessionId?: string) => {
     // Booking will be created by webhook after payment success
     // Navigate directly to confirmation page with session_id
-    console.log("💰 [PAYMENT_SUCCESS] Payment completed, redirecting to confirmation...");
-    
     if (sessionId) {
       // Navigate with session_id so confirmation page can fetch webhook-created booking
       navigate(`/booking-confirmed?session_id=${sessionId}`);

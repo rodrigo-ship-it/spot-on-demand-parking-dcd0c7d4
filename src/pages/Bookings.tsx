@@ -127,15 +127,6 @@ const Bookings = () => {
             endDateObj.setHours(endDateObj.getHours() + 3);
             const gracePeriodEnd = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')} ${String(endDateObj.getHours()).padStart(2, '0')}:${String(endDateObj.getMinutes()).padStart(2, '0')}:${String(endDateObj.getSeconds()).padStart(2, '0')}`;
             
-            console.log('📅 [SIMPLE_STRING_COMPARE]', {
-              id: booking.id.substring(0, 8),
-              spotTimezone,
-              currentTimeAtSpot,
-              startTimeStr,
-              endTimeStr,
-              gracePeriodEnd
-            });
-            
             // DETERMINE STATUS - Respect user checkout, then time comparison
             // Flow: Upcoming → Active → Late → Completed
             let status = 'Upcoming';
@@ -154,8 +145,6 @@ const Bookings = () => {
             } else {
               status = 'Completed';
             }
-            
-            console.log('🕐 [STATUS]', { id: booking.id.substring(0, 8), status, currentTimeAtSpot, startTimeStr });
             
             // Parse dates for display formatting
             const startParts = startTimeStr.split(/[- :]/);

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ChatInterface } from "@/components/ChatInterface";
 
 const BookingConfirmed = () => {
   const location = useLocation();
@@ -15,6 +16,8 @@ const BookingConfirmed = () => {
   const [bookingData, setBookingData] = useState(location.state);
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatOwner, setChatOwner] = useState<{id: string, name: string} | null>(null);
   const { user, signOut } = useAuth();
 
   // Get URL parameters from Stripe redirect
@@ -123,15 +126,11 @@ const BookingConfirmed = () => {
           }
 
           // Find booking by payment_intent_id
-          console.log('🔍 [BOOKING_LOOKUP] Looking for booking with payment_intent_id:', sessionData.payment_intent_id);
-          
           let booking;
           let bookingError;
           
           // Try multiple times with delays to handle webhook processing timing
           for (let attempt = 1; attempt <= 3; attempt++) {
-            console.log(`🔄 [BOOKING_LOOKUP_ATTEMPT] Attempt ${attempt}/3`);
-            
             const { data: bookingData, error: lookupError } = await supabase
               .from('bookings')
               .select('*')
@@ -141,12 +140,9 @@ const BookingConfirmed = () => {
             if (!lookupError && bookingData) {
               booking = bookingData;
               bookingError = null;
-              console.log('✅ [BOOKING_FOUND] Found booking:', booking.id);
               break;
             } else {
               bookingError = lookupError;
-              console.log(`❌ [BOOKING_ATTEMPT_${attempt}] No booking found, waiting...`);
-              
               if (attempt < 3) {
                 // Wait before next attempt (increasing delay)
                 await new Promise(resolve => setTimeout(resolve, attempt * 2000));
@@ -161,14 +157,10 @@ const BookingConfirmed = () => {
           }
 
           // Fetch spot details using secure function with retry logic
-          console.log('🏢 [SPOT_LOOKUP] Fetching spot details for:', booking.spot_id);
-          
           let spotData, spotError;
           
           // Try multiple times to get spot details
           for (let attempt = 1; attempt <= 3; attempt++) {
-            console.log(`🔄 [SPOT_LOOKUP_ATTEMPT] Attempt ${attempt}/3`);
-            
             const { data: retrievedSpotData, error: retrievedSpotError } = await supabase.rpc('get_booking_spot_details', {
               spot_id_param: booking.spot_id,
               booking_id_param: booking.id
@@ -177,12 +169,9 @@ const BookingConfirmed = () => {
             if (!retrievedSpotError && retrievedSpotData && retrievedSpotData.length > 0) {
               spotData = retrievedSpotData;
               spotError = null;
-              console.log('✅ [SPOT_FOUND] Found spot details:', retrievedSpotData[0].title);
               break;
             } else {
               spotError = retrievedSpotError;
-              console.log(`❌ [SPOT_ATTEMPT_${attempt}] No spot data found:`, retrievedSpotError);
-              
               if (attempt < 3) {
                 // Wait before next attempt
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -320,6 +309,35 @@ const BookingConfirmed = () => {
     return null;
   }
 
+  const handleContactOwner = async () => {
+    if (!bookingData?.bookingId) {
+      toast.error('Booking information not available');
+      return;
+    }
+    try {
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('spot_id')
+        .eq('id', bookingData.bookingId)
+        .single();
+      if (booking?.spot_id) {
+        const { data: spot } = await supabase
+          .from('parking_spots')
+          .select('owner_id, profiles(full_name)')
+          .eq('id', booking.spot_id)
+          .single();
+        if (spot) {
+          setChatOwner({
+            id: spot.owner_id,
+            name: (spot.profiles as any)?.full_name || 'Parking Owner'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching owner info:', error);
+    }
+    setShowChat(true);
+  };
 
   const sendConfirmationEmail = async () => {
     if (!bookingData?.bookingId) {
@@ -682,11 +700,11 @@ const BookingConfirmed = () => {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full" onClick={handleContactOwner}>
             <MessageSquare className="w-4 h-4 mr-2" />
             Contact Owner
           </Button>
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full" onClick={() => navigate('/help')}>
             <Phone className="w-4 h-4 mr-2" />
             Get Support
           </Button>
@@ -696,6 +714,18 @@ const BookingConfirmed = () => {
             </Button>
           </Link>
         </div>
+
+        {/* Chat Interface */}
+        {showChat && bookingData?.bookingId && (
+          <div className="mt-6">
+            <ChatInterface
+              bookingId={bookingData.bookingId}
+              recipientId={chatOwner?.id || ''}
+              recipientName={chatOwner?.name || 'Parking Owner'}
+              onClose={() => setShowChat(false)}
+            />
+          </div>
+        )}
 
         {/* Back to Home */}
         <div className="text-center mt-8">

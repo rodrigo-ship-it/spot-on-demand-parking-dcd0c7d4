@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LocationSuggestion {
   id: string;
@@ -31,21 +32,29 @@ export const LocationAutocomplete = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Mock data for demonstration (replace with real API call)
-  const mockSuggestions: LocationSuggestion[] = [
-    { id: "1", name: "Downtown", address: "Downtown, City Center", coordinates: { lat: 40.7128, lng: -74.0060 } },
-    { id: "2", name: "Airport", address: "International Airport Terminal", coordinates: { lat: 40.6892, lng: -74.1745 } },
-    { id: "3", name: "University District", address: "University Campus Area", coordinates: { lat: 40.7282, lng: -73.9942 } },
-    { id: "4", name: "Shopping Mall", address: "Central Shopping Mall", coordinates: { lat: 40.7589, lng: -73.9851 } },
-    { id: "5", name: "Business District", address: "Financial District", coordinates: { lat: 40.7074, lng: -74.0113 } },
-    { id: "6", name: "Sports Stadium", address: "Main Sports Arena", coordinates: { lat: 40.8296, lng: -73.9262 } },
-    { id: "7", name: "Convention Center", address: "City Convention Center", coordinates: { lat: 40.7505, lng: -73.9934 } },
-    { id: "8", name: "Hospital District", address: "Medical Center Area", coordinates: { lat: 40.7831, lng: -73.9712 } }
-  ];
+  // Get user's current location for better search results
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        () => {
+          setUserLocation({ lat: 40.7128, lng: -74.0060 });
+        }
+      );
+    } else {
+      setUserLocation({ lat: 40.7128, lng: -74.0060 });
+    }
+  }, []);
 
   const fetchSuggestions = async (query: string) => {
     if (!query || query.length < 2) {
@@ -56,24 +65,52 @@ export const LocationAutocomplete = ({
     setIsLoading(true);
 
     try {
-      // For now, using mock data. Replace with real API call:
-      if (apiKey) {
-        // Example: Use Google Places API, Mapbox, or similar service
-        // const response = await fetch(`https://api.example.com/places?query=${encodeURIComponent(query)}&key=${apiKey}`);
-        // const data = await response.json();
-        // setSuggestions(data.suggestions);
+      // Try Google Places API via edge function
+      try {
+        const { data: googlePlaces, error: edgeFunctionError } = await supabase.functions.invoke('search-places', {
+          body: {
+            query,
+            userLocation: userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null
+          }
+        });
+
+        if (!edgeFunctionError && googlePlaces?.places?.length > 0) {
+          const mapped: LocationSuggestion[] = googlePlaces.places.map((place: any) => ({
+            id: place.id,
+            name: place.name,
+            address: place.description || place.address || '',
+            coordinates: place.latitude && place.longitude
+              ? { lat: place.latitude, lng: place.longitude }
+              : undefined
+          }));
+          setSuggestions(mapped.slice(0, 6));
+          return;
+        }
+      } catch {
+        // fall through to local DB
       }
-      
-      // Mock implementation - filter based on query
-      const filtered = mockSuggestions.filter(
-        item =>
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.address.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setSuggestions(filtered.slice(0, 6)); // Limit to 6 suggestions
+
+      // Fallback to local database search
+      const { data: places, error } = await supabase
+        .from('places')
+        .select('*')
+        .or(`name.ilike.%${query}%,address.ilike.%${query}%`)
+        .limit(6);
+
+      if (error) {
+        setSuggestions([]);
+        return;
+      }
+
+      const mapped: LocationSuggestion[] = (places || []).map((place: any) => ({
+        id: place.id,
+        name: place.name,
+        address: place.address || `${place.category || ''} in ${place.name}`,
+        coordinates: place.latitude && place.longitude
+          ? { lat: Number(place.latitude), lng: Number(place.longitude) }
+          : undefined
+      }));
+      setSuggestions(mapped);
     } catch (error) {
       console.error("Error fetching location suggestions:", error);
       setSuggestions([]);
@@ -96,7 +133,7 @@ export const LocationAutocomplete = ({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [value]);
+  }, [value, userLocation]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -230,11 +267,6 @@ export const LocationAutocomplete = ({
         </div>
       )}
       
-      {!apiKey && value.length >= 2 && (
-        <div className="absolute top-full left-0 right-0 z-40 mt-2 p-4 bg-gradient-to-r from-orange-50 to-blue-50 border border-orange-200/50 rounded-2xl text-sm text-gray-900 backdrop-blur-sm shadow-card">
-          <strong className="text-orange-600">Demo Mode:</strong> Using mock location data. Connect to a places API for real suggestions.
-        </div>
-      )}
     </div>
   );
 };
