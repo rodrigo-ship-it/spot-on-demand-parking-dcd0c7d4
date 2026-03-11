@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Mail, Twitter, Instagram, Linkedin } from "lucide-react";
+import settldLogoWhite from "@/assets/settld-logo-white.png";
 
 const Footer = () => {
   return (

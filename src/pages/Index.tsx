@@ -285,8 +285,8 @@ const Index = () => {
         <div className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 50%, hsl(217 91% 50% / 0.15) 0%, transparent 60%), radial-gradient(circle at 80% 20%, hsl(217 91% 60% / 0.1) 0%, transparent 50%)" }} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-          <div className="max-w-3xl">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center max-w-4xl mx-auto">
             {/* Eyebrow */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <span className="inline-flex items-center gap-2 bg-primary/20 text-primary-glow text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
@@ -300,7 +300,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
               className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight mb-6"
             >
-              Park smarter,<br />
+              Park smarter,{" "}
               <span className="text-primary-glow">
                 <TypewriterText
                   words={["earn more.", "book faster.", "get Settld."]}
@@ -312,7 +312,7 @@ const Index = () => {
             {/* Sub */}
             <motion.p
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg text-slate-300 max-w-xl mb-10 leading-relaxed"
+              className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed"
             >
               Book a neighbor's driveway or garage near your destination. Hosts earn, drivers save — all in seconds.
             </motion.p>
@@ -320,7 +320,7 @@ const Index = () => {
             {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-3 mb-10"
+              className="flex flex-wrap gap-3 justify-center mb-10"
             >
               <button
                 onClick={() => document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' })}
@@ -338,7 +338,7 @@ const Index = () => {
             {/* Trust signals */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.45 }}
-              className="flex flex-wrap gap-5 text-sm text-slate-400"
+              className="flex flex-wrap gap-5 text-sm text-slate-400 justify-center"
             >
               {[
                 { icon: "✓", label: "Instant booking" },
