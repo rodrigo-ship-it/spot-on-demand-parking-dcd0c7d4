@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   MapPin, DollarSign, Clock, Car, Grid, List, Search, Star,
   Shield, Zap, Users, Menu, HelpCircle, Crown, Sparkles,
-  ChevronRight, BadgeCheck, TrendingUp
+  ChevronRight, TrendingUp
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
