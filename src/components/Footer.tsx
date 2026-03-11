@@ -9,8 +9,9 @@ const Footer = () => {
 
           {/* Brand */}
           <div className="space-y-4 lg:col-span-1">
-            <Link to="/" className="inline-block">
-              <img src="/lovable-uploads/settld-logo-with-text.png" alt="Settld" className="h-9 w-auto" />
+            <Link to="/" className="inline-flex items-center gap-2.5">
+              <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto" />
+              <span className="text-white font-bold text-lg tracking-tight">Settld</span>
             </Link>
             <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
               The smarter way to park. Book a neighbor's driveway or list your space and earn.
