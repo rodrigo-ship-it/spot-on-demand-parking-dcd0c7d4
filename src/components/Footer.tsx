@@ -9,8 +9,9 @@ const Footer = () => {
 
           {/* Brand */}
           <div className="space-y-4 lg:col-span-1">
-            <Link to="/" className="inline-block">
-              <img src="/lovable-uploads/settld-logo-with-text.png" alt="Settld" className="h-9 w-auto" />
+            <Link to="/" className="inline-flex items-center gap-2.5">
+              <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto" />
+              <span className="text-white font-bold text-lg tracking-tight">Settld</span>
             </Link>
             <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
               The smarter way to park. Book a neighbor's driveway or list your space and earn.
@@ -85,12 +86,12 @@ const Footer = () => {
 
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-400 text-sm">
             © {new Date().getFullYear()} Settld. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-600">
-            <Link to="/privacy-policy" className="hover:text-slate-400 transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+          <div className="flex items-center gap-4 text-xs text-slate-400">
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
           </div>
         </div>
       </div>
