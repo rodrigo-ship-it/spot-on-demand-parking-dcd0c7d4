@@ -86,12 +86,12 @@ const Footer = () => {
 
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-400 text-sm">
             © {new Date().getFullYear()} Settld. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-600">
-            <Link to="/privacy-policy" className="hover:text-slate-400 transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+          <div className="flex items-center gap-4 text-xs text-slate-400">
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
           </div>
         </div>
       </div>
