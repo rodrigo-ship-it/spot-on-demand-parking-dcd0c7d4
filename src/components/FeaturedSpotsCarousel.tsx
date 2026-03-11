@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "./ui/card";
-import { Star, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, MapPin, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,17 +24,15 @@ interface FeaturedSpot {
   is_premium?: boolean;
 }
 
-// Calculate distance between two coordinates using Haversine formula
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 3959; // Earth's radius in miles
+  const R = 3959;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
+  const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
 const FeaturedSpotsCarousel = () => {
@@ -43,20 +41,11 @@ const FeaturedSpotsCarousel = () => {
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const navigate = useNavigate();
 
-  // Get user's location on mount
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          console.log("FeaturedSpotsCarousel: User location obtained:", position.coords.latitude, position.coords.longitude);
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.log("FeaturedSpotsCarousel: User denied location access:", error);
-        },
+        (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+        () => {},
         { timeout: 10000, enableHighAccuracy: false }
       );
     }
@@ -71,180 +60,173 @@ const FeaturedSpotsCarousel = () => {
         .order("rating", { ascending: false });
 
       if (data && !error) {
-        // Filter by distance (within 15 miles) if user location is available
         let filteredData = data;
         if (userLocation) {
-          const nearbySpots = data.filter(spot => {
-            if (!spot.latitude || !spot.longitude) return false;
-            const distance = calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              Number(spot.latitude),
-              Number(spot.longitude)
-            );
-            return distance <= 15; // Within 15 miles
+          const nearby = data.filter(s => {
+            if (!s.latitude || !s.longitude) return false;
+            return calculateDistance(userLocation.latitude, userLocation.longitude, Number(s.latitude), Number(s.longitude)) <= 15;
           });
-          // Use nearby spots if we have any, otherwise fall back to all spots
-          filteredData = nearbySpots.length > 0 ? nearbySpots : data;
-          console.log(`FeaturedSpotsCarousel: Found ${nearbySpots.length} spots within 15 miles`);
+          filteredData = nearby.length > 0 ? nearby : data;
         }
-
-        // Take top 6 highest rated
         filteredData = filteredData.slice(0, 6);
 
-        // Check premium status for each spot owner
-        const ownerIds = [...new Set(filteredData.map(spot => spot.owner_id))];
-        const { data: premiumData } = await supabase
-          .rpc("get_premium_status_for_owners", { owner_ids: ownerIds });
+        const ownerIds = [...new Set(filteredData.map(s => s.owner_id))];
+        const { data: premiumData } = await supabase.rpc("get_premium_status_for_owners", { owner_ids: ownerIds });
 
-        const spotsWithPremium = filteredData.map(spot => ({
-          ...spot,
-          is_premium: premiumData?.find((p: any) => p.user_id === spot.owner_id)?.is_premium || false
-        }));
-
-        setSpots(spotsWithPremium);
+        setSpots(filteredData.map(s => ({
+          ...s,
+          is_premium: premiumData?.find((p: any) => p.user_id === s.owner_id)?.is_premium || false
+        })));
       }
     };
-
     fetchFeaturedSpots();
   }, [userLocation]);
 
-  const next = () => {
-    setCurrentIndex((prev) => (prev + 1) % Math.max(1, spots.length - 2));
-  };
+  const total = spots.length;
+  const visibleCount = 3;
+  const maxIndex = Math.max(0, total - visibleCount);
 
-  const prev = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.max(1, spots.length - 2)) % Math.max(1, spots.length - 2));
-  };
+  const next = () => setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+  const prev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
 
   if (spots.length === 0) return null;
 
-  // Use carousel only if more than 3 spots, otherwise use grid
-  const useCarousel = spots.length > 3;
+  const getPrice = (spot: FeaturedSpot) => {
+    if (spot.pricing_type === "hourly") return { amount: spot.price_per_hour, label: "/ hr" };
+    if (spot.pricing_type === "daily") return { amount: spot.daily_price, label: "/ day" };
+    if (spot.pricing_type === "monthly") return { amount: spot.monthly_price, label: "/ mo" };
+    return { amount: spot.one_time_price, label: "one-time" };
+  };
 
-  const SpotCard = ({ spot }: { spot: FeaturedSpot }) => (
-    <Card className={`glass-card hover-lift overflow-hidden h-full group ${
-      spot.is_premium ? 'border-2 border-amber-400' : ''
-    }`}>
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={spot.images?.[0] || "/placeholder.svg"}
-          alt={spot.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-        />
-        <div className="absolute top-3 left-3">
-          {spot.is_premium && <PremiumBadge />}
+  const SpotCard = ({ spot }: { spot: FeaturedSpot }) => {
+    const price = getPrice(spot);
+    return (
+      <div
+        className="group cursor-pointer rounded-2xl overflow-hidden bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
+        onClick={() => navigate(`/spot/${spot.id}`)}
+      >
+        {/* Image */}
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+          <img
+            src={spot.images?.[0] || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=450&fit=crop"}
+            alt={spot.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex gap-2">
+            {spot.is_premium && <PremiumBadge size="sm" />}
+          </div>
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center gap-1 bg-white/95 backdrop-blur-sm text-foreground text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              {spot.rating?.toFixed(1) || "5.0"}
+            </span>
+          </div>
+          {/* Featured tag */}
+          <div className="absolute bottom-3 left-3">
+            <span className="inline-flex items-center gap-1 bg-primary text-primary-foreground text-xs font-semibold px-2.5 py-1 rounded-full">
+              <Sparkles className="w-3 h-3" />
+              Featured
+            </span>
+          </div>
         </div>
-        <div className="absolute top-3 right-3">
-          <Badge className="bg-primary/90 text-primary-foreground border-0">
-            Featured
-          </Badge>
+
+        {/* Content */}
+        <div className="p-4 flex flex-col flex-1">
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <h3 className="font-semibold text-foreground text-base leading-snug line-clamp-1 group-hover:text-primary transition-colors">
+              {spot.title}
+            </h3>
+            <div className="flex-shrink-0 text-right">
+              <span className="font-bold text-foreground text-base">${price.amount}</span>
+              <span className="text-muted-foreground text-xs ml-1">{price.label}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-muted-foreground text-sm">
+            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="line-clamp-1">{spot.address}</span>
+          </div>
         </div>
       </div>
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-1 group-hover:text-primary transition-colors">
-          {spot.title}
-        </h3>
-        <div className="flex items-center gap-1 text-muted-foreground text-sm mb-3">
-          <MapPin className="w-4 h-4" />
-          <span className="line-clamp-1">{spot.address}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-medium">{spot.rating?.toFixed(1) || "5.0"}</span>
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-bold text-primary">
-              ${spot.pricing_type === "hourly" ? spot.price_per_hour : 
-                spot.pricing_type === "daily" ? spot.daily_price :
-                spot.pricing_type === "monthly" ? spot.monthly_price :
-                spot.one_time_price}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {spot.pricing_type === "hourly" ? "per hour" : 
-               spot.pricing_type === "daily" ? "per day" :
-               spot.pricing_type === "monthly" ? "per month" :
-               "one-time"}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+    );
+  };
+
+  const useCarousel = spots.length > 3;
 
   return (
-    <div className="w-full py-16 px-4 bg-white">
+    <div className="w-full py-16 px-4 bg-white border-t border-border">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-900 to-slate-700 bg-clip-text text-transparent leading-tight pb-1">
-            Featured Parking Spots
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Discover our highest-rated and most popular locations
-          </p>
-        </div>
-
-        {useCarousel ? (
-          <>
-            <div className="relative">
-              <div className="overflow-hidden">
-                <div
-                  className="flex transition-transform duration-500 ease-out gap-6"
-                  style={{ transform: `translateX(-${currentIndex * (100 / 3)}%)` }}
-                >
-                  {spots.map((spot) => (
-                    <div
-                      key={spot.id}
-                      className="min-w-[calc(100%-2rem)] md:min-w-[calc(33.333%-1rem)] cursor-pointer"
-                      onClick={() => navigate(`/spot/${spot.id}`)}
-                    >
-                      <SpotCard spot={spot} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
+        {/* Header */}
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <span className="section-label mb-3 block">
+              <Sparkles className="w-3.5 h-3.5" />
+              Top Rated
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+              Featured Parking Spots
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Highest-rated spaces near you
+            </p>
+          </div>
+          {useCarousel && (
+            <div className="hidden md:flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={prev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-background shadow-lg hover:bg-muted"
+                disabled={currentIndex === 0}
+                className="rounded-full w-10 h-10 border-border disabled:opacity-30"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={next}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-background shadow-lg hover:bg-muted"
+                disabled={currentIndex >= maxIndex}
+                className="rounded-full w-10 h-10 border-border disabled:opacity-30"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
+          )}
+        </div>
 
-            <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: Math.max(1, spots.length - 2) }).map((_, idx) => (
+        {useCarousel ? (
+          <>
+            <div className="overflow-hidden">
+              <div
+                className="flex gap-6 transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
+              >
+                {spots.map(spot => (
+                  <div
+                    key={spot.id}
+                    className="min-w-[calc(100%-1.5rem)] md:min-w-[calc(33.333%-1rem)] flex-shrink-0"
+                  >
+                    <SpotCard spot={spot} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Dot indicators (mobile) */}
+            <div className="flex md:hidden justify-center gap-2 mt-6">
+              {Array.from({ length: maxIndex + 1 }).map((_, i) => (
                 <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`h-2 rounded-full transition-all ${
-                    idx === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
-                  }`}
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  className={`h-1.5 rounded-full transition-all ${i === currentIndex ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30"}`}
                 />
               ))}
             </div>
           </>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {spots.map((spot) => (
-              <div
-                key={spot.id}
-                className="cursor-pointer"
-                onClick={() => navigate(`/spot/${spot.id}`)}
-              >
-                <SpotCard spot={spot} />
-              </div>
+            {spots.map(spot => (
+              <SpotCard key={spot.id} spot={spot} />
             ))}
           </div>
         )}
