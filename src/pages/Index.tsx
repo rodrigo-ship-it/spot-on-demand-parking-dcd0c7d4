@@ -184,14 +184,14 @@ const Index = () => {
     <div className="min-h-screen bg-background">
 
       {/* ══════════════════════ NAVBAR ══════════════════════ */}
-      <nav className="bg-navy-900 sticky top-0 z-50 border-b border-white/8">
+      <nav className="sticky top-0 z-50 border-b border-white/10" style={{ background: "hsl(222, 47%, 10%)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
 
             {/* Left: Logo + links */}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
-                <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto" />
+                <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto object-contain" style={{ background: "none", border: "none", boxShadow: "none" }} />
                 <span className="text-white font-bold text-lg tracking-tight">Settld</span>
               </Link>
               <div className="hidden lg:flex items-center gap-6">
