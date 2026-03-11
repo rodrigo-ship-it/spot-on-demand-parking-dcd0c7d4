@@ -240,7 +240,7 @@ const Index = () => {
                 <SheetContent side="right" className="w-72 bg-navy-900 border-white/10 p-0">
                   <div className="flex flex-col h-full">
                     <div className="p-6 border-b border-white/10 flex items-center gap-2.5">
-                      <img src="/assets/settld-logo-white.png" alt="Settld logo" className="h-7 w-auto" />
+                      <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-7 w-auto" />
                       <span className="text-white font-bold text-base">Settld</span>
                     </div>
                     <div className="flex flex-col gap-1 p-4 flex-1">
