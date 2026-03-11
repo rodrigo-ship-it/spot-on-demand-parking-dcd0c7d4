@@ -191,7 +191,7 @@ const Index = () => {
             {/* Left: Logo + links */}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
-                <img src="/assets/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto" />
+                <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto" />
                 <span className="text-white font-bold text-lg tracking-tight">Settld</span>
               </Link>
               <div className="hidden lg:flex items-center gap-6">
