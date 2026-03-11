@@ -530,34 +530,34 @@ const BookSpot = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#F1F5F9]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center">
-          <Button 
-            variant="ghost" 
+      <div className="bg-[#0F172A] sticky top-0 z-50 border-b border-white/10">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center h-16">
+          <Button
+            variant="ghost"
             onClick={() => navigate(-1)}
-            className="mr-4"
+            className="mr-4 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-xl font-semibold flex-1">Complete Your Booking</h1>
+          <h1 className="text-base font-semibold flex-1 text-white">Complete Your Booking</h1>
           {user && (
             <div className="flex gap-2">
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 size="sm"
                 onClick={() => secureSignOut(supabase)}
-                className="ml-4"
+                className="ml-4 rounded-xl"
               >
                 Force Sign Out
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={signOut}
-                className=""
+                className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl"
               >
                 Sign Out ({user.email?.split('@')[0]})
               </Button>
@@ -1125,14 +1125,14 @@ const BookSpot = () => {
               <CardContent className="pt-6">
                 {!showPayment ? (
                   <>
-                    <Button 
+                    <Button
                       onClick={handleBooking}
-                      className="w-full h-12 text-lg font-semibold"
+                      className="w-full h-14 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-all duration-200 border-none"
                       size="lg"
                     >
                       Create Booking - ${total}
                     </Button>
-                    <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
+                    <div className="flex items-center justify-center mt-3 text-xs text-slate-500">
                       <Shield className="w-3 h-3 mr-1" />
                       Secure payment • Instant confirmation
                     </div>

@@ -156,25 +156,25 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F1F5F9]">
       {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-[#0F172A] sticky top-0 z-50 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-4">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-                <img 
-                  src="/lovable-uploads/settld-logo-with-text.png" 
-                  alt="Settld Logo" 
-                  className="h-14 w-auto hover:drop-shadow-lg transition-all duration-200"
+              <Link to="/" className="flex items-center space-x-3">
+                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                <img
+                  src="/lovable-uploads/settld-logo-with-text.png"
+                  alt="Settld Logo"
+                  className="h-9 w-auto"
                 />
               </Link>
             </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <NotificationSettings />
             <TermsAcceptanceStatus />
-            <Button size="sm" onClick={handleSignOut}>Sign Out</Button>
+            <Button size="sm" onClick={handleSignOut} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">Sign Out</Button>
           </div>
           </div>
         </div>
@@ -183,8 +183,8 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Profile Settings</h1>
-          <p className="text-xl text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile Settings</h1>
+          <p className="text-lg text-slate-500">
             Manage your account settings and preferences.
           </p>
         </div>

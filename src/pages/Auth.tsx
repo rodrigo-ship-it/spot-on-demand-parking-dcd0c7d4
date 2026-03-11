@@ -179,39 +179,45 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#F1F5F9] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-slate-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#F1F5F9] flex flex-col">
       {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-[#0F172A] border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-4">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-              <img 
-                src="/lovable-uploads/settld-logo-with-text.png" 
-                alt="Settld Logo" 
-                className="h-14 w-auto hover:drop-shadow-lg transition-all duration-200"
+            <Link to="/" className="flex items-center space-x-3">
+              <img
+                src="/lovable-uploads/settld-logo-with-text.png"
+                alt="Settld Logo"
+                className="h-9 w-auto"
               />
+            </Link>
+            <Link to="/" className="text-slate-400 hover:text-white text-sm transition-colors flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Auth Form */}
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-100">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">Welcome to Settld</CardTitle>
-            <CardDescription>
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100">
+          <CardHeader className="space-y-1 text-center pb-2">
+            <div className="flex justify-center mb-2">
+              <img src="/lovable-uploads/settld-logo-with-text.png" alt="Settld" className="h-10 w-auto" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-slate-900">Welcome to Settld</CardTitle>
+            <CardDescription className="text-slate-500">
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>
@@ -237,7 +243,7 @@ const Auth = () => {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg py-3" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3" disabled={isLoading}>
                       {isLoading ? 'Sending reset email...' : 'Send Reset Email'}
                     </Button>
                     <Button
@@ -290,7 +296,7 @@ const Auth = () => {
                         </Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg py-3" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3" disabled={isLoading}>
                       {isLoading ? 'Signing in...' : 'Sign In'}
                     </Button>
                     <div className="text-center">
@@ -411,7 +417,7 @@ const Auth = () => {
                   </div>
                     <Button
                       type="submit"
-                      className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg py-3"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3"
                       disabled={isLoading || !passwordValidation.isValid || formData.password !== formData.confirmPassword}
                     >
                       {isLoading ? 'Creating account...' : 'Create Account'}

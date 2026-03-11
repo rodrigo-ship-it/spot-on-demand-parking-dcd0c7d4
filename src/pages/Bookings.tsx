@@ -309,21 +309,21 @@ const Bookings = () => {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "completed": return "bg-green-100 text-green-800";
-      case "active": return "bg-blue-100 text-blue-800";
-      case "upcoming": return "bg-yellow-100 text-yellow-800";
-      case "late": return "bg-orange-100 text-orange-800";
-      case "cancelled": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "completed": return "bg-slate-100 text-slate-600 font-semibold text-xs px-3 py-1 rounded-full";
+      case "active": return "bg-blue-50 text-blue-700 font-semibold text-xs px-3 py-1 rounded-full";
+      case "upcoming": return "bg-yellow-50 text-yellow-700 font-semibold text-xs px-3 py-1 rounded-full";
+      case "late": return "bg-orange-50 text-orange-700 font-semibold text-xs px-3 py-1 rounded-full";
+      case "cancelled": return "bg-red-50 text-red-700 font-semibold text-xs px-3 py-1 rounded-full";
+      default: return "bg-slate-100 text-slate-600 font-semibold text-xs px-3 py-1 rounded-full";
     }
   };
 
   const getPaymentStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "paid": return "bg-green-100 text-green-800";
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "failed": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "paid": return "bg-green-50 text-green-700 font-semibold text-xs px-3 py-1 rounded-full";
+      case "pending": return "bg-yellow-50 text-yellow-700 font-semibold text-xs px-3 py-1 rounded-full";
+      case "failed": return "bg-red-50 text-red-700 font-semibold text-xs px-3 py-1 rounded-full";
+      default: return "bg-slate-100 text-slate-600 font-semibold text-xs px-3 py-1 rounded-full";
     }
   };
 
@@ -376,34 +376,34 @@ const Bookings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F1F5F9] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0EA5E9] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your bookings...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading your bookings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#F1F5F9]">
       {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-[#0F172A] sticky top-0 z-50 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-4">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-                <img 
-                  src="/lovable-uploads/settld-logo-with-text.png" 
-                  alt="Settld Logo" 
-                  className="h-14 w-auto hover:drop-shadow-lg transition-all duration-200"
+              <Link to="/" className="flex items-center space-x-3">
+                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                <img
+                  src="/lovable-uploads/settld-logo-with-text.png"
+                  alt="Settld Logo"
+                  className="h-9 w-auto"
                 />
               </Link>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/help-support">
-                <Button size="sm">Help</Button>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">Help</Button>
               </Link>
             </div>
           </div>
@@ -413,8 +413,8 @@ const Bookings = () => {
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">My Parking Reservations</h1>
-          <p className="text-xl text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">My Parking Reservations</h1>
+          <p className="text-lg text-slate-500">
             View and manage all your parking reservations in one place.
           </p>
         </div>

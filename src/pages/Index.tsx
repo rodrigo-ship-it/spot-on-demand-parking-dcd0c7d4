@@ -365,78 +365,78 @@ const Index = () => {
 
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Modern Navigation with Glass Effect */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto container-padding">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
-              <Link to="/" className="interactive">
-                <img 
-                  src="/lovable-uploads/settld-logo-with-text.png" 
-                  alt="Settld Logo" 
-                  className="h-14 w-auto hover:drop-shadow-lg transition-all duration-300"
+    <div className="min-h-screen bg-[#F1F5F9]">
+      {/* Navigation */}
+      <nav className="bg-[#0F172A] sticky top-0 z-50 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <Link to="/" className="flex-shrink-0">
+                <img
+                  src="/lovable-uploads/settld-logo-with-text.png"
+                  alt="Settld Logo"
+                  className="h-9 w-auto"
                 />
               </Link>
-              <div className="hidden lg:flex items-center space-x-8">
-                <Link to="/how-it-works" className="text-muted-foreground hover:text-primary smooth-transition font-semibold">
+              <div className="hidden lg:flex items-center space-x-6">
+                <Link to="/how-it-works" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
                   How it Works
                 </Link>
-                <Link to="/manage-spots" className="text-muted-foreground hover:text-primary smooth-transition font-semibold">
+                <Link to="/manage-spots" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
                   My Spots
                 </Link>
               </div>
             </div>
-            
+
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-3">
               {user ? (
                 <>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
+                  <Button
+                    variant="default"
+                    size="sm"
                     onClick={() => navigate('/premium')}
-                    className="flex items-center bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-none"
+                    className="flex items-center bg-amber-500 hover:bg-amber-600 text-white border-none rounded-xl"
                   >
                     <Crown className="w-4 h-4 mr-2" />
                     Premium
                   </Button>
                   {user.email === 'rodrigo@settldparking.com' && (
                     <Link to="/admin">
-                      <Button variant="warning" size="sm" className="text-sm">
+                      <Button variant="warning" size="sm" className="text-sm rounded-xl">
                         Admin
                       </Button>
                     </Link>
                   )}
                   <Link to="/bookings">
-                    <Button variant="outline" size="sm">
+                    <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                       My Bookings
                     </Button>
                   </Link>
                   <Link to="/profile">
-                    <Button variant="outline" size="sm">
+                    <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                       Profile
                     </Button>
                   </Link>
                   <Link to="/help-support">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                       <HelpCircle className="w-4 h-4 mr-2" />
                       Help
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" onClick={signOut}>
+                  <Button variant="ghost" size="sm" onClick={signOut} className="text-slate-400 hover:text-white hover:bg-white/10 rounded-xl">
                     Sign Out
                   </Button>
                 </>
               ) : (
                 <>
                   <Link to="/help-support">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                       <HelpCircle className="w-4 h-4 mr-2" />
                       Help
                     </Button>
                   </Link>
-                  <Button variant="default" size="sm" onClick={handleSignIn}>
+                  <Button size="sm" onClick={handleSignIn} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">
                     Sign In
                   </Button>
                 </>
@@ -445,9 +445,9 @@ const Index = () => {
 
             {/* Tablet Navigation - Condensed */}
             <div className="hidden md:flex lg:hidden items-center space-x-2">
-              <Button 
-                variant="default" 
-                size="sm" 
+              <Button
+                variant="default"
+                size="sm"
                 onClick={() => {
                   if (!user) {
                     toast.info("Please sign in to access premium features");
@@ -456,14 +456,14 @@ const Index = () => {
                   }
                   navigate('/premium');
                 }}
-                className="flex items-center bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-none px-2"
+                className="flex items-center bg-amber-500 hover:bg-amber-600 text-white border-none px-2 rounded-xl"
               >
                 <Crown className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="px-2"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl"
                 onClick={() => {
                   if (!user) {
                     toast.info("Please sign in to view your bookings");
@@ -475,10 +475,10 @@ const Index = () => {
               >
                 Bookings
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="px-2"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl"
                 onClick={() => {
                   if (!user) {
                     toast.info("Please sign in to access your profile");
@@ -493,25 +493,25 @@ const Index = () => {
               {user && (
                   <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                     <SheetTrigger asChild>
-                      <Button variant="outline" size="sm" className="px-2">
+                      <Button variant="ghost" size="sm" className="px-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                         <Menu className="w-4 h-4" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" className="w-[300px]">
+                    <SheetContent side="right" className="w-[300px] bg-[#0F172A] border-white/10">
                       <div className="flex flex-col space-y-4 mt-8">
-                        <Link to="/how-it-works" className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>
+                        <Link to="/how-it-works" className="text-slate-300 hover:text-white transition-colors font-medium p-2 rounded-lg hover:bg-white/10" onClick={() => setMobileMenuOpen(false)}>
                           How it Works
                         </Link>
-                        <Link to="/manage-spots" className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>
+                        <Link to="/manage-spots" className="text-slate-300 hover:text-white transition-colors font-medium p-2 rounded-lg hover:bg-white/10" onClick={() => setMobileMenuOpen(false)}>
                           My Spots
                         </Link>
                         <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                          <Button variant="outline" className="w-full justify-start h-12">
+                          <Button variant="ghost" className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10">
                             <HelpCircle className="w-4 h-4 mr-2" />
                             Help
                           </Button>
                         </Link>
-                        <Button variant="outline" className="w-full justify-start h-12" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
+                        <Button variant="ghost" className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
                           Sign Out
                         </Button>
                       </div>
@@ -535,28 +535,28 @@ const Index = () => {
             <div className="md:hidden flex items-center space-x-2">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                     <Menu className="w-4 h-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-[#0F172A] border-white/10">
                   <div className="flex flex-col space-y-4 mt-8">
-                    <Link 
-                      to="/how-it-works" 
-                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                    <Link
+                      to="/how-it-works"
+                      className="text-slate-300 hover:text-white transition-colors font-medium p-2 rounded-lg hover:bg-white/10"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       How it Works
                     </Link>
-                    <Link 
-                      to="/manage-spots" 
-                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50"
+                    <Link
+                      to="/manage-spots"
+                      className="text-slate-300 hover:text-white transition-colors font-medium p-2 rounded-lg hover:bg-white/10"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       My Spots
                     </Link>
-                    <Button 
-                      className="text-gray-600 hover:text-primary transition-colors font-medium p-2 rounded-lg hover:bg-gray-50 flex items-center w-full justify-start bg-transparent border-none shadow-none"
+                    <Button
+                      className="text-slate-300 hover:text-white transition-colors font-medium p-2 rounded-lg hover:bg-white/10 flex items-center w-full justify-start bg-transparent border-none shadow-none"
                       onClick={() => {
                         if (!user) {
                           toast.info("Please sign in to access premium features");
@@ -571,18 +571,18 @@ const Index = () => {
                       <Crown className="w-4 h-4 mr-2" />
                       Premium
                     </Button>
-                    
-                    <div className="border-t pt-4 flex flex-col space-y-3">
+
+                    <div className="border-t border-white/10 pt-4 flex flex-col space-y-3">
                       {user?.email === 'rodrigo@settldparking.com' && (
                         <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                          <Button variant="outline" className="w-full justify-start h-12 border-orange-200 hover:bg-orange-50 text-orange-600">
+                          <Button variant="ghost" className="w-full justify-start h-12 text-orange-400 hover:text-orange-300 hover:bg-white/10">
                             Admin
                           </Button>
                         </Link>
                       )}
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-12"
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10"
                         onClick={() => {
                           if (!user) {
                             toast.info("Please sign in to view your bookings");
@@ -596,9 +596,9 @@ const Index = () => {
                       >
                         My Bookings
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-12"
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10"
                         onClick={() => {
                           if (!user) {
                             toast.info("Please sign in to access your profile");
@@ -615,39 +615,33 @@ const Index = () => {
                       {user ? (
                         <>
                           <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                            <Button variant="outline" className="w-full justify-start h-12">
+                            <Button variant="ghost" className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10">
                               <HelpCircle className="w-4 h-4 mr-2" />
                               Help
                             </Button>
                           </Link>
-                        <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                          <Button variant="outline" className="w-full justify-start h-12">
-                            <HelpCircle className="w-4 h-4 mr-2" />
-                            Help
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10"
+                            onClick={() => {
+                              signOut();
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Sign Out
                           </Button>
-                        </Link>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start h-12" 
-                          onClick={() => {
-                            signOut();
-                            setMobileMenuOpen(false);
-                          }}
-                        >
-                          Sign Out
-                        </Button>
                         </>
                       ) : (
                         <>
                           <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                            <Button variant="outline" className="w-full justify-start h-12">
+                            <Button variant="ghost" className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10">
                               <HelpCircle className="w-4 h-4 mr-2" />
                               Help
                             </Button>
                           </Link>
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start h-12" 
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start h-12 text-slate-300 hover:text-white hover:bg-white/10"
                             onClick={() => {
                               handleSignIn();
                               setMobileMenuOpen(false);
@@ -666,150 +660,133 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Revolutionary Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-[#0F172A]" role="banner">
-        {/* Subtle Dot Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.15]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)',
-            backgroundSize: '24px 24px'
-          }}
-        ></div>
-        {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/30"></div>
-        
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 flex items-center justify-center min-h-screen">
-          <motion.div 
+      {/* Hero Section */}
+      <section className="bg-[#0F172A] pt-16 pb-28" role="banner">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center space-y-8 w-full"
+            transition={{ duration: 0.7 }}
+            className="text-center space-y-6"
           >
-            {/* Revolutionary Heading */}
-            <div className="space-y-6 pt-16 md:pt-20">
-              {/* Animated Logo */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
-                className="flex justify-center mb-4"
-              >
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                >
-                  <img 
-                    src="/lovable-uploads/settld-logo.png" 
-                    alt="Settld Logo"
-                    className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-2xl"
-                  />
-                </motion.div>
-              </motion.div>
+            {/* Logo */}
+            <div className="flex justify-center mb-2">
+              <img
+                src="/lovable-uploads/settld-logo.png"
+                alt="Settld Logo"
+                className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
+              />
+            </div>
 
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-                className="font-black leading-tight tracking-tighter px-4"
-              >
-                <motion.span 
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="block text-7xl md:text-9xl lg:text-[11rem] text-black drop-shadow-2xl"
-                >
-                  settld
-                </motion.span>
-                <span className="flex items-start justify-center mt-2 md:mt-4 min-h-[8rem] md:min-h-[12rem] lg:min-h-[14rem]">
-                <TypewriterText 
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-400 text-sm font-medium px-3 py-1 rounded-full">
+                🚗 Peer-to-Peer Parking
+              </span>
+              <h1 className="text-5xl md:text-6xl font-bold text-white leading-tight">
+                Find parking.<br />
+                <span className="text-blue-400">
+                  <TypewriterText
                     words={[
-                      "Your parking, Settld.",
-                      "From search to Settld.",
-                      "Get it Settld before you arrive."
+                      "Earn from your spot.",
+                      "Book in seconds.",
+                      "Get it Settld."
                     ]}
-                    className="text-5xl md:text-7xl lg:text-8xl tracking-tight text-foreground text-center"
+                    className="text-blue-400"
                   />
                 </span>
-              </motion.h1>
-              
+              </h1>
+              <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+                Book a neighbor's driveway or garage near your destination. Hosts earn, drivers save.
+              </p>
             </div>
-            
-            {/* Futuristic Search Card */}
-            <motion.div 
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="max-w-4xl mx-auto mt-16"
-            >
-              <div className="relative group">
-                {/* Subtle glow */}
-                <div className="absolute -inset-1 bg-slate-700 rounded-3xl blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
 
-                <div className="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-1">
-                      <GooglePlacesAutocomplete
-                        value={searchLocation}
-                        onChange={setSearchLocation}
-                        onLocationSelect={handleLocationSelect}
-                        placeholder="Where to?"
-                        className="h-14 text-base rounded-2xl bg-white border-2 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 hover:border-slate-400 transition-colors"
-                      />
-                    </div>
-                    <Select value={searchPricingType} onValueChange={setSearchPricingType}>
-                      <SelectTrigger className="h-14 text-base rounded-2xl bg-white border-2 border-slate-300 text-slate-900 hover:border-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl bg-white border-2 border-slate-300">
-                        <SelectItem value="hourly">Hourly</SelectItem>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="one_time">One-time</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={searchTimeFilter} onValueChange={setSearchTimeFilter}>
-                      <SelectTrigger className="h-14 text-base rounded-2xl bg-white border-2 border-slate-300 text-slate-900 hover:border-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors">
-                        <SelectValue placeholder="Time" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl bg-white border-2 border-slate-300">
-                        <SelectItem value="anytime">Anytime</SelectItem>
-                        <SelectItem value="now">Now</SelectItem>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="tomorrow">Tomorrow</SelectItem>
-                        <SelectItem value="this_week">This Week</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      size="lg" 
-                      className="h-14 rounded-lg font-bold bg-[#0EA5E9] hover:bg-[#0284C7] text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                      onClick={handleSearch}
-                    >
-                      <Search className="w-5 h-5 mr-2" />
-                      Search
-                    </Button>
-                  </div>
-                  
-                  {hasSearched && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="mt-4 flex justify-center"
-                    >
-                      <Button 
-                        variant="ghost" 
-                        onClick={clearSearch} 
-                        className="text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full"
-                      >
-                        Clear Search
-                      </Button>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+              <button
+                onClick={() => document.getElementById('search-section')?.scrollIntoView({behavior: 'smooth'})}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
+              >
+                Find Parking
+              </button>
+              <Link to="/list-spot">
+                <button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-200 text-lg w-full sm:w-auto">
+                  List Your Spot
+                </button>
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap gap-6 justify-center text-sm text-slate-400 pt-2">
+              <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Instant booking</span>
+              <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Secure payments</span>
+              <span className="flex items-center gap-1"><span className="text-green-400">✓</span> 24/7 support</span>
+            </div>
           </motion.div>
         </div>
       </section>
+
+      {/* Search Card (overlapping hero) */}
+      <div id="search-section" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10 mb-12">
+        <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-6">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Find a parking spot</p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-1">
+              <GooglePlacesAutocomplete
+                value={searchLocation}
+                onChange={setSearchLocation}
+                onLocationSelect={handleLocationSelect}
+                placeholder="Where to?"
+                className="h-12 text-base rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 hover:border-slate-300 transition-colors"
+              />
+            </div>
+            <Select value={searchPricingType} onValueChange={setSearchPricingType}>
+              <SelectTrigger className="h-12 text-base rounded-xl bg-white border border-slate-200 text-slate-900 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-white border border-slate-200">
+                <SelectItem value="hourly">Hourly</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="one_time">One-time</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={searchTimeFilter} onValueChange={setSearchTimeFilter}>
+              <SelectTrigger className="h-12 text-base rounded-xl bg-white border border-slate-200 text-slate-900 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors">
+                <SelectValue placeholder="Time" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-white border border-slate-200">
+                <SelectItem value="anytime">Anytime</SelectItem>
+                <SelectItem value="now">Now</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                <SelectItem value="this_week">This Week</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="lg"
+              className="h-12 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
+              onClick={handleSearch}
+            >
+              <Search className="w-5 h-5 mr-2" />
+              Search
+            </Button>
+          </div>
+
+          {hasSearched && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 flex justify-center"
+            >
+              <Button
+                variant="ghost"
+                onClick={clearSearch}
+                className="text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl"
+              >
+                Clear Search
+              </Button>
+            </motion.div>
+          )}
+        </div>
+      </div>
 
       {/* Search Results with Map - Show after search */}
       {hasSearched && (
@@ -825,47 +802,42 @@ const Index = () => {
         />
       )}
 
-      {/* Revolutionary Features Section */}
-      <section className="py-24 bg-white">
+      {/* Features Section */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-20">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold mb-4"
-              >
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-600 font-semibold mb-4 text-sm">
                 <Sparkles className="w-4 h-4" />
                 <span>Why Choose Settld</span>
-              </motion.div>
-              <h2 className="text-4xl md:text-6xl font-bold mb-4">
-                Parking <span className="text-primary">Reimagined</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                Parking <span className="text-blue-600">Reimagined</span>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Experience next-generation parking with cutting-edge technology
+              <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+                Experience modern parking with simple technology
               </p>
             </div>
           </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Zap, title: "Instant Booking", desc: "Reserve in seconds with real-time availability", gradient: "from-orange-500 to-amber-500", delay: 0 },
-              { icon: Shield, title: "Bank-Level Security", desc: "Encrypted payments and data protection", gradient: "from-blue-500 to-blue-600", delay: 0.2 },
-              { icon: Users, title: "Trusted Community", desc: "Join thousands of verified drivers and hosts", gradient: "from-slate-600 to-slate-700", delay: 0.4 }
+              { icon: Zap, title: "Instant Booking", desc: "Reserve in seconds with real-time availability", color: "bg-blue-600", delay: 0 },
+              { icon: Shield, title: "Bank-Level Security", desc: "Encrypted payments and data protection", color: "bg-slate-700", delay: 0.2 },
+              { icon: Users, title: "Trusted Community", desc: "Join thousands of verified drivers and hosts", color: "bg-blue-600", delay: 0.4 }
             ].map((feature, idx) => (
               <ScrollReveal key={idx} delay={feature.delay}>
                 <motion.div
-                  whileHover={{ y: -10, scale: 1.02 }}
+                  whileHover={{ y: -6 }}
                   className="relative group"
                 >
-                  <Card className="relative border border-slate-100 h-full bg-white shadow-sm hover:shadow-lg transition-shadow duration-200">
+                  <Card className="relative border border-slate-100 h-full bg-white shadow-sm hover:shadow-md transition-shadow duration-200 rounded-2xl">
                     <CardHeader className="text-center pb-4">
-                      <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform duration-300`}>
-                        <feature.icon className="w-10 h-10 text-white" />
+                      <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl ${feature.color} flex items-center justify-center`}>
+                        <feature.icon className="w-7 h-7 text-white" />
                       </div>
-                      <CardTitle className="text-2xl mb-2">{feature.title}</CardTitle>
-                      <CardDescription className="text-base">{feature.desc}</CardDescription>
+                      <CardTitle className="text-xl mb-2 text-slate-900">{feature.title}</CardTitle>
+                      <CardDescription className="text-base text-slate-500">{feature.desc}</CardDescription>
                     </CardHeader>
                   </Card>
                 </motion.div>
@@ -883,7 +855,7 @@ const Index = () => {
 
       {/* Parking Spots - Only show when no search has been made */}
       {!hasSearched && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-[#F1F5F9]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {(() => {
               // Filter spots by distance (within 15 miles) if user location is available
@@ -920,10 +892,10 @@ const Index = () => {
                 <>
                   <div className="flex justify-between items-center mb-8">
                     <div>
-                      <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                      <h2 className="text-3xl font-bold text-slate-900 mb-2">
                         Available Parking Near You
                       </h2>
-                      <p className="text-gray-600">
+                      <p className="text-slate-500">
                         {displaySpots.length} spots near you
                       </p>
                     </div>
@@ -932,7 +904,7 @@ const Index = () => {
                         variant={viewMode === "grid" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setViewMode("grid")}
-                        className={viewMode === "grid" ? "bg-primary hover:bg-secondary" : ""}
+                        className={viewMode === "grid" ? "bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none" : "rounded-xl border-slate-200"}
                       >
                         <Grid className="w-4 h-4" />
                       </Button>
@@ -940,7 +912,7 @@ const Index = () => {
                         variant={viewMode === "list" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setViewMode("list")}
-                        className={viewMode === "list" ? "bg-primary hover:bg-secondary" : ""}
+                        className={viewMode === "list" ? "bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none" : "rounded-xl border-slate-200"}
                       >
                         <List className="w-4 h-4" />
                       </Button>
@@ -954,13 +926,13 @@ const Index = () => {
                     </div>
                   ) : displaySpots.length === 0 ? (
                     <div className="text-center py-12">
-                      <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      <Car className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-slate-900 mb-2">
                         {userLocation ? 'No parking spots within 15 miles' : 'Enable location to see nearby spots'}
                       </h3>
-                      <p className="text-gray-600 mb-6">Be the first to list a parking spot in your area!</p>
+                      <p className="text-slate-500 mb-6">Be the first to list a parking spot in your area!</p>
                       <Link to="/list-spot">
-                        <Button className="bg-primary hover:bg-secondary text-primary-foreground">
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">
                           List Your First Spot
                         </Button>
                       </Link>
@@ -973,7 +945,7 @@ const Index = () => {
                     whileHover={{ y: -8 }}
                     className="h-full"
                   >
-                    <Card className={`group hover:shadow-lg transition-shadow duration-200 flex flex-col h-full overflow-hidden bg-white ${spot.isPremiumLister ? 'border-2 border-amber-400' : 'border border-slate-100 shadow-sm'}`}>
+                    <Card className={`group hover:shadow-md transition-shadow duration-200 flex flex-col h-full overflow-hidden bg-white rounded-2xl ${spot.isPremiumLister ? 'border-2 border-amber-400' : 'border border-slate-100 shadow-sm'}`}>
                       <div className="relative overflow-hidden">
                         <motion.img 
                           whileHover={{ scale: 1.1 }}
@@ -1037,8 +1009,8 @@ const Index = () => {
                             spotType={spot.type}
                             totalSpots={spot.totalSpots || 1}
                           />
-                          <Button 
-                            className="w-full mt-3 bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg transition-colors duration-200"
+                          <Button
+                            className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
                             onClick={() => handleBookNow(spot.id)}
                           >
                             Book Now
@@ -1062,24 +1034,22 @@ const Index = () => {
       <FAQAccordion />
 
 
-      {/* Enhanced CTA Section */}
-      <section className="py-20 bg-[#0F172A] relative overflow-hidden" aria-labelledby="cta-heading">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="animate-fade-in">
-            <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Turn Your Space Into Income
-            </h2>
-            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Have an unused parking space? List it on Settld and start earning money today.
-              Join members of the Settld community already making extra income.
-            </p>
-            <Link to="/list-spot">
-              <Button size="xl" className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-lg px-8 py-3">
-                <DollarSign className="w-5 h-5 mr-2" />
-                Start Earning Now
-              </Button>
-            </Link>
-          </div>
+      {/* CTA Section */}
+      <section className="py-20 bg-[#0F172A]" aria-labelledby="cta-heading">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Turn Your Space Into Income
+          </h2>
+          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Have an unused parking space? List it on Settld and start earning money today.
+            Join members of the Settld community already making extra income.
+          </p>
+          <Link to="/list-spot">
+            <Button size="xl" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-8 py-4 text-lg shadow-lg border-none">
+              <DollarSign className="w-5 h-5 mr-2" />
+              Start Earning Now
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -1087,61 +1057,61 @@ const Index = () => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore More</h2>
-            <p className="text-lg text-gray-600">Everything you need to get started with Settld</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Explore More</h2>
+            <p className="text-lg text-slate-500">Everything you need to get started with Settld</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white">
+            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white rounded-2xl">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                  <Shield className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Shield className="w-7 h-7 text-white" />
                 </div>
-                <CardTitle className="text-xl">How It Works</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-xl text-slate-900">How It Works</CardTitle>
+                <CardDescription className="text-base text-slate-500">
                   Learn how to find parking or list your space in simple steps
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/how-it-works">
-                  <Button className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-lg">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">
                     Learn More
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white">
+            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white rounded-2xl">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                  <Car className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Car className="w-7 h-7 text-white" />
                 </div>
-                <CardTitle className="text-xl">My Spots</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-xl text-slate-900">My Spots</CardTitle>
+                <CardDescription className="text-base text-slate-500">
                   Manage your listed parking spaces and track earnings
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/manage-spots">
-                  <Button className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-lg">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">
                     Manage Spots
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white">
+            <Card className="text-center border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 group flex flex-col h-full bg-white rounded-2xl">
               <CardHeader className="pb-4 flex-grow">
-                <div className="w-16 h-16 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                  <Clock className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-[#0F172A] rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Clock className="w-7 h-7 text-white" />
                 </div>
-                <CardTitle className="text-xl">My Bookings</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-xl text-slate-900">My Bookings</CardTitle>
+                <CardDescription className="text-base text-slate-500">
                   View and manage your parking reservations
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <Link to="/bookings">
-                  <Button className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] text-white rounded-lg">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">
                     View Bookings
                   </Button>
                 </Link>

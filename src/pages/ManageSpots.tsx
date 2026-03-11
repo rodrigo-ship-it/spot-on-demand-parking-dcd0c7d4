@@ -387,48 +387,48 @@ const ManageSpots = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F1F5F9]">
       {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-[#0F172A] sticky top-0 z-50 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-4">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-                <img 
-                  src="/lovable-uploads/settld-logo-with-text.png" 
-                  alt="Settld Logo" 
-                  className="h-14 w-auto hover:drop-shadow-lg transition-all duration-200"
+              <Link to="/" className="flex items-center space-x-3">
+                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                <img
+                  src="/lovable-uploads/settld-logo-with-text.png"
+                  alt="Settld Logo"
+                  className="h-9 w-auto"
                 />
               </Link>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Link to="/bookings">
-                <Button variant="outline" size="sm">
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                   <Calendar className="w-4 h-4 mr-2" />
                   Bookings
                 </Button>
               </Link>
               <Link to="/profile">
-                <Button variant="outline" size="sm">
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">
                   <User className="w-4 h-4 mr-2" />
                   Profile
                 </Button>
               </Link>
               <Link to="/list-spot">
-                <Button size="sm" className="bg-primary hover:bg-secondary text-primary-foreground">
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">
                   <Plus className="w-4 h-4 mr-2" />
                   List New Spot
                 </Button>
               </Link>
               <Link to="/help-support">
-                <Button variant="outline" size="sm">Help</Button>
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl">Help</Button>
               </Link>
               {user ? (
-                <Button size="sm" onClick={() => navigate('/auth')}>Sign Out</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-slate-400 hover:text-white hover:bg-white/10 rounded-xl">Sign Out</Button>
               ) : (
                 <Link to="/auth">
-                  <Button size="sm">Sign In</Button>
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl border-none">Sign In</Button>
                 </Link>
               )}
             </div>

@@ -766,25 +766,25 @@ const ListSpot = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F1F5F9]">
       {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-[#0F172A] sticky top-0 z-50 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-4">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-                <img 
-                  src="/lovable-uploads/settld-logo-with-text.png" 
-                  alt="Settld Logo" 
-                  className="h-14 w-auto hover:drop-shadow-lg transition-all duration-200"
+              <Link to="/" className="flex items-center space-x-3">
+                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                <img
+                  src="/lovable-uploads/settld-logo-with-text.png"
+                  alt="Settld Logo"
+                  className="h-9 w-auto"
                 />
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-base font-semibold text-white hidden sm:block">
                   {isEditMode ? 'Edit Your Parking Spot' : 'List Your Parking Spot'}
                 </h1>
               </Link>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-400">
               Step {currentStep} of 4
             </div>
           </div>
