@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   MapPin, DollarSign, Clock, Car, Grid, List, Search, Star,
   Shield, Zap, Users, Menu, HelpCircle, Crown, Sparkles,
-  ChevronRight, BadgeCheck, TrendingUp
+  ChevronRight, TrendingUp
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -184,14 +184,14 @@ const Index = () => {
     <div className="min-h-screen bg-background">
 
       {/* ══════════════════════ NAVBAR ══════════════════════ */}
-      <nav className="bg-navy-900 sticky top-0 z-50 border-b border-white/8">
+      <nav className="sticky top-0 z-50 border-b border-white/10" style={{ background: "hsl(222, 47%, 10%)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
 
             {/* Left: Logo + links */}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
-                <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto" />
+                <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-8 w-auto object-contain" style={{ background: "none", border: "none", boxShadow: "none" }} />
                 <span className="text-white font-bold text-lg tracking-tight">Settld</span>
               </Link>
               <div className="hidden lg:flex items-center gap-6">
@@ -237,10 +237,10 @@ const Index = () => {
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-72 bg-navy-900 border-white/10 p-0">
+                <SheetContent side="right" className="w-72 border-white/10 p-0" style={{ background: "hsl(222, 47%, 10%)" }}>
                   <div className="flex flex-col h-full">
                     <div className="p-6 border-b border-white/10 flex items-center gap-2.5">
-                      <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-7 w-auto" />
+                      <img src="/lovable-uploads/settld-logo-white.png" alt="Settld logo" className="h-7 w-auto object-contain" style={{ background: "none" }} />
                       <span className="text-white font-bold text-base">Settld</span>
                     </div>
                     <div className="flex flex-col gap-1 p-4 flex-1">
@@ -285,20 +285,24 @@ const Index = () => {
         <div className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 50%, hsl(217 91% 50% / 0.15) 0%, transparent 60%), radial-gradient(circle at 80% 20%, hsl(217 91% 60% / 0.1) 0%, transparent 50%)" }} />
 
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Eyebrow */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <span className="inline-flex items-center gap-2 bg-primary/20 text-primary-glow text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-                <BadgeCheck className="w-3.5 h-3.5" />
-                Peer-to-Peer Parking Marketplace
-              </span>
+        <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center max-w-3xl mx-auto">
+
+            {/* Brand logo above headline */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className="flex justify-center mb-7">
+              <img
+                src="/lovable-uploads/settld-logo-white.png"
+                alt="Settld"
+                className="h-16 w-auto object-contain"
+                style={{ background: "none", border: "none", boxShadow: "none", filter: "drop-shadow(0 0 12px rgba(255,255,255,0.18))" }}
+              />
             </motion.div>
 
             {/* Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight mb-6"
+              className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight mb-5"
             >
               Park smarter,{" "}
               <span className="text-primary-glow">
@@ -312,7 +316,7 @@ const Index = () => {
             {/* Sub */}
             <motion.p
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed"
+              className="text-lg text-slate-300 max-w-2xl mx-auto mb-9 leading-relaxed"
             >
               Book a neighbor's driveway or garage near your destination. Hosts earn, drivers save — all in seconds.
             </motion.p>
@@ -320,7 +324,7 @@ const Index = () => {
             {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-3 justify-center mb-10"
+              className="flex flex-wrap gap-3 justify-center mb-8"
             >
               <button
                 onClick={() => document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' })}
@@ -329,7 +333,7 @@ const Index = () => {
                 Find Parking
               </button>
               <Link to="/list-spot">
-                <button className="bg-white/10 hover:bg-white/18 border border-white/20 text-white font-semibold px-7 py-3 rounded-xl text-base transition-all duration-200">
+                <button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-7 py-3 rounded-xl text-base transition-all duration-200">
                   List Your Spot
                 </button>
               </Link>
@@ -338,15 +342,15 @@ const Index = () => {
             {/* Trust signals */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.45 }}
-              className="flex flex-wrap gap-5 text-sm text-slate-400 justify-center"
+              className="flex flex-wrap gap-5 text-sm text-slate-300 justify-center"
             >
               {[
-                { icon: "✓", label: "Instant booking" },
-                { icon: "✓", label: "Secure payments" },
-                { icon: "✓", label: "Verified listings" },
+                { label: "Instant booking" },
+                { label: "Secure payments" },
+                { label: "Verified listings" },
               ].map(t => (
                 <span key={t.label} className="flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">{t.icon}</span> {t.label}
+                  <span className="text-emerald-400 font-bold">✓</span> {t.label}
                 </span>
               ))}
             </motion.div>
@@ -360,7 +364,7 @@ const Index = () => {
       {/* ══════════════════════ SEARCH BAR ══════════════════════ */}
       <div id="search-section" className="bg-background">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10 pb-8">
-          <div className="bg-white rounded-2xl shadow-[0_8px_40px_hsl(222_47%_11%/0.12)] border border-border p-5 md:p-6">
+          <div className="bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-border p-5 md:p-6">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Find a parking spot</p>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="md:col-span-1">
@@ -395,7 +399,7 @@ const Index = () => {
                   <SelectItem value="this_week">This Week</SelectItem>
                 </SelectContent>
               </Select>
-              <Button size="default" className="h-11 rounded-lg font-semibold bg-primary hover:bg-primary/90 text-white shadow-button" onClick={handleSearch}>
+              <Button size="default" className="h-11 rounded-lg font-semibold bg-primary hover:bg-primary/90 text-white" onClick={handleSearch}>
                 <Search className="w-4 h-4 mr-2" /> Search
               </Button>
             </div>
